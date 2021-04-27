@@ -1,5 +1,16 @@
+#!/usr/bin/env Rscript
+#
+# Weigh, Scale and Shift (WSS) Code
+#
+# Copyright 2021 Graeme Ackland, The University of Edinburgh
+#
 #### Header ####
-rm(list = ls())
+
+if(interactive()){
+  # Remove existing variables
+  rm(list = ls())
+}
+
 library("haven")
 library("reshape2")
 library("stats")
@@ -88,9 +99,9 @@ groups = colnames(casedat[2:20])
 #         panel.background = element_blank())
 # print(casemap)
 # rm(casemap, casemelt, deathmelt, colourscheme)
-# 
+#
 
-image(casedat$date, 1:19, as.matrix(casedat[2:20]), 
+image(casedat$date, 1:19, as.matrix(casedat[2:20]),
       xlab = "Time", ylab = "Age group", col = hcl.colors(96, "Blues", rev = TRUE),
       axes = F, mgp = c(3.3, 1, 0))
 axis.Date(1, at=seq(min(casedat$date), max(casedat$date), by="1 month"), format="%m-%Y")
@@ -98,7 +109,7 @@ axis(2, 1:19, labels = groups, las = 1, cex.axis = 0.8)
 title(main = "Cases and Deaths")
 
 
-deathmap = image(deathdat$date, 1:19, as.matrix(deathdat[2:20]), 
+deathmap = image(deathdat$date, 1:19, as.matrix(deathdat[2:20]),
                 xlab = "", ylab = "", col = hcl.colors(96, "Reds", rev = TRUE),
                 axes = F, mgp = c(3.3, 1, 0))
 axis.Date(1, at=seq(min(deathdat$date), max(deathdat$date), by="1 month"), format="%m-%Y")
@@ -111,7 +122,7 @@ rm(casemap, deathmap, groups)
 logmean = 2.534
 logsd = 0.613
 lndist = dlnorm(1:28, logmean, logsd) #params from Hawryluk et al.
-ggplot(data.frame(index = 1:28, prop = lndist)) + 
+ggplot(data.frame(index = 1:28, prop = lndist)) +
   geom_point(aes(x = index, y = prop)) +
   labs(title = "Discretised Lognormal Distribution (Hawryluk)") +
   xlab("Time to Death") +
@@ -131,7 +142,7 @@ rm(agegroup, day)
 #Spread all cases by the distribution
 comdat$logcaseload = 0
 for (day in 28:nrow(comdat)) {
-  comdat$logcaseload[day] = sum(comdat$allCases[(day-27):day] * rev(lndist)) 
+  comdat$logcaseload[day] = sum(comdat$allCases[(day-27):day] * rev(lndist))
 }
 rm(day)
 
@@ -148,7 +159,7 @@ rm(logcasesageplot)
 alpha = 4.447900991
 beta = 4.00188764
 gamdist = dgamma(1:28, shape = alpha, scale = beta) #params from Verity et al.
-ggplot(data.frame(index = 1:28, prop = gamdist)) + 
+ggplot(data.frame(index = 1:28, prop = gamdist)) +
   geom_point(aes(x = index, y = prop)) +
   labs(title = "Discretised Gamma Distribution (Verity)") +
   xlab("Time to Death") +
@@ -168,13 +179,13 @@ rm(agegroup, day)
 #Spread all cases by the distribution
 comdat$gamcaseload = 0
 for (day in 28:nrow(comdat)) {
-  comdat$gamcaseload[day] = sum(comdat$allCases[(day-27):day] * rev(gamdist)) 
+  comdat$gamcaseload[day] = sum(comdat$allCases[(day-27):day] * rev(gamdist))
 }
 
 
 #### Fig 2. Distributions ####
-distdat = data.frame(days = 1:29, ln = c(lndist, 0), gam = c(gamdist, 0), exp = c(dexp(1:28, rate = 0.1), 0), 
-                     shift = c(rep(0, 14), 1, rep(0, 14)), 
+distdat = data.frame(days = 1:29, ln = c(lndist, 0), gam = c(gamdist, 0), exp = c(dexp(1:28, rate = 0.1), 0),
+                     shift = c(rep(0, 14), 1, rep(0, 14)),
                      avgshift = c(rep(0, 11), rep((1/7),7), rep(0, 11)))
 ggplot(data = distdat, aes(x = days)) +
   geom_line(aes(y = ln, color = "Lognormal"), size = 1) +
@@ -188,8 +199,8 @@ ggplot(data = distdat, aes(x = days)) +
   scale_x_continuous(breaks =  0:30) +
   coord_cartesian(ylim=c(0, 0.15)) +
   theme_bw()
-  
-  
+
+
 #### AGE GROUPS - Gamma Model ####
 #Calculate age-group CFRs to fit Oct-Nov from Gamma
 gamageweights = data.frame(agegroup = names(casedat[2:20]), weight = 0, lowerbound = 0, upperbound = 0)
@@ -270,7 +281,7 @@ ggplot(data = comdat, aes(x = date)) +
   ylab("Deaths") +
   xlab("Date") +
   scale_color_manual(values = c("Deaths (Government Figures)" = "Blue",
-                                "Gamma Model Predicted Deaths" = "Red", 
+                                "Gamma Model Predicted Deaths" = "Red",
                                 "Lognormal Model Predicted Deaths" = "Green",
                                 "WSS Original" = "Orange")) +
   scale_x_date(date_breaks = "1 month", date_labels = "%b") +
@@ -296,8 +307,8 @@ rollframe = rollframe[301:(nrow(rollframe)-30),]
 plot = ggplot() +
   geom_line(data = rollframe, aes(x = date, y = CFR, color = agegroup), size = 1.1) +
   scale_colour_manual(values = rev(brewer.pal(10,"Set3"))) +
-  labs(title = paste("Case Fatality Ratios by age group -  7-day rolling averages"), 
-       subtitle = "Lognormal model", 
+  labs(title = paste("Case Fatality Ratios by age group -  7-day rolling averages"),
+       subtitle = "Lognormal model",
        x = "Date", y = "CFR") +
   scale_x_date(date_breaks = "1 month", date_labels = "%b") +
   theme_bw() +
