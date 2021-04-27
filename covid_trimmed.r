@@ -277,7 +277,7 @@ ggplot(data = comdat, aes(x = date)) +
   geom_line(mapping = aes(y = allDeaths, color = "Deaths (Government Figures)"), size = 1) +
   geom_line(data = gampred, aes(y = allCasesPred, color = "Gamma Model Predicted Deaths"), size = 1) +
   geom_line(data = logpred, aes(y = allCasesPred, color = "Lognormal Model Predicted Deaths"), size = 1) +
-  geom_line(data = WSS, aes(y = values, color = "WSS Original"), size = 1)
+  geom_line(data = WSS, aes(y = values, color = "WSS Original"), size = 1) +
   labs(title = "Predicted Deaths vs. Actual Deaths", color = "Legend") +
   ylab("Deaths") +
   xlab("Date") +
