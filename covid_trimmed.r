@@ -40,6 +40,10 @@ options(scipen = 999)
 # Base URL to get the data
 baseurl <- "https://api.coronavirus.data.gov.uk/v2/data?"
 
+# Start and end date - the data to collect data from
+startdate <- as.Date("2020/07/25")
+enddate <-  Sys.Date()-7
+
 # Total cases, deaths, tests
 casesurl <- paste0(baseurl,
                    "areaType=nation&",
@@ -62,18 +66,25 @@ comdat <- comdat %>%  select(date,
                              allCases = newCasesBySpecimenDate,
                              allDeaths = newDeaths28DaysByDeathDate,
                              tests = newVirusTests) %>%
-                      filter(date >= as.Date("2020/07/25") &
-                             date <= Sys.Date()-7) %>%
+                      filter(date >= startdate &
+                             date <= enddate ) %>%
                       arrange(date)
 
-#All UK cases (to estimate pre-Sept England Cases)
-ukcasedat = read.csv(file = "https://api.coronavirus.data.gov.uk/v2/data?areaType=overview&metric=newVirusTests&format=csv")
-ukcasedat = select(ukcasedat, date = date, tests = newVirusTests)
-ukcasedat$date = as.Date(ukcasedat$date)
-ukcasedat = dplyr::filter(ukcasedat, date >= as.Date("2020/07/25") & date <= Sys.Date()-7)
-ukcasedat = ukcasedat[order(ukcasedat$date),]
-row.names(ukcasedat) = 1:nrow(ukcasedat)
+# All UK cases (to estimate pre-Sept England Cases)
+ukcaseurl <- paste0(baseurl,
+                    "areaType=overview&",
+                    "metric=newVirusTests&",
+                    "format=csv")
 
+coltypes <- cols(col_character(), col_character(),col_character(),
+                 col_date(format="%Y-%m-%d"), col_integer())
+
+ukcasedat <-  read_csv(file = ukcaseurl, col_types = coltypes)
+
+ukcasedat <- ukcasedat %>%  select(date = date, tests = newVirusTests) %>%
+                            filter(date >= startdate &
+                                   date <= enddate ) %>%
+                            arrange(date)
 
 #cases by age
 casedat = read.csv(file = "https://api.coronavirus.data.gov.uk/v2/data?areaType=nation&areaCode=E92000001&metric=newCasesBySpecimenDateAgeDemographics&format=csv")
