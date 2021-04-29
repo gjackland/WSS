@@ -113,15 +113,29 @@ casedat <- casedat %>%
            arrange(date)
 
 #deaths by age
-deathdat = read.csv(file = "https://api.coronavirus.data.gov.uk/v2/data?areaType=nation&areaCode=E92000001&metric=newDeaths28DaysByDeathDateAgeDemographics&format=csv")
-deathdat = select(deathdat, date = date, age = age, values = deaths)
-deathdat = pivot_wider(deathdat, id_cols = date, names_from = age, values_from = values)
-deathdat = select(deathdat, -"60+", -"00_59")
-deathdat$date = as.Date(deathdat$date)
-deathdat = dplyr::filter(deathdat, date >= as.Date("2020/07/25") & date <= Sys.Date()-7)
-deathdat = deathdat[order(deathdat$date),]
-deathdat = deathdat[, names(casedat)]
-row.names(deathdat) = 1:nrow(deathdat)
+deathurl <- paste0(baseurl,
+                   "areaType=nation&",
+                   "areaCode=E92000001&",
+                   "metric=newDeaths28DaysByDeathDateAgeDemographics&",
+                   "format=csv")
+
+# Explicitly define the types for the columns
+coltypes <- cols(col_character(), col_character(),col_character(),
+                 col_date(format="%Y-%m-%d"),col_character(),
+                 col_integer(), col_integer(), col_double())
+# Read the data
+deathdat <-  read_csv(file = deathurl, col_types = coltypes)
+
+# Map the ages column to become column headings for the different age groups
+# for dates between the start and end date inclusive and then ensure that we
+# end up with the same columns as for the case data above.
+deathdat <- deathdat %>%
+            select(date = date, age = age, values = deaths) %>%
+            pivot_wider(id_cols = date, names_from = age, values_from = values) %>%
+            select(-"60+", -"00_59") %>%
+            filter(date >= startdate & date <= enddate) %>%
+            arrange(date) %>%
+            select(names(casedat))
 
 #### Get tests for England pre-Sept by taking the post-Sept fraction of all tests that were in england (0.867)
 comdat$tests[1:58] = ukcasedat[1:58,"tests"] * 0.867
