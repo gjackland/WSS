@@ -53,7 +53,7 @@ casesurl <- paste0(baseurl,
                    "metric=newVirusTests&",
                    "format=csv")
 
-# Explicitly specify the column types
+# Explicitly define the types for the columns
 coltypes <- cols(col_character(), col_character(),col_character(),
                  col_date(format="%Y-%m-%d"), col_integer(),
                  col_integer(), col_integer())
@@ -76,25 +76,42 @@ ukcaseurl <- paste0(baseurl,
                     "metric=newVirusTests&",
                     "format=csv")
 
+# Explicitly define the types for the columns
 coltypes <- cols(col_character(), col_character(),col_character(),
                  col_date(format="%Y-%m-%d"), col_integer())
-
+# Read the data
 ukcasedat <-  read_csv(file = ukcaseurl, col_types = coltypes)
 
+# Transform the data
 ukcasedat <- ukcasedat %>%  select(date = date, tests = newVirusTests) %>%
                             filter(date >= startdate &
                                    date <= enddate ) %>%
                             arrange(date)
+# cases by age
+ageurl <- paste0(baseurl,
+                 "areaType=nation&",
+                 "areaCode=E92000001&",
+                 "metric=newCasesBySpecimenDateAgeDemographics&",
+                 "format=csv")
 
-#cases by age
-casedat = read.csv(file = "https://api.coronavirus.data.gov.uk/v2/data?areaType=nation&areaCode=E92000001&metric=newCasesBySpecimenDateAgeDemographics&format=csv")
-casedat = select(casedat, date = date, age = age, values = cases)
-casedat = pivot_wider(casedat, id_cols = date, names_from = age, values_from = values)
-casedat = select(casedat, -unassigned, -"60+", -"00_59")
-casedat$date = as.Date(casedat$date)
-casedat = dplyr::filter(casedat, date >= as.Date("2020/07/25") & date <= Sys.Date()-7)
-casedat = casedat[order(casedat$date),]
-row.names(casedat) = 1:nrow(casedat)
+# Explicitly define the types for the columns
+# Age is a character as it giving a range, e.g. 00_04, 05_09, ...
+coltypes <- cols(col_character(), col_character(),col_character(),
+                 col_date(format="%Y-%m-%d"), col_character(),
+                 col_integer(), col_integer(), col_double())
+
+# read in the data
+casedat <-  read_csv(file = ageurl, col_types = coltypes)
+
+# Remap the ages column to be the header rows, remove the unassigned,
+# 60+ and 00_59 columns, filter dates to be between the start and end
+# dates and order the output by date
+casedat <- casedat %>%
+           select(date = date, age = age, values = cases) %>%
+           pivot_wider(id_cols = date, names_from = age, values_from = values) %>%
+           select(-unassigned, -"60+", -"00_59") %>%
+           filter(date >= startdate & date <= enddate) %>%
+           arrange(date)
 
 #deaths by age
 deathdat = read.csv(file = "https://api.coronavirus.data.gov.uk/v2/data?areaType=nation&areaCode=E92000001&metric=newDeaths28DaysByDeathDateAgeDemographics&format=csv")
