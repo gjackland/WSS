@@ -14,6 +14,7 @@ if(interactive()){
 library(haven, warn.conflicts = FALSE, quietly = TRUE)
 library(reshape2, warn.conflicts = FALSE, quietly = TRUE)
 library(stats, warn.conflicts = FALSE, quietly = TRUE)
+library(readr, warn.conflicts = FALSE, quietly = TRUE)
 library(dplyr, warn.conflicts = FALSE, quietly = TRUE)
 library(tidyr, warn.conflicts = FALSE, quietly = TRUE)
 library(ggplot2, warn.conflicts = FALSE, quietly = TRUE)
@@ -36,13 +37,34 @@ setwd(".")
 options(scipen = 999)
 
 #### Read data ####
-#total cases, deaths, tests
-comdat = read.csv(file = "https://api.coronavirus.data.gov.uk/v2/data?areaType=nation&areaCode=E92000001&metric=newCasesBySpecimenDate&metric=newDeaths28DaysByDeathDate&metric=newVirusTests&format=csv")
-comdat = select(comdat, date = date, allCases = newCasesBySpecimenDate, allDeaths = newDeaths28DaysByDeathDate, tests = newVirusTests)
-comdat$date = as.Date(comdat$date)
-comdat = dplyr::filter(comdat, date >= as.Date("2020/07/25") & date <= Sys.Date()-7)
-comdat = comdat[order(comdat$date),]
-row.names(comdat) = 1:nrow(comdat)
+# Base URL to get the data
+baseurl <- "https://api.coronavirus.data.gov.uk/v2/data?"
+
+# Total cases, deaths, tests
+casesurl <- paste0(baseurl,
+                   "areaType=nation&",
+                   "areaCode=E92000001&",
+                   "metric=newCasesBySpecimenDate&",
+                   "metric=newDeaths28DaysByDeathDate&",
+                   "metric=newVirusTests&",
+                   "format=csv")
+
+# Explicitly specify the column types
+coltypes <- cols(col_character(), col_character(),col_character(),
+                 col_date(format="%Y-%m-%d"), col_integer(),
+                 col_integer(), col_integer())
+
+# Read the data
+comdat <-  read_csv(file = casesurl, col_types = coltypes)
+
+# Transform the data
+comdat <- comdat %>%  select(date,
+                             allCases = newCasesBySpecimenDate,
+                             allDeaths = newDeaths28DaysByDeathDate,
+                             tests = newVirusTests) %>%
+                      filter(date >= as.Date("2020/07/25") &
+                             date <= Sys.Date()-7) %>%
+                      arrange(date)
 
 #All UK cases (to estimate pre-Sept England Cases)
 ukcasedat = read.csv(file = "https://api.coronavirus.data.gov.uk/v2/data?areaType=overview&metric=newVirusTests&format=csv")
