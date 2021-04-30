@@ -27,7 +27,7 @@ file <- basename(Rurl)
 dir.create("data",showWarnings = FALSE)
 download.file(Rurl,destfile = paste0("data/",file))
 Rest <- read_ods(paste0("data/",file), sheet = "Table1_-_R")
-
+View(Rest)
 
 # library(haven, warn.conflicts = FALSE, quietly = TRUE)
 # library(reshape2, warn.conflicts = FALSE, quietly = TRUE)
