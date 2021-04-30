@@ -2,7 +2,7 @@
 #
 # Weigh, Scale and Shift (WSS) Code
 #
-# Copyright 2021 Graeme Ackland, The University of Edinburgh
+# Copyright 2021 Graeme Ackland, The University of Edinburgh, James Ackland The University of Cambridge
 #
 #### Header ####
 
@@ -141,6 +141,37 @@ deathdat <- deathdat %>%
 #### Get tests for England pre-Sept by taking the post-Sept fraction of all tests that were in england (0.867)
 comdat$tests[1:58] = ukcasedat[1:58,"tests"] * 0.867
 rm(ukcasedat)
+
+plot(comdat$allCases)
+#remove weekend effect
+days <-1:7
+weeks<-as.integer(length(comdat$allCases)/7)-7
+for(i in 1:weeks){
+  for(j in 1:7){
+    days[j]<-days[j]+comdat$allCases[7*i+j]}
+}
+casetot=sum(days)
+days=7*days/casetot
+# Scale up cases
+for(i in 1:length(comdat$allCases)){
+  indexday=(i-1)%%7+1
+  comdat$allCases[i]=comdat$allCases[i]/days[indexday]}
+plot(comdat$allCases)
+#  Calculation of Rnumber
+rm(gjaR)
+gjaR<-unlist(comdat$allCases,use.names=FALSE)
+for(i in 2:length(gjaR)){
+  gjaR[i]<-(1+(comdat$allCases[i]-comdat$allCases[i-1])*2*2.5/(comdat$allCases[i]+comdat$allCases[i-1]))}
+
+gjaR[1]=gjaR[2]
+#  Smooth spline discontinuous at 
+#UK lockdown Oct 31 (day 98) -Dec 2  (day 130) Jan 6 (day 165)  (day 1 = July 25)
+#plot(smooth.spline(gjaR[1:88],df=8))
+#plot(smooth.spline(gjaR[89:120],df=8))
+#plot(smooth.spline(gjaR[121:154],df=8))
+#plot(smooth.spline(gjaR[155:length(gjaR)]),df=4)
+plot(smooth.spline(as.vector(gjaR),df=22))
+plot(gjaR)
 
 #### Fig 1. - Heatmaps ####
 groups = colnames(casedat[2:20])
