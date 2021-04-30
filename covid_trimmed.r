@@ -20,6 +20,15 @@ library(lubridate, warn.conflicts = FALSE, quietly = TRUE)
 library(zoo, warn.conflicts = FALSE, quietly = TRUE)
 library(RColorBrewer, warn.conflicts = FALSE, quietly = TRUE)
 
+install.packages("readODS")
+library(readODS)
+Rurl <- "https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/982867/R-and-growth-rate-time-series-30-Apr-2021.ods"
+file <- basename(Rurl)
+dir.create("data",showWarnings = FALSE)
+download.file(Rurl,destfile = paste0("data/",file))
+Rest <- read_ods(paste0("data/",file), sheet = "Table1_-_R")
+
+
 # library(haven, warn.conflicts = FALSE, quietly = TRUE)
 # library(reshape2, warn.conflicts = FALSE, quietly = TRUE)
 # library(stats, warn.conflicts = FALSE, quietly = TRUE)
