@@ -2,7 +2,8 @@
 #
 # Weigh, Scale and Shift (WSS) Code
 #
-# Copyright 2021 Graeme Ackland, The University of Edinburgh
+# Copyright 2021 Graeme Ackland, The University of Edinburgh,
+#                James Ackland The University of Cambridge
 #
 #### Header ####
 
@@ -18,6 +19,20 @@ library(ggplot2, warn.conflicts = FALSE, quietly = TRUE)
 library(lubridate, warn.conflicts = FALSE, quietly = TRUE)
 library(zoo, warn.conflicts = FALSE, quietly = TRUE)
 library(RColorBrewer, warn.conflicts = FALSE, quietly = TRUE)
+
+install.packages("readODS")
+library(readODS)
+Rurl <- "https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/982867/R-and-growth-rate-time-series-30-Apr-2021.ods"
+file <- basename(Rurl)
+dir.create("data",showWarnings = FALSE)
+download.file(Rurl,destfile = paste0("data/",file))
+Rest <- read_ods(paste0("data/",file), sheet = "Table1_-_R", skip=8)
+names(Rest) <- c("","Date","UK_LowerBound","UK_UpperBound",
+                 "EEng_LowerBound","EEng_UpperBound",
+                 "Lon_LowerBound","Lon_UpperBound","Mid_LowerBound","Mid_UpperBound",
+                 "NEY_LowerBound","NEY_UpperBound","NW_LowerBound","NW_UpperBound",
+                 "SE_LowerBound","SE_UpperBound","SW_LowerBound","SW_UpperBound")
+View(Rest)
 
 # library(haven, warn.conflicts = FALSE, quietly = TRUE)
 # library(reshape2, warn.conflicts = FALSE, quietly = TRUE)
@@ -141,6 +156,55 @@ deathdat <- deathdat %>%
 #### Get tests for England pre-Sept by taking the post-Sept fraction of all tests that were in england (0.867)
 comdat$tests[1:58] = ukcasedat[1:58,"tests"] * 0.867
 rm(ukcasedat)
+
+plot(comdat$allCases)
+
+# MAA same with lines
+plot(comdat$allCases,type="l")
+
+# MAA: Same plot using ggplot
+comdat %>% ggplot(aes(x=date,y=allCases)) + geom_line() +
+           xlab("Date") + ylab("All cases")
+
+#remove weekend effect
+days <-1:7
+weeks<-as.integer(length(comdat$allCases)/7)-7 #MAA should this not be -1? as.integer(difftime(max(comdat$date),min(comdat$date),units="weeks")) gives 38
+for(i in 1:weeks){
+  for(j in 1:7){
+    days[j]<-days[j]+comdat$allCases[7*i+j]}
+}
+casetot=sum(days)
+days=7*days/casetot
+# Scale up cases
+# MAA:start same as below but not modifying the original data
+modcases <- comdat$allCases
+for(i in 1:length(modcases)){
+  indexday=(i-1)%%7+1
+  modcases[i]=modcases[i]/days[indexday]}
+
+plot(comdat$allCases,type="l")
+  lines(modcases, col="red")
+#MAA end
+
+for(i in 1:length(comdat$allCases)){
+  indexday=(i-1)%%7+1
+  comdat$allCases[i]=comdat$allCases[i]/days[indexday]}
+plot(comdat$allCases)
+#  Calculation of Rnumber
+rm(gjaR)
+gjaR<-unlist(comdat$allCases,use.names=FALSE)
+for(i in 2:length(gjaR)){
+  gjaR[i]<-(1+(comdat$allCases[i]-comdat$allCases[i-1])*2*2.5/(comdat$allCases[i]+comdat$allCases[i-1]))}
+
+gjaR[1]=gjaR[2]
+#  Smooth spline discontinuous at
+#UK lockdown Oct 31 (day 98) -Dec 2  (day 130) Jan 6 (day 165)  (day 1 = July 25)
+#plot(smooth.spline(gjaR[1:88],df=8))
+#plot(smooth.spline(gjaR[89:120],df=8))
+#plot(smooth.spline(gjaR[121:154],df=8))
+#plot(smooth.spline(gjaR[155:length(gjaR)]),df=4)
+plot(smooth.spline(as.vector(gjaR),df=22))
+plot(gjaR)
 
 #### Fig 1. - Heatmaps ####
 groups = colnames(casedat[2:20])
@@ -380,4 +444,5 @@ plot = ggplot() +
   geom_rect(aes(xmin=as.Date("2020/12/01"), xmax=as.Date("2021/01/16"), ymin=0, ymax=Inf), fill = "red", alpha = 0.1) +
   geom_rect(aes(xmin=as.Date("2021/01/17"), xmax=Sys.Date(), ymin=0, ymax=Inf), fill = "green", alpha = 0.1)
 print(plot)
+
 
