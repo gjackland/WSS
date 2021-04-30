@@ -26,7 +26,12 @@ Rurl <- "https://assets.publishing.service.gov.uk/government/uploads/system/uplo
 file <- basename(Rurl)
 dir.create("data",showWarnings = FALSE)
 download.file(Rurl,destfile = paste0("data/",file))
-Rest <- read_ods(paste0("data/",file), sheet = "Table1_-_R", skip=7)
+Rest <- read_ods(paste0("data/",file), sheet = "Table1_-_R", skip=8)
+names(Rest) <- c("","Date","UK_LowerBound","UK_UpperBound",
+                 "EEng_LowerBound","EEng_UpperBound",
+                 "Lon_LowerBound","Lon_UpperBound","Mid_LowerBound","Mid_UpperBound",
+                 "NEY_LowerBound","NEY_UpperBound","NW_LowerBound","NW_UpperBound",
+                 "SE_LowerBound","SE_UpperBound","SW_LowerBound","SW_UpperBound")
 View(Rest)
 
 # library(haven, warn.conflicts = FALSE, quietly = TRUE)
