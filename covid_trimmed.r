@@ -2,8 +2,10 @@
 #
 # Weigh, Scale and Shift (WSS) Code
 #
+
 # Copyright 2021 Graeme Ackland, The University of Edinburgh,
 #                James Ackland The University of Cambridge
+
 #
 #### Header ####
 
@@ -20,7 +22,7 @@ library(lubridate, warn.conflicts = FALSE, quietly = TRUE)
 library(zoo, warn.conflicts = FALSE, quietly = TRUE)
 library(RColorBrewer, warn.conflicts = FALSE, quietly = TRUE)
 
-install.packages("readODS")
+#install.packages("readODS")
 library(readODS)
 Rurl <- "https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/982867/R-and-growth-rate-time-series-30-Apr-2021.ods"
 file <- basename(Rurl)
@@ -159,6 +161,7 @@ rm(ukcasedat)
 
 plot(comdat$allCases)
 
+
 # MAA same with lines
 plot(comdat$allCases,type="l")
 
@@ -166,9 +169,11 @@ plot(comdat$allCases,type="l")
 comdat %>% ggplot(aes(x=date,y=allCases)) + geom_line() +
            xlab("Date") + ylab("All cases")
 
+
 #remove weekend effect
 days <-1:7
-weeks<-as.integer(length(comdat$allCases)/7)-7 #MAA should this not be -1? as.integer(difftime(max(comdat$date),min(comdat$date),units="weeks")) gives 38
+weeks<-as.integer(length(comdat$allCases)/7)-1
+
 for(i in 1:weeks){
   for(j in 1:7){
     days[j]<-days[j]+comdat$allCases[7*i+j]}
@@ -176,37 +181,78 @@ for(i in 1:weeks){
 casetot=sum(days)
 days=7*days/casetot
 # Scale up cases
+
 # MAA:start same as below but not modifying the original data
-modcases <- comdat$allCases
-for(i in 1:length(modcases)){
-  indexday=(i-1)%%7+1
-  modcases[i]=modcases[i]/days[indexday]}
+#modcases <- comdat$allCases
+#for(i in 1:length(modcases)){
+#  indexday=(i-1)%%7+1
+#  modcases[i]=modcases[i]/days[indexday]}
 
-plot(comdat$allCases,type="l")
-  lines(modcases, col="red")
+#plot(comdat$allCases,type="l")
+#  lines(modcases, col="red")
 #MAA end
-
+  plot(comdat$allCases)
 for(i in 1:length(comdat$allCases)){
   indexday=(i-1)%%7+1
   comdat$allCases[i]=comdat$allCases[i]/days[indexday]}
-plot(comdat$allCases)
-#  Calculation of Rnumber
+lines(comdat$allCases, col="red")
+
+# Fix Xmas anomaly in comdat
+Xmasav = sum(comdat$allCases[153:164])/12
+Xmasgrad=Xmasav/25
+for (i in 153:164){
+  comdat$allCases[i]=Xmasav-Xmasgrad*(158.5-i)}
+lines(comdat$allCases, col="blue")
+
+
+for (i in 2:ncol(casedat)) {
+  for (j in 1:nrow(casedat)) {
+    indexday=(j-1)%%7+1
+    casedat[j,i] <- as.integer(casedat[j,i]/days[indexday]) 
+  } 
+} 
+plot(unlist(casedat[,11]))
+for ( i  in 2:ncol(casedat) ){
+Xmasav = sum(casedat[153:164,i])/12
+Xmasgrad=Xmasav/25
+for (iday in 153:164){
+  casedat[iday,i]=as.integer(Xmasav-Xmasgrad*(158.5-iday))}
+}
+lines(unlist(casedat[,11]))
+
+
+#  Calculation of Rnumber, generation time = 6,5 days
 rm(gjaR)
+genTime=6.5
 gjaR<-unlist(comdat$allCases,use.names=FALSE)
 for(i in 2:length(gjaR)){
-  gjaR[i]<-(1+(comdat$allCases[i]-comdat$allCases[i-1])*2*2.5/(comdat$allCases[i]+comdat$allCases[i-1]))}
-
+  gjaR[i]<-(1+(comdat$allCases[i]-comdat$allCases[i-1])*2*genTime/(comdat$allCases[i]+comdat$allCases[i-1]))
+}
 gjaR[1]=gjaR[2]
-#  Smooth spline discontinuous at
+weeklyR<-gjaR
+for(i in 4:(length(gjaR)-3)){
+day1=i-3
+day7=i+3
+      weeklyR[i]=sum(gjaR[day1:day7])/7
+}
+#Plot varios types of smoothing on the R data
+plot(weeklyR)
+# Wanted to plot a Smooth spline discontinuous at 
 #UK lockdown Oct 31 (day 98) -Dec 2  (day 130) Jan 6 (day 165)  (day 1 = July 25)
-#plot(smooth.spline(gjaR[1:88],df=8))
-#plot(smooth.spline(gjaR[89:120],df=8))
-#plot(smooth.spline(gjaR[121:154],df=8))
-#plot(smooth.spline(gjaR[155:length(gjaR)]),df=4)
-plot(smooth.spline(as.vector(gjaR),df=22))
-plot(gjaR)
+#jnk1<-(smooth.spline(gjaR[1:98]))
+#jnk2<-unlist(smooth.spline(gjaR[99:130]))
+#plot(jnk1,df=4)
+#plot(smooth.spline(gjaR[99:130],df=4))
+#plot(smooth.spline(gjaR[131:164],df=4))
+#plot(smooth.spline(gjaR[165:length(gjaR)],df=4))
+#plot(smooth.spline(as.vector(gjaR),df=24))
+for (ismooth in 4:28){
+  lines(smooth.spline(as.vector(gjaR),df=ismooth))
+  lines(smooth.spline(as.vector(weeklyR),df=ismooth),col="red")}
+points(gjaR, col = "green")
 
-#### Fig 1. - Heatmaps ####
+
+##### Fig 1. - Heatmaps ####
 groups = colnames(casedat[2:20])
 # casemelt = melt(as.matrix(casedat[2:20]))
 # deathmelt = melt(as.matrix(deathdat[2:20]))
