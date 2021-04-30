@@ -26,7 +26,7 @@ Rurl <- "https://assets.publishing.service.gov.uk/government/uploads/system/uplo
 file <- basename(Rurl)
 dir.create("data",showWarnings = FALSE)
 download.file(Rurl,destfile = paste0("data/",file))
-Rest <- read_ods(paste0("data/",file), sheet = "Table1_-_R")
+Rest <- read_ods(paste0("data/",file), sheet = "Table1_-_R", skip=7)
 View(Rest)
 
 # library(haven, warn.conflicts = FALSE, quietly = TRUE)
