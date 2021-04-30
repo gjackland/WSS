@@ -19,6 +19,7 @@ library(lubridate, warn.conflicts = FALSE, quietly = TRUE)
 library(zoo, warn.conflicts = FALSE, quietly = TRUE)
 library(RColorBrewer, warn.conflicts = FALSE, quietly = TRUE)
 
+# This do not appear to be needed:
 # library(haven, warn.conflicts = FALSE, quietly = TRUE)
 # library(reshape2, warn.conflicts = FALSE, quietly = TRUE)
 # library(stats, warn.conflicts = FALSE, quietly = TRUE)
