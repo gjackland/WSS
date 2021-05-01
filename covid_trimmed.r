@@ -21,20 +21,9 @@ library(ggplot2, warn.conflicts = FALSE, quietly = TRUE)
 library(lubridate, warn.conflicts = FALSE, quietly = TRUE)
 library(zoo, warn.conflicts = FALSE, quietly = TRUE)
 library(RColorBrewer, warn.conflicts = FALSE, quietly = TRUE)
-
-#install.packages("readODS")
 library(readODS)
-Rurl <- "https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/982867/R-and-growth-rate-time-series-30-Apr-2021.ods"
-file <- basename(Rurl)
-dir.create("data",showWarnings = FALSE)
-download.file(Rurl,destfile = paste0("data/",file))
-Rest <- read_ods(paste0("data/",file), sheet = "Table1_-_R", skip=8)
-names(Rest) <- c("","Date","UK_LowerBound","UK_UpperBound",
-                 "EEng_LowerBound","EEng_UpperBound",
-                 "Lon_LowerBound","Lon_UpperBound","Mid_LowerBound","Mid_UpperBound",
-                 "NEY_LowerBound","NEY_UpperBound","NW_LowerBound","NW_UpperBound",
-                 "SE_LowerBound","SE_UpperBound","SW_LowerBound","SW_UpperBound")
-View(Rest)
+library(xml2)
+library(rvest)
 
 # library(haven, warn.conflicts = FALSE, quietly = TRUE)
 # library(reshape2, warn.conflicts = FALSE, quietly = TRUE)
@@ -155,6 +144,61 @@ deathdat <- deathdat %>%
             arrange(date) %>%
             select(names(casedat))
 
+# Get the Government R estimates
+
+# URL data of where the information is held
+baeseurl <- "https://www.gov.uk/guidance/the-r-value-and-growth-rate"
+
+# Get the URL that holds the time series
+read_html(url) %>% html_nodes(xpath='//a[contains(text(),"time series of published")]') %>%
+  html_attr("href") -> Rurl
+
+# Get the filename from the URL
+file <- basename(Rurl)
+
+# Create a data subdirectory if it does not exist
+if(!dir.exists("data")){
+  dir.create("data")
+}
+
+# Download the file with the data
+download.file(Rurl,destfile = paste0("data/",file))
+
+# Read the contents of the file
+# skip the first 8 rows, table header and merged cells (read can't handle)
+# read "."s as NAs as the "." is used to mean not applicable
+Rest <- read_ods(paste0("data/",file), sheet = "Table1_-_R", skip=8, na=".")
+
+# Rename the columns
+names(Rest) <- c("","Date","UK_LowerBound","UK_UpperBound",
+                 "England_LowerBound","England_UpperBound",
+                 "EEng_LowerBound","EEng_UpperBound",
+                 "Lon_LowerBound","Lon_UpperBound","Mid_LowerBound","Mid_UpperBound",
+                 "NEY_LowerBound","NEY_UpperBound","NW_LowerBound","NW_UpperBound",
+                 "SE_LowerBound","SE_UpperBound","SW_LowerBound","SW_UpperBound")
+
+# Remove the first column that contains nothing
+Rest <- Rest[,-1]
+
+# Convert to a tibble
+Rest <- as_tibble(Rest)
+
+# Convert character dates to dates
+Rest$Date <- as.Date(Rest$Date, format="%d-%b-%y")
+
+# Remove NA values
+Rest %>% filter(!is.na(Date)) -> Rest
+
+# Plot the UB and LB for the UK R estimates, have added a line commented out
+# where you can plot your estimate for the R value - add your own data frame
+# change date and R to what you called the columns - you probably have to have
+# the same number of values corresponding to the same time frame - you may
+# also want the range for England rather than the UK. Remove these lines they
+# are for your benefit Graeme. You probably wnat to move this plot until after
+# you have calculated your own Restimate.
+Rest %>% ggplot(aes(x=Date)) + geom_ribbon(aes(Date,min=UK_LowerBound,max=UK_UpperBound),colour="red",alpha=0.25) +
+         ylab("R Estimate") + xlab("Date") # + geom_line(YourDataFrame,aes(date,R))
+
 #### Get tests for England pre-Sept by taking the post-Sept fraction of all tests that were in england (0.867)
 comdat$tests[1:58] = ukcasedat[1:58,"tests"] * 0.867
 rm(ukcasedat)
@@ -208,9 +252,9 @@ lines(comdat$allCases, col="blue")
 for (i in 2:ncol(casedat)) {
   for (j in 1:nrow(casedat)) {
     indexday=(j-1)%%7+1
-    casedat[j,i] <- as.integer(casedat[j,i]/days[indexday]) 
-  } 
-} 
+    casedat[j,i] <- as.integer(casedat[j,i]/days[indexday])
+  }
+}
 plot(unlist(casedat[,11]))
 for ( i  in 2:ncol(casedat) ){
 Xmasav = sum(casedat[153:164,i])/12
@@ -237,7 +281,7 @@ day7=i+3
 }
 #Plot varios types of smoothing on the R data
 plot(weeklyR)
-# Wanted to plot a Smooth spline discontinuous at 
+# Wanted to plot a Smooth spline discontinuous at
 #UK lockdown Oct 31 (day 98) -Dec 2  (day 130) Jan 6 (day 165)  (day 1 = July 25)
 #jnk1<-(smooth.spline(gjaR[1:98]))
 #jnk2<-unlist(smooth.spline(gjaR[99:130]))
