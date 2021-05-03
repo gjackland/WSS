@@ -1,3 +1,4 @@
+
 #!/usr/bin/env Rscript
 #
 # Weight, Scale and Shift (WSS) Code
@@ -310,18 +311,6 @@ for (ismooth in 4:28){
   lines(smooth.spline(as.vector(weeklyR),df=ismooth),col="red")}
 points(gjaR, col = "green")
 
-
-########### Reverse engineer case data from R
-
-PredictCases <- gjaR
-PredictCases[1]=1.0
-for(i in 2:length(gjaR)){
-  PredictCases[i]=PredictCases[i-1]*(1.0+(gjaR[i]-1)/genTime)
-  }
-plot(PredictCases)
-
-
-#####  Figures and analysis for https://www.medrxiv.org/content/10.1101/2021.04.14.21255385v1
 
 ##### Fig 1. - Heatmaps ####
 groups = colnames(casedat[2:20])
