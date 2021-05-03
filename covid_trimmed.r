@@ -1,6 +1,6 @@
 #!/usr/bin/env Rscript
 #
-# Weigh, Scale and Shift (WSS) Code
+# Weight, Scale and Shift (WSS) Code
 #
 
 # Copyright 2021 Graeme Ackland, The University of Edinburgh,
@@ -279,17 +279,32 @@ day1=i-3
 day7=i+3
       weeklyR[i]=sum(gjaR[day1:day7])/7
 }
-#Plot varios types of smoothing on the R data
+#Plot various types of smoothing on the R data
 plot(weeklyR)
 # Wanted to plot a Smooth spline discontinuous at
 #UK lockdown Oct 31 (day 98) -Dec 2  (day 130) Jan 6 (day 165)  (day 1 = July 25)
-#jnk1<-(smooth.spline(gjaR[1:98]))
-#jnk2<-unlist(smooth.spline(gjaR[99:130]))
-#plot(jnk1,df=4)
-#plot(smooth.spline(gjaR[99:130],df=4))
-#plot(smooth.spline(gjaR[131:164],df=4))
-#plot(smooth.spline(gjaR[165:length(gjaR)],df=4))
-#plot(smooth.spline(as.vector(gjaR),df=24))
+
+nospl=2
+test_delay=1
+lock1=98+test_delay
+unlock1=130+test_delay
+lock2=165+test_delay
+
+
+smoothR<-smooth.spline(gjaR,df=14)
+smoothR98<-smooth.spline(gjaR[1:lock1],df=nospl)
+smoothR98$x=smoothR98$x
+smoothR130<-smooth.spline(gjaR[lock1:unlock1],df=nospl)
+smoothR130$x=smoothR130$x+lock1
+smoothR164<-smooth.spline(gjaR[unlock1:lock2],df=nospl)
+smoothR164$x=smoothR164$x+unlock1
+smoothRend<-smooth.spline(gjaR[lock2:length(gjaR)],df=nospl)
+smoothRend$x=smoothRend$x+lock2
+plot(x=smoothR$x, smoothR$y)
+lines(smoothR98, col="red")
+lines(smoothR130)
+lines(smoothR164,col="blue")
+lines(smoothRend,col="green")
 for (ismooth in 4:28){
   lines(smooth.spline(as.vector(gjaR),df=ismooth))
   lines(smooth.spline(as.vector(weeklyR),df=ismooth),col="red")}
