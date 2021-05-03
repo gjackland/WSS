@@ -1,4 +1,3 @@
-
 #!/usr/bin/env Rscript
 #
 # Weight, Scale and Shift (WSS) Code
@@ -151,10 +150,11 @@ deathdat <- deathdat %>%
 baeseurl <- "https://www.gov.uk/guidance/the-r-value-and-growth-rate"
 
 # Get the URL that holds the time series
-read_html(url) %>% html_nodes(xpath='//a[contains(text(),"time series of published")]') %>%
-  html_attr("href") -> Rurl
+#read_html(url) %>% html_nodes(xpath='//a[contains(text(),"time series of published")]') %>%
+#  html_attr("href") -> Rurl
+Rurl <-  "https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/982867/R-and-growth-rate-time-series-30-Apr-2021.ods"
 
-# Get the filename from the URL
+# Get the file name from the URL
 file <- basename(Rurl)
 
 # Create a data subdirectory if it does not exist
@@ -197,7 +197,7 @@ Rest %>% filter(!is.na(Date)) -> Rest
 # also want the range for England rather than the UK. Remove these lines they
 # are for your benefit Graeme. You probably wnat to move this plot until after
 # you have calculated your own Restimate.
-Rest %>% ggplot(aes(x=Date)) + geom_ribbon(aes(Date,min=UK_LowerBound,max=UK_UpperBound),colour="red",alpha=0.25) +
+Rest %>% ggplot(aes(x=Date)) + geom_ribbon(aes(Date,min=England_LowerBound,max=England_UpperBound),colour="red",alpha=0.25) +
          ylab("R Estimate") + xlab("Date") # + geom_line(YourDataFrame,aes(date,R))
 
 #### Get tests for England pre-Sept by taking the post-Sept fraction of all tests that were in england (0.867)
