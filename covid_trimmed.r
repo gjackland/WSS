@@ -1,4 +1,3 @@
-
 #!/usr/bin/env Rscript
 #
 # Weight, Scale and Shift (WSS) Code
