@@ -21,9 +21,9 @@ library(ggplot2, warn.conflicts = FALSE, quietly = TRUE)
 library(lubridate, warn.conflicts = FALSE, quietly = TRUE)
 library(zoo, warn.conflicts = FALSE, quietly = TRUE)
 library(RColorBrewer, warn.conflicts = FALSE, quietly = TRUE)
-library(readODS)
-library(xml2)
-library(rvest)
+library(readODS, warn.conflicts = FALSE, quietly = TRUE)
+library(xml2, warn.conflicts = FALSE, quietly = TRUE)
+library(rvest, warn.conflicts = FALSE, quietly = TRUE)
 
 # library(haven, warn.conflicts = FALSE, quietly = TRUE)
 # library(reshape2, warn.conflicts = FALSE, quietly = TRUE)
@@ -150,8 +150,8 @@ deathdat <- deathdat %>%
 baeseurl <- "https://www.gov.uk/guidance/the-r-value-and-growth-rate"
 
 # Get the URL that holds the time series
-#read_html(url) %>% html_nodes(xpath='//a[contains(text(),"time series of published")]') %>%
-#  html_attr("href") -> Rurl
+read_html(url) %>% html_nodes(xpath='//a[contains(text(),"time series of published")]') %>%
+ html_attr("href") -> Rurl
 Rurl <-  "https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/982867/R-and-growth-rate-time-series-30-Apr-2021.ods"
 
 # Get the file name from the URL
