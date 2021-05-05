@@ -14,6 +14,7 @@ if(interactive()){
   rm(list = ls())
 }
 
+# Read packages used by the script
 library(readr, warn.conflicts = FALSE, quietly = TRUE)
 library(dplyr, warn.conflicts = FALSE, quietly = TRUE)
 library(tidyr, warn.conflicts = FALSE, quietly = TRUE)
@@ -21,25 +22,14 @@ library(ggplot2, warn.conflicts = FALSE, quietly = TRUE)
 library(lubridate, warn.conflicts = FALSE, quietly = TRUE)
 library(zoo, warn.conflicts = FALSE, quietly = TRUE)
 library(RColorBrewer, warn.conflicts = FALSE, quietly = TRUE)
-library(readODS)
-library(xml2)
-library(rvest)
+library(readODS, warn.conflicts = FALSE, quietly = TRUE)
+library(xml2, warn.conflicts = FALSE, quietly = TRUE)
+library(rvest, warn.conflicts = FALSE, quietly = TRUE)
 
-# library(haven, warn.conflicts = FALSE, quietly = TRUE)
-# library(reshape2, warn.conflicts = FALSE, quietly = TRUE)
-# library(stats, warn.conflicts = FALSE, quietly = TRUE)
-# library(ggseas, warn.conflicts = FALSE, quietly = TRUE)
-# library(astsa, warn.conflicts = FALSE, quietly = TRUE)
-# suppressMessages(library(forecast, warn.conflicts = FALSE, quietly = TRUE))
-# library(effsize, warn.conflicts = FALSE, quietly = TRUE)
-# library(ggthemes, warn.conflicts = FALSE, quietly = TRUE)
-# suppressMessages(library(corrplot, warn.conflicts = FALSE, quietly = TRUE))
-# library(rjson, warn.conflicts = FALSE, quietly = TRUE)
-# library(tibble, warn.conflicts = FALSE, quietly = TRUE)
-# library(ggnewscale, warn.conflicts = FALSE, quietly = TRUE)
-# library(scales, warn.conflicts = FALSE, quietly = TRUE)
-
+# Set the working directory from where the script is run.
 setwd(".")
+
+# Turn off scientific notation.
 options(scipen = 999)
 
 #### Read data ####
@@ -73,7 +63,8 @@ comdat <- comdat %>%  select(date,
                              allCases = newCasesBySpecimenDate,
                              allDeaths = newDeaths28DaysByDeathDate,
                              tests = newVirusTests,
-                             inputCases = newCasesBySpecimenDate) %>%
+                             inputCases = newCasesBySpecimenDate,
+                             fpCases = newCasesBySpecimenDate) %>%
                       filter(date >= startdate &
                              date <= enddate ) %>%
                       arrange(date)
@@ -139,22 +130,44 @@ deathdat <-  read_csv(file = deathurl, col_types = coltypes)
 # for dates between the start and end date inclusive and then ensure that we
 # end up with the same columns as for the case data above.
 deathdat <- deathdat %>%
-            select(date = date, age = age, values = deaths) %>%
-            pivot_wider(id_cols = date, names_from = age, values_from = values) %>%
-            select(-"60+", -"00_59") %>%
-            filter(date >= startdate & date <= enddate) %>%
-            arrange(date) %>%
-            select(names(casedat))
+  select(date = date, age = age, values = deaths) %>%
+  pivot_wider(id_cols = date, names_from = age, values_from = values) %>%
+  select(-"60+", -"00_59") %>%
+  filter(date >= startdate & date <= enddate) %>%
+  arrange(date) %>%
+  select(names(casedat))#deaths by age
+
+vacurl <- paste0(baseurl,
+                   "areaType=nation&",
+                   "areaCode=E92000001&",
+                   "metric=cumVaccinationFirstDoseUptakeByPublishDatePercentage&",
+                   "format=csv")
+
+# Explicitly define the types for the columns
+coltypes <- cols(col_character(), col_character(),col_character(),
+                 col_date(format="%Y-%m-%d"),col_character(),
+                 col_integer(), col_integer(), col_double())
+# Read the data
+vacdat <-  read_csv(file = vacurl, col_types = coltypes)
+
+# Map the ages column to become column headings for the different age groups
+# for dates between the start and end date inclusive and then ensure that we
+# end up with the same columns as for the case data above.
+vacdat <- vacdat %>%
+  select(date = date,  values =cumVaccinationFirstDoseUptakeByPublishDatePercentage
+)
 
 # Get the Government R estimates
 
 # URL data of where the information is held
+
 Rurl <- "https://www.gov.uk/guidance/the-r-value-and-growth-rate"
 
 # Get the URL that holds the time series
 #read_html(url) %>% html_nodes(xpath='//a[contains(text(),"time series of published")]') %>%
 #  html_attr("href") -> Rurl
 Rurl <-  "https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/982867/R-and-growth-rate-time-series-30-Apr-2021.ods"
+
 # Get the file name from the URL
 file <- basename(Rurl)
 
@@ -164,7 +177,7 @@ if(!dir.exists("data")){
 }
 
 # Download the file with the data
-download.file(Rurl,destfile = paste0("data/",file))
+download.file(Rurl,destfile = paste0("data/",file),quiet = TRUE)
 
 # Read the contents of the file
 # skip the first 8 rows, table header and merged cells (read can't handle)
@@ -205,15 +218,12 @@ Rest %>% ggplot(aes(x=Date)) + geom_ribbon(aes(Date,min=England_LowerBound,max=E
 comdat$tests[1:58] = ukcasedat[1:58,"tests"] * 0.867
 rm(ukcasedat)
 
-plot(comdat$allCases)
+plot(y=comdat$allCases, x=comdat$date, xlab="Date" , ylab="All cases")
 
-
-# MAA same with lines
-plot(comdat$allCases,type="l")
 
 # MAA: Same plot using ggplot
-comdat %>% ggplot(aes(x=date,y=allCases)) + geom_line() +
-           xlab("Date") + ylab("All cases")
+#comdat %>% ggplot(aes(x=date,y=allCases)) + geom_line() +
+#  xlab("Date") + ylab("All cases")
 
 
 #remove weekend effect
@@ -228,7 +238,7 @@ casetot=sum(days)
 days=7*days/casetot
 # Scale up cases
 
-  plot(comdat$allCases)
+
 for(i in 1:length(comdat$allCases)){
   indexday=(i-1)%%7+1
   comdat$allCases[i]=comdat$allCases[i]/days[indexday]}
@@ -248,15 +258,19 @@ for (i in 2:ncol(casedat)) {
     casedat[j,i] <- as.integer(casedat[j,i]/days[indexday])
   }
 }
-plot(unlist(casedat[,11]))
+
 for ( i  in 2:ncol(casedat) ){
 Xmasav = sum(casedat[153:164,i])/12
 Xmasgrad=Xmasav/25
 for (iday in 153:164){
   casedat[iday,i]=as.integer(Xmasav-Xmasgrad*(158.5-iday))}
 }
-lines(unlist(casedat[,11]))
+# Set false positive adjustment at 0.004
 
+for(i in 1:length(comdat$allCases)){
+  comdat$fpCases[i]=comdat$allCases[i]-0.004*as.integer(comdat$tests[i])}
+plot(comdat$allCases)
+lines(comdat$fpCases, col="red")
 
 #  Calculation of Rnumber, generation time = 6,5 days
 genTime=6.5
@@ -267,7 +281,7 @@ for(i in 2:length(gjaR)){
   #Stratanovitch calculus
   gjaR[i]<-(1+(comdat$allCases[i]-comdat$allCases[i-1])*genTime/(comdat$allCases[i-1]))
   rawR[i]<-(1+(comdat$inputCases[i]-comdat$inputCases[i-1])*genTime/(comdat$inputCases[i-1]))
-}
+  fpR[i]<-(1+(comdat$fpCases[i]-comdat$fpCases[i-1])*genTime/(comdat$fpCases[i-1]))}
 rawR[1]=rawR[2]
 gjaR[1]=gjaR[2]
 weeklyR<-gjaR
@@ -277,9 +291,9 @@ day7=i+3
       weeklyR[i]=sum(gjaR[day1:day7])/7.0
 }
 #Plot various types of smoothing on the R data
-plot(rawR,col="red")
-points(gjaR)
-lines(weeklyR)
+plot(x=comdat$date,y=rawR,ylab="R",xlab="date")
+points(x=comdat$date,y=gjaR,col="red")
+lines(x=comdat$date,y=weeklyR, lwd=3)
 # Wanted to plot a Smooth spline discontinuous at
 #UK lockdown Oct 31 (day 98) -Dec 2  (day 130) Jan 6 (day 165)  (day 1 = July 25)
 
@@ -290,6 +304,7 @@ unlock1=130+test_delay
 lock2=165+test_delay
 
 
+smoothweightR<-smooth.spline(gjaR,df=14,w=sqrt(comdat$allCases))
 smoothR<-smooth.spline(gjaR,df=14)
 smoothR98<-smooth.spline(gjaR[1:lock1],df=nospl)
 smoothR98$x=smoothR98$x
@@ -299,17 +314,19 @@ smoothR164<-smooth.spline(gjaR[unlock1:lock2],df=nospl)
 smoothR164$x=smoothR164$x+unlock1
 smoothRend<-smooth.spline(gjaR[lock2:length(gjaR)],df=nospl)
 smoothRend$x=smoothRend$x+lock2
-plot(x=smoothR$x, smoothR$y)
+plot(smoothweightR$y,x=comdat$date)
+points(smoothR$y,x=comdat$date,col="green")
 #Plot fits discontinuous at lockdown
-lines(smoothR98, col="red")
-lines(smoothR130)
-lines(smoothR164,col="blue")
-lines(smoothRend,col="green")
+plot(smoothweightR$y,x=comdat$date)
+lines(smoothR98, col="red", lwd=2)
+lines(smoothR130,col="red",lwd=2)
+lines(smoothR164,col="red",lwd=2)
+lines(smoothRend,col="red",lwd=2)
 lines(weeklyR)
 #  Plot R continuous with many splines.  Not sure when fitting noise here!
 for (ismooth in 4:28){
   lines(smooth.spline(as.vector(gjaR),df=ismooth))
-  lines(smooth.spline(as.vector(weeklyR),df=ismooth),col="red")}
+  lines(smooth.spline(as.vector(weeklyR),df=ismooth),col="blue")}
 points(gjaR, col = "green")
 lines(smooth.spline(gjaR,df=14))
 
@@ -325,7 +342,7 @@ PredictCases[1]=comdat$allCases[1]
 PredictCasesRaw[1]=PredictCases[1]
 PredictCasesSmoothR[1]=PredictCases[1]
 PredictCasesMeanR[1]<- PredictCases[1]
-smoothR<-smooth.spline(gjaR,df=276)
+smoothR<-smooth.spline(gjaR,df=24)
 meanR=mean(rawR)
 for(i in 2:length(gjaR)){
   PredictCases[i]=PredictCases[i-1]*(1.0+(gjaR[i]-1)/genTime)
@@ -333,15 +350,16 @@ for(i in 2:length(gjaR)){
   PredictCasesMeanR[i]=PredictCasesMeanR[i-1]*(1.0+(meanR-1)/genTime)
 #  Averaging R is not the same as averaging e^R 
 #  Noise suppresses the growth rate in the model, Smoothed R grows too fast  
-   ri=smoothR$y[i]*0.95
-#   ri=weeklyR[i]*0.95
+   ri=smoothR$y[i]*0.94663
+#   Multiplier chosen to match final cases with df=24
     PredictCasesSmoothR[i]=PredictCasesSmoothR[i-1]*(1.0+(ri-1)/genTime)
   }
-plot(PredictCases,ylim=c(0,50000))
-lines(comdat$allCases, col="red")
-lines(PredictCasesSmoothR, col="blue")
-lines(PredictCasesMeanR, col="green")
+plot(PredictCases,x=comdat$date,ylim=c(0,50000),xlab="Date")
+lines(comdat$allCases,x=comdat$date, col="red")
+lines(PredictCasesSmoothR,x=comdat$date, col="blue",lwd=2)
+lines(PredictCasesMeanR,x=comdat$date, col="green")
 sum(PredictCases)
+sum(PredictCasesSmoothR)
 sum(PredictCasesMeanR)
 
 #####  Figures and analysis for https://www.medrxiv.org/content/10.1101/2021.04.14.21255385v1

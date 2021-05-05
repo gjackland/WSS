@@ -3,3 +3,6 @@
 .RData
 .Ruserdata
 data/
+Rplots.pdf
+*.Rproj
+forpub.csv
