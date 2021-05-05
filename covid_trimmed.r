@@ -25,7 +25,10 @@ library(readODS, warn.conflicts = FALSE, quietly = TRUE)
 library(xml2, warn.conflicts = FALSE, quietly = TRUE)
 library(rvest, warn.conflicts = FALSE, quietly = TRUE)
 
+# Set the working directory from where the script is run.
 setwd(".")
+
+# Turn off scientific notation.
 options(scipen = 999)
 
 #### Read data ####
