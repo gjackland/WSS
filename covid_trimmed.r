@@ -14,6 +14,7 @@ if(interactive()){
   rm(list = ls())
 }
 
+# Read packages used by the script
 library(readr, warn.conflicts = FALSE, quietly = TRUE)
 library(dplyr, warn.conflicts = FALSE, quietly = TRUE)
 library(tidyr, warn.conflicts = FALSE, quietly = TRUE)
@@ -136,12 +137,13 @@ deathdat <- deathdat %>%
 # Get the Government R estimates
 
 # URL data of where the information is held
-baeseurl <- "https://www.gov.uk/guidance/the-r-value-and-growth-rate"
+baseurl <- "https://www.gov.uk/guidance/the-r-value-and-growth-rate"
 
 # Get the URL that holds the time series
-read_html(url) %>% html_nodes(xpath='//a[contains(text(),"time series of published")]') %>%
+read_html(baseurl) %>% html_nodes(xpath='//a[contains(text(),"time series of published")]') %>%
  html_attr("href") -> Rurl
-Rurl <-  "https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/982867/R-and-growth-rate-time-series-30-Apr-2021.ods"
+
+#Rurl <-  "https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/982867/R-and-growth-rate-time-series-30-Apr-2021.ods"
 
 # Get the file name from the URL
 file <- basename(Rurl)
@@ -152,7 +154,7 @@ if(!dir.exists("data")){
 }
 
 # Download the file with the data
-download.file(Rurl,destfile = paste0("data/",file))
+download.file(Rurl,destfile = paste0("data/",file),quiet = TRUE)
 
 # Read the contents of the file
 # skip the first 8 rows, table header and merged cells (read can't handle)
