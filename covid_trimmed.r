@@ -215,7 +215,8 @@ Rest %>% ggplot(aes(x=Date)) + geom_ribbon(aes(Date,min=England_LowerBound,max=E
          ylab("R Estimate") + xlab("Date") # + geom_line(YourDataFrame,aes(date,R))
 
 #### Get tests for England pre-Sept by taking the post-Sept fraction of all tests that were in england (0.867)
-comdat$tests[1:58] = ukcasedat[1:58,"tests"] * 0.867
+
+comdat$tests[1:58] = as.integer(ukcasedat$tests[1:58] * 0.867)
 rm(ukcasedat)
 
 plot(y=comdat$allCases, x=comdat$date, xlab="Date" , ylab="All cases")
