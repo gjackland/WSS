@@ -48,6 +48,7 @@ baseurl <- "https://api.coronavirus.data.gov.uk/v2/data?"
 
 # Start and end date - the data to collect data from
 startdate <- as.Date("2020/07/25")
+#  To one week ago (-7)
 enddate <-  Sys.Date()-7
 
 # Total cases, deaths, tests
@@ -71,7 +72,8 @@ comdat <-  read_csv(file = casesurl, col_types = coltypes)
 comdat <- comdat %>%  select(date,
                              allCases = newCasesBySpecimenDate,
                              allDeaths = newDeaths28DaysByDeathDate,
-                             tests = newVirusTests) %>%
+                             tests = newVirusTests,
+                             inputCases = newCasesBySpecimenDate) %>%
                       filter(date >= startdate &
                              date <= enddate ) %>%
                       arrange(date)
@@ -147,13 +149,12 @@ deathdat <- deathdat %>%
 # Get the Government R estimates
 
 # URL data of where the information is held
-baeseurl <- "https://www.gov.uk/guidance/the-r-value-and-growth-rate"
+Rurl <- "https://www.gov.uk/guidance/the-r-value-and-growth-rate"
 
 # Get the URL that holds the time series
 #read_html(url) %>% html_nodes(xpath='//a[contains(text(),"time series of published")]') %>%
 #  html_attr("href") -> Rurl
 Rurl <-  "https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/982867/R-and-growth-rate-time-series-30-Apr-2021.ods"
-
 # Get the file name from the URL
 file <- basename(Rurl)
 
@@ -227,15 +228,6 @@ casetot=sum(days)
 days=7*days/casetot
 # Scale up cases
 
-# MAA:start same as below but not modifying the original data
-#modcases <- comdat$allCases
-#for(i in 1:length(modcases)){
-#  indexday=(i-1)%%7+1
-#  modcases[i]=modcases[i]/days[indexday]}
-
-#plot(comdat$allCases,type="l")
-#  lines(modcases, col="red")
-#MAA end
   plot(comdat$allCases)
 for(i in 1:length(comdat$allCases)){
   indexday=(i-1)%%7+1
@@ -267,21 +259,27 @@ lines(unlist(casedat[,11]))
 
 
 #  Calculation of Rnumber, generation time = 6,5 days
-rm(gjaR)
 genTime=6.5
 gjaR<-unlist(comdat$allCases,use.names=FALSE)
+rawR<-unlist(comdat$inputCases,use.names=FALSE)
 for(i in 2:length(gjaR)){
-  gjaR[i]<-(1+(comdat$allCases[i]-comdat$allCases[i-1])*2*genTime/(comdat$allCases[i]+comdat$allCases[i-1]))
+  #  gjaR[i]<-(1+(comdat$allCases[i]-comdat$allCases[i-1])*2*genTime/(comdat$allCases[i]+comdat$allCases[i-1]))
+  #Stratanovitch calculus
+  gjaR[i]<-(1+(comdat$allCases[i]-comdat$allCases[i-1])*genTime/(comdat$allCases[i-1]))
+  rawR[i]<-(1+(comdat$inputCases[i]-comdat$inputCases[i-1])*genTime/(comdat$inputCases[i-1]))
 }
+rawR[1]=rawR[2]
 gjaR[1]=gjaR[2]
 weeklyR<-gjaR
 for(i in 4:(length(gjaR)-3)){
 day1=i-3
 day7=i+3
-      weeklyR[i]=sum(gjaR[day1:day7])/7
+      weeklyR[i]=sum(gjaR[day1:day7])/7.0
 }
 #Plot various types of smoothing on the R data
-plot(weeklyR)
+plot(rawR,col="red")
+points(gjaR)
+lines(weeklyR)
 # Wanted to plot a Smooth spline discontinuous at
 #UK lockdown Oct 31 (day 98) -Dec 2  (day 130) Jan 6 (day 165)  (day 1 = July 25)
 
@@ -302,16 +300,54 @@ smoothR164$x=smoothR164$x+unlock1
 smoothRend<-smooth.spline(gjaR[lock2:length(gjaR)],df=nospl)
 smoothRend$x=smoothRend$x+lock2
 plot(x=smoothR$x, smoothR$y)
+#Plot fits discontinuous at lockdown
 lines(smoothR98, col="red")
 lines(smoothR130)
 lines(smoothR164,col="blue")
 lines(smoothRend,col="green")
+lines(weeklyR)
+#  Plot R continuous with many splines.  Not sure when fitting noise here!
 for (ismooth in 4:28){
   lines(smooth.spline(as.vector(gjaR),df=ismooth))
   lines(smooth.spline(as.vector(weeklyR),df=ismooth),col="red")}
 points(gjaR, col = "green")
+lines(smooth.spline(gjaR,df=14))
+
+#Reverse Engineer cases from R-number - requires stratonovich calculus to get reversibility
+# Initializations 
+rm(PredictCases,PredictCasesSmoothR)
+PredictCases <- gjaR
+PredictCasesRaw <- rawR
+PredictCasesSmoothR<- gjaR
+PredictCasesMeanR<- gjaR
+#  Use the same weekend-adjusted initial condition, regardless of smoothing effect
+PredictCases[1]=comdat$allCases[1]
+PredictCasesRaw[1]=PredictCases[1]
+PredictCasesSmoothR[1]=PredictCases[1]
+PredictCasesMeanR[1]<- PredictCases[1]
+smoothR<-smooth.spline(gjaR,df=276)
+meanR=mean(rawR)
+for(i in 2:length(gjaR)){
+  PredictCases[i]=PredictCases[i-1]*(1.0+(gjaR[i]-1)/genTime)
+  PredictCasesRaw[i]=PredictCasesRaw[i-1]*(1.0+(rawR[i]-1)/genTime)
+  PredictCasesMeanR[i]=PredictCasesMeanR[i-1]*(1.0+(meanR-1)/genTime)
+#  Averaging R is not the same as averaging e^R 
+#  Noise suppresses the growth rate in the model, Smoothed R grows too fast  
+   ri=smoothR$y[i]*0.95
+#   ri=weeklyR[i]*0.95
+    PredictCasesSmoothR[i]=PredictCasesSmoothR[i-1]*(1.0+(ri-1)/genTime)
+  }
+plot(PredictCases,ylim=c(0,50000))
+lines(comdat$allCases, col="red")
+lines(PredictCasesSmoothR, col="blue")
+lines(PredictCasesMeanR, col="green")
+sum(PredictCases)
+sum(PredictCasesMeanR)
+
+#####  Figures and analysis for https://www.medrxiv.org/content/10.1101/2021.04.14.21255385v1
 
 
+####  From here on we're reproducing figures from https://www.medrxiv.org/content/10.1101/2021.04.14.21255385v1
 ##### Fig 1. - Heatmaps ####
 groups = colnames(casedat[2:20])
 # casemelt = melt(as.matrix(casedat[2:20]))
