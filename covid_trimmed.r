@@ -14,6 +14,7 @@ if(interactive()){
   rm(list = ls())
 }
 
+# Read packages used by the script
 library(readr, warn.conflicts = FALSE, quietly = TRUE)
 library(dplyr, warn.conflicts = FALSE, quietly = TRUE)
 library(tidyr, warn.conflicts = FALSE, quietly = TRUE)
@@ -21,25 +22,14 @@ library(ggplot2, warn.conflicts = FALSE, quietly = TRUE)
 library(lubridate, warn.conflicts = FALSE, quietly = TRUE)
 library(zoo, warn.conflicts = FALSE, quietly = TRUE)
 library(RColorBrewer, warn.conflicts = FALSE, quietly = TRUE)
-library(readODS)
-library(xml2)
-library(rvest)
+library(readODS, warn.conflicts = FALSE, quietly = TRUE)
+library(xml2, warn.conflicts = FALSE, quietly = TRUE)
+library(rvest, warn.conflicts = FALSE, quietly = TRUE)
 
-# library(haven, warn.conflicts = FALSE, quietly = TRUE)
-# library(reshape2, warn.conflicts = FALSE, quietly = TRUE)
-# library(stats, warn.conflicts = FALSE, quietly = TRUE)
-# library(ggseas, warn.conflicts = FALSE, quietly = TRUE)
-# library(astsa, warn.conflicts = FALSE, quietly = TRUE)
-# suppressMessages(library(forecast, warn.conflicts = FALSE, quietly = TRUE))
-# library(effsize, warn.conflicts = FALSE, quietly = TRUE)
-# library(ggthemes, warn.conflicts = FALSE, quietly = TRUE)
-# suppressMessages(library(corrplot, warn.conflicts = FALSE, quietly = TRUE))
-# library(rjson, warn.conflicts = FALSE, quietly = TRUE)
-# library(tibble, warn.conflicts = FALSE, quietly = TRUE)
-# library(ggnewscale, warn.conflicts = FALSE, quietly = TRUE)
-# library(scales, warn.conflicts = FALSE, quietly = TRUE)
-
+# Set the working directory from where the script is run.
 setwd(".")
+
+# Turn off scientific notation.
 options(scipen = 999)
 
 #### Read data ####
@@ -149,12 +139,23 @@ deathdat <- deathdat %>%
 # Get the Government R estimates
 
 # URL data of where the information is held
+<<<<<<< HEAD
 Rurl <- "https://www.gov.uk/guidance/the-r-value-and-growth-rate"
 
 # Get the URL that holds the time series
 #read_html(url) %>% html_nodes(xpath='//a[contains(text(),"time series of published")]') %>%
 #  html_attr("href") -> Rurl
 Rurl <-  "https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/982867/R-and-growth-rate-time-series-30-Apr-2021.ods"
+=======
+baseurl <- "https://www.gov.uk/guidance/the-r-value-and-growth-rate"
+
+# Get the URL that holds the time series
+read_html(baseurl) %>% html_nodes(xpath='//a[contains(text(),"time series of published")]') %>%
+ html_attr("href") -> Rurl
+
+#Rurl <-  "https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/982867/R-and-growth-rate-time-series-30-Apr-2021.ods"
+
+>>>>>>> ec8b1a6dc909e028400c2037fd4075228f59d3f5
 # Get the file name from the URL
 file <- basename(Rurl)
 
@@ -164,7 +165,7 @@ if(!dir.exists("data")){
 }
 
 # Download the file with the data
-download.file(Rurl,destfile = paste0("data/",file))
+download.file(Rurl,destfile = paste0("data/",file),quiet = TRUE)
 
 # Read the contents of the file
 # skip the first 8 rows, table header and merged cells (read can't handle)
