@@ -4,7 +4,7 @@
 #
 
 # Copyright 2021 Graeme Ackland, The University of Edinburgh,
-#                James Ackland The University of Cambridge
+#                James Ackland, The University of Cambridge
 
 #
 #### Header ####
