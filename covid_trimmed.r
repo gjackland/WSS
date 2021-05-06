@@ -137,6 +137,7 @@ deathdat <- deathdat %>%
   arrange(date) %>%
   select(names(casedat))#deaths by age
 
+# Get information on the number of vaccinations
 vacurl <- paste0(baseurl,
                    "areaType=nation&",
                    "areaCode=E92000001&",
@@ -153,8 +154,7 @@ vacdat <-  read_csv(file = vacurl, col_types = coltypes)
 # for dates between the start and end date inclusive and then ensure that we
 # end up with the same columns as for the case data above.
 vacdat <- vacdat %>%
-  select(date = date,  values =cumVaccinationFirstDoseUptakeByPublishDatePercentage
-)
+  select(date = date,  values =cumVaccinationFirstDoseUptakeByPublishDatePercentage)
 
 # Get the Government R estimates
 # URL data of where the information is held
@@ -281,12 +281,17 @@ lines(comdat$fpCases, col="red")
 genTime=6.5
 gjaR<-unlist(comdat$allCases,use.names=FALSE)
 rawR<-unlist(comdat$inputCases,use.names=FALSE)
+
+# Create a vector to hold the results
+fpR <- vector(mode=mode(comdat$fpCases),length=length(gjaR))
+
 for(i in 2:length(gjaR)){
   #  gjaR[i]<-(1+(comdat$allCases[i]-comdat$allCases[i-1])*2*genTime/(comdat$allCases[i]+comdat$allCases[i-1]))
   #Stratanovitch calculus
   gjaR[i]<-(1+(comdat$allCases[i]-comdat$allCases[i-1])*genTime/(comdat$allCases[i-1]))
   rawR[i]<-(1+(comdat$inputCases[i]-comdat$inputCases[i-1])*genTime/(comdat$inputCases[i-1]))
-  fpR[i]<-(1+(comdat$fpCases[i]-comdat$fpCases[i-1])*genTime/(comdat$fpCases[i-1]))}
+  fpR[i]<-(1+(comdat$fpCases[i]-comdat$fpCases[i-1])*genTime/(comdat$fpCases[i-1]))
+}
 rawR[1]=rawR[2]
 gjaR[1]=gjaR[2]
 weeklyR<-gjaR
