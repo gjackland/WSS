@@ -145,8 +145,7 @@ vacurl <- paste0(baseurl,
 
 # Explicitly define the types for the columns
 coltypes <- cols(col_character(), col_character(),col_character(),
-                 col_date(format="%Y-%m-%d"),col_character(),
-                 col_integer(), col_integer(), col_double())
+                 col_date(format="%Y-%m-%d"), col_double())
 # Read the data
 vacdat <-  read_csv(file = vacurl, col_types = coltypes)
 
