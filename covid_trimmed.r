@@ -47,7 +47,7 @@ casesurl <- paste0(baseurl,
                    "areaCode=E92000001&",
                    "metric=newCasesBySpecimenDate&",
                    "metric=newDeaths28DaysByDeathDate&",
-                   "metric=newVirusTests&",
+                   "metric=newPCRTestsByPublishDate&",
                    "format=csv")
 
 # Explicitly define the types for the columns
@@ -62,7 +62,7 @@ comdat <-  read_csv(file = casesurl, col_types = coltypes)
 comdat <- comdat %>%  select(date,
                              allCases = newCasesBySpecimenDate,
                              allDeaths = newDeaths28DaysByDeathDate,
-                             tests = newVirusTests,
+                             tests = newPCRTestsByPublishDate,
                              inputCases = newCasesBySpecimenDate,
                              fpCases = newCasesBySpecimenDate) %>%
   filter(date >= startdate &
@@ -72,7 +72,7 @@ comdat <- comdat %>%  select(date,
 # All UK cases (to estimate pre-Sept England Cases)
 ukcaseurl <- paste0(baseurl,
                     "areaType=overview&",
-                    "metric=newVirusTests&",
+                    "metric=newPCRTestsByPublishDate&",
                     "format=csv")
 
 # Explicitly define the types for the columns
@@ -82,7 +82,7 @@ coltypes <- cols(col_character(), col_character(),col_character(),
 ukcasedat <-  read_csv(file = ukcaseurl, col_types = coltypes)
 
 # Transform the data
-ukcasedat <- ukcasedat %>%  select(date = date, tests = newVirusTests) %>%
+ukcasedat <- ukcasedat %>%  select(date = date, tests = newPCRTestsByPublishDate) %>%
                             filter(date >= startdate &
                                    date <= enddate ) %>%
                             arrange(date)
@@ -137,6 +137,7 @@ deathdat <- deathdat %>%
   arrange(date) %>%
   select(names(casedat))#deaths by age
 
+
 #  Read in the Vaccination data
 vacurl <- paste0(baseurl,
                  "areaType=nation&",
@@ -146,8 +147,7 @@ vacurl <- paste0(baseurl,
 
 # Explicitly define the types for the columns
 coltypes <- cols(col_character(), col_character(),col_character(),
-                 col_date(format="%Y-%m-%d"),col_character(),
-                 col_integer(), col_integer(), col_double())
+                 col_date(format="%Y-%m-%d"), col_double()) 
 # Read the data
 vacdat <-  read_csv(file = vacurl, col_types = coltypes)
 
@@ -155,8 +155,7 @@ vacdat <-  read_csv(file = vacurl, col_types = coltypes)
 # for dates between the start and end date inclusive and then ensure that we
 # end up with the same columns as for the case data above.
 vacdat <- vacdat %>%
-  select(date = date,  values =cumVaccinationFirstDoseUptakeByPublishDatePercentage
-)
+  select(date = date,  values =cumVaccinationFirstDoseUptakeByPublishDatePercentage)
 
 #  Regional data
 regurl <- paste0(baseurl,
@@ -183,66 +182,63 @@ regdeaths <- regdat %>%  select(date,areaName,
   filter(date >= startdate &
            date <= enddate )%>%
   arrange(date)
-rm(regdat)
 
-for (i in 1:length(regdat$areaCode)){
-regdat$areaCode[i]=as.integer(substr(regdat$areaCode[i],7,9))}
+#  Use integer areaCodes
+#for (i in 1:length(regdat$areaCode)){
+#regdat$areaCode[i]=as.integer(substr(regdat$areaCode[i],7,9))}
 # Get the Government R estimates
-
 # URL data of where the information is held
-
-Rurl <- "https://www.gov.uk/guidance/the-r-value-and-growth-rate"
-
-# Get the URL that holds the time series
-#read_html(url) %>% html_nodes(xpath='//a[contains(text(),"time series of published")]') %>%
+# Rurl <- "https://www.gov.uk/guidance/the-r-value-and-growth-rate"
+#
+# # Get the URL that holds the time series
+# read_html(Rurl) %>% html_nodes(xpath='//a[contains(text(),"time series of published")]') %>%
 #  html_attr("href") -> Rurl
-Rurl <-  "https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/982867/R-and-growth-rate-time-series-30-Apr-2021.ods"
+#
+# # Get the file name from the URL
+# file <- basename(Rurl)
+#
+# # Create a data subdirectory if it does not exist
+# if(!dir.exists("data")){
+#   dir.create("data")
+# }
+#
+# # Download the file with the data if it does not already exist
+# if(!file.exists(paste0("data/",file))){
+#   download.file(Rurl,destfile = paste0("data/",file),quiet = TRUE)
+# }
+#
+# # Read the contents of the file
+# # skip the first 8 rows, table header and merged cells (read can't handle)
+# # read "."s as NAs as the "." is used to mean not applicable
+# Rest <- read_ods(paste0("data/",file), sheet = "Table1_-_R", skip=8, na=".")
+#
+# # Rename the columns
+# names(Rest) <- c("","Date","UK_LowerBound","UK_UpperBound",
+#                  "England_LowerBound","England_UpperBound",
+#                  "EEng_LowerBound","EEng_UpperBound",
+#                  "Lon_LowerBound","Lon_UpperBound","Mid_LowerBound","Mid_UpperBound",
+#                  "NEY_LowerBound","NEY_UpperBound","NW_LowerBound","NW_UpperBound",
+#                  "SE_LowerBound","SE_UpperBound","SW_LowerBound","SW_UpperBound")
+#
+# # Remove the first column that contains nothing
+# Rest <- Rest[,-1]
+#
+# # Convert to a tibble
+# Rest <- as_tibble(Rest)
+#
+# # Convert character dates to dates
+# Rest$Date <- as.Date(Rest$Date, format="%d-%b-%y")
+#
+# # Remove NA values
+# Rest %>% filter(!is.na(Date)) -> Rest
+#
+# # Write the data to a CSV file
+# write_csv(Rest,file="data/R_estimate.csv")
 
-# Get the file name from the URL
-file <- basename(Rurl)
+# Read in the data from a csv file
+Rest <- read_csv(file="data/R_estimate.csv")
 
-# Create a data subdirectory if it does not exist
-if(!dir.exists("data")){
-  dir.create("data")
-}
 
-# Download the file with the data
-download.file(Rurl,destfile = paste0("data/",file),quiet = TRUE)
-
-# Read the contents of the file
-# skip the first 8 rows, table header and merged cells (read can't handle)
-# read "."s as NAs as the "." is used to mean not applicable
-Rest <- read_ods(paste0("data/",file), sheet = "Table1_-_R", skip=8, na=".")
-
-# Rename the columns
-names(Rest) <- c("","Date","UK_LowerBound","UK_UpperBound",
-                 "England_LowerBound","England_UpperBound",
-                 "EEng_LowerBound","EEng_UpperBound",
-                 "Lon_LowerBound","Lon_UpperBound","Mid_LowerBound","Mid_UpperBound",
-                 "NEY_LowerBound","NEY_UpperBound","NW_LowerBound","NW_UpperBound",
-                 "SE_LowerBound","SE_UpperBound","SW_LowerBound","SW_UpperBound")
-
-# Remove the first column that contains nothing
-Rest <- Rest[,-1]
-
-# Convert to a tibble
-Rest <- as_tibble(Rest)
-
-# Convert character dates to dates
-Rest$Date <- as.Date(Rest$Date, format="%d-%b-%y")
-
-# Remove NA values
-Rest %>% filter(!is.na(Date)) -> Rest
-
-# Plot the UB and LB for the UK R estimates, have added a line commented out
-# where you can plot your estimate for the R value - add your own data frame
-# change date and R to what you called the columns - you probably have to have
-# the same number of values corresponding to the same time frame - you may
-# also want the range for England rather than the UK. Remove these lines they
-# are for your benefit Graeme. You probably wnat to move this plot until after
-# you have calculated your own Restimate.
-Rest %>% ggplot(aes(x=Date)) + geom_ribbon(aes(Date,min=England_LowerBound,max=England_UpperBound),colour="red",alpha=0.25) +
-         ylab("R Estimate") + xlab("Date") # + geom_line(YourDataFrame,aes(date,R))
 
 #### Get tests for England pre-Sept by taking the post-Sept fraction of all tests that were in england (0.867)
 
@@ -307,12 +303,18 @@ lines(comdat$fpCases, col="red")
 genTime=6.5
 gjaR<-unlist(comdat$allCases,use.names=FALSE)
 rawR<-unlist(comdat$inputCases,use.names=FALSE)
-for(i in 2:length(gjaR)){
-  #  gjaR[i]<-(1+(comdat$allCases[i]-comdat$allCases[i-1])*2*genTime/(comdat$allCases[i]+comdat$allCases[i-1]))
+
+# Create a vector to hold the results
+fpR <- vector(mode=mode(comdat$fpCases),length=length(gjaR))
+
+
+ #Ito: gjaR[i]<-(1+(comdat$allCases[i]-comdat$allCases[i-1])*2*genTime/(comdat$allCases[i]+comdat$allCases[i-1]))
   #Stratanovitch calculus
+for(i in 2:length(gjaR)){
   gjaR[i]<-(1+(comdat$allCases[i]-comdat$allCases[i-1])*genTime/(comdat$allCases[i-1]))
   rawR[i]<-(1+(comdat$inputCases[i]-comdat$inputCases[i-1])*genTime/(comdat$inputCases[i-1]))
-  fpR[i]<-(1+(comdat$fpCases[i]-comdat$fpCases[i-1])*genTime/(comdat$fpCases[i-1]))}
+  fpR[i]<-(1+(comdat$fpCases[i]-comdat$fpCases[i-1])*genTime/(comdat$fpCases[i-1]))
+}
 rawR[1]=rawR[2]
 gjaR[1]=gjaR[2]
 weeklyR<-gjaR
@@ -325,6 +327,8 @@ day7=i+3
 plot(x=comdat$date,y=rawR,ylab="R",xlab="date")
 points(x=comdat$date,y=gjaR,col="red")
 lines(x=comdat$date,y=weeklyR, lwd=3)
+lines(y=Rest$England_LowerBound,x=Rest$Date)
+lines(y=Rest$England_UpperBound,x=Rest$Date)
 # Wanted to plot a Smooth spline discontinuous at
 #UK lockdown Oct 31 (day 98) -Dec 2  (day 130) Jan 6 (day 165)  (day 1 = July 25)
 
@@ -336,6 +340,7 @@ lock2=165+test_delay
 
 
 smoothweightR<-smooth.spline(gjaR,df=14,w=sqrt(comdat$allCases))
+smoothweightRfp<-smooth.spline(fpR,df=14,w=sqrt(comdat$allCases))
 smoothR<-smooth.spline(gjaR,df=14)
 smoothR98<-smooth.spline(gjaR[1:lock1],df=nospl)
 smoothR98$x=smoothR98$x
@@ -347,23 +352,37 @@ smoothRend<-smooth.spline(gjaR[lock2:length(gjaR)],df=nospl)
 smoothRend$x=smoothRend$x+lock2
 plot(smoothweightR$y,x=comdat$date)
 points(smoothR$y,x=comdat$date,col="green")
-#Plot fits discontinuous at lockdown
+#Plot R estimate vs data and fits discontinuous at lockdown
+plot(smoothweightR$y,x=comdat$date)
+lines(smoothweightRfp$y,x=comdat$date)
+lines(y=Rest$England_LowerBound,x=Rest$Date)
+lines(y=Rest$England_UpperBound,x=Rest$Date)
 plot(smoothweightR$y,x=comdat$date)
 lines(smoothR98, col="red", lwd=2)
 lines(smoothR130,col="red",lwd=2)
 lines(smoothR164,col="red",lwd=2)
 lines(smoothRend,col="red",lwd=2)
 lines(weeklyR)
+
 #  Plot R continuous with many splines.  Not sure when fitting noise here!
 for (ismooth in 4:28){
   lines(smooth.spline(as.vector(gjaR),df=ismooth))
   lines(smooth.spline(as.vector(weeklyR),df=ismooth),col="blue")}
 points(gjaR, col = "green")
+# Plot the UB and LB for the UK R estimates, have added a line commented out
+# where you can plot your estimate for the R value - add your own data frame
+# change date and R to what you called the columns - you probably have to have
+# the same number of values corresponding to the same time frame - you may
+# also want the range for England rather than the UK. Remove these lines they
+# are for your benefit Graeme. You probably wnat to move this plot until after
+# you have calculated your own Restimate.
+Rest %>% ggplot(aes(x=Date)) + geom_ribbon(aes(Date,min=England_LowerBound,max=England_UpperBound),colour="red",alpha=0.25) +
+  ylab("R Estimate") + xlab("Date") # + geom_line(comdat,aes(date,R))
 lines(smooth.spline(gjaR,df=14))
 
 #Reverse Engineer cases from R-number - requires stratonovich calculus to get reversibility
-# Initializations 
-rm(PredictCases,PredictCasesSmoothR)
+# Initializations
+#rm(PredictCases,PredictCasesSmoothR)
 PredictCases <- gjaR
 PredictCasesRaw <- rawR
 PredictCasesSmoothR<- gjaR
@@ -379,8 +398,8 @@ for(i in 2:length(gjaR)){
   PredictCases[i]=PredictCases[i-1]*(1.0+(gjaR[i]-1)/genTime)
   PredictCasesRaw[i]=PredictCasesRaw[i-1]*(1.0+(rawR[i]-1)/genTime)
   PredictCasesMeanR[i]=PredictCasesMeanR[i-1]*(1.0+(meanR-1)/genTime)
-#  Averaging R is not the same as averaging e^R 
-#  Noise suppresses the growth rate in the model, Smoothed R grows too fast  
+#  Averaging R is not the same as averaging e^R
+#  Noise suppresses the growth rate in the model, Smoothed R grows too fast
    ri=smoothR$y[i]*0.94663
 #   Multiplier chosen to match final cases with df=24
     PredictCasesSmoothR[i]=PredictCasesSmoothR[i-1]*(1.0+(ri-1)/genTime)
