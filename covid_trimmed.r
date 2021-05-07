@@ -65,9 +65,9 @@ comdat <- comdat %>%  select(date,
                              tests = newVirusTests,
                              inputCases = newCasesBySpecimenDate,
                              fpCases = newCasesBySpecimenDate) %>%
-                      filter(date >= startdate &
-                             date <= enddate ) %>%
-                      arrange(date)
+  filter(date >= startdate &
+           date <= enddate ) %>%
+  arrange(date)
 
 # All UK cases (to estimate pre-Sept England Cases)
 ukcaseurl <- paste0(baseurl,
@@ -106,11 +106,11 @@ casedat <-  read_csv(file = ageurl, col_types = coltypes)
 # 60+ and 00_59 columns, filter dates to be between the start and end
 # dates and order the output by date
 casedat <- casedat %>%
-           select(date = date, age = age, values = cases) %>%
-           pivot_wider(id_cols = date, names_from = age, values_from = values) %>%
-           select(-unassigned, -"60+", -"00_59") %>%
-           filter(date >= startdate & date <= enddate) %>%
-           arrange(date)
+  select(date = date, age = age, values = cases) %>%
+  pivot_wider(id_cols = date, names_from = age, values_from = values) %>%
+  select(-unassigned, -"60+", -"00_59") %>%
+  filter(date >= startdate & date <= enddate) %>%
+  arrange(date)
 
 #deaths by age
 deathurl <- paste0(baseurl,
@@ -137,11 +137,12 @@ deathdat <- deathdat %>%
   arrange(date) %>%
   select(names(casedat))#deaths by age
 
+#  Read in the Vaccination data
 vacurl <- paste0(baseurl,
-                   "areaType=nation&",
-                   "areaCode=E92000001&",
-                   "metric=cumVaccinationFirstDoseUptakeByPublishDatePercentage&",
-                   "format=csv")
+                 "areaType=nation&",
+                 "areaCode=E92000001&",
+                 "metric=cumVaccinationFirstDoseUptakeByPublishDatePercentage&",
+                 "format=csv")
 
 # Explicitly define the types for the columns
 coltypes <- cols(col_character(), col_character(),col_character(),
@@ -157,6 +158,35 @@ vacdat <- vacdat %>%
   select(date = date,  values =cumVaccinationFirstDoseUptakeByPublishDatePercentage
 )
 
+#  Regional data
+regurl <- paste0(baseurl,
+                 "areaType=region&",
+                 "metric=newDeaths28DaysByDeathDate&",
+                 "metric=newCasesBySpecimenDate&",
+                 "format=csv")
+
+regdat <-  read_csv(file = regurl)
+
+
+# Transform the data
+regcases <- regdat %>%  select(date,areaName,areaCode,
+                               Cases = newCasesBySpecimenDate
+                               ) %>%
+  pivot_wider(id_cols = date, names_from = areaName, values_from = Cases) %>%
+  filter(date >= startdate &
+           date <= enddate )%>%
+  arrange(date)
+regdeaths <- regdat %>%  select(date,areaName,
+                               Deaths = newDeaths28DaysByDeathDate,
+                               ) %>%
+  pivot_wider(id_cols = date, names_from = areaName, values_from = Deaths) %>%
+  filter(date >= startdate &
+           date <= enddate )%>%
+  arrange(date)
+rm(regdat)
+
+for (i in 1:length(regdat$areaCode)){
+regdat$areaCode[i]=as.integer(substr(regdat$areaCode[i],7,9))}
 # Get the Government R estimates
 
 # URL data of where the information is held
@@ -436,6 +466,29 @@ for (day in 28:nrow(comdat)) {
 }
 rm(day)
 
+#  Spread Regional cases by the distribution
+regpredict<-regdeaths
+for (area in 2:10){
+for (day in 28:nrow(comdat)){
+  regpredict[day,area] = sum(regcases[(day-27):day,area] * rev(lndist))
+}}
+rm(day,area)
+plot(regpredict$London,x=regdeaths$date)
+lines(regdeaths$London*40,x=regdeaths$date)
+lines(regcases$London,x=regpredict$date)
+plot(regpredict$`North East`,x=regdeaths$date)
+lines(regcases$`North East`,x=regpredict$date)
+plot(regpredict$`North West`,x=regpredict$date)
+lines(regpredict$`North West`,x=regpredict$date)
+lines(regpredict$`South West`,x=regpredict$date)
+lines(regpredict$`South East`,x=regpredict$date)
+lines(regpredict$`East Midlands` ,x=regpredict$date)
+lines(regpredict$`East of England`,x=regpredict$date)
+lines(regpredict$`West Midlands`,x=regpredict$date)
+lines(regpredict$`Yorkshire and The Humber`,x=regpredict$date)
+
+for (area in 2:10){
+  lines(regpredict[2:279,area])}
 #Plots
 logcasesageplot = ggplot(logcases, aes(x = date)) +
   geom_line(aes(y = rowSums(logcases[,2:20]))) +
@@ -472,6 +525,11 @@ for (day in 28:nrow(comdat)) {
   comdat$gamcaseload[day] = sum(comdat$allCases[(day-27):day] * rev(gamdist))
 }
 
+#  Spread Regional cases by the distribution
+regdat$gamcaseload = 0
+for (day in 28:nrow(comdat)) {
+  regdat$gamcaseload[day] = sum(regdat$allCases[(day-27):day] * rev(gamdist))
+}
 
 #### Fig 2. Distributions ####
 distdat = data.frame(days = 1:29, ln = c(lndist, 0), gam = c(gamdist, 0), exp = c(dexp(1:28, rate = 0.1), 0),
