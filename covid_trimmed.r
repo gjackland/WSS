@@ -340,14 +340,14 @@ for (ismooth in 4:28){
 points(gjaR, col = "green")
 lines(smooth.spline(gjaR,df=14))
 
-#Reverse Engineer cases from R-number - requires stratonovich calculus to get reversibility
+# Reverse Engineer cases from R-number - requires stratonovich calculus to get reversibility
 # Initializations
-rm(PredictCases,PredictCasesSmoothR)
+
 PredictCases <- gjaR
 PredictCasesRaw <- rawR
 PredictCasesSmoothR<- gjaR
 PredictCasesMeanR<- gjaR
-#  Use the same weekend-adjusted initial condition, regardless of smoothing effect
+# Use the same weekend-adjusted initial condition, regardless of smoothing effect
 PredictCases[1]=comdat$allCases[1]
 PredictCasesRaw[1]=PredictCases[1]
 PredictCasesSmoothR[1]=PredictCases[1]
