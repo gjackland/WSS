@@ -225,13 +225,7 @@ rm(ukcasedat)
 
 plot(y=comdat$allCases, x=comdat$date, xlab="Date" , ylab="All cases")
 
-
-# MAA: Same plot using ggplot
-#comdat %>% ggplot(aes(x=date,y=allCases)) + geom_line() +
-#  xlab("Date") + ylab("All cases")
-
-
-#remove weekend effect
+# remove weekend effect
 days <-1:7
 weeks<-as.integer(length(comdat$allCases)/7)-1
 
@@ -241,19 +235,20 @@ for(i in 1:weeks){
 }
 casetot=sum(days)
 days=7*days/casetot
+
 # Scale up cases
-
-
 for(i in 1:length(comdat$allCases)){
   indexday=(i-1)%%7+1
-  comdat$allCases[i]=comdat$allCases[i]/days[indexday]}
+  comdat$allCases[i]=comdat$allCases[i]/days[indexday]
+}
 lines(comdat$allCases, col="red")
 
 # Fix Xmas anomaly in comdat
 Xmasav = sum(comdat$allCases[153:164])/12
 Xmasgrad=Xmasav/25
 for (i in 153:164){
-  comdat$allCases[i]=Xmasav-Xmasgrad*(158.5-i)}
+  comdat$allCases[i]=Xmasav-Xmasgrad*(158.5-i)
+}
 lines(comdat$allCases, col="blue")
 
 
@@ -264,16 +259,18 @@ for (i in 2:ncol(casedat)) {
   }
 }
 
-for ( i  in 2:ncol(casedat) ){
-Xmasav = sum(casedat[153:164,i])/12
-Xmasgrad=Xmasav/25
-for (iday in 153:164){
-  casedat[iday,i]=as.integer(Xmasav-Xmasgrad*(158.5-iday))}
+for (i in 2:ncol(casedat) ){
+   Xmasav = sum(casedat[153:164,i])/12
+   Xmasgrad=Xmasav/25
+   for (iday in 153:164){
+     casedat[iday,i]=as.integer(Xmasav-Xmasgrad*(158.5-iday))
+     }
 }
-# Set false positive adjustment at 0.004
 
+# Set false positive adjustment at 0.004
 for(i in 1:length(comdat$allCases)){
-  comdat$fpCases[i]=comdat$allCases[i]-0.004*as.integer(comdat$tests[i])}
+  comdat$fpCases[i]=comdat$allCases[i]-0.004*as.integer(comdat$tests[i])
+}
 plot(comdat$allCases)
 lines(comdat$fpCases, col="red")
 
@@ -305,14 +302,13 @@ plot(x=comdat$date,y=rawR,ylab="R",xlab="date")
 points(x=comdat$date,y=gjaR,col="red")
 lines(x=comdat$date,y=weeklyR, lwd=3)
 # Wanted to plot a Smooth spline discontinuous at
-#UK lockdown Oct 31 (day 98) -Dec 2  (day 130) Jan 6 (day 165)  (day 1 = July 25)
+# UK lockdown Oct 31 (day 98) -Dec 2  (day 130) Jan 6 (day 165)  (day 1 = July 25)
 
 nospl=2
 test_delay=1
 lock1=98+test_delay
 unlock1=130+test_delay
 lock2=165+test_delay
-
 
 smoothweightR<-smooth.spline(gjaR,df=14,w=sqrt(comdat$allCases))
 smoothR<-smooth.spline(gjaR,df=14)
@@ -326,23 +322,25 @@ smoothRend<-smooth.spline(gjaR[lock2:length(gjaR)],df=nospl)
 smoothRend$x=smoothRend$x+lock2
 plot(smoothweightR$y,x=comdat$date)
 points(smoothR$y,x=comdat$date,col="green")
-#Plot fits discontinuous at lockdown
+
+# Plot fits discontinuous at lockdown
 plot(smoothweightR$y,x=comdat$date)
 lines(smoothR98, col="red", lwd=2)
 lines(smoothR130,col="red",lwd=2)
 lines(smoothR164,col="red",lwd=2)
 lines(smoothRend,col="red",lwd=2)
 lines(weeklyR)
-#  Plot R continuous with many splines.  Not sure when fitting noise here!
+
+# Plot R continuous with many splines.  Not sure when fitting noise here!
 for (ismooth in 4:28){
   lines(smooth.spline(as.vector(gjaR),df=ismooth))
-  lines(smooth.spline(as.vector(weeklyR),df=ismooth),col="blue")}
+  lines(smooth.spline(as.vector(weeklyR),df=ismooth),col="blue")
+}
 points(gjaR, col = "green")
 lines(smooth.spline(gjaR,df=14))
 
 # Reverse Engineer cases from R-number - requires stratonovich calculus to get reversibility
 # Initializations
-
 PredictCases <- gjaR
 PredictCasesRaw <- rawR
 PredictCasesSmoothR<- gjaR
@@ -368,9 +366,11 @@ plot(PredictCases,x=comdat$date,ylim=c(0,50000),xlab="Date")
 lines(comdat$allCases,x=comdat$date, col="red")
 lines(PredictCasesSmoothR,x=comdat$date, col="blue",lwd=2)
 lines(PredictCasesMeanR,x=comdat$date, col="green")
-sum(PredictCases)
-sum(PredictCasesSmoothR)
-sum(PredictCasesMeanR)
+if(interactive()){
+   sum(PredictCases)
+   sum(PredictCasesSmoothR)
+   sum(PredictCasesMeanR)
+}
 
 #####  Figures and analysis for https://www.medrxiv.org/content/10.1101/2021.04.14.21255385v1
 
