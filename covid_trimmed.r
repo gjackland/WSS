@@ -4,7 +4,7 @@
 #
 
 # Copyright 2021 Graeme Ackland, The University of Edinburgh,
-#                James Ackland The University of Cambridge
+#                James Ackland, The University of Cambridge
 
 #
 #### Header ####
@@ -22,7 +22,6 @@ library(ggplot2, warn.conflicts = FALSE, quietly = TRUE)
 library(lubridate, warn.conflicts = FALSE, quietly = TRUE)
 library(zoo, warn.conflicts = FALSE, quietly = TRUE)
 library(RColorBrewer, warn.conflicts = FALSE, quietly = TRUE)
-
 
 # Set the working directory from where the script is run.
 setwd(".")
