@@ -249,8 +249,8 @@ plot(y=comdat$allCases, x=comdat$date, xlab="Date" , ylab="All cases")
 
 
 # MAA: Same plot using ggplot
-#comdat %>% ggplot(aes(x=date,y=allCases)) + geom_line() +
-#  xlab("Date") + ylab("All cases")
+comdat %>% ggplot(aes(x=date,y=allCases)) + geom_line() +
+  xlab("Date") + ylab("All cases")
 
 
 #remove weekend effect
@@ -306,7 +306,7 @@ rawR<-unlist(comdat$inputCases,use.names=FALSE)
 
 # Create a vector to hold the results
 fpR <- vector(mode=mode(comdat$fpCases),length=length(gjaR))
-
+bylogR <-fpR
 
  #Ito: gjaR[i]<-(1+(comdat$allCases[i]-comdat$allCases[i-1])*2*genTime/(comdat$allCases[i]+comdat$allCases[i-1]))
   #Stratanovitch calculus
@@ -314,9 +314,12 @@ for(i in 2:length(gjaR)){
   gjaR[i]<-(1+(comdat$allCases[i]-comdat$allCases[i-1])*genTime/(comdat$allCases[i-1]))
   rawR[i]<-(1+(comdat$inputCases[i]-comdat$inputCases[i-1])*genTime/(comdat$inputCases[i-1]))
   fpR[i]<-(1+(comdat$fpCases[i]-comdat$fpCases[i-1])*genTime/(comdat$fpCases[i-1]))
-}
+  bylogR[i]<-1+log(comdat$fpCases[i]/comdat$fpCases[i-1])*genTime
+  }
 rawR[1]=rawR[2]
 gjaR[1]=gjaR[2]
+bylogR[1]=bylogR[2]
+ fpR[1]=fpR[2]
 weeklyR<-gjaR
 for(i in 4:(length(gjaR)-3)){
 day1=i-3
@@ -332,15 +335,15 @@ lines(y=Rest$England_UpperBound,x=Rest$Date)
 # Wanted to plot a Smooth spline discontinuous at
 #UK lockdown Oct 31 (day 98) -Dec 2  (day 130) Jan 6 (day 165)  (day 1 = July 25)
 
-nospl=2
-test_delay=1
+nospl=5
+test_delay=0
 lock1=98+test_delay
 unlock1=130+test_delay
 lock2=165+test_delay
 
 
-smoothweightR<-smooth.spline(gjaR,df=14,w=sqrt(comdat$allCases))
-smoothweightRfp<-smooth.spline(fpR,df=14,w=sqrt(comdat$allCases))
+smoothweightR<-smooth.spline(gjaR,df=19,w=sqrt(comdat$allCases))
+smoothweightRfp<-smooth.spline(fpR,df=19,w=sqrt(comdat$fpCases))
 smoothR<-smooth.spline(gjaR,df=14)
 smoothR98<-smooth.spline(gjaR[1:lock1],df=nospl)
 smoothR98$x=smoothR98$x
@@ -353,22 +356,21 @@ smoothRend$x=smoothRend$x+lock2
 plot(smoothweightR$y,x=comdat$date)
 points(smoothR$y,x=comdat$date,col="green")
 #Plot R estimate vs data and fits discontinuous at lockdown
-plot(smoothweightR$y,x=comdat$date)
-lines(smoothweightRfp$y,x=comdat$date)
+lines(smoothweightRfp$y,x=comdat$date,col="red")
 lines(y=Rest$England_LowerBound,x=Rest$Date)
 lines(y=Rest$England_UpperBound,x=Rest$Date)
-plot(smoothweightR$y,x=comdat$date)
-lines(smoothR98, col="red", lwd=2)
+plot(smoothweightR$y,ylab="R-number",xlab="Day",w=sqrt(comdat$allCases))
+lines(smoothR98$y, col="red", lwd=2)
 lines(smoothR130,col="red",lwd=2)
 lines(smoothR164,col="red",lwd=2)
 lines(smoothRend,col="red",lwd=2)
 lines(weeklyR)
-
+plot(smoothweightR$y,ylab="R-number",xlab="Day",w=sqrt(comdat$allCases))
 #  Plot R continuous with many splines.  Not sure when fitting noise here!
 for (ismooth in 4:28){
-  lines(smooth.spline(as.vector(gjaR),df=ismooth))
+#   lines(smooth.spline(as.vector(gjaR),df=ismooth,w=sqrt(comdat$allCases)))
   lines(smooth.spline(as.vector(weeklyR),df=ismooth),col="blue")}
-points(gjaR, col = "green")
+points(gjaR, col = "red")
 # Plot the UB and LB for the UK R estimates, have added a line commented out
 # where you can plot your estimate for the R value - add your own data frame
 # change date and R to what you called the columns - you probably have to have
