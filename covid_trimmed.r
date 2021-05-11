@@ -174,7 +174,6 @@ coltypes <-  cols(
 # Read in the data
 regdat <-  read_csv(file = regurl, col_types = coltypes)
 
-
 # Transform the data
 regcases <- regdat %>%  select(date,areaName,areaCode,
                                Cases = newCasesBySpecimenDate
@@ -226,24 +225,26 @@ weeks<-as.integer(length(comdat$allCases)/7)-1
 
 for(i in 1:weeks){
   for(j in 1:7){
-    days[j]<-days[j]+comdat$allCases[7*i+j]}
+    days[j]<-days[j]+comdat$allCases[7*i+j]
+  }
 }
 casetot=sum(days)
 days=7*days/casetot
+
 # Scale up cases
-
-
 for(i in 1:length(comdat$allCases)){
   indexday=(i-1)%%7+1
-  comdat$allCases[i]=comdat$allCases[i]/days[indexday]}
-lines(comdat$allCases, col="red")
+  comdat$allCases[i]=comdat$allCases[i]/days[indexday]
+}
+#lines(comdat$allCases, col="red")
 
 # Fix Xmas anomaly in comdat
 Xmasav = sum(comdat$allCases[153:164])/12
 Xmasgrad=Xmasav/25
 for (i in 153:164){
-  comdat$allCases[i]=Xmasav-Xmasgrad*(158.5-i)}
-lines(comdat$allCases, col="blue")
+  comdat$allCases[i]=Xmasav-Xmasgrad*(158.5-i)
+}
+#lines(comdat$allCases, col="blue")
 
 
 for (i in 2:ncol(casedat)) {
@@ -254,15 +255,17 @@ for (i in 2:ncol(casedat)) {
 }
 
 for ( i  in 2:ncol(casedat) ){
-Xmasav = sum(casedat[153:164,i])/12
-Xmasgrad=Xmasav/25
-for (iday in 153:164){
-  casedat[iday,i]=as.integer(Xmasav-Xmasgrad*(158.5-iday))}
+    Xmasav = sum(casedat[153:164,i])/12
+    Xmasgrad=Xmasav/25
+    for (iday in 153:164){
+        casedat[iday,i]=as.integer(Xmasav-Xmasgrad*(158.5-iday))
+    }
 }
-# Set false positive adjustment at 0.004
 
+# Set false positive adjustment at 0.004
 for(i in 1:length(comdat$allCases)){
-  comdat$fpCases[i]=comdat$allCases[i]-0.004*as.integer(comdat$tests[i])}
+  comdat$fpCases[i]=comdat$allCases[i]-0.004*as.integer(comdat$tests[i])
+}
 plot(comdat$allCases)
 lines(comdat$fpCases, col="red")
 
@@ -346,7 +349,7 @@ points(gjaR, col = "red")
 # are for your benefit Graeme. You probably wnat to move this plot until after
 # you have calculated your own Restimate.
 Rest %>% ggplot(aes(x=Date)) + geom_ribbon(aes(Date,min=England_LowerBound,max=England_UpperBound),colour="red",alpha=0.25) +
-  ylab("R Estimate") + xlab("Date") # + geom_line(comdat,aes(date,R))
+  ylab("R Estimate") + xlab("Date")  # + geom_line(comdat,aes(date,R))
 lines(smooth.spline(gjaR,df=14))
 
 #Reverse Engineer cases from R-number - requires stratonovich calculus to get reversibility
@@ -423,7 +426,7 @@ deathmap = image(deathdat$date, 1:19, as.matrix(deathdat[2:20]),
 axis.Date(1, at=seq(min(deathdat$date), max(deathdat$date), by="1 month"), format="%m-%Y")
 axis(2, 1:19, labels = groups, las = 1, cex.axis = 0.8)
 title(main = "Deaths heatmap")
-rm(casemap, deathmap, groups)
+rm(deathmap, groups)
 
 #### AGE GROUPS - Lognormal distribution ####
 ##We are fixing parameters at the clinical levels from Hawryluk et al.
