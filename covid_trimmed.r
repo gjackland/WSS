@@ -261,7 +261,7 @@ for (i in 2:ncol(casedat) ){
         casedat[iday,i]=as.integer(Xmasav-Xmasgrad*(158.5-iday))
     }
 }
-
+rm(Xmasav,Xmasgrad,weeks,i,iday,j,indexday)
 # Set false positive adjustment at 0.004
 for(i in 1:length(comdat$allCases)){
   comdat$fpCases[i]=comdat$allCases[i]-0.004*as.integer(comdat$tests[i])
@@ -269,8 +269,8 @@ for(i in 1:length(comdat$allCases)){
 plot(comdat$allCases)
 lines(comdat$fpCases, col="red")
 
-# Calculation of Rnumber, generation time = 6,5 days
-genTime=6.5
+# Calculation of Rnumber, generation time = 4 days
+genTime=4
 gjaR<-unlist(comdat$allCases,use.names=FALSE)
 rawR<-unlist(comdat$inputCases,use.names=FALSE)
 
@@ -324,7 +324,7 @@ ggplot(comdat) +
   geom_point(aes(x=date,y=rawR),alpha=0.5) +
   geom_point(aes(x=date,y=gjaR),colour="red", alpha=0.5) +
   geom_line(aes(x=date,y=weeklyR),colour="blue") +
-  geom_ribbon(data=dat,aes(Date,min=England_LowerBound,max=England_UpperBound),
+    geom_ribbon(data=dat,aes(Date,min=England_LowerBound,max=England_UpperBound),
               colour="green",alpha=0.25) + ylim(0,2.5) +
   xlab("Date") + ylab("R value")
 
@@ -335,7 +335,7 @@ lock1=98+test_delay
 unlock1=130+test_delay
 lock2=165+test_delay
 
-
+gjaR<-bylogR
 smoothweightR<-smooth.spline(gjaR,df=19,w=sqrt(comdat$allCases))
 smoothweightRfp<-smooth.spline(fpR,df=19,w=sqrt(comdat$fpCases))
 smoothR<-smooth.spline(gjaR,df=14)
@@ -350,16 +350,17 @@ smoothRend$x=smoothRend$x+lock2
 plot(smoothweightR$y,x=comdat$date)
 points(smoothR$y,x=comdat$date,col="green")
 #Plot R estimate vs data and fits discontinuous at lockdown
+#  Have to move the Official R data back by 20 days !
 lines(smoothweightRfp$y,x=comdat$date,col="red")
-lines(y=Rest$England_LowerBound,x=Rest$Date)
-lines(y=Rest$England_UpperBound,x=Rest$Date)
-plot(smoothweightR$y,ylab="R-number",xlab="Day",w=sqrt(comdat$allCases))
+lines(y=Rest$England_LowerBound,x=Rest$Date-16)
+lines(y=Rest$England_UpperBound,x=Rest$Date-16)
+plot(smoothweightR$y,ylab="R-number",xlab="Day")
 lines(smoothR98$y, col="red", lwd=2)
 lines(smoothR130,col="red",lwd=2)
 lines(smoothR164,col="red",lwd=2)
 lines(smoothRend,col="red",lwd=2)
 lines(weeklyR)
-plot(smoothweightR$y,ylab="R-number",xlab="Day",w=sqrt(comdat$allCases))
+plot(smoothweightR$y,ylab="R-number",xlab="Day")
 #  Plot R continuous with many splines.  Not sure when fitting noise here!
 for (ismooth in 4:28){
 #   lines(smooth.spline(as.vector(gjaR),df=ismooth,w=sqrt(comdat$allCases)))
@@ -464,54 +465,6 @@ ggplot(data.frame(index = 1:28, prop = lndist)) +
   ylab("Proportion of day zero cases")
 rm(logmean, logsd)
 
-#Spread each age group's cases by the distribution
-logcases = casedat
-logcases[2:20] = NA_real_
-for (agegroup in 2:20) {
-  for (day in 28:nrow(logcases)) {
-    logcases[day,agegroup] = sum(casedat[(day-27):day,agegroup] * rev(lndist))
-  }
-}
-rm(agegroup, day)
-
-#Spread all cases by the distribution
-comdat$logcaseload = 0
-for (day in 28:nrow(comdat)) {
-  comdat$logcaseload[day] = sum(comdat$allCases[(day-27):day] * rev(lndist))
-}
-rm(day)
-
-#  Spread Regional cases by the distribution
-regpredict<-regdeaths
-for (area in 2:10){
-for (day in 28:nrow(comdat)){
-  regpredict[day,area] = sum(regcases[(day-27):day,area] * rev(lndist))
-}}
-rm(day,area)
-plot(regpredict$London,x=regdeaths$date)
-lines(regdeaths$London*40,x=regdeaths$date)
-lines(regcases$London,x=regpredict$date)
-plot(regpredict$`North East`,x=regdeaths$date)
-lines(regcases$`North East`,x=regpredict$date)
-plot(regpredict$`North West`,x=regpredict$date)
-lines(regpredict$`North West`,x=regpredict$date)
-lines(regpredict$`South West`,x=regpredict$date)
-lines(regpredict$`South East`,x=regpredict$date)
-lines(regpredict$`East Midlands` ,x=regpredict$date)
-lines(regpredict$`East of England`,x=regpredict$date)
-lines(regpredict$`West Midlands`,x=regpredict$date)
-lines(regpredict$`Yorkshire and The Humber`,x=regpredict$date)
-
-for (area in 2:10){
-  lines(regpredict[2:279,area])}
-#Plots
-logcasesageplot = ggplot(logcases, aes(x = date)) +
-  geom_line(aes(y = rowSums(logcases[,2:20]))) +
-  ggtitle("All age groups separately lognormal distributed")
-logcasesageplot
-rm(logcasesageplot)
-
-
 #### AGE GROUPS - Gamma distribution ####
 ##We are fixing alpha at the clinical level of 4.447900991. Verity et al. find a global beta of 4.00188764
 alpha = 4.447900991
@@ -525,28 +478,77 @@ ggplot(data.frame(index = 1:28, prop = gamdist)) +
 rm(alpha, beta)
 
 #Spread each age group's cases by the distribution
-gamcases = casedat
+logcases <- casedat
+gamcases <- logcases
+logcases[2:20] = NA_real_
 gamcases[2:20] = NA_real_
 for (agegroup in 2:20) {
-  for (day in 28:nrow(gamcases)) {
+  for (day in 28:nrow(logcases)) {
+    logcases[day,agegroup] = sum(casedat[(day-27):day,agegroup] * rev(lndist))
     gamcases[day,agegroup] = sum(casedat[(day-27):day,agegroup] * rev(gamdist))
   }
 }
 rm(agegroup, day)
 
 #Spread all cases by the distribution
+comdat$logcaseload = 0
 comdat$gamcaseload = 0
 for (day in 28:nrow(comdat)) {
+  comdat$logcaseload[day] = sum(comdat$allCases[(day-27):day] * rev(lndist))
   comdat$gamcaseload[day] = sum(comdat$allCases[(day-27):day] * rev(gamdist))
-}
+  }
 
-#  Spread Regional cases by the distribution
-regdat$gamcaseload = 0
-for (day in 28:nrow(comdat)) {
-  regdat$gamcaseload[day] = sum(regdat$allCases[(day-27):day] * rev(gamdist))
-}
+#  Spread Regional cases by the lognormal & gammadistribution
+reglnpredict<-regdeaths
+reggampredict<-regdeaths
+for (area in 2:10){
+for (day in 28:nrow(comdat)){
+  reglnpredict[day,area] = sum(regcases[(day-27):day,area] * rev(lndist))
+  reggampredict[day,area] = sum(regcases[(day-27):day,area] * rev(gamdist))}}
+rm(day,area)
 
-#### Fig 2. Distributions ####
+
+#  Regional plots, with CFR input by hand
+
+
+plot(regdeaths$London*55,x=regdeaths$date)
+lines(reglnpredict$London,x=reglnpredict$date)
+lines(reggampredict$London,x=reglnpredict$date)
+
+plot(regdeaths$`North East`,x=regdeaths$date)
+lines(reglnpredict$`North East`*55,x=regdeaths$date)
+plot(regdeaths$`North West`,x=regdeaths$date)
+points(y=reglnpredict$`North West`,x=reglnpredict$date)
+lines(reglnpredict$`South West`,x=reglnpredict$date)
+lines(reglnpredict$`South East`,x=reglnpredict$date)
+lines(reglnpredict$`East Midlands` ,x=reglnpredict$date)
+lines(reglnpredict$`East of England`,x=reglnpredict$date)
+lines(reglnpredict$`West Midlands`,x=reglnpredict$date)
+lines(reglnpredict$`Yorkshire and The Humber`,x=reglnpredict$date)
+
+for (area in 2:10){
+  lines(reglnpredict[2:279,area])}
+#Plots
+logcasesageplot = ggplot(logcases, aes(x = date)) +
+  geom_line(aes(y = rowSums(logcases[,2:20]))) +
+  ggtitle("All age groups separately lognormal distributed")
+logcasesageplot
+rm(logcasesageplot)
+
+
+#Spread each age group's cases by the gamma distribution
+#gamcases = casedat
+#gamcases[2:20] = NA_real_
+#for (agegroup in 2:20) {
+#  for (day in 28:nrow(gamcases)) {
+#    gamcases[day,agegroup] = sum(casedat[(day-27):day,agegroup] * rev(gamdist))
+#  }
+#}
+
+
+
+
+plot#### Fig 2. Distributions ####
 distdat = data.frame(days = 1:29, ln = c(lndist, 0), gam = c(gamdist, 0), exp = c(dexp(1:28, rate = 0.1), 0),
                      shift = c(rep(0, 14), 1, rep(0, 14)),
                      avgshift = c(rep(0, 11), rep((1/7),7), rep(0, 11)))
