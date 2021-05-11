@@ -22,9 +22,6 @@ library(ggplot2, warn.conflicts = FALSE, quietly = TRUE)
 library(lubridate, warn.conflicts = FALSE, quietly = TRUE)
 library(zoo, warn.conflicts = FALSE, quietly = TRUE)
 library(RColorBrewer, warn.conflicts = FALSE, quietly = TRUE)
-library(readODS, warn.conflicts = FALSE, quietly = TRUE)
-library(xml2, warn.conflicts = FALSE, quietly = TRUE)
-library(rvest, warn.conflicts = FALSE, quietly = TRUE)
 
 # Set the working directory from where the script is run.
 setwd(".")
@@ -184,8 +181,20 @@ regdeaths <- regdat %>%  select(date,areaName,
   arrange(date)
 
 
-# Read in the data from a csv file
-Rest <- read_csv(file="data/R_estimate.csv")
+# Read in the UK government R estimate data from a csv file
+coltypes <- cols(
+  Date = col_date(format = "%Y-%m-%d"), UK_LowerBound = col_double(),
+  UK_UpperBound = col_double(), England_LowerBound = col_double(),
+  England_UpperBound = col_double(), EEng_LowerBound = col_double(),
+  EEng_UpperBound = col_double(), Lon_LowerBound = col_double(),
+  Lon_UpperBound = col_double(), Mid_LowerBound = col_double(),
+  Mid_UpperBound = col_double(), NEY_LowerBound = col_double(),
+  NEY_UpperBound = col_double(), NW_LowerBound = col_double(),
+  NW_UpperBound = col_double(), SE_LowerBound = col_double(),
+  SE_UpperBound = col_double(), SW_LowerBound = col_double(),
+  SW_UpperBound = col_double()
+)
+Rest <- read_csv(file="data/R_estimate.csv", col_types = coltypes)
 
 #### Get tests for England pre-Sept by taking the post-Sept fraction of all tests that were in england (0.867)
 
