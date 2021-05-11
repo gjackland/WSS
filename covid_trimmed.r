@@ -182,6 +182,7 @@ regcases <- regdat %>%  select(date,areaName,areaCode,
   filter(date >= startdate &
            date <= enddate )%>%
   arrange(date)
+
 regdeaths <- regdat %>%  select(date,areaName,
                                Deaths = newDeaths28DaysByDeathDate,
                                ) %>%
@@ -246,7 +247,6 @@ for (i in 153:164){
 }
 #lines(comdat$allCases, col="blue")
 
-
 for (i in 2:ncol(casedat)) {
   for (j in 1:nrow(casedat)) {
     indexday=(j-1)%%7+1
@@ -254,7 +254,7 @@ for (i in 2:ncol(casedat)) {
   }
 }
 
-for ( i  in 2:ncol(casedat) ){
+for (i in 2:ncol(casedat) ){
     Xmasav = sum(casedat[153:164,i])/12
     Xmasgrad=Xmasav/25
     for (iday in 153:164){
@@ -269,7 +269,7 @@ for(i in 1:length(comdat$allCases)){
 plot(comdat$allCases)
 lines(comdat$fpCases, col="red")
 
-#  Calculation of Rnumber, generation time = 6,5 days
+# Calculation of Rnumber, generation time = 6,5 days
 genTime=6.5
 gjaR<-unlist(comdat$allCases,use.names=FALSE)
 rawR<-unlist(comdat$inputCases,use.names=FALSE)
@@ -285,16 +285,16 @@ for(i in 2:length(gjaR)){
   rawR[i]<-(1+(comdat$inputCases[i]-comdat$inputCases[i-1])*genTime/(comdat$inputCases[i-1]))
   fpR[i]<-(1+(comdat$fpCases[i]-comdat$fpCases[i-1])*genTime/(comdat$fpCases[i-1]))
   bylogR[i]<-1+log(comdat$fpCases[i]/comdat$fpCases[i-1])*genTime
-  }
+}
 rawR[1]=rawR[2]
 gjaR[1]=gjaR[2]
 bylogR[1]=bylogR[2]
- fpR[1]=fpR[2]
+fpR[1]=fpR[2]
 weeklyR<-gjaR
 for(i in 4:(length(gjaR)-3)){
-day1=i-3
-day7=i+3
-      weeklyR[i]=sum(gjaR[day1:day7])/7.0
+    day1=i-3
+    day7=i+3
+    weeklyR[i]=sum(gjaR[day1:day7])/7.0
 }
 #Plot various types of smoothing on the R data
 plot(x=comdat$date,y=rawR,ylab="R",xlab="date")
@@ -304,6 +304,30 @@ lines(y=Rest$England_LowerBound,x=Rest$Date)
 lines(y=Rest$England_UpperBound,x=Rest$Date)
 # Wanted to plot a Smooth spline discontinuous at
 #UK lockdown Oct 31 (day 98) -Dec 2  (day 130) Jan 6 (day 165)  (day 1 = July 25)
+
+# Making the time windows agree
+dat <- Rest[Rest$Date >= min(comdat$date) & Rest$Date <= max(comdat$date),]
+
+# Plot
+d1 <- as.Date("2020-10-31")
+d2 <- as.Date("2020-12-02")
+ggplot(comdat) +
+           geom_point(aes(x=date,y=rawR),alpha=0.5) +
+           geom_point(aes(x=date,y=gjaR),colour="red", alpha=0.5) +
+           geom_line(aes(x=date,y=weeklyR),colour="blue") +
+           geom_ribbon(data=dat,aes(Date,min=England_LowerBound,max=England_UpperBound),
+                       colour="green",alpha=0.25) +
+           xlab("Date") + ylab("R value")
+
+# Zoom in
+ggplot(comdat) +
+  geom_point(aes(x=date,y=rawR),alpha=0.5) +
+  geom_point(aes(x=date,y=gjaR),colour="red", alpha=0.5) +
+  geom_line(aes(x=date,y=weeklyR),colour="blue") +
+  geom_ribbon(data=dat,aes(Date,min=England_LowerBound,max=England_UpperBound),
+              colour="green",alpha=0.25) + ylim(0,2.5) +
+  xlab("Date") + ylab("R value")
+
 
 nospl=5
 test_delay=0
