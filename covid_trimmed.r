@@ -161,7 +161,18 @@ regurl <- paste0(baseurl,
                  "metric=newCasesBySpecimenDate&",
                  "format=csv")
 
-regdat <-  read_csv(file = regurl)
+# Specify the column types
+coltypes <-  cols(
+  areaCode = col_character(),
+  areaName = col_character(),
+  areaType = col_character(),
+  date = col_date(format = "%Y-%m-%d"),
+  newCasesBySpecimenDate = col_double(),
+  newDeaths28DaysByDeathDate = col_double()
+)
+
+# Read in the data
+regdat <-  read_csv(file = regurl, col_types = coltypes)
 
 
 # Transform the data
