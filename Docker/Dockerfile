@@ -14,10 +14,7 @@ RUN apt-get update -y && \
     ggplot2 \
     lubridate \
     zoo \
-    RColorBrewer \
-    readODS \
-    xml2 \
-    rvest
+    RColorBrewer 
 
 # Copy the code to the root directory of the image
 COPY ../covid_trimmed.r .
