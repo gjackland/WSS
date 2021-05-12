@@ -153,6 +153,35 @@ vacdat <-  read_csv(file = vacurl, col_types = coltypes)
 # end up with the same columns as for the case data above.
 vacdat <- vacdat %>%
   select(date = date,  values =cumVaccinationFirstDoseUptakeByPublishDatePercentage)
+#  Scotland data https://api.coronavirus.data.gov.uk/v2/data?areaType=nation&areaCode=S92000003&metric=newCasesBySpecimenDate&metric=newDeaths28DaysByDeathDate&metric=newDeaths28DaysByPublishDate&format=csv
+
+scoturl <-  paste0(baseurl,
+                   "areaType=nation&",
+                   "areaCode=S92000003&",
+                   "metric=newDeaths28DaysByDeathDate&",
+                   "metric=newCasesBySpecimenDate&",
+                   "metric=newDeaths28DaysByPublishDate&",
+                   "format=csv")
+coltypes <-  cols(
+  date = col_date(format = "%Y-%m-%d"),
+  newCasesBySpecimenDate = col_double(),
+  newDeaths28DaysByPublishDate = col_double(), 
+  newDeaths28DaysByDeathDate = col_double()
+)
+
+# Read in the data
+scotdat <-  read_csv(file = scoturl, col_types = coltypes)
+
+# Transform the data
+scotdat <- scotdat %>%  select(date,
+                             allCases = newCasesBySpecimenDate,
+                             allDeaths = newDeaths28DaysByDeathDate,
+                             inputCases = newCasesBySpecimenDate,
+                             fpCases = newCasesBySpecimenDate) %>%
+  filter(date >= startdate &
+           date <= enddate ) %>%
+  arrange(date)
+
 
 #  Regional data
 regurl <- paste0(baseurl,
@@ -160,6 +189,8 @@ regurl <- paste0(baseurl,
                  "metric=newDeaths28DaysByDeathDate&",
                  "metric=newCasesBySpecimenDate&",
                  "format=csv")
+
+
 
 # Specify the column types
 coltypes <-  cols(
@@ -236,19 +267,24 @@ days=7*days/casetot
 for(i in 1:length(comdat$allCases)){
   indexday=(i-1)%%7+1
   comdat$allCases[i]=comdat$allCases[i]/days[indexday]
+  scotdat$allCases[i]=scotdat$allCases[i]/days[indexday]
   for (area in 2:10){
     regcases[i,area]=regcases[i,area]/days[indexday] 
   }
 }
 
 # Fix Xmas anomaly over 12 days in comdat,regcases by linear fit
-Xmasav<-1:10
+Xmasav<-1:11
 Xmasav[1] = sum(comdat$allCases[153:164])/12
 Xmasgrad=comdat$allCases[164]-comdat$allCases[153]
 for (i in 153:164){
-  comdat$allCases[i]=Xmasav[1]-Xmasgrad[1]*(158.5-i)/12
+  comdat$allCases[i]=Xmasav[1]-Xmasgrad*(158.5-i)/12
 }
-
+Xmasav[11] = sum(scotdat$allCases[153:164])/12
+Xmasgrad=scotdat$allCases[164]-scotdat$allCases[153]
+for (i in 153:164){
+  scotdat$allCases[i]=Xmasav[11]-Xmasgrad*(158.5-i)/12
+}
 #  Fix Xmas anomaly in regions
 for (area in 2:10){
   Xmasav[area] <- sum(regcases[153:164,area])/12
