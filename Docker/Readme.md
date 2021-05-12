@@ -33,10 +33,7 @@ RUN install2.r --error \
     ggplot2 \
     lubridate \
     zoo \
-    RColorBrewer \
-    readODS \
-    xml2 \
-    rvest
+    RColorBrewer 
 
 # Copy the code and any data to the root directory of the image
 COPY ./covid_trimmed.r /
