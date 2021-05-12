@@ -220,7 +220,7 @@ comdat %>% ggplot(aes(x=date,y=allCases)) + geom_line() +
   xlab("Date") + ylab("All cases")
 
 
-#remove weekend effect
+#remove weekend effect,  assuming each weekday has same number of cases over the epidemic, and national averages hold regionally
 days <-1:7
 weeks<-as.integer(length(comdat$allCases)/7)-1
 
@@ -232,20 +232,32 @@ for(i in 1:weeks){
 casetot=sum(days)
 days=7*days/casetot
 
-# Scale up cases
+# REscale comdat and regcases
 for(i in 1:length(comdat$allCases)){
   indexday=(i-1)%%7+1
   comdat$allCases[i]=comdat$allCases[i]/days[indexday]
+  for (area in 2:10){
+    regcases[i,area]=regcases[i,area]/days[indexday] 
+  }
 }
-#lines(comdat$allCases, col="red")
 
-# Fix Xmas anomaly in comdat
-Xmasav = sum(comdat$allCases[153:164])/12
-Xmasgrad=Xmasav/25
+# Fix Xmas anomaly over 12 days in comdat,regcases by linear fit
+Xmasav<-1:10
+Xmasav[1] = sum(comdat$allCases[153:164])/12
+Xmasgrad=comdat$allCases[164]-comdat$allCases[153]
 for (i in 153:164){
-  comdat$allCases[i]=Xmasav-Xmasgrad*(158.5-i)
+  comdat$allCases[i]=Xmasav[1]-Xmasgrad[1]*(158.5-i)/12
 }
-#lines(comdat$allCases, col="blue")
+
+#  Fix Xmas anomaly in regions
+for (area in 2:10){
+  Xmasav[area] <- sum(regcases[153:164,area])/12
+  Xmasgrad<-regcases[164,area]-regcases[153,area] 
+  for (i in 153:164){
+    regcases[i,area]<-Xmasav[area]-Xmasgrad*(158.5-i)/12.0
+  }  
+  }
+
 
 for (i in 2:ncol(casedat)) {
   for (j in 1:nrow(casedat)) {
@@ -284,7 +296,7 @@ for(i in 2:length(gjaR)){
   gjaR[i]<-(1+(comdat$allCases[i]-comdat$allCases[i-1])*genTime/(comdat$allCases[i-1]))
   rawR[i]<-(1+(comdat$inputCases[i]-comdat$inputCases[i-1])*genTime/(comdat$inputCases[i-1]))
   fpR[i]<-(1+(comdat$fpCases[i]-comdat$fpCases[i-1])*genTime/(comdat$fpCases[i-1]))
-  bylogR[i]<-1+log(comdat$fpCases[i]/comdat$fpCases[i-1])*genTime
+  bylogR[i]<-1+log(comdat$allCases[i]/comdat$allCases[i-1])*genTime
 }
 rawR[1]=rawR[2]
 gjaR[1]=gjaR[2]
@@ -335,17 +347,17 @@ lock1=98+test_delay
 unlock1=130+test_delay
 lock2=165+test_delay
 
-gjaR<-bylogR
-smoothweightR<-smooth.spline(gjaR,df=19,w=sqrt(comdat$allCases))
+
+smoothweightR<-smooth.spline(bylogR,df=19,w=sqrt(comdat$allCases))
 smoothweightRfp<-smooth.spline(fpR,df=19,w=sqrt(comdat$fpCases))
-smoothR<-smooth.spline(gjaR,df=14)
-smoothR98<-smooth.spline(gjaR[1:lock1],df=nospl)
+smoothR<-smooth.spline(bylogR,df=14)
+smoothR98<-smooth.spline(bylogR[1:lock1],df=nospl)
 smoothR98$x=smoothR98$x
-smoothR130<-smooth.spline(gjaR[lock1:unlock1],df=nospl)
+smoothR130<-smooth.spline(bylogR[lock1:unlock1],df=nospl)
 smoothR130$x=smoothR130$x+lock1
-smoothR164<-smooth.spline(gjaR[unlock1:lock2],df=nospl)
+smoothR164<-smooth.spline(bylogR[unlock1:lock2],df=nospl)
 smoothR164$x=smoothR164$x+unlock1
-smoothRend<-smooth.spline(gjaR[lock2:length(gjaR)],df=nospl)
+smoothRend<-smooth.spline(bylogR[lock2:length(gjaR)],df=nospl)
 smoothRend$x=smoothRend$x+lock2
 plot(smoothweightR$y,x=comdat$date)
 points(smoothR$y,x=comdat$date,col="green")
@@ -365,7 +377,8 @@ plot(smoothweightR$y,ylab="R-number",xlab="Day")
 for (ismooth in 4:28){
 #   lines(smooth.spline(as.vector(gjaR),df=ismooth,w=sqrt(comdat$allCases)))
   lines(smooth.spline(as.vector(weeklyR),df=ismooth),col="blue")}
-points(gjaR, col = "red")
+points(bylogR, col = "red")
+lines(smooth.spline(bylogR,df=14))
 # Plot the UB and LB for the UK R estimates, have added a line commented out
 # where you can plot your estimate for the R value - add your own data frame
 # change date and R to what you called the columns - you probably have to have
@@ -375,15 +388,16 @@ points(gjaR, col = "red")
 # you have calculated your own Restimate.
 Rest %>% ggplot(aes(x=Date)) + geom_ribbon(aes(Date,min=England_LowerBound,max=England_UpperBound),colour="red",alpha=0.25) +
   ylab("R Estimate") + xlab("Date")  # + geom_line(comdat,aes(date,R))
-lines(smooth.spline(gjaR,df=14))
+
 
 #Reverse Engineer cases from R-number - requires stratonovich calculus to get reversibility
 # Initializations
 #rm(PredictCases,PredictCasesSmoothR)
-PredictCases <- gjaR
+PredictCases <- bylogR
 PredictCasesRaw <- rawR
-PredictCasesSmoothR<- gjaR
-PredictCasesMeanR<- gjaR
+PredictCasesSmoothR<- bylogR
+PredictCasesMeanR<- bylogR
+PredictCasesLin <-gjaR
 #  Use the same weekend-adjusted initial condition, regardless of smoothing effect
 PredictCases[1]=comdat$allCases[1]
 PredictCasesRaw[1]=PredictCases[1]
@@ -392,23 +406,27 @@ PredictCasesMeanR[1]<- PredictCases[1]
 smoothR<-smooth.spline(gjaR,df=24)
 meanR=mean(rawR)
 for(i in 2:length(gjaR)){
-  PredictCases[i]=PredictCases[i-1]*(1.0+(gjaR[i]-1)/genTime)
+  PredictCases[i]=PredictCases[i-1]*exp((bylogR[i]-1)/genTime)
+  PredictCasesLin[i]=PredictCases[i-1]*(1.0+(gjaR[i]-1)/genTime)
   PredictCasesRaw[i]=PredictCasesRaw[i-1]*(1.0+(rawR[i]-1)/genTime)
   PredictCasesMeanR[i]=PredictCasesMeanR[i-1]*(1.0+(meanR-1)/genTime)
+  
 #  Averaging R is not the same as averaging e^R
 #  Noise suppresses the growth rate in the model, Smoothed R grows too fast
-   ri=smoothR$y[i]*0.94663
+   ri=smoothR$y[i]  # Fudge factor *0.94663
 #   Multiplier chosen to match final cases with df=24
     PredictCasesSmoothR[i]=PredictCasesSmoothR[i-1]*(1.0+(ri-1)/genTime)
   }
-plot(PredictCases,x=comdat$date,ylim=c(0,50000),xlab="Date")
+plot(PredictCases,x=comdat$date,xlab="Date")
 lines(comdat$allCases,x=comdat$date, col="red")
 lines(PredictCasesSmoothR,x=comdat$date, col="blue",lwd=2)
 lines(PredictCasesMeanR,x=comdat$date, col="green")
+lines(PredictCasesLin,x=comdat$date, col="orange")
 sum(PredictCases)
 sum(PredictCasesSmoothR)
 sum(PredictCasesMeanR)
-
+sum(PredictCasesLin)
+sum(comdat$allCases)
 #####  Figures and analysis for https://www.medrxiv.org/content/10.1101/2021.04.14.21255385v1
 
 
