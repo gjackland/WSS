@@ -44,7 +44,7 @@ casesurl <- paste0(baseurl,
                    "areaCode=E92000001&",
                    "metric=newCasesBySpecimenDate&",
                    "metric=newDeaths28DaysByDeathDate&",
-                   "metric=newVirusTests&",
+                   "metric=newPCRTestsByPublishDate&",
                    "format=csv")
 
 # Explicitly define the types for the columns
@@ -59,17 +59,17 @@ comdat <-  read_csv(file = casesurl, col_types = coltypes)
 comdat <- comdat %>%  select(date,
                              allCases = newCasesBySpecimenDate,
                              allDeaths = newDeaths28DaysByDeathDate,
-                             tests = newVirusTests,
+                             tests = newPCRTestsByPublishDate,
                              inputCases = newCasesBySpecimenDate,
                              fpCases = newCasesBySpecimenDate) %>%
-                      filter(date >= startdate &
-                             date <= enddate ) %>%
-                      arrange(date)
+  filter(date >= startdate &
+           date <= enddate ) %>%
+  arrange(date)
 
 # All UK cases (to estimate pre-Sept England Cases)
 ukcaseurl <- paste0(baseurl,
                     "areaType=overview&",
-                    "metric=newVirusTests&",
+                    "metric=newPCRTestsByPublishDate&",
                     "format=csv")
 
 # Explicitly define the types for the columns
@@ -79,7 +79,7 @@ coltypes <- cols(col_character(), col_character(),col_character(),
 ukcasedat <-  read_csv(file = ukcaseurl, col_types = coltypes)
 
 # Transform the data
-ukcasedat <- ukcasedat %>%  select(date = date, tests = newVirusTests) %>%
+ukcasedat <- ukcasedat %>%  select(date = date, tests = newPCRTestsByPublishDate) %>%
                             filter(date >= startdate &
                                    date <= enddate ) %>%
                             arrange(date)
@@ -103,11 +103,11 @@ casedat <-  read_csv(file = ageurl, col_types = coltypes)
 # 60+ and 00_59 columns, filter dates to be between the start and end
 # dates and order the output by date
 casedat <- casedat %>%
-           select(date = date, age = age, values = cases) %>%
-           pivot_wider(id_cols = date, names_from = age, values_from = values) %>%
-           select(-unassigned, -"60+", -"00_59") %>%
-           filter(date >= startdate & date <= enddate) %>%
-           arrange(date)
+  select(date = date, age = age, values = cases) %>%
+  pivot_wider(id_cols = date, names_from = age, values_from = values) %>%
+  select(-unassigned, -"60+", -"00_59") %>%
+  filter(date >= startdate & date <= enddate) %>%
+  arrange(date)
 
 #deaths by age
 deathurl <- paste0(baseurl,
@@ -134,12 +134,13 @@ deathdat <- deathdat %>%
   arrange(date) %>%
   select(names(casedat))#deaths by age
 
-# Get information on the number of vaccinations
+
+#  Read in the Vaccination data
 vacurl <- paste0(baseurl,
-                   "areaType=nation&",
-                   "areaCode=E92000001&",
-                   "metric=cumVaccinationFirstDoseUptakeByPublishDatePercentage&",
-                   "format=csv")
+                 "areaType=nation&",
+                 "areaCode=E92000001&",
+                 "metric=cumVaccinationFirstDoseUptakeByPublishDatePercentage&",
+                 "format=csv")
 
 # Explicitly define the types for the columns
 coltypes <- cols(col_character(), col_character(),col_character(),
@@ -153,18 +154,58 @@ vacdat <-  read_csv(file = vacurl, col_types = coltypes)
 vacdat <- vacdat %>%
   select(date = date,  values =cumVaccinationFirstDoseUptakeByPublishDatePercentage)
 
-# Read in the R estimate data from a csv file
-Rest <- read_csv(file="data/R_estimate.csv")
+#  Regional data
+regurl <- paste0(baseurl,
+                 "areaType=region&",
+                 "metric=newDeaths28DaysByDeathDate&",
+                 "metric=newCasesBySpecimenDate&",
+                 "format=csv")
 
-# Plot the UB and LB for the UK R estimates, have added a line commented out
-# where you can plot your estimate for the R value - add your own data frame
-# change date and R to what you called the columns - you probably have to have
-# the same number of values corresponding to the same time frame - you may
-# also want the range for England rather than the UK. Remove these lines they
-# are for your benefit Graeme. You probably wnat to move this plot until after
-# you have calculated your own Restimate.
-Rest %>% ggplot(aes(x=Date)) + geom_ribbon(aes(Date,min=England_LowerBound,max=England_UpperBound),colour="red",alpha=0.25) +
-         ylab("R Estimate") + xlab("Date") # + geom_line(YourDataFrame,aes(date,R))
+# Specify the column types
+coltypes <-  cols(
+  areaCode = col_character(),
+  areaName = col_character(),
+  areaType = col_character(),
+  date = col_date(format = "%Y-%m-%d"),
+  newCasesBySpecimenDate = col_double(),
+  newDeaths28DaysByDeathDate = col_double()
+)
+
+# Read in the data
+regdat <-  read_csv(file = regurl, col_types = coltypes)
+
+# Transform the data
+regcases <- regdat %>%  select(date,areaName,areaCode,
+                               Cases = newCasesBySpecimenDate
+                               ) %>%
+  pivot_wider(id_cols = date, names_from = areaName, values_from = Cases) %>%
+  filter(date >= startdate &
+           date <= enddate )%>%
+  arrange(date)
+
+regdeaths <- regdat %>%  select(date,areaName,
+                               Deaths = newDeaths28DaysByDeathDate,
+                               ) %>%
+  pivot_wider(id_cols = date, names_from = areaName, values_from = Deaths) %>%
+  filter(date >= startdate &
+           date <= enddate )%>%
+  arrange(date)
+
+
+# Read in the UK government R estimate data from a csv file
+coltypes <- cols(
+  Date = col_date(format = "%Y-%m-%d"), UK_LowerBound = col_double(),
+  UK_UpperBound = col_double(), England_LowerBound = col_double(),
+  England_UpperBound = col_double(), EEng_LowerBound = col_double(),
+  EEng_UpperBound = col_double(), Lon_LowerBound = col_double(),
+  Lon_UpperBound = col_double(), Mid_LowerBound = col_double(),
+  Mid_UpperBound = col_double(), NEY_LowerBound = col_double(),
+  NEY_UpperBound = col_double(), NW_LowerBound = col_double(),
+  NW_UpperBound = col_double(), SE_LowerBound = col_double(),
+  SE_UpperBound = col_double(), SW_LowerBound = col_double(),
+  SW_UpperBound = col_double()
+)
+Rest <- read_csv(file="data/R_estimate.csv", col_types = coltypes)
 
 #### Get tests for England pre-Sept by taking the post-Sept fraction of all tests that were in england (0.867)
 
@@ -173,32 +214,52 @@ rm(ukcasedat)
 
 plot(y=comdat$allCases, x=comdat$date, xlab="Date" , ylab="All cases")
 
-# remove weekend effect
+
+# MAA: Same plot using ggplot
+comdat %>% ggplot(aes(x=date,y=allCases)) + geom_line() +
+  xlab("Date") + ylab("All cases")
+
+
+#remove weekend effect,  assuming each weekday has same number of cases over the epidemic, and national averages hold regionally
+
 days <-1:7
 weeks<-as.integer(length(comdat$allCases)/7)-1
 
 for(i in 1:weeks){
   for(j in 1:7){
-    days[j]<-days[j]+comdat$allCases[7*i+j]}
+    days[j]<-days[j]+comdat$allCases[7*i+j]
+  }
 }
 casetot=sum(days)
 days=7*days/casetot
 
-# Scale up cases
+
+# REscale comdat and regcases
 for(i in 1:length(comdat$allCases)){
   indexday=(i-1)%%7+1
   comdat$allCases[i]=comdat$allCases[i]/days[indexday]
+  for (area in 2:10){
+    regcases[i,area]=regcases[i,area]/days[indexday]
+  }
 }
-lines(comdat$allCases, col="red")
 
-# Fix Xmas anomaly in comdat
-Xmasav = sum(comdat$allCases[153:164])/12
-Xmasgrad=Xmasav/25
+# Fix Xmas anomaly over 12 days in comdat,regcases by linear fit
+Xmasav<-1:10
+Xmasav[1] = sum(comdat$allCases[153:164])/12
+Xmasgrad=comdat$allCases[164]-comdat$allCases[153]
 for (i in 153:164){
-  comdat$allCases[i]=Xmasav-Xmasgrad*(158.5-i)
-}
-lines(comdat$allCases, col="blue")
 
+  comdat$allCases[i]=Xmasav[1]-Xmasgrad[1]*(158.5-i)/12
+}
+
+#  Fix Xmas anomaly in regions
+for (area in 2:10){
+  Xmasav[area] <- sum(regcases[153:164,area])/12
+  Xmasgrad<-regcases[164,area]-regcases[153,area]
+  for (i in 153:164){
+    regcases[i,area]<-Xmasav[area]-Xmasgrad*(158.5-i)/12.0
+  }
+}
 
 for (i in 2:ncol(casedat)) {
   for (j in 1:nrow(casedat)) {
@@ -208,12 +269,14 @@ for (i in 2:ncol(casedat)) {
 }
 
 for (i in 2:ncol(casedat) ){
-   Xmasav = sum(casedat[153:164,i])/12
-   Xmasgrad=Xmasav/25
-   for (iday in 153:164){
-     casedat[iday,i]=as.integer(Xmasav-Xmasgrad*(158.5-iday))
-     }
+
+    Xmasav = sum(casedat[153:164,i])/12
+    Xmasgrad=Xmasav/25
+    for (iday in 153:164){
+        casedat[iday,i]=as.integer(Xmasav-Xmasgrad*(158.5-iday))
+    }
 }
+rm(Xmasav,Xmasgrad,weeks,i,iday,j,indexday)
 
 # Set false positive adjustment at 0.004
 for(i in 1:length(comdat$allCases)){
@@ -222,78 +285,126 @@ for(i in 1:length(comdat$allCases)){
 plot(comdat$allCases)
 lines(comdat$fpCases, col="red")
 
-#  Calculation of Rnumber, generation time = 6,5 days
-genTime=6.5
+# Calculation of Rnumber, generation time = 4 days
+genTime=4
 gjaR<-unlist(comdat$allCases,use.names=FALSE)
 rawR<-unlist(comdat$inputCases,use.names=FALSE)
 
 # Create a vector to hold the results
 fpR <- vector(mode=mode(comdat$fpCases),length=length(gjaR))
+bylogR <-fpR
 
-for(i in 2:length(gjaR)){
-  #  gjaR[i]<-(1+(comdat$allCases[i]-comdat$allCases[i-1])*2*genTime/(comdat$allCases[i]+comdat$allCases[i-1]))
+ #Ito: gjaR[i]<-(1+(comdat$allCases[i]-comdat$allCases[i-1])*2*genTime/(comdat$allCases[i]+comdat$allCases[i-1]))
   #Stratanovitch calculus
+for(i in 2:length(gjaR)){
   gjaR[i]<-(1+(comdat$allCases[i]-comdat$allCases[i-1])*genTime/(comdat$allCases[i-1]))
   rawR[i]<-(1+(comdat$inputCases[i]-comdat$inputCases[i-1])*genTime/(comdat$inputCases[i-1]))
   fpR[i]<-(1+(comdat$fpCases[i]-comdat$fpCases[i-1])*genTime/(comdat$fpCases[i-1]))
+  bylogR[i]<-1+log(comdat$allCases[i]/comdat$allCases[i-1])*genTime
 }
 rawR[1]=rawR[2]
 gjaR[1]=gjaR[2]
+bylogR[1]=bylogR[2]
+fpR[1]=fpR[2]
 weeklyR<-gjaR
 for(i in 4:(length(gjaR)-3)){
-day1=i-3
-day7=i+3
-      weeklyR[i]=sum(gjaR[day1:day7])/7.0
+    day1=i-3
+    day7=i+3
+    weeklyR[i]=sum(gjaR[day1:day7])/7.0
 }
 #Plot various types of smoothing on the R data
 plot(x=comdat$date,y=rawR,ylab="R",xlab="date")
 points(x=comdat$date,y=gjaR,col="red")
 lines(x=comdat$date,y=weeklyR, lwd=3)
+lines(y=Rest$England_LowerBound,x=Rest$Date)
+lines(y=Rest$England_UpperBound,x=Rest$Date)
 # Wanted to plot a Smooth spline discontinuous at
 # UK lockdown Oct 31 (day 98) -Dec 2  (day 130) Jan 6 (day 165)  (day 1 = July 25)
 
-nospl=2
-test_delay=1
+# Making the time windows agree
+dat <- Rest[Rest$Date >= min(comdat$date) & Rest$Date <= max(comdat$date),]
+
+# Plot
+d1 <- as.Date("2020-10-31")
+d2 <- as.Date("2020-12-02")
+ggplot(comdat) +
+           geom_point(aes(x=date,y=rawR),alpha=0.5) +
+           geom_point(aes(x=date,y=gjaR),colour="red", alpha=0.5) +
+           geom_line(aes(x=date,y=weeklyR),colour="blue") +
+           geom_ribbon(data=dat,aes(Date,min=England_LowerBound,max=England_UpperBound),
+                       colour="green",alpha=0.25) +
+           xlab("Date") + ylab("R value")
+
+# Zoom in
+ggplot(comdat) +
+  geom_point(aes(x=date,y=rawR),alpha=0.5) +
+  geom_point(aes(x=date,y=gjaR),colour="red", alpha=0.5) +
+  geom_line(aes(x=date,y=weeklyR),colour="blue") +
+    geom_ribbon(data=dat,aes(Date,min=England_LowerBound,max=England_UpperBound),
+              colour="green",alpha=0.25) + ylim(0,2.5) +
+  xlab("Date") + ylab("R value")
+
+nospl=5
+test_delay=0
 lock1=98+test_delay
 unlock1=130+test_delay
 lock2=165+test_delay
 
-smoothweightR<-smooth.spline(gjaR,df=14,w=sqrt(comdat$allCases))
-smoothR<-smooth.spline(gjaR,df=14)
-smoothR98<-smooth.spline(gjaR[1:lock1],df=nospl)
+smoothweightR<-smooth.spline(bylogR,df=19,w=sqrt(comdat$allCases))
+smoothweightRfp<-smooth.spline(fpR,df=19,w=sqrt(comdat$fpCases))
+smoothR<-smooth.spline(bylogR,df=14)
+smoothR98<-smooth.spline(bylogR[1:lock1],df=nospl)
 smoothR98$x=smoothR98$x
-smoothR130<-smooth.spline(gjaR[lock1:unlock1],df=nospl)
+smoothR130<-smooth.spline(bylogR[lock1:unlock1],df=nospl)
 smoothR130$x=smoothR130$x+lock1
-smoothR164<-smooth.spline(gjaR[unlock1:lock2],df=nospl)
+smoothR164<-smooth.spline(bylogR[unlock1:lock2],df=nospl)
 smoothR164$x=smoothR164$x+unlock1
-smoothRend<-smooth.spline(gjaR[lock2:length(gjaR)],df=nospl)
+smoothRend<-smooth.spline(bylogR[lock2:length(gjaR)],df=nospl)
 smoothRend$x=smoothRend$x+lock2
 plot(smoothweightR$y,x=comdat$date)
 points(smoothR$y,x=comdat$date,col="green")
 
-# Plot fits discontinuous at lockdown
-plot(smoothweightR$y,x=comdat$date)
-lines(smoothR98, col="red", lwd=2)
+#Plot R estimate vs data and fits discontinuous at lockdown
+#  Have to move the Official R data back by 20 days !
+lines(smoothweightRfp$y,x=comdat$date,col="red")
+lines(y=Rest$England_LowerBound,x=Rest$Date-16)
+lines(y=Rest$England_UpperBound,x=Rest$Date-16)
+plot(smoothweightR$y,ylab="R-number",xlab="Day")
+lines(smoothR98$y, col="red", lwd=2)
 lines(smoothR130,col="red",lwd=2)
 lines(smoothR164,col="red",lwd=2)
 lines(smoothRend,col="red",lwd=2)
 lines(weeklyR)
 
-# Plot R continuous with many splines.  Not sure when fitting noise here!
+plot(smoothweightR$y,ylab="R-number",xlab="Day")
+#  Plot R continuous with many splines.  Not sure when fitting noise here!
 for (ismooth in 4:28){
-  lines(smooth.spline(as.vector(gjaR),df=ismooth))
-  lines(smooth.spline(as.vector(weeklyR),df=ismooth),col="blue")
-}
-points(gjaR, col = "green")
-lines(smooth.spline(gjaR,df=14))
+#   lines(smooth.spline(as.vector(gjaR),df=ismooth,w=sqrt(comdat$allCases)))
+  lines(smooth.spline(as.vector(weeklyR),df=ismooth),col="blue")}
+points(bylogR, col = "red")
+lines(smooth.spline(bylogR,df=14))
+# Plot the UB and LB for the UK R estimates, have added a line commented out
+# where you can plot your estimate for the R value - add your own data frame
+# change date and R to what you called the columns - you probably have to have
+# the same number of values corresponding to the same time frame - you may
+# also want the range for England rather than the UK. Remove these lines they
+# are for your benefit Graeme. You probably wnat to move this plot until after
+# you have calculated your own Restimate.
+Rest %>% ggplot(aes(x=Date)) + geom_ribbon(aes(Date,min=England_LowerBound,max=England_UpperBound),colour="red",alpha=0.25) +
+  ylab("R Estimate") + xlab("Date")  # + geom_line(comdat,aes(date,R))
+
 
 # Reverse Engineer cases from R-number - requires stratonovich calculus to get reversibility
 # Initializations
-PredictCases <- gjaR
+
+#rm(PredictCases,PredictCasesSmoothR)
+PredictCases <- bylogR
 PredictCasesRaw <- rawR
-PredictCasesSmoothR<- gjaR
-PredictCasesMeanR<- gjaR
-# Use the same weekend-adjusted initial condition, regardless of smoothing effect
+PredictCasesSmoothR<- bylogR
+PredictCasesMeanR<- bylogR
+PredictCasesLin <-gjaR
+#  Use the same weekend-adjusted initial condition, regardless of smoothing effect
+
 PredictCases[1]=comdat$allCases[1]
 PredictCasesRaw[1]=PredictCases[1]
 PredictCasesSmoothR[1]=PredictCases[1]
@@ -301,24 +412,28 @@ PredictCasesMeanR[1]<- PredictCases[1]
 smoothR<-smooth.spline(gjaR,df=24)
 meanR=mean(rawR)
 for(i in 2:length(gjaR)){
-  PredictCases[i]=PredictCases[i-1]*(1.0+(gjaR[i]-1)/genTime)
+  PredictCases[i]=PredictCases[i-1]*exp((bylogR[i]-1)/genTime)
+  PredictCasesLin[i]=PredictCases[i-1]*(1.0+(gjaR[i]-1)/genTime)
   PredictCasesRaw[i]=PredictCasesRaw[i-1]*(1.0+(rawR[i]-1)/genTime)
   PredictCasesMeanR[i]=PredictCasesMeanR[i-1]*(1.0+(meanR-1)/genTime)
+
 #  Averaging R is not the same as averaging e^R
 #  Noise suppresses the growth rate in the model, Smoothed R grows too fast
-   ri=smoothR$y[i]*0.94663
+   ri=smoothR$y[i]  # Fudge factor *0.94663
 #   Multiplier chosen to match final cases with df=24
     PredictCasesSmoothR[i]=PredictCasesSmoothR[i-1]*(1.0+(ri-1)/genTime)
   }
-plot(PredictCases,x=comdat$date,ylim=c(0,50000),xlab="Date")
+plot(PredictCases,x=comdat$date,xlab="Date")
 lines(comdat$allCases,x=comdat$date, col="red")
 lines(PredictCasesSmoothR,x=comdat$date, col="blue",lwd=2)
 lines(PredictCasesMeanR,x=comdat$date, col="green")
-if(interactive()){
-   sum(PredictCases)
-   sum(PredictCasesSmoothR)
-   sum(PredictCasesMeanR)
-}
+
+lines(PredictCasesLin,x=comdat$date, col="orange")
+sum(PredictCases)
+sum(PredictCasesSmoothR)
+sum(PredictCasesMeanR)
+sum(PredictCasesLin)
+sum(comdat$allCases)
 
 #####  Figures and analysis for https://www.medrxiv.org/content/10.1101/2021.04.14.21255385v1
 
@@ -362,7 +477,7 @@ deathmap = image(deathdat$date, 1:19, as.matrix(deathdat[2:20]),
 axis.Date(1, at=seq(min(deathdat$date), max(deathdat$date), by="1 month"), format="%m-%Y")
 axis(2, 1:19, labels = groups, las = 1, cex.axis = 0.8)
 title(main = "Deaths heatmap")
-rm(casemap, deathmap, groups)
+rm(deathmap, groups)
 
 #### AGE GROUPS - Lognormal distribution ####
 ##We are fixing parameters at the clinical levels from Hawryluk et al.
@@ -375,31 +490,6 @@ ggplot(data.frame(index = 1:28, prop = lndist)) +
   xlab("Time to Death") +
   ylab("Proportion of day zero cases")
 rm(logmean, logsd)
-
-#Spread each age group's cases by the distribution
-logcases = casedat
-logcases[2:20] = NA_real_
-for (agegroup in 2:20) {
-  for (day in 28:nrow(logcases)) {
-    logcases[day,agegroup] = sum(casedat[(day-27):day,agegroup] * rev(lndist))
-  }
-}
-rm(agegroup, day)
-
-#Spread all cases by the distribution
-comdat$logcaseload = 0
-for (day in 28:nrow(comdat)) {
-  comdat$logcaseload[day] = sum(comdat$allCases[(day-27):day] * rev(lndist))
-}
-rm(day)
-
-#Plots
-logcasesageplot = ggplot(logcases, aes(x = date)) +
-  geom_line(aes(y = rowSums(logcases[,2:20]))) +
-  ggtitle("All age groups separately lognormal distributed")
-logcasesageplot
-rm(logcasesageplot)
-
 
 #### AGE GROUPS - Gamma distribution ####
 ##We are fixing alpha at the clinical level of 4.447900991. Verity et al. find a global beta of 4.00188764
@@ -414,23 +504,77 @@ ggplot(data.frame(index = 1:28, prop = gamdist)) +
 rm(alpha, beta)
 
 #Spread each age group's cases by the distribution
-gamcases = casedat
+logcases <- casedat
+gamcases <- logcases
+logcases[2:20] = NA_real_
 gamcases[2:20] = NA_real_
 for (agegroup in 2:20) {
-  for (day in 28:nrow(gamcases)) {
+  for (day in 28:nrow(logcases)) {
+    logcases[day,agegroup] = sum(casedat[(day-27):day,agegroup] * rev(lndist))
     gamcases[day,agegroup] = sum(casedat[(day-27):day,agegroup] * rev(gamdist))
   }
 }
 rm(agegroup, day)
 
 #Spread all cases by the distribution
+comdat$logcaseload = 0
 comdat$gamcaseload = 0
 for (day in 28:nrow(comdat)) {
+  comdat$logcaseload[day] = sum(comdat$allCases[(day-27):day] * rev(lndist))
   comdat$gamcaseload[day] = sum(comdat$allCases[(day-27):day] * rev(gamdist))
-}
+  }
+
+#  Spread Regional cases by the lognormal & gammadistribution
+reglnpredict<-regdeaths
+reggampredict<-regdeaths
+for (area in 2:10){
+for (day in 28:nrow(comdat)){
+  reglnpredict[day,area] = sum(regcases[(day-27):day,area] * rev(lndist))
+  reggampredict[day,area] = sum(regcases[(day-27):day,area] * rev(gamdist))}}
+rm(day,area)
 
 
-#### Fig 2. Distributions ####
+#  Regional plots, with CFR input by hand
+
+
+plot(regdeaths$London*55,x=regdeaths$date)
+lines(reglnpredict$London,x=reglnpredict$date)
+lines(reggampredict$London,x=reglnpredict$date)
+
+plot(regdeaths$`North East`,x=regdeaths$date)
+lines(reglnpredict$`North East`*55,x=regdeaths$date)
+plot(regdeaths$`North West`,x=regdeaths$date)
+points(y=reglnpredict$`North West`,x=reglnpredict$date)
+lines(reglnpredict$`South West`,x=reglnpredict$date)
+lines(reglnpredict$`South East`,x=reglnpredict$date)
+lines(reglnpredict$`East Midlands` ,x=reglnpredict$date)
+lines(reglnpredict$`East of England`,x=reglnpredict$date)
+lines(reglnpredict$`West Midlands`,x=reglnpredict$date)
+lines(reglnpredict$`Yorkshire and The Humber`,x=reglnpredict$date)
+
+for (area in 2:10){
+  lines(reglnpredict[2:279,area])}
+#Plots
+logcasesageplot = ggplot(logcases, aes(x = date)) +
+  geom_line(aes(y = rowSums(logcases[,2:20]))) +
+  ggtitle("All age groups separately lognormal distributed")
+logcasesageplot
+rm(logcasesageplot)
+
+
+#Spread each age group's cases by the gamma distribution
+#gamcases = casedat
+#gamcases[2:20] = NA_real_
+#for (agegroup in 2:20) {
+#  for (day in 28:nrow(gamcases)) {
+#    gamcases[day,agegroup] = sum(casedat[(day-27):day,agegroup] * rev(gamdist))
+#  }
+#}
+
+
+
+
+plot#### Fig 2. Distributions ####
 distdat = data.frame(days = 1:29, ln = c(lndist, 0), gam = c(gamdist, 0), exp = c(dexp(1:28, rate = 0.1), 0),
                      shift = c(rep(0, 14), 1, rep(0, 14)),
                      avgshift = c(rep(0, 11), rep((1/7),7), rep(0, 11)))
