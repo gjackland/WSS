@@ -2,10 +2,8 @@
 #
 # Weight, Scale and Shift (WSS) Code
 #
-
 # Copyright 2021 Graeme Ackland, The University of Edinburgh,
 #                James Ackland, The University of Cambridge
-
 #
 #### Header ####
 
@@ -80,9 +78,9 @@ ukcasedat <-  read_csv(file = ukcaseurl, col_types = coltypes)
 
 # Transform the data
 ukcasedat <- ukcasedat %>%  select(date = date, tests = newPCRTestsByPublishDate) %>%
-                            filter(date >= startdate &
-                                   date <= enddate ) %>%
-                            arrange(date)
+  filter(date >= startdate &
+           date <= enddate ) %>%
+  arrange(date)
 # cases by age
 ageurl <- paste0(baseurl,
                  "areaType=nation&",
@@ -190,8 +188,6 @@ regurl <- paste0(baseurl,
                  "metric=newCasesBySpecimenDate&",
                  "format=csv")
 
-
-
 # Specify the column types
 coltypes <-  cols(
   areaCode = col_character(),
@@ -221,7 +217,18 @@ regdeaths <- regdat %>%  select(date,areaName,
   filter(date >= startdate &
            date <= enddate )%>%
   arrange(date)
-
+#  Get age data for regions because can't download simultaneously
+regurl2 <- paste0(baseurl,
+                 "areaType=region&",
+                 "metric=newCasesBySpecimenDateAgeDemographics&",
+                 "format=csv")
+# Read in the data
+regagedat <-  read_csv(file = regurl2)
+# Transform the data
+regagedat <- regagedat %>%  select(date, areaName, age, cases) %>%
+  filter(date >= startdate &
+           date <= enddate ) %>%
+  arrange(date)
 
 # Read in the UK government R estimate data from a csv file
 coltypes <- cols(
@@ -439,7 +446,7 @@ PredictCases[1]=comdat$allCases[1]
 PredictCasesRaw[1]=PredictCases[1]
 PredictCasesSmoothR[1]=PredictCases[1]
 PredictCasesMeanR[1]<- PredictCases[1]
-smoothR<-smooth.spline(gjaR,df=24)
+smoothR<-smooth.spline(bylogR,df=24)
 meanR=mean(rawR)
 for(i in 2:length(gjaR)){
   PredictCases[i]=PredictCases[i-1]*exp((bylogR[i]-1)/genTime)
@@ -550,8 +557,13 @@ comdat$gamcaseload = 0
 for (day in 28:nrow(comdat)) {
   comdat$logcaseload[day] = sum(comdat$allCases[(day-27):day] * rev(lndist))
   comdat$gamcaseload[day] = sum(comdat$allCases[(day-27):day] * rev(gamdist))
-  }
-
+}
+scotdat$logcaseload = 0
+scotdat$gamcaseload = 0
+for (day in 28:nrow(comdat)) {
+  scotdat$logcaseload[day] = sum(scotdat$allCases[(day-27):day] * rev(lndist))
+  scotdat$gamcaseload[day] = sum(scotdat$allCases[(day-27):day] * rev(gamdist))
+}
 #  Spread Regional cases by the lognormal & gammadistribution
 reglnpredict<-regdeaths
 reggampredict<-regdeaths
@@ -567,12 +579,12 @@ rm(day,area)
 
 plot(regdeaths$London*55,x=regdeaths$date)
 lines(reglnpredict$London,x=reglnpredict$date)
-lines(reggampredict$London,x=reglnpredict$date)
+plotlines(reggampredict$London,x=reglnpredict$date)
 
 plot(regdeaths$`North East`,x=regdeaths$date)
 lines(reglnpredict$`North East`*55,x=regdeaths$date)
 plot(regdeaths$`North West`,x=regdeaths$date)
-points(y=reglnpredict$`North West`,x=reglnpredict$date)
+plot(y=reglnpredict$`North West`,x=reglnpredict$date)
 lines(reglnpredict$`South West`,x=reglnpredict$date)
 lines(reglnpredict$`South East`,x=reglnpredict$date)
 lines(reglnpredict$`East Midlands` ,x=reglnpredict$date)
@@ -589,15 +601,6 @@ logcasesageplot = ggplot(logcases, aes(x = date)) +
 logcasesageplot
 rm(logcasesageplot)
 
-
-#Spread each age group's cases by the gamma distribution
-#gamcases = casedat
-#gamcases[2:20] = NA_real_
-#for (agegroup in 2:20) {
-#  for (day in 28:nrow(gamcases)) {
-#    gamcases[day,agegroup] = sum(casedat[(day-27):day,agegroup] * rev(gamdist))
-#  }
-#}
 
 
 
