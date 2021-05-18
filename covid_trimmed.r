@@ -340,6 +340,16 @@ dfR$rawR<-dfR$gjaR
 dfR$fpR<-dfR$gjaR
 dfR$weeklyR<-dfR$gjaR
 dfR$bylogR<-dfR$gjaR
+dfR$NE<-dfR$gjaR
+dfR$NW<-dfR$gjaR
+dfR$YH<-dfR$gjaR
+dfR$EM<-dfR$gjaR
+dfR$WM<-dfR$gjaR
+dfR$EE<-dfR$gjaR
+dfR$Lon<-dfR$gjaR
+dfR$SE<-dfR$gjaR
+dfR$SW<-dfR$gjaR
+
  
  #Ito: gjaR[i]<-(1+(comdat$allCases[i]-comdat$allCases[i-1])*2*genTime/(comdat$allCases[i]+comdat$allCases[i-1]))
   #Stratanovitch calculus
@@ -348,11 +358,18 @@ for(i in 2:length(dfR$gjaR)){
   dfR$rawR[i]=(1+(comdat$inputCases[i]-comdat$inputCases[i-1])*genTime/(comdat$inputCases[i-1]))
   dfR$fpR[i]=(1+(comdat$fpCases[i]-comdat$fpCases[i-1])*genTime/(comdat$fpCases[i-1]))
   dfR$bylogR[i]=1+log(comdat$allCases[i]/comdat$allCases[i-1])*genTime
+  dfR$NE[i]=1+log(regcases$`North East`[i]/regcases$`North East`[i-1])*genTime
+  dfR$NW[i]=1+log(regcases$`North West`[i]/regcases$`North West`[i-1])*genTime
+  dfR$YH[i]=1+log(regcases$`Yorkshire and The Humber`[i]/regcases$`Yorkshire and The Humber`[i-1])*genTime
+  dfR$EM[i]=1+log(regcases$`East Midlands`[i]/regcases$`East Midlands`[i-1])*genTime
+  dfR$WM[i]=1+log(regcases$`West Midlands`[i]/regcases$`West Midlands`[i-1])*genTime
+  dfR$EE[i]=1+log(regcases$`East of England`[i]/regcases$`East of England`[i-1])*genTime
+  dfR$Lon[i]=1+log(regcases$London[i]/regcases$London[i-1])*genTime
+  dfR$SE[i]=1+log(regcases$`South East`[i]/regcases$`South East`[i-1])*genTime
+  dfR$SW[i]=1+log(regcases$`South West`[i]/regcases$`South West`[i-1])*genTime
 }
-dfR$rawR[1]=dfR$rawR[2]
-dfR$gjaR[1]=dfR$gjaR[2]
-dfR$bylogR[1]=dfR$bylogR[2]
-dfR$fpR[1]=dfR$fpR[2]
+for (i in 3:17){dfR[i,1]=dfR[i,2]}
+
 for(i in 4:(length(dfR$weeklyR)-3)){
     day1=i-3
     day7=i+3
@@ -401,6 +418,7 @@ test_delay=7
 lock1=98+test_delay
 unlock1=130+test_delay
 lock2=165+test_delay
+sagedelay=16 # Delay in producing R-number
 
 smoothweightR<-smooth.spline(dfR$bylogR,df=19,w=sqrt(comdat$allCases))
 smoothweightR$date<-comdat$date
@@ -426,10 +444,16 @@ for (i in lock2+1:length(dfR$date)){dfR$piecewise[i]=smoothRend$y[i-lock2]}
 #Plot R estimate vs data and fits discontinuous at lockdown
 #  Have to move the Official R data back by 16 days !
 
+#  All cases and Regions
+
+plot(smoothweightR$y,ylab="R-number",xlab="Date",x=dfR$date)
+for (i in 9:17){
+lines(smooth.spline(dfR[i],df=19)$y,col=i,x=dfR$date)
+}
 plot(smoothweightR$y,x=smoothweightR$date,ylab="R-number",xlab="Date after Aug 25",ylim=c(0.6,1.4))
 #lines(smoothweightRfp$y,x=smoothweightRfp$date,col="blue")
-lines(y=Rest$England_LowerBound,x=Rest$Date-16)
-lines(y=Rest$England_UpperBound,x=Rest$Date-16)
+lines(y=Rest$England_LowerBound,x=Rest$Date-sagedelay)
+lines(y=Rest$England_UpperBound,x=Rest$Date-sagedelay)
 lines(dfR$piecewise,col="red",lwd=2,x=dfR$date)
 
 
@@ -454,6 +478,55 @@ lines(smooth.spline(dfR$bylogR,df=14))
 # you have calculated your own Restimate.
 Rest %>% ggplot(aes(x=Date)) + geom_ribbon(aes(Date,min=England_LowerBound,max=England_UpperBound),colour="red",alpha=0.25) +
   ylab("R Estimate") + xlab("Date")  # + geom_line(comdat,aes(date,R))
+
+#Plot Regional R data vs Government
+plot(smoothweightR$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4))
+lines(y=Rest$Lon_LowerBound,x=Rest$Date-sagedelay)
+lines(y=Rest$Lon_UpperBound,x=Rest$Date-sagedelay)
+lines(predict(loess(Lon ~ x, data=dfR,span=0.3)),col='red',x=dfR$date,title("London"))
+
+plot(smoothweightR$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),)
+lines(y=Rest$NW_LowerBound,x=Rest$Date-sagedelay)
+lines(y=Rest$NW_UpperBound,x=Rest$Date-sagedelay)
+lines(predict(loess(NW ~ x, data=dfR,span=0.3)),col='red',x=dfR$date,title("North West"))
+
+
+plot(smoothweightR$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),)
+lines(y=Rest$NEY_LowerBound,x=Rest$Date-sagedelay)
+lines(y=Rest$NEY_UpperBound,x=Rest$Date-sagedelay)
+lines(predict(loess(NE ~ x, data=dfR,span=0.3)),col='red',x=dfR$date,title("North East"))
+
+plot(smoothweightR$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),)
+lines(y=Rest$SW_LowerBound,x=Rest$Date-sagedelay)
+lines(y=Rest$SW_UpperBound,x=Rest$Date-sagedelay)
+lines(predict(loess(SW ~ x, data=dfR,span=0.3)),col='red',x=dfR$date,title("South West"))
+
+plot(smoothweightR$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),)
+lines(y=Rest$SE_LowerBound,x=Rest$Date-sagedelay)
+lines(y=Rest$SE_UpperBound,x=Rest$Date-sagedelay)
+lines(predict(loess(SE ~ x, data=dfR,span=0.3)),col='red',x=dfR$date,title("South East"))
+
+plot(smoothweightR$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),)
+lines(y=Rest$EEng_LowerBound,x=Rest$Date-sagedelay)
+lines(y=Rest$EEng_UpperBound,x=Rest$Date-sagedelay)
+lines(predict(loess(EE ~ x, data=dfR,span=0.3)),col='red',x=dfR$date,title("East England"))
+
+plot(smoothweightR$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),)
+lines(y=Rest$Mid_LowerBound,x=Rest$Date-sagedelay)
+lines(y=Rest$Mid_UpperBound,x=Rest$Date-sagedelay)
+lines(predict(loess(EM ~ x, data=dfR,span=0.3)),col='red',x=dfR$date,title("East Midlands"))
+
+plot(smoothweightR$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),)
+lines(y=Rest$Mid_LowerBound,x=Rest$Date-sagedelay)
+lines(y=Rest$Mid_UpperBound,x=Rest$Date-sagedelay)
+lines(predict(loess(WM ~ x, data=dfR,span=0.3)),col='red',x=dfR$date,title("West Midlands"))
+
+plot(smoothweightR$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),)
+lines(y=Rest$NEY_LowerBound,x=Rest$Date-sagedelay)
+lines(y=Rest$NEY_UpperBound,x=Rest$Date-sagedelay)
+lines(predict(loess(YH ~ x, data=dfR,span=0.3)),col='red',x=dfR$date,title("Yorkshire"))
+
+
 
 
 #Reverse Engineer cases from R-number - requires stratonovich calculus to get reversibility
