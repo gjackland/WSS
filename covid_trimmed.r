@@ -152,6 +152,7 @@ vacdat <-  read_csv(file = vacurl, col_types = coltypes)
 vacdat <- vacdat %>%
   select(date = date,  values =cumVaccinationFirstDoseUptakeByPublishDatePercentage)
 #  Scotland data https://api.coronavirus.data.gov.uk/v2/data?areaType=nation&areaCode=S92000003&metric=newCasesBySpecimenDate&metric=newDeaths28DaysByDeathDate&metric=newDeaths28DaysByPublishDate&format=csv
+# https://www.opendata.nhs.scot/dataset/covid-19-in-scotland/resource/9393bd66-5012-4f01-9bc5-e7a10accacf4
 
 scoturl <-  paste0(baseurl,
                    "areaType=nation&",
@@ -166,7 +167,9 @@ coltypes <-  cols(
   newDeaths28DaysByPublishDate = col_double(), 
   newDeaths28DaysByDeathDate = col_double()
 )
-
+#  trying and failing to get data from PHS
+scotdeaths<- read.csv(file="https://www.opendata.nhs.scot/dataset/covid-19-in-scotland/resource/9393bd66-5012-4f01-9bc5-e7a10accacf4")
+#scotdeaths<- read.csv(file="https://www.opendata.nhs.scot/api/3/action/datastore_search?resource_id=9393bd66-5012-4f01-9bc5-e7a10accacf4")
 # Read in the data
 scotdat <-  read_csv(file = scoturl, col_types = coltypes)
 
@@ -219,9 +222,10 @@ regdeaths <- regdat %>%  select(date,areaName,
   arrange(date)
 #  Get age data for regions because can't download simultaneously
 regurl2 <- paste0(baseurl,
-                 "areaType=region&",
-                 "metric=newCasesBySpecimenDateAgeDemographics&",
-                 "format=csv")
+                  "areaType=region&",
+                  "metric=newCasesBySpecimenDateAgeDemographics&",
+                  "metric=newDeathsBySpecimenDateAgeDemographics&",
+                  "format=csv")
 # Read in the data
 regagedat <-  read_csv(file = regurl2)
 # Transform the data
@@ -250,9 +254,7 @@ Rest <- read_csv(file="data/R_estimate.csv", col_types = coltypes)
 comdat$tests[1:58] = as.integer(ukcasedat$tests[1:58] * 0.867)
 rm(ukcasedat)
 
-plot(y=comdat$allCases, x=comdat$date, xlab="Date" , ylab="All cases")
-
-
+#plot(y=comdat$allCases, x=comdat$date, xlab="Date" , ylab="All cases")
 # MAA: Same plot using ggplot
 comdat %>% ggplot(aes(x=date,y=allCases)) + geom_line() +
   xlab("Date") + ylab("All cases")
@@ -326,35 +328,45 @@ lines(comdat$fpCases, col="red")
 
 # Calculation of Rnumber, generation time = 4 days
 genTime=4
-gjaR<-unlist(comdat$allCases,use.names=FALSE)
-rawR<-unlist(comdat$inputCases,use.names=FALSE)
+#gjaR<-unlist(comdat$allCases,use.names=FALSE)
+#rawR<-unlist(comdat$inputCases,use.names=FALSE)
 
 # Create a vector to hold the results
-fpR <- vector(mode=mode(comdat$fpCases),length=length(gjaR))
-bylogR <-fpR
-
+#fpR <- vector(mode=mode(comdat$fpCases),length=length(gjaR))
+#bylogR <-fpR
+#dfR=data.frame(gjaR=gjaR,x=1:length(gjaR),bylogR=bylogR,fpR=fpR,rawR=rawR,date=comdat$date)
+dfR=data.frame(x=1.0:length(comdat$date),date=comdat$date,gjaR=1:length(comdat$date))
+dfR$rawR<-dfR$gjaR
+dfR$fpR<-dfR$gjaR
+dfR$weeklyR<-dfR$gjaR
+dfR$bylogR<-dfR$gjaR
+ 
  #Ito: gjaR[i]<-(1+(comdat$allCases[i]-comdat$allCases[i-1])*2*genTime/(comdat$allCases[i]+comdat$allCases[i-1]))
   #Stratanovitch calculus
-for(i in 2:length(gjaR)){
-  gjaR[i]<-(1+(comdat$allCases[i]-comdat$allCases[i-1])*genTime/(comdat$allCases[i-1]))
-  rawR[i]<-(1+(comdat$inputCases[i]-comdat$inputCases[i-1])*genTime/(comdat$inputCases[i-1]))
-  fpR[i]<-(1+(comdat$fpCases[i]-comdat$fpCases[i-1])*genTime/(comdat$fpCases[i-1]))
-  bylogR[i]<-1+log(comdat$allCases[i]/comdat$allCases[i-1])*genTime
+for(i in 2:length(dfR$gjaR)){
+  dfR$gjaR[i]=(1+(comdat$allCases[i]-comdat$allCases[i-1])*genTime/(comdat$allCases[i-1]))
+  dfR$rawR[i]=(1+(comdat$inputCases[i]-comdat$inputCases[i-1])*genTime/(comdat$inputCases[i-1]))
+  dfR$fpR[i]=(1+(comdat$fpCases[i]-comdat$fpCases[i-1])*genTime/(comdat$fpCases[i-1]))
+  dfR$bylogR[i]=1+log(comdat$allCases[i]/comdat$allCases[i-1])*genTime
 }
-rawR[1]=rawR[2]
-gjaR[1]=gjaR[2]
-bylogR[1]=bylogR[2]
-fpR[1]=fpR[2]
-weeklyR<-gjaR
-for(i in 4:(length(gjaR)-3)){
+dfR$rawR[1]=dfR$rawR[2]
+dfR$gjaR[1]=dfR$gjaR[2]
+dfR$bylogR[1]=dfR$bylogR[2]
+dfR$fpR[1]=dfR$fpR[2]
+for(i in 4:(length(dfR$weeklyR)-3)){
     day1=i-3
     day7=i+3
-    weeklyR[i]=sum(gjaR[day1:day7])/7.0
+    dfR$weeklyR[i]=sum(dfR$gjaR[day1:day7])/7.0
 }
+#End effect
+dfR$weeklyR[length(dfR$weeklyR)]=1.0
+dfR$weeklyR[length(dfR$weeklyR)-1]=1.0
+dfR$weeklyR[length(dfR$weeklyR)-2]=1.0
+
 #Plot various types of smoothing on the R data
-plot(x=comdat$date,y=rawR,ylab="R",xlab="date")
-points(x=comdat$date,y=gjaR,col="red")
-lines(x=comdat$date,y=weeklyR, lwd=3)
+plot(x=dfR$date,y=dfR$rawR,ylab="R",xlab="date")
+points(x=dfR$date,y=dfR$gjaR,col="red")
+lines(x=dfR$date,y=dfR$weeklyR, lwd=3)
 lines(y=Rest$England_LowerBound,x=Rest$Date)
 lines(y=Rest$England_UpperBound,x=Rest$Date)
 # Wanted to plot a Smooth spline discontinuous at
@@ -366,7 +378,7 @@ dat <- Rest[Rest$Date >= min(comdat$date) & Rest$Date <= max(comdat$date),]
 # Plot
 d1 <- as.Date("2020-10-31")
 d2 <- as.Date("2020-12-02")
-ggplot(comdat) +
+ggplot(dfR) +
            geom_point(aes(x=date,y=rawR),alpha=0.5) +
            geom_point(aes(x=date,y=gjaR),colour="red", alpha=0.5) +
            geom_line(aes(x=date,y=weeklyR),colour="blue") +
@@ -375,7 +387,7 @@ ggplot(comdat) +
            xlab("Date") + ylab("R value")
 
 # Zoom in
-ggplot(comdat) +
+ggplot(dfR) +
   geom_point(aes(x=date,y=rawR),alpha=0.5) +
   geom_point(aes(x=date,y=gjaR),colour="red", alpha=0.5) +
   geom_line(aes(x=date,y=weeklyR),colour="blue") +
@@ -384,44 +396,55 @@ ggplot(comdat) +
   xlab("Date") + ylab("R value")
 
 
-nospl=5
-test_delay=0
+nospl=3
+test_delay=7
 lock1=98+test_delay
 unlock1=130+test_delay
 lock2=165+test_delay
 
-
-smoothweightR<-smooth.spline(bylogR,df=19,w=sqrt(comdat$allCases))
-smoothweightRfp<-smooth.spline(fpR,df=19,w=sqrt(comdat$fpCases))
-smoothR<-smooth.spline(bylogR,df=14)
-smoothR98<-smooth.spline(bylogR[1:lock1],df=nospl)
-smoothR98$x=smoothR98$x
-smoothR130<-smooth.spline(bylogR[lock1:unlock1],df=nospl)
-smoothR130$x=smoothR130$x+lock1
-smoothR164<-smooth.spline(bylogR[unlock1:lock2],df=nospl)
+smoothweightR<-smooth.spline(dfR$bylogR,df=19,w=sqrt(comdat$allCases))
+smoothweightR$date<-comdat$date
+smoothweightRfp<-smooth.spline(dfR$fpR,df=19,w=sqrt(comdat$fpCases))
+smoothweightRfp$date<-dfR$date
+smoothR<-smooth.spline(dfR$bylogR,df=14)
+smoothR98<-smooth.spline(dfR$bylogR[1:lock1],df=nospl)
+smoothR98$date<-dfR$date[1:lock1]
+smoothR130<-smooth.spline(dfR$bylogR[lock1:unlock1],df=nospl)
+smoothR130$date<-dfR$date[lock1:unlock1]
+smoothR164<-smooth.spline(dfR$bylogR[unlock1:lock2],df=nospl)
 smoothR164$x=smoothR164$x+unlock1
-smoothRend<-smooth.spline(bylogR[lock2:length(gjaR)],df=nospl)
+smoothR164$date<-dfR$date[unlock1:lock2]
+smoothRend<-smooth.spline(dfR$bylogR[lock2:length(dfR$date)],df=nospl)
 smoothRend$x=smoothRend$x+lock2
-plot(smoothweightR$y,x=comdat$date)
-points(smoothR$y,x=comdat$date,col="green")
+smoothRend$date<-dfR$date[lock2:length(dfR$gjaR)]
+dfR$piecewise<-dfR$gjaR
+for (i in 1:lock1){dfR$piecewise[i]=smoothR98$y[i]}
+for (i in lock1+1:unlock1){dfR$piecewise[i]=smoothR130$y[i-lock1]}
+for (i in unlock1+1:lock2){dfR$piecewise[i]=smoothR164$y[i-unlock1]}
+for (i in lock2+1:length(dfR$date)){dfR$piecewise[i]=smoothRend$y[i-lock2]}
+
 #Plot R estimate vs data and fits discontinuous at lockdown
-#  Have to move the Official R data back by 20 days !
-lines(smoothweightRfp$y,x=comdat$date,col="red")
+#  Have to move the Official R data back by 16 days !
+
+plot(smoothweightR$y,x=smoothweightR$date,ylab="R-number",xlab="Date after Aug 25",ylim=c(0.6,1.4))
+#lines(smoothweightRfp$y,x=smoothweightRfp$date,col="blue")
 lines(y=Rest$England_LowerBound,x=Rest$Date-16)
 lines(y=Rest$England_UpperBound,x=Rest$Date-16)
-plot(smoothweightR$y,ylab="R-number",xlab="Day")
-lines(smoothR98$y, col="red", lwd=2)
-lines(smoothR130,col="red",lwd=2)
-lines(smoothR164,col="red",lwd=2)
-lines(smoothRend,col="red",lwd=2)
-lines(weeklyR)
+lines(dfR$piecewise,col="red",lwd=2,x=dfR$date)
+
+
+lines(predict(loess(gjaR ~ x, data=dfR,span=0.1)),col='red',x=dfR$date)
+lines(predict(loess(gjaR ~ x, data=dfR,span=0.2)),col='red',x=dfR$date)
+lines(predict(loess(gjaR ~ x, data=dfR,span=0.3)),col='red',x=dfR$date)
+lines(predict(loess(gjaR ~ x, data=dfR,span=0.5)),col='red',x=dfR$date)
+lines(predict(loess(gjaR ~ x, data=dfR,span=1.0)),col='red',x=dfR$date)
 plot(smoothweightR$y,ylab="R-number",xlab="Day")
 #  Plot R continuous with many splines.  Not sure when fitting noise here!
 for (ismooth in 4:28){
 #   lines(smooth.spline(as.vector(gjaR),df=ismooth,w=sqrt(comdat$allCases)))
-  lines(smooth.spline(as.vector(weeklyR),df=ismooth),col="blue")}
-points(bylogR, col = "red")
-lines(smooth.spline(bylogR,df=14))
+  lines(smooth.spline(dfR$weeklyR,df=ismooth),col="blue")}
+points(dfR$bylogR, col = "red")
+lines(smooth.spline(dfR$bylogR,df=14))
 # Plot the UB and LB for the UK R estimates, have added a line commented out
 # where you can plot your estimate for the R value - add your own data frame
 # change date and R to what you called the columns - you probably have to have
@@ -436,23 +459,23 @@ Rest %>% ggplot(aes(x=Date)) + geom_ribbon(aes(Date,min=England_LowerBound,max=E
 #Reverse Engineer cases from R-number - requires stratonovich calculus to get reversibility
 # Initializations
 #rm(PredictCases,PredictCasesSmoothR)
-PredictCases <- bylogR
-PredictCasesRaw <- rawR
-PredictCasesSmoothR<- bylogR
-PredictCasesMeanR<- bylogR
-PredictCasesLin <-gjaR
+PredictCases <- dfR$bylogR
+PredictCasesRaw <- dfR$rawR
+PredictCasesSmoothR<- dfR$bylogR
+PredictCasesMeanR<- dfR$bylogR
+PredictCasesLin <-dfR$gjaR
 #  Use the same weekend-adjusted initial condition, regardless of smoothing effect
 PredictCases[1]=comdat$allCases[1]
 PredictCasesRaw[1]=PredictCases[1]
 PredictCasesSmoothR[1]=PredictCases[1]
 PredictCasesMeanR[1]<- PredictCases[1]
-smoothR<-smooth.spline(bylogR,df=24)
-meanR=mean(rawR)
-for(i in 2:length(gjaR)){
-  PredictCases[i]=PredictCases[i-1]*exp((bylogR[i]-1)/genTime)
-  PredictCasesLin[i]=PredictCases[i-1]*(1.0+(gjaR[i]-1)/genTime)
-  PredictCasesRaw[i]=PredictCasesRaw[i-1]*(1.0+(rawR[i]-1)/genTime)
-  PredictCasesMeanR[i]=PredictCasesMeanR[i-1]*(1.0+(meanR-1)/genTime)
+smoothR<-smooth.spline(dfR$bylogR,df=24)
+meanR=mean(dfR$rawR)
+for(i in 2:length(dfR$gjaR)){
+  PredictCases[i]=PredictCases[i-1]*exp((dfR$bylogR[i]-1)/genTime)
+  PredictCasesLin[i]=PredictCases[i-1]*(1.0+(dfR$gjaR[i]-1)/genTime)
+  PredictCasesRaw[i]=PredictCasesRaw[i-1]*(1.0+(dfR$rawR[i]-1)/genTime)
+  PredictCasesMeanR[i]=PredictCasesMeanR[i-1]*(1.0+(dfR$meanR-1)/genTime)
   
 #  Averaging R is not the same as averaging e^R
 #  Noise suppresses the growth rate in the model, Smoothed R grows too fast
@@ -460,10 +483,10 @@ for(i in 2:length(gjaR)){
 #   Multiplier chosen to match final cases with df=24
     PredictCasesSmoothR[i]=PredictCasesSmoothR[i-1]*(1.0+(ri-1)/genTime)
   }
-plot(PredictCases,x=comdat$date,xlab="Date")
+plot(PredictCases,x=dfR$date,xlab="Date",ylab="Cases backdeduced from R")
 lines(comdat$allCases,x=comdat$date, col="red")
-lines(PredictCasesSmoothR,x=comdat$date, col="blue",lwd=2)
-lines(PredictCasesMeanR,x=comdat$date, col="green")
+lines(PredictCasesSmoothR,x=dfR$date, col="blue",lwd=2)
+#lines(PredictCasesMeanR,x=comdat$date, col="green")
 lines(PredictCasesLin,x=comdat$date, col="orange")
 sum(PredictCases)
 sum(PredictCasesSmoothR)
@@ -579,12 +602,12 @@ rm(day,area)
 
 plot(regdeaths$London*55,x=regdeaths$date)
 lines(reglnpredict$London,x=reglnpredict$date)
-plotlines(reggampredict$London,x=reglnpredict$date)
+lines(reggampredict$London,x=reglnpredict$date)
 
-plot(regdeaths$`North East`,x=regdeaths$date)
-lines(reglnpredict$`North East`*55,x=regdeaths$date)
-plot(regdeaths$`North West`,x=regdeaths$date)
-plot(y=reglnpredict$`North West`,x=reglnpredict$date)
+plot(regdeaths$`North East`*55,x=regdeaths$date)
+lines(reglnpredict$`North East`,x=reglnpredict$date)
+plot(regdeaths$`North West`*55,x=regdeaths$date)
+lines(y=reglnpredict$`North West`,x=reglnpredict$date)
 lines(reglnpredict$`South West`,x=reglnpredict$date)
 lines(reglnpredict$`South East`,x=reglnpredict$date)
 lines(reglnpredict$`East Midlands` ,x=reglnpredict$date)
