@@ -437,9 +437,9 @@ smoothRend$x=smoothRend$x+lock2
 smoothRend$date<-dfR$date[lock2:length(dfR$gjaR)]
 dfR$piecewise<-dfR$gjaR
 for (i in 1:lock1){dfR$piecewise[i]=smoothR98$y[i]}
-for (i in lock1+1:unlock1){dfR$piecewise[i]=smoothR130$y[i-lock1]}
-for (i in unlock1+1:lock2){dfR$piecewise[i]=smoothR164$y[i-unlock1]}
-for (i in lock2+1:length(dfR$date)){dfR$piecewise[i]=smoothRend$y[i-lock2]}
+for (i in (lock1+1):unlock1){dfR$piecewise[i]=smoothR130$y[i-lock1]}
+for (i in (unlock1+1):lock2){dfR$piecewise[i]=smoothR164$y[i-unlock1]}
+for (i in (lock2+1):length(dfR$date)){dfR$piecewise[i]=smoothRend$y[i-lock2]}
 
 #Plot R estimate vs data and fits discontinuous at lockdown
 #  Have to move the Official R data back by 16 days !
@@ -479,54 +479,54 @@ lines(smooth.spline(dfR$bylogR,df=14))
 Rest %>% ggplot(aes(x=Date)) + geom_ribbon(aes(Date,min=England_LowerBound,max=England_UpperBound),colour="red",alpha=0.25) +
   ylab("R Estimate") + xlab("Date")  # + geom_line(comdat,aes(date,R))
 
-#Plot Regional R data vs Government
-plot(smoothweightR$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4))
+#Plot Regional R data vs Government  spdf is spline smoothing factor, lospan for loess
+spdf=12
+lospan=0.3
+plot(smooth.spline(dfR$Lon,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4))
 lines(y=Rest$Lon_LowerBound,x=Rest$Date-sagedelay)
 lines(y=Rest$Lon_UpperBound,x=Rest$Date-sagedelay)
-lines(predict(loess(Lon ~ x, data=dfR,span=0.3)),col='red',x=dfR$date,title("London"))
+lines(predict(loess(Lon ~ x, data=dfR,span=lospan)),col='red',x=dfR$date,title("London"))
 
-plot(smoothweightR$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),)
+plot(smooth.spline(dfR$NW,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4))
 lines(y=Rest$NW_LowerBound,x=Rest$Date-sagedelay)
 lines(y=Rest$NW_UpperBound,x=Rest$Date-sagedelay)
-lines(predict(loess(NW ~ x, data=dfR,span=0.3)),col='red',x=dfR$date,title("North West"))
+lines(predict(loess(NW ~ x, data=dfR,span=lospan)),col='red',x=dfR$date,title("North West"))
 
 
-plot(smoothweightR$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),)
+plot(smooth.spline(dfR$NE,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4))
 lines(y=Rest$NEY_LowerBound,x=Rest$Date-sagedelay)
 lines(y=Rest$NEY_UpperBound,x=Rest$Date-sagedelay)
-lines(predict(loess(NE ~ x, data=dfR,span=0.3)),col='red',x=dfR$date,title("North East"))
+lines(predict(loess(NE ~ x, data=dfR,span=lospan)),col='red',x=dfR$date,title("North East"))
 
-plot(smoothweightR$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),)
+plot(smooth.spline(dfR$SW,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4))
 lines(y=Rest$SW_LowerBound,x=Rest$Date-sagedelay)
 lines(y=Rest$SW_UpperBound,x=Rest$Date-sagedelay)
-lines(predict(loess(SW ~ x, data=dfR,span=0.3)),col='red',x=dfR$date,title("South West"))
+lines(predict(loess(SW ~ x, data=dfR,span=lospan)),col='red',x=dfR$date,title("South West"))
 
-plot(smoothweightR$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),)
+plot(smooth.spline(dfR$SE,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4))
 lines(y=Rest$SE_LowerBound,x=Rest$Date-sagedelay)
 lines(y=Rest$SE_UpperBound,x=Rest$Date-sagedelay)
-lines(predict(loess(SE ~ x, data=dfR,span=0.3)),col='red',x=dfR$date,title("South East"))
+lines(predict(loess(SE ~ x, data=dfR,span=lospan)),col='red',x=dfR$date,title("South East"))
 
-plot(smoothweightR$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),)
+plot(smooth.spline(dfR$EE,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4))
 lines(y=Rest$EEng_LowerBound,x=Rest$Date-sagedelay)
 lines(y=Rest$EEng_UpperBound,x=Rest$Date-sagedelay)
-lines(predict(loess(EE ~ x, data=dfR,span=0.3)),col='red',x=dfR$date,title("East England"))
+lines(predict(loess(EE ~ x, data=dfR,span=lospan)),col='red',x=dfR$date,title("East England"))
 
-plot(smoothweightR$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),)
+plot(smooth.spline(dfR$EM,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4))
 lines(y=Rest$Mid_LowerBound,x=Rest$Date-sagedelay)
 lines(y=Rest$Mid_UpperBound,x=Rest$Date-sagedelay)
-lines(predict(loess(EM ~ x, data=dfR,span=0.3)),col='red',x=dfR$date,title("East Midlands"))
+lines(predict(loess(EM ~ x, data=dfR,span=lospan)),col='red',x=dfR$date,title("East Midlands"))
 
-plot(smoothweightR$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),)
+plot(smooth.spline(dfR$WM,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4))
 lines(y=Rest$Mid_LowerBound,x=Rest$Date-sagedelay)
 lines(y=Rest$Mid_UpperBound,x=Rest$Date-sagedelay)
-lines(predict(loess(WM ~ x, data=dfR,span=0.3)),col='red',x=dfR$date,title("West Midlands"))
+lines(predict(loess(WM ~ x, data=dfR,span=lospan)),col='red',x=dfR$date,title("West Midlands"))
 
-plot(smoothweightR$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),)
+plot(smooth.spline(dfR$YH,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4))
 lines(y=Rest$NEY_LowerBound,x=Rest$Date-sagedelay)
 lines(y=Rest$NEY_UpperBound,x=Rest$Date-sagedelay)
-lines(predict(loess(YH ~ x, data=dfR,span=0.3)),col='red',x=dfR$date,title("Yorkshire"))
-
-
+lines(predict(loess(YH ~ x, data=dfR,span=lospan)),col='red',x=dfR$date,title("Yorkshire"))
 
 
 #Reverse Engineer cases from R-number - requires stratonovich calculus to get reversibility
