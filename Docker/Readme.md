@@ -39,7 +39,7 @@ RUN install2.r --error \
 COPY ./covid_trimmed.r /
 ADD ./data /data
 
-# Run the code
+# Run the code when the docker instance is activated
 CMD ["Rscript", "covid_trimmed.r"]
 ```
 
