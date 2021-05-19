@@ -14,11 +14,11 @@ RUN apt-get update -y && \
     ggplot2 \
     lubridate \
     zoo \
-    RColorBrewer 
+    RColorBrewer
 
 # Copy the code to the root directory of the image
 COPY ../covid_trimmed.r .
 ADD ./data /data
-#WORKDIR /Users/mario/Git/Covid-19/WSS/
-# Run the code
+
+# Run the code when the docker instance is activated
 CMD ["Rscript", "covid_trimmed.r"]
