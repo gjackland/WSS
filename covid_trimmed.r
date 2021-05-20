@@ -1,4 +1,4 @@
-#!/usr/bin/env Rscript
+#!/usr/bin/env Rscript --verbose
 #
 # Weight, Scale and Shift (WSS) Code
 #
@@ -164,7 +164,7 @@ scoturl <-  paste0(baseurl,
 coltypes <-  cols(
   date = col_date(format = "%Y-%m-%d"),
   newCasesBySpecimenDate = col_double(),
-  newDeaths28DaysByPublishDate = col_double(), 
+  newDeaths28DaysByPublishDate = col_double(),
   newDeaths28DaysByDeathDate = col_double()
 )
 #  trying and failing to get data from PHS
@@ -278,7 +278,7 @@ for(i in 1:length(comdat$allCases)){
   comdat$allCases[i]=comdat$allCases[i]/days[indexday]
   scotdat$allCases[i]=scotdat$allCases[i]/days[indexday]
   for (area in 2:10){
-    regcases[i,area]=regcases[i,area]/days[indexday] 
+    regcases[i,area]=regcases[i,area]/days[indexday]
   }
 }
 
@@ -297,10 +297,10 @@ for (i in 153:164){
 #  Fix Xmas anomaly in regions
 for (area in 2:10){
   Xmasav[area] <- sum(regcases[153:164,area])/12
-  Xmasgrad<-regcases[164,area]-regcases[153,area] 
+  Xmasgrad<-regcases[164,area]-regcases[153,area]
   for (i in 153:164){
     regcases[i,area]<-Xmasav[area]-Xmasgrad*(158.5-i)/12.0
-  }  
+  }
   }
 
 
@@ -350,7 +350,7 @@ dfR$Lon<-dfR$gjaR
 dfR$SE<-dfR$gjaR
 dfR$SW<-dfR$gjaR
 
- 
+
  #Ito: gjaR[i]<-(1+(comdat$allCases[i]-comdat$allCases[i-1])*2*genTime/(comdat$allCases[i]+comdat$allCases[i-1]))
   #Stratanovitch calculus
 for(i in 2:length(dfR$gjaR)){
@@ -549,7 +549,7 @@ for(i in 2:length(dfR$gjaR)){
   PredictCasesLin[i]=PredictCases[i-1]*(1.0+(dfR$gjaR[i]-1)/genTime)
   PredictCasesRaw[i]=PredictCasesRaw[i-1]*(1.0+(dfR$rawR[i]-1)/genTime)
   PredictCasesMeanR[i]=PredictCasesMeanR[i-1]*(1.0+(dfR$meanR-1)/genTime)
-  
+
 #  Averaging R is not the same as averaging e^R
 #  Noise suppresses the growth rate in the model, Smoothed R grows too fast
    ri=smoothR$y[i]  # Fudge factor *0.94663
