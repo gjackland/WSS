@@ -1,4 +1,4 @@
-#!/usr/bin/env Rscript --verbose
+#!/usr/bin/env Rscript
 #
 # Weight, Scale and Shift (WSS) Code
 #
@@ -405,9 +405,9 @@ ggplot(dfR) +
 
 # Zoom in
 ggplot(dfR) +
-  geom_point(aes(x=date,y=rawR),alpha=0.5) +
-  geom_point(aes(x=date,y=gjaR),colour="red", alpha=0.5) +
-  geom_line(aes(x=date,y=weeklyR),colour="blue") +
+  geom_point(aes(x=date,y=rawR),alpha=0.5,na.rm=TRUE) +
+  geom_point(aes(x=date,y=gjaR),colour="red", alpha=0.5,na.rm=TRUE) +
+  geom_line(aes(x=date,y=weeklyR),colour="blue",na.rm=TRUE) +
     geom_ribbon(data=dat,aes(Date,min=England_LowerBound,max=England_UpperBound),
               colour="green",alpha=0.25) + ylim(0,2.5) +
   xlab("Date") + ylab("R value")
@@ -548,7 +548,7 @@ for(i in 2:length(dfR$gjaR)){
   PredictCases[i]=PredictCases[i-1]*exp((dfR$bylogR[i]-1)/genTime)
   PredictCasesLin[i]=PredictCases[i-1]*(1.0+(dfR$gjaR[i]-1)/genTime)
   PredictCasesRaw[i]=PredictCasesRaw[i-1]*(1.0+(dfR$rawR[i]-1)/genTime)
-  PredictCasesMeanR[i]=PredictCasesMeanR[i-1]*(1.0+(dfR$meanR-1)/genTime)
+  PredictCasesMeanR[i]=PredictCasesMeanR[i-1]*(1.0+(meanR-1)/genTime)
 
 #  Averaging R is not the same as averaging e^R
 #  Noise suppresses the growth rate in the model, Smoothed R grows too fast
