@@ -433,7 +433,12 @@ for(i in ((genTime+1):length(dfR$gjaR))    ){
   dfR$p75[i]=1+log(casedat$'75_79'[i]/casedat$'75_79'[i-1])*genTime
   dfR$p80[i]=1+log(casedat$'80_84'[i]/casedat$'80_84'[i-1])*genTime
   dfR$p85[i]=1+log(casedat$'85_89'[i]/casedat$'85_89'[i-1])*genTime
-  dfR$p90[i]=1+log(casedat$'90+'[i]/casedat$'90+'[i-1])*genTime
+  if(casedat$'90+'[i] != 0 & casedat$'90+'[i-1] != 0){
+    dfR$p90[i]=1+log(casedat$'90+'[i]/casedat$'90+'[i-1])*genTime
+  }else{
+    dfR$p90[i] = NA
+  }
+
 }
 
 for (i in 3:17){dfR[i,1]=dfR[i,2]}
@@ -523,7 +528,7 @@ for (i in 8:17){
 
 plot(smoothweightR$y,ylab="Agegroup R-number",xlab="Date",x=dfR$date)
 for (i in 18:length(dfR)){
-  lines(smooth.spline(dfR[i],df=19)$y,col=i,x=dfR$date)
+  lines(smooth.spline(na.omit(dfR[i]),df=19)$y,col=i,x=dfR$date[!is.na(dfR[i])])
 }
 
 plot(smoothweightR$y,x=smoothweightR$date,ylab="R-number",xlab="Date after Aug 25",ylim=c(0.6,1.4))
@@ -690,10 +695,11 @@ lines(y=Rest$England_LowerBound,x=Rest$Date-sagedelay)
 lines(y=Rest$England_UpperBound,x=Rest$Date-sagedelay)
 lines(predict(loess(p85 ~ x, data=dfR,span=lospan)),col='red',x=dfR$date,title("85-89"))
 
-plot(smooth.spline(dfR$p90,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4))
+plot(smooth.spline(na.omit(dfR$p90),df=spdf,w=sqrt(comdat$allCases[!is.na(dfR$p90)]))$y,ylab="R-number",xlab="Date",
+     x=dfR$date[!is.na(dfR$p90)],ylim=c(0.6,1.4))
 lines(y=Rest$England_LowerBound,x=Rest$Date-sagedelay)
 lines(y=Rest$England_UpperBound,x=Rest$Date-sagedelay)
-lines(predict(loess(p90 ~ x, data=dfR,span=lospan)),col='red',x=dfR$date,title("90+"))
+lines(predict(loess(p90 ~ x, data=dfR,span=lospan)),col='red',x=dfR$date[!is.na(dfR$p90)],title("90+"))
 
 
 # Reverse Engineer cases from R-number - requires stratonovich calculus to get reversibility
