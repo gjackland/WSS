@@ -385,6 +385,17 @@ dfR$p90<-dfR$gjaR
 # df#Ito: gjaR[i]<-(1+(comdat$allCases[i]-comdat$allCases[i-1])*2*genTime/(comdat$allCases[i]+comdat$allCases[i-1]))
 #  #Stratanovitch calculus
 # rawR averages cases over previous genTime days - assumes genTime is the same as infectious period
+
+# Check if there are any zero cases in the data
+if(any(casedat==0)){
+  for(name in names(casedat)){
+    if(any(casedat[name]==0)){
+      warning("Zero values found for ",name," for the date(s) ",
+              paste(casedat[["date"]][which(casedat[name]==0)],collapse = ", "),".")
+    }
+  }
+}
+
 #  Generate R over all regions and ages
 for(i in ((genTime+1):length(dfR$gjaR))    ){
   dfR$gjaR[i]=(1+(comdat$allCases[i]-comdat$allCases[i-1])*genTime/(comdat$allCases[i-1]))
