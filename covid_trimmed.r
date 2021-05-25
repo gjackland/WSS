@@ -220,14 +220,29 @@ regdeaths <- regdat %>%  select(date,areaName,
   filter(date >= startdate &
            date <= enddate )%>%
   arrange(date)
+
 #  Get age data for regions because can't download simultaneously
 regurl2 <- paste0(baseurl,
                   "areaType=region&",
                   "metric=newCasesBySpecimenDateAgeDemographics&",
                   "metric=newDeathsBySpecimenDateAgeDemographics&",
                   "format=csv")
+
+# specify the column types
+coltypes <- cols(
+  areaCode = col_character(),
+  areaName = col_character(),
+  areaType = col_character(),
+  date = col_date(format = "%Y-%m-%d"),
+  age = col_character(),
+  cases = col_double(),
+  rollingSum = col_double(),
+  rollingRate = col_double()
+)
+
 # Read in the data
-regagedat <-  read_csv(file = regurl2)
+regagedat <-  read_csv(file = regurl2, col_types = coltypes)
+
 # Transform the data
 regagedat <- regagedat %>%  select(date, areaName, age, cases) %>%
   filter(date >= startdate &
@@ -311,7 +326,7 @@ for (i in 2:ncol(casedat)) {
     casedat[j,i] <- as.integer(casedat[j,i]/days[indexday])
   }
 }
-
+#Fix Xmas and weekend anomaly in age data
 for (i in 2:ncol(casedat) ){
 
     Xmasav = sum(casedat[153:164,i])/12
@@ -330,9 +345,8 @@ plot(comdat$allCases)
 lines(comdat$fpCases, col="red")
 
 # Calculation of Rnumber, generation time = 4 days
-genTime=4
-#gjaR<-unlist(comdat$allCases,use.names=FALSE)
-#rawR<-unlist(comdat$inputCases,use.names=FALSE)
+genTime=5
+
 
 # Create a vector to hold the results
 #fpR <- vector(mode=mode(comdat$fpCases),length=length(gjaR))
@@ -352,13 +366,44 @@ dfR$EE<-dfR$gjaR
 dfR$Lon<-dfR$gjaR
 dfR$SE<-dfR$gjaR
 dfR$SW<-dfR$gjaR
+dfR$p00<-dfR$gjaR
+dfR$p05<-dfR$gjaR
+dfR$p10<-dfR$gjaR
+dfR$p15<-dfR$gjaR
+dfR$p20<-dfR$gjaR
+dfR$p25<-dfR$gjaR
+dfR$p30<-dfR$gjaR
+dfR$p35<-dfR$gjaR
+dfR$p40<-dfR$gjaR
+dfR$p45<-dfR$gjaR
+dfR$p50<-dfR$gjaR
+dfR$p55<-dfR$gjaR
+dfR$p60<-dfR$gjaR
+dfR$p65<-dfR$gjaR
+dfR$p70<-dfR$gjaR
+dfR$p75<-dfR$gjaR
+dfR$p80<-dfR$gjaR
+dfR$p85<-dfR$gjaR
+dfR$p90<-dfR$gjaR
+# df#Ito: gjaR[i]<-(1+(comdat$allCases[i]-comdat$allCases[i-1])*2*genTime/(comdat$allCases[i]+comdat$allCases[i-1]))
+#  #Stratanovitch calculus
+# rawR averages cases over previous genTime days - assumes genTime is the same as infectious period
 
+# Check if there are any zero cases in the data
+if(any(casedat==0)){
+  for(name in names(casedat)){
+    if(any(casedat[name]==0)){
+      warning("Zero values found for ",name," for the date(s) ",
+              paste(casedat[["date"]][which(casedat[name]==0)],collapse = ", "),".")
+    }
+  }
+}
 
- #Ito: gjaR[i]<-(1+(comdat$allCases[i]-comdat$allCases[i-1])*2*genTime/(comdat$allCases[i]+comdat$allCases[i-1]))
-  #Stratanovitch calculus
-for(i in 2:length(dfR$gjaR)){
+#  Generate R over all regions and ages
+for(i in ((genTime+1):length(dfR$gjaR))    ){
   dfR$gjaR[i]=(1+(comdat$allCases[i]-comdat$allCases[i-1])*genTime/(comdat$allCases[i-1]))
-  dfR$rawR[i]=(1+(comdat$inputCases[i]-comdat$inputCases[i-1])*genTime/(comdat$inputCases[i-1]))
+  dfR$rawR[i]=1+ (comdat$allCases[i]-mean(comdat$allCases[(i-genTime):(i-1)]))*2/comdat$allCases[i-1]
+#  dfR$rawR[i]=(1+(comdat$inputCases[i]-comdat$inputCases[i-1])*genTime/(comdat$inputCases[i-1]))
   dfR$fpR[i]=(1+(comdat$fpCases[i]-comdat$fpCases[i-1])*genTime/(comdat$fpCases[i-1]))
   dfR$bylogR[i]=1+log(comdat$allCases[i]/comdat$allCases[i-1])*genTime
   dfR$NE[i]=1+log(regcases$`North East`[i]/regcases$`North East`[i-1])*genTime
@@ -370,7 +415,27 @@ for(i in 2:length(dfR$gjaR)){
   dfR$Lon[i]=1+log(regcases$London[i]/regcases$London[i-1])*genTime
   dfR$SE[i]=1+log(regcases$`South East`[i]/regcases$`South East`[i-1])*genTime
   dfR$SW[i]=1+log(regcases$`South West`[i]/regcases$`South West`[i-1])*genTime
+  dfR$p00[i]=1+log(casedat$'00_04'[i]/casedat$'00_04'[i-1])*genTime
+  dfR$p05[i]=1+log(casedat$'05_09'[i]/casedat$'05_09'[i-1])*genTime
+  dfR$p10[i]=1+log(casedat$'10_14'[i]/casedat$'10_14'[i-1])*genTime
+  dfR$p15[i]=1+log(casedat$'15_19'[i]/casedat$'15_19'[i-1])*genTime
+  dfR$p20[i]=1+log(casedat$'20_24'[i]/casedat$'20_24'[i-1])*genTime
+  dfR$p25[i]=1+log(casedat$'25_29'[i]/casedat$'25_29'[i-1])*genTime
+  dfR$p30[i]=1+log(casedat$'30_34'[i]/casedat$'30_34'[i-1])*genTime
+  dfR$p35[i]=1+log(casedat$'35_39'[i]/casedat$'35_39'[i-1])*genTime
+  dfR$p40[i]=1+log(casedat$'40_44'[i]/casedat$'40_44'[i-1])*genTime
+  dfR$p45[i]=1+log(casedat$'45_49'[i]/casedat$'45_49'[i-1])*genTime
+  dfR$p50[i]=1+log(casedat$'50_54'[i]/casedat$'50_54'[i-1])*genTime
+  dfR$p55[i]=1+log(casedat$'55_59'[i]/casedat$'55_59'[i-1])*genTime
+  dfR$p60[i]=1+log(casedat$'60_64'[i]/casedat$'60_64'[i-1])*genTime
+  dfR$p65[i]=1+log(casedat$'65_69'[i]/casedat$'65_69'[i-1])*genTime
+  dfR$p70[i]=1+log(casedat$'70_74'[i]/casedat$'70_74'[i-1])*genTime
+  dfR$p75[i]=1+log(casedat$'75_79'[i]/casedat$'75_79'[i-1])*genTime
+  dfR$p80[i]=1+log(casedat$'80_84'[i]/casedat$'80_84'[i-1])*genTime
+  dfR$p85[i]=1+log(casedat$'85_89'[i]/casedat$'85_89'[i-1])*genTime
+  dfR$p90[i]=1+log(casedat$'90+'[i]/casedat$'90+'[i-1])*genTime
 }
+
 for (i in 3:17){dfR[i,1]=dfR[i,2]}
 
 for(i in 4:(length(dfR$weeklyR)-3)){
@@ -384,36 +449,36 @@ dfR$weeklyR[length(dfR$weeklyR)-1]=1.0
 dfR$weeklyR[length(dfR$weeklyR)-2]=1.0
 
 #Plot various types of smoothing on the R data
-plot(x=dfR$date,y=dfR$rawR,ylab="R",xlab="date")
-points(x=dfR$date,y=dfR$gjaR,col="red")
-lines(x=dfR$date,y=dfR$weeklyR, lwd=3)
-lines(y=Rest$England_LowerBound,x=Rest$Date)
-lines(y=Rest$England_UpperBound,x=Rest$Date)
+#plot(x=dfR$date,y=dfR$rawR,ylab="R",xlab="date")
+#points(x=dfR$date,y=dfR$gjaR,col="red")
+#lines(x=dfR$date,y=dfR$weeklyR, lwd=3)
+#lines(y=Rest$England_LowerBound,x=Rest$Date)
+#lines(y=Rest$England_UpperBound,x=Rest$Date)
 # Wanted to plot a Smooth spline discontinuous at
 # UK lockdown Oct 31 (day 98) -Dec 2  (day 130) Jan 6 (day 165)  (day 1 = July 25)
 
 # Making the time windows agree
-dat <- Rest[Rest$Date >= min(comdat$date) & Rest$Date <= max(comdat$date),]
+Govdat <- Rest[Rest$Date >= min(comdat$date) & Rest$Date <= max(comdat$date),]
 
 # Plot
-d1 <- as.Date("2020-10-31")
-d2 <- as.Date("2020-12-02")
-ggplot(dfR) +
-           geom_point(aes(x=date,y=rawR),alpha=0.5) +
-           geom_point(aes(x=date,y=gjaR),colour="red", alpha=0.5) +
-           geom_line(aes(x=date,y=weeklyR),colour="blue") +
-           geom_ribbon(data=dat,aes(Date,min=England_LowerBound,max=England_UpperBound),
-                       colour="green",alpha=0.25) +
-           xlab("Date") + ylab("R value")
+#d1 <- as.Date("2020-10-31")
+#d2 <- as.Date("2020-12-02")
+#ggplot(dfR) +
+#           geom_point(aes(x=date,y=rawR),alpha=0.5) +
+#           geom_point(aes(x=date,y=gjaR),colour="red", alpha=0.5) +
+#           geom_line(aes(x=date,y=weeklyR),colour="blue") +
+#           geom_ribbon(data=Govdat,aes(Date,min=England_LowerBound,max=England_UpperBound),
+#                       colour="green",alpha=0.25) +
+#           xlab("Date") + ylab("R value")
 
 # Zoom in
-ggplot(dfR) +
-  geom_point(aes(x=date,y=rawR),alpha=0.5,na.rm=TRUE) +
-  geom_point(aes(x=date,y=gjaR),colour="red", alpha=0.5,na.rm=TRUE) +
-  geom_line(aes(x=date,y=weeklyR),colour="blue",na.rm=TRUE) +
-    geom_ribbon(data=dat,aes(Date,min=England_LowerBound,max=England_UpperBound),
-              colour="green",alpha=0.25) + ylim(0,2.5) +
-  xlab("Date") + ylab("R value")
+#  ggplot(dfR) +
+#  geom_point(aes(x=date,y=rawR),alpha=0.5) +
+#  geom_point(aes(x=date,y=gjaR),colour="red", alpha=0.5) +
+#  geom_line(aes(x=date,y=weeklyR),colour="blue") +
+#    geom_ribbon(data=Govdat,aes(Date,min=England_LowerBound,max=England_UpperBound),
+#              colour="green",alpha=0.25) + ylim(0,2.5) +
+#  xlab("Date") + ylab("R value")
 
 nospl=3
 test_delay=7
@@ -423,6 +488,8 @@ lock2=165+test_delay
 sagedelay=16 # Delay in producing R-number
 
 smoothweightR<-smooth.spline(dfR$bylogR,df=19,w=sqrt(comdat$allCases))
+smoothweightRraw<-smooth.spline(dfR$rawR,df=19,w=sqrt(comdat$allCases))
+smoothweightRgja<-smooth.spline(dfR$gjaR,df=19,w=sqrt(comdat$allCases))
 smoothweightR$date<-comdat$date
 smoothweightRfp<-smooth.spline(dfR$fpR,df=19,w=sqrt(comdat$fpCases))
 smoothweightRfp$date<-dfR$date
@@ -449,10 +516,16 @@ for (i in (lock2+1):length(dfR$date)){dfR$piecewise[i]=smoothRend$y[i-lock2]}
 
 #  All cases and Regions
 
-plot(smoothweightR$y,ylab="R-number",xlab="Date",x=dfR$date)
-for (i in 9:17){
-lines(smooth.spline(dfR[i],df=19)$y,col=i,x=dfR$date)
+plot(smoothweightR$y,ylab="Region R-number",xlab="Date",x=dfR$date)
+for (i in 8:17){
+  lines(smooth.spline(dfR[i],df=19)$y,col=i,x=dfR$date)
 }
+
+plot(smoothweightR$y,ylab="Agegroup R-number",xlab="Date",x=dfR$date)
+for (i in 18:length(dfR)){
+  lines(smooth.spline(dfR[i],df=19)$y,col=i,x=dfR$date)
+}
+
 plot(smoothweightR$y,x=smoothweightR$date,ylab="R-number",xlab="Date after Aug 25",ylim=c(0.6,1.4))
 #lines(smoothweightRfp$y,x=smoothweightRfp$date,col="blue")
 lines(y=Rest$England_LowerBound,x=Rest$Date-sagedelay)
@@ -531,6 +604,96 @@ plot(smooth.spline(dfR$YH,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xla
 lines(y=Rest$NEY_LowerBound,x=Rest$Date-sagedelay)
 lines(y=Rest$NEY_UpperBound,x=Rest$Date-sagedelay)
 lines(predict(loess(YH ~ x, data=dfR,span=lospan)),col='red',x=dfR$date,title("Yorkshire"))
+
+plot(smooth.spline(dfR$p05,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4))
+lines(y=Rest$England_LowerBound,x=Rest$Date-sagedelay)
+lines(y=Rest$England_UpperBound,x=Rest$Date-sagedelay)
+lines(predict(loess(p05 ~ x, data=dfR,span=lospan)),col='red',x=dfR$date,title("05-09"))
+
+plot(smooth.spline(dfR$p10,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4))
+lines(y=Rest$England_LowerBound,x=Rest$Date-sagedelay)
+lines(y=Rest$England_UpperBound,x=Rest$Date-sagedelay)
+lines(predict(loess(p10 ~ x, data=dfR,span=lospan)),col='red',x=dfR$date,title("10-14"))
+
+plot(smooth.spline(dfR$p15,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4))
+lines(y=Rest$England_LowerBound,x=Rest$Date-sagedelay)
+lines(y=Rest$England_UpperBound,x=Rest$Date-sagedelay)
+lines(predict(loess(p15 ~ x, data=dfR,span=lospan)),col='red',x=dfR$date,title("15-19"))
+
+plot(smooth.spline(dfR$p20,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4))
+lines(y=Rest$England_LowerBound,x=Rest$Date-sagedelay)
+lines(y=Rest$England_UpperBound,x=Rest$Date-sagedelay)
+lines(predict(loess(p20 ~ x, data=dfR,span=lospan)),col='red',x=dfR$date,title("20-24"))
+
+plot(smooth.spline(dfR$p25,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4))
+lines(y=Rest$England_LowerBound,x=Rest$Date-sagedelay)
+lines(y=Rest$England_UpperBound,x=Rest$Date-sagedelay)
+lines(predict(loess(p25 ~ x, data=dfR,span=lospan)),col='red',x=dfR$date,title("25-29"))
+
+plot(smooth.spline(dfR$p30,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4))
+lines(y=Rest$England_LowerBound,x=Rest$Date-sagedelay)
+lines(y=Rest$England_UpperBound,x=Rest$Date-sagedelay)
+lines(predict(loess(p30 ~ x, data=dfR,span=lospan)),col='red',x=dfR$date,title("30-34"))
+
+plot(smooth.spline(dfR$p10,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4))
+lines(y=Rest$England_LowerBound,x=Rest$Date-sagedelay)
+lines(y=Rest$England_UpperBound,x=Rest$Date-sagedelay)
+lines(predict(loess(p10 ~ x, data=dfR,span=lospan)),col='red',x=dfR$date,title("35-39"))
+
+plot(smooth.spline(dfR$p40,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4))
+lines(y=Rest$England_LowerBound,x=Rest$Date-sagedelay)
+lines(y=Rest$England_UpperBound,x=Rest$Date-sagedelay)
+lines(predict(loess(p40 ~ x, data=dfR,span=lospan)),col='red',x=dfR$date,title("40-44"))
+
+plot(smooth.spline(dfR$p45,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4))
+lines(y=Rest$England_LowerBound,x=Rest$Date-sagedelay)
+lines(y=Rest$England_UpperBound,x=Rest$Date-sagedelay)
+lines(predict(loess(p45 ~ x, data=dfR,span=lospan)),col='red',x=dfR$date,title("45-49"))
+
+plot(smooth.spline(dfR$p50,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4))
+lines(y=Rest$England_LowerBound,x=Rest$Date-sagedelay)
+lines(y=Rest$England_UpperBound,x=Rest$Date-sagedelay)
+lines(predict(loess(p50 ~ x, data=dfR,span=lospan)),col='red',x=dfR$date,title("50-54"))
+
+plot(smooth.spline(dfR$p55,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4))
+lines(y=Rest$England_LowerBound,x=Rest$Date-sagedelay)
+lines(y=Rest$England_UpperBound,x=Rest$Date-sagedelay)
+lines(predict(loess(p55 ~ x, data=dfR,span=lospan)),col='red',x=dfR$date,title("55-59"))
+
+plot(smooth.spline(dfR$p60,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4))
+lines(y=Rest$England_LowerBound,x=Rest$Date-sagedelay)
+lines(y=Rest$England_UpperBound,x=Rest$Date-sagedelay)
+lines(predict(loess(p60 ~ x, data=dfR,span=lospan)),col='red',x=dfR$date,title("60-64"))
+
+plot(smooth.spline(dfR$p65,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4))
+lines(y=Rest$England_LowerBound,x=Rest$Date-sagedelay)
+lines(y=Rest$England_UpperBound,x=Rest$Date-sagedelay)
+lines(predict(loess(p65 ~ x, data=dfR,span=lospan)),col='red',x=dfR$date,title("65-69"))
+
+plot(smooth.spline(dfR$p70,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4))
+lines(y=Rest$England_LowerBound,x=Rest$Date-sagedelay)
+lines(y=Rest$England_UpperBound,x=Rest$Date-sagedelay)
+lines(predict(loess(p70 ~ x, data=dfR,span=lospan)),col='red',x=dfR$date,title("70-74"))
+
+plot(smooth.spline(dfR$p75,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4))
+lines(y=Rest$England_LowerBound,x=Rest$Date-sagedelay)
+lines(y=Rest$England_UpperBound,x=Rest$Date-sagedelay)
+lines(predict(loess(p75 ~ x, data=dfR,span=lospan)),col='red',x=dfR$date,title("75-79"))
+
+plot(smooth.spline(dfR$p80,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4))
+lines(y=Rest$England_LowerBound,x=Rest$Date-sagedelay)
+lines(y=Rest$England_UpperBound,x=Rest$Date-sagedelay)
+lines(predict(loess(p80 ~ x, data=dfR,span=lospan)),col='red',x=dfR$date,title("80-85"))
+
+plot(smooth.spline(dfR$p85,df=12,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4))
+lines(y=Rest$England_LowerBound,x=Rest$Date-sagedelay)
+lines(y=Rest$England_UpperBound,x=Rest$Date-sagedelay)
+lines(predict(loess(p85 ~ x, data=dfR,span=lospan)),col='red',x=dfR$date,title("85-89"))
+
+plot(smooth.spline(dfR$p90,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4))
+lines(y=Rest$England_LowerBound,x=Rest$Date-sagedelay)
+lines(y=Rest$England_UpperBound,x=Rest$Date-sagedelay)
+lines(predict(loess(p90 ~ x, data=dfR,span=lospan)),col='red',x=dfR$date,title("90+"))
 
 
 # Reverse Engineer cases from R-number - requires stratonovich calculus to get reversibility
