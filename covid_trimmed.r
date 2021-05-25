@@ -164,7 +164,7 @@ scoturl <-  paste0(baseurl,
 coltypes <-  cols(
   date = col_date(format = "%Y-%m-%d"),
   newCasesBySpecimenDate = col_double(),
-  newDeaths28DaysByPublishDate = col_double(), 
+  newDeaths28DaysByPublishDate = col_double(),
   newDeaths28DaysByDeathDate = col_double()
 )
 #  trying and failing to get data from PHS
@@ -220,14 +220,29 @@ regdeaths <- regdat %>%  select(date,areaName,
   filter(date >= startdate &
            date <= enddate )%>%
   arrange(date)
+
 #  Get age data for regions because can't download simultaneously
 regurl2 <- paste0(baseurl,
                   "areaType=region&",
                   "metric=newCasesBySpecimenDateAgeDemographics&",
                   "metric=newDeathsBySpecimenDateAgeDemographics&",
                   "format=csv")
+
+# specify the column types
+coltypes <- cols(
+  areaCode = col_character(),
+  areaName = col_character(),
+  areaType = col_character(),
+  date = col_date(format = "%Y-%m-%d"),
+  age = col_character(),
+  cases = col_double(),
+  rollingSum = col_double(),
+  rollingRate = col_double()
+)
+
 # Read in the data
-regagedat <-  read_csv(file = regurl2)
+regagedat <-  read_csv(file = regurl2, col_types = coltypes)
+
 # Transform the data
 regagedat <- regagedat %>%  select(date, areaName, age, cases) %>%
   filter(date >= startdate &
@@ -278,7 +293,7 @@ for(i in 1:length(comdat$allCases)){
   comdat$allCases[i]=comdat$allCases[i]/days[indexday]
   scotdat$allCases[i]=scotdat$allCases[i]/days[indexday]
   for (area in 2:10){
-    regcases[i,area]=regcases[i,area]/days[indexday] 
+    regcases[i,area]=regcases[i,area]/days[indexday]
   }
 }
 
@@ -297,10 +312,10 @@ for (i in 153:164){
 #  Fix Xmas anomaly in regions
 for (area in 2:10){
   Xmasav[area] <- sum(regcases[153:164,area])/12
-  Xmasgrad<-regcases[164,area]-regcases[153,area] 
+  Xmasgrad<-regcases[164,area]-regcases[153,area]
   for (i in 153:164){
     regcases[i,area]<-Xmasav[area]-Xmasgrad*(158.5-i)/12.0
-  }  
+  }
   }
 
 
@@ -348,27 +363,27 @@ dfR$EE<-dfR$gjaR
 dfR$Lon<-dfR$gjaR
 dfR$SE<-dfR$gjaR
 dfR$SW<-dfR$gjaR
-dfR$p00<-dfR$gjaR 
-dfR$p05<-dfR$gjaR 
-dfR$p10<-dfR$gjaR 
-dfR$p15<-dfR$gjaR 
-dfR$p20<-dfR$gjaR 
-dfR$p25<-dfR$gjaR 
-dfR$p30<-dfR$gjaR 
-dfR$p35<-dfR$gjaR 
-dfR$p40<-dfR$gjaR 
-dfR$p45<-dfR$gjaR 
-dfR$p50<-dfR$gjaR 
-dfR$p55<-dfR$gjaR 
-dfR$p60<-dfR$gjaR 
-dfR$p65<-dfR$gjaR 
-dfR$p70<-dfR$gjaR 
-dfR$p75<-dfR$gjaR 
-dfR$p80<-dfR$gjaR 
-dfR$p85<-dfR$gjaR 
-dfR$p90<-dfR$gjaR 
- df#Ito: gjaR[i]<-(1+(comdat$allCases[i]-comdat$allCases[i-1])*2*genTime/(comdat$allCases[i]+comdat$allCases[i-1]))
-  #Stratanovitch calculus
+dfR$p00<-dfR$gjaR
+dfR$p05<-dfR$gjaR
+dfR$p10<-dfR$gjaR
+dfR$p15<-dfR$gjaR
+dfR$p20<-dfR$gjaR
+dfR$p25<-dfR$gjaR
+dfR$p30<-dfR$gjaR
+dfR$p35<-dfR$gjaR
+dfR$p40<-dfR$gjaR
+dfR$p45<-dfR$gjaR
+dfR$p50<-dfR$gjaR
+dfR$p55<-dfR$gjaR
+dfR$p60<-dfR$gjaR
+dfR$p65<-dfR$gjaR
+dfR$p70<-dfR$gjaR
+dfR$p75<-dfR$gjaR
+dfR$p80<-dfR$gjaR
+dfR$p85<-dfR$gjaR
+dfR$p90<-dfR$gjaR
+# df#Ito: gjaR[i]<-(1+(comdat$allCases[i]-comdat$allCases[i-1])*2*genTime/(comdat$allCases[i]+comdat$allCases[i-1]))
+#  #Stratanovitch calculus
 # rawR averages cases over previous genTime days - assumes genTime is the same as infectious period
 #  Generate R over all regions and ages
 for(i in ((genTime+1):length(dfR$gjaR))    ){
@@ -405,7 +420,7 @@ for(i in ((genTime+1):length(dfR$gjaR))    ){
   dfR$p80[i]=1+log(casedat$'80_84'[i]/casedat$'80_84'[i-1])*genTime
   dfR$p85[i]=1+log(casedat$'85_89'[i]/casedat$'85_89'[i-1])*genTime
   dfR$p90[i]=1+log(casedat$'90+'[i]/casedat$'90+'[i-1])*genTime
-  }
+}
 
 for (i in 3:17){dfR[i,1]=dfR[i,2]}
 
@@ -604,7 +619,7 @@ plot(smooth.spline(dfR$p30,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xl
 lines(y=Rest$England_LowerBound,x=Rest$Date-sagedelay)
 lines(y=Rest$England_UpperBound,x=Rest$Date-sagedelay)
 lines(predict(loess(p30 ~ x, data=dfR,span=lospan)),col='red',x=dfR$date,title("30-34"))
- 
+
 plot(smooth.spline(dfR$p10,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4))
 lines(y=Rest$England_LowerBound,x=Rest$Date-sagedelay)
 lines(y=Rest$England_UpperBound,x=Rest$Date-sagedelay)
@@ -686,7 +701,7 @@ for(i in 2:length(dfR$gjaR)){
   PredictCasesLin[i]=PredictCases[i-1]*(1.0+(dfR$gjaR[i]-1)/genTime)
   PredictCasesRaw[i]=PredictCasesRaw[i-1]*(1.0+(dfR$rawR[i]-1)/genTime)
   PredictCasesMeanR[i]=PredictCasesMeanR[i-1]*(1.0+(meanR-1)/genTime)
-  
+
 #  Averaging R is not the same as averaging e^R
 #  Noise suppresses the growth rate in the model, Smoothed R grows too fast
    ri=smoothR$y[i]  # Fudge factor *0.94663
