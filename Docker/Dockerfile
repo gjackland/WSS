@@ -17,7 +17,7 @@ RUN apt-get update -y && \
     RColorBrewer
 
 # Copy the code to the root directory of the image
-COPY ../covid_trimmed.r .
+COPY ./covid_trimmed.r .
 ADD ./data /data
 
 # Run the code when the docker instance is activated
