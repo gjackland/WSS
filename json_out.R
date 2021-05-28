@@ -57,15 +57,21 @@ json <- '{
 #           see https://www.iso.org/iso-3166-country-codes.html
 # mysubregion: ISO 3166-2:GB subregion code, e.g. ENG, NIR, SCT, WLS,
 #              see https://en.wikipedia.org/wiki/ISO_3166-2:GB for more options
-# mycalibrationCaseCount:
-# mycalibrationDate:
-# mycalibrationDeathCount:
+# mycalibrationCaseCount: The total number of confirmed cases in the region before the calibration date.
+# mycalibrationDate: An ISO-8601 string encoding the date of the most recent case data in the region.
+# mycalibrationDeathCount: The total number of deaths in the region before the calibration date.
+# myr0: The assumed reproduction number for the virus. If this is NA, then each
+#       model will use its own default value.
 # myinterventionPeriods: a list array containing the following properties:
 #     caseIsolation: The level to which individuals with symptoms self-isolate.
-#     reductionPopulationContact: The estimated reduction in population contact resulting from
+#     reductionPopulationContact (required): The estimated reduction in population contact resulting from
 #                                 all of the above interventions. Some models require this generalized
 #                                 parameter instead of the individual interventions.
 #     schoolClosure: The level of school closure in the region.
+#     socialDistancing: The level of social distancing in the region.
+#     startDate (required): An ISO-8601 string encoding the date that these interventions begin.
+#     voluntaryHomeQuarantine:
+
 
 outputJSON <- function(myt0,
                        mydaysarray,
@@ -73,6 +79,8 @@ outputJSON <- function(myt0,
                        mysubregion,
                        mycalibrationCaseCount,
                        mycalibrationDate,
+                       mycalibrationDeathCount,
+                       myr0,
                        myinterventionPeriods
 
 ){
@@ -80,11 +88,21 @@ outputJSON <- function(myt0,
     time0 <- myt0
     myextent <- c(min(mydaysarray),max(mydaysarray))
 
-    mytime <- list(t0=time0, timestamps=mydaysarray, extent=myextent)
+    mytime <- list(t0=time0,
+                   timestamps=mydaysarray,
+                   extent=myextent)
 
     ## Metadata section
+    myparameters <- list(calibrationCaseCount=mycalibrationCaseCount,
+                         calibrationDate=mycalibrationDate,
+                         r0=myr0,
+                         calibrationDeathCount=mycalibrationDeathCount,
+                         interventionPeriods=myinterventionPeriods
+                         )
 
-    mymetadata <- list(region=myregion,subregion=mysubregion)
+    mymetadata <- list(region=myregion,
+                       subregion=mysubregion,
+                       parameters=myparameters)
 
     ## Build up the object to be output to JSON
     myobject <- list(time=mytime,
@@ -98,34 +116,15 @@ outputJSON <- function(myt0,
 outputJSON("2021-05-27",
            c(1,2,3,4,5,6),
            "GB",
-           "ENG")
+           "ENG",
+           43464,
+           "2021-05-27",
+           1755,
+           NA,
+           NA
+           )
 
-outputJSON(mydaysarray=c(1,2,3,4,5,6),myt0="2021-05-27")
 
-## time section
-time0 <- "2021-05-21"
-mytimestamps <- c(1,2,3)
-myextent <- c(1,length(mytimestamps))
-
-mytime <- list(t0=time0, timestamps=timestamps, extent=extent)
-
-## Metadata section
-
-myregion <- "GB"
-mysubregion <- "England"
-mycalibCaseCount <- 0
-mycalibDate <- "2021-01-01"
-myR0 <- NA
-mycalibDeathCount <- 0
-myinterventionPeriods <- c(1,2,3)
-
-myparameters <- list(calibrationCaseCount=mycalibCaseCount,
-                     calibrationDate=mycalibDate,
-                     r0=myR0,
-                     calibrationDeathCount=mycalibDeathCount,
-                     interventionPeriods=myinterventionPeriods)
-
-mymetadata <- list(region=myregion,subregion=mysubregion,parameters=myparameters)
 
 ## Aggregates section
 default <- vector(mode="numeric", length = length(mytimestamps))
