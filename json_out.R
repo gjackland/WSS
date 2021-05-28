@@ -82,7 +82,17 @@ json <- '{
 # of the correct length as output.
 #
 # myCritRecov: The total number of confirmed cases in the region before the calibration date.
-
+# myCritical: Current number of critical cases on this day (assume represents ICU demand).
+# myILI: Current number of influenza-like illness cases on this day (assume represents GP demand).
+# myMild: Current number of mild cases on this day.
+# myR: R-number on this day.
+# mySARI: Current number of Severe Acute Respiratory Illness cases on this day (assume represents hospital demand).
+# mycumCritRecov: Total number of patients recovered from critical cases since the beginning of the epidemic.
+# mycumCritical: Total number of critical cases since the beginning of the epidemic.
+# mycumILI: Total number of influence-like illnesses since the beginning of the epidemic.
+# mycumMild: Total number of mild cases since the beginning of the epidemic.
+# mycumSARI: Total number of severe acute respiratory illnesses since the beginning of the epidemic.
+# myincDeath: Number of deaths occurring on this day.
 outputJSON <- function(myt0,
                        mydaysarray,
                        myregion,
@@ -92,7 +102,18 @@ outputJSON <- function(myt0,
                        mycalibrationDeathCount,
                        myr0,
                        myinterventionPeriods,
-                       myCritRecov
+                       myCritRecov,
+                       myCritical,
+                       myILI,
+                       myMild,
+                       myR,
+                       mySARI,
+                       mycumCritRecov,
+                       mycumCritical,
+                       mycumILI,
+                       mycumMild,
+                       mycumSARI,
+                       myincDeath
 
 ){
     ## Time section
@@ -121,8 +142,31 @@ outputJSON <- function(myt0,
     default <- numeric(length(mydaysarray))
 
     if(is.na(myCritRecov)){myCritRecov <- default}
+    if(is.na(myCritical)){myCritical <- default}
+    if(is.na(myILI)){myILI <- default}
+    if(is.na(myMild)){myMild <- default}
+    if(is.na(myR)){myR <- default}
+    if(is.na(mySARI)){mySARI <- default}
+    if(is.na(mycumCritRecov)){mycumCritRecov <- default}
+    if(is.na(mycumCritical)){mycumCritical <- default}
+    if(is.na(mycumILI)){mycumILI <- default}
+    if(is.na(mycumMild)){mycumMild <- default}
+    if(is.na(mycumSARI)){mycumSARI <- default}
+    if(is.na(myincDeath)){myincDeath <- default}
 
-    myaggregates <- list(CritRecov = myCritRecov)
+    myaggregates <- list(CritRecov = myCritRecov,
+                         Critical = myCritical,
+                         ILI = myILI,
+                         Mild = myMild,
+                         R = myR,
+                         SARI = mySARI,
+                         cumCritRecov = mycumCritRecov,
+                         cumCritical = mycumCritical,
+                         cumILI = mycumILI,
+                         cumMild = mycumMild,
+                         cumSARI = mycumSARI,
+                         incDeath = myincDeath
+    )
 
     ## Build up the object to be output to JSON
     myobject <- list(time = mytime,
@@ -160,42 +204,21 @@ outputJSON(myt0 = "2021-05-27",
            mycalibrationDeathCount=1755,
            myr0 = NA,
            myinterventionPeriods= interventions,
-           myCritRecov = NA
+           myCritRecov = NA,
+           myCritical = NA,
+           myILI = NA,
+           myMild = NA,
+           myR = NA,
+           mySARI = NA,
+           mycumCritRecov = NA,
+           mycumCritical = NA,
+           mycumILI = NA,
+           mycumMild = NA,
+           mycumSARI = NA,
+           myincDeath = NA
            )
 
 
 
-## Aggregates section
-default <- vector(mode="numeric", length = length(mytimestamps))
-MildCases <- default
-InfluenzaLikeIllness <- default
-SevereAcuteRespiratoryIllness <- default
-CriticalCases <- default
-CriticalRecovery <- default
-DeathsonDay <- default
-CummulativeMild <- default
-CummulativeILI <- default
-CummulativeSARI <- default
-CummulativeCritical <- default
-CummulativeCriticalRecovery <- default
-Rnumber <- default
-
-myaggregates <- list(Mild=MildCases,
-                     ILI=InfluenzaLikeIllness,
-                     SARI=SevereAcuteRespiratoryIllness,
-                     Critical=CriticalCases,
-                     CritRecov=CriticalRecovery,
-                     incDeath=DeathsonDay,
-                     cumMild=CummulativeMild,
-                     cumILI=CummulativeILI,
-                     cumSARI=CummulativeSARI,
-                     cumCritical=CummulativeCritical,
-                     cumCritRecov=CummulativeCriticalRecovery,
-                     R=Rnumber
-                     )
-
-## Build up the object
-
-myobject <- list(time=mytime, metadata=mymetadata,aggregates=myaggregates)
 
 toJSON(myobject,pretty = TRUE,auto_unbox = TRUE, na ="null")
