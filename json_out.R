@@ -1,0 +1,163 @@
+# Function to output JSON for the web-ui interface.
+library(jsonlite)
+
+# Temporary output JSON document.
+json <- '{
+    "time": {
+        "t0": "2021-05-21",
+        "timestamps": [1,2,3],
+        "extent": [1,100]
+    },
+    "metadata": {
+        "region": "GB",
+        "subregion": "England",
+        "parameters": {
+            "calibrationCaseCount": 0,
+            "calibrationDate": "2021-05-21",
+            "r0": null,
+            "calibrationDeathCount": 0,
+            "interventionPeriods": []
+        }
+    },
+    "aggregate": {
+        "metrics": {
+            "Critical": [],
+            "CritRecov": [],
+            "cumCritical": [],
+            "cumCritRecov": [],
+            "cumILI": [],
+            "cumMild": [],
+            "SARI": [],
+            "cumSARI": [],
+            "ILI": [],
+            "incDeath": [],
+            "Mild": [],
+            "R": []
+        }
+    }
+
+}
+'
+
+# The JSON output schema:
+#
+# https://raw.githubusercontent.com/covid-policy-modelling/model-runner/epcc/packages/api/schema/output.json
+#
+# Output examples:
+#
+# https://github.com/covid-policy-modelling/model-runner/blob/main/packages/api/src/model-output.ts
+# https://github.com/covid-policy-modelling/web-ui/tree/main/data
+#
+# Arguments to the function:
+#
+# time0: An ISO-8601, e.g. "2021-05-27, string encoding the date that each timeseries begins.
+# days: Each value is a number of days after `time0` that correspond to every series of metrics.
+#       output for time0 counts as 0.
+# myregion: ISO 3166 country code for the region, e.g. "GB",
+#           see https://www.iso.org/iso-3166-country-codes.html
+# mysubregion: ISO 3166-2:GB subregion code, e.g. ENG, NIR, SCT, WLS,
+#              see https://en.wikipedia.org/wiki/ISO_3166-2:GB for more options
+# mycalibrationCaseCount:
+# mycalibrationDate:
+# mycalibrationDeathCount:
+# myinterventionPeriods: a list array containing the following properties:
+#     caseIsolation: The level to which individuals with symptoms self-isolate.
+#     reductionPopulationContact: The estimated reduction in population contact resulting from
+#                                 all of the above interventions. Some models require this generalized
+#                                 parameter instead of the individual interventions.
+#     schoolClosure: The level of school closure in the region.
+
+outputJSON <- function(myt0,
+                       mydaysarray,
+                       myregion,
+                       mysubregion,
+                       mycalibrationCaseCount,
+                       mycalibrationDate,
+                       myinterventionPeriods
+
+){
+    ## Time section
+    time0 <- myt0
+    myextent <- c(min(mydaysarray),max(mydaysarray))
+
+    mytime <- list(t0=time0, timestamps=mydaysarray, extent=myextent)
+
+    ## Metadata section
+
+    mymetadata <- list(region=myregion,subregion=mysubregion)
+
+    ## Build up the object to be output to JSON
+    myobject <- list(time=mytime,
+                     metadata=mymetadata)
+
+    ## Output to JSON
+    toJSON(myobject,pretty = TRUE,auto_unbox = TRUE, na ="null")
+
+}
+
+outputJSON("2021-05-27",
+           c(1,2,3,4,5,6),
+           "GB",
+           "ENG")
+
+outputJSON(mydaysarray=c(1,2,3,4,5,6),myt0="2021-05-27")
+
+## time section
+time0 <- "2021-05-21"
+mytimestamps <- c(1,2,3)
+myextent <- c(1,length(mytimestamps))
+
+mytime <- list(t0=time0, timestamps=timestamps, extent=extent)
+
+## Metadata section
+
+myregion <- "GB"
+mysubregion <- "England"
+mycalibCaseCount <- 0
+mycalibDate <- "2021-01-01"
+myR0 <- NA
+mycalibDeathCount <- 0
+myinterventionPeriods <- c(1,2,3)
+
+myparameters <- list(calibrationCaseCount=mycalibCaseCount,
+                     calibrationDate=mycalibDate,
+                     r0=myR0,
+                     calibrationDeathCount=mycalibDeathCount,
+                     interventionPeriods=myinterventionPeriods)
+
+mymetadata <- list(region=myregion,subregion=mysubregion,parameters=myparameters)
+
+## Aggregates section
+default <- vector(mode="numeric", length = length(mytimestamps))
+MildCases <- default
+InfluenzaLikeIllness <- default
+SevereAcuteRespiratoryIllness <- default
+CriticalCases <- default
+CriticalRecovery <- default
+DeathsonDay <- default
+CummulativeMild <- default
+CummulativeILI <- default
+CummulativeSARI <- default
+CummulativeCritical <- default
+CummulativeCriticalRecovery <- default
+Rnumber <- default
+
+myaggregates <- list(Mild=MildCases,
+                     ILI=InfluenzaLikeIllness,
+                     SARI=SevereAcuteRespiratoryIllness,
+                     Critical=CriticalCases,
+                     CritRecov=CriticalRecovery,
+                     incDeath=DeathsonDay,
+                     cumMild=CummulativeMild,
+                     cumILI=CummulativeILI,
+                     cumSARI=CummulativeSARI,
+                     cumCritical=CummulativeCritical,
+                     cumCritRecov=CummulativeCriticalRecovery,
+                     R=Rnumber
+                     )
+
+## Build up the object
+
+myobject <- list(time=mytime, metadata=mymetadata,aggregates=myaggregates)
+
+toJSON(myobject,pretty = TRUE,auto_unbox = TRUE, na ="null")
