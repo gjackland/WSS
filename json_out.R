@@ -1,44 +1,6 @@
 # Function to output JSON for the web-ui interface.
 library(jsonlite)
 
-# Temporary output JSON document.
-json <- '{
-    "time": {
-        "t0": "2021-05-21",
-        "timestamps": [1,2,3],
-        "extent": [1,100]
-    },
-    "metadata": {
-        "region": "GB",
-        "subregion": "England",
-        "parameters": {
-            "calibrationCaseCount": 0,
-            "calibrationDate": "2021-05-21",
-            "r0": null,
-            "calibrationDeathCount": 0,
-            "interventionPeriods": []
-        }
-    },
-    "aggregate": {
-        "metrics": {
-            "Critical": [],
-            "CritRecov": [],
-            "cumCritical": [],
-            "cumCritRecov": [],
-            "cumILI": [],
-            "cumMild": [],
-            "SARI": [],
-            "cumSARI": [],
-            "ILI": [],
-            "incDeath": [],
-            "Mild": [],
-            "R": []
-        }
-    }
-
-}
-'
-
 # The JSON output schema:
 #
 # https://raw.githubusercontent.com/covid-policy-modelling/model-runner/epcc/packages/api/schema/output.json
@@ -93,6 +55,7 @@ json <- '{
 # mycumMild: Total number of mild cases since the beginning of the epidemic.
 # mycumSARI: Total number of severe acute respiratory illnesses since the beginning of the epidemic.
 # myincDeath: Number of deaths occurring on this day.
+
 outputJSON <- function(myt0,
                        mydaysarray,
                        myregion,
