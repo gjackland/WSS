@@ -77,6 +77,11 @@ json <- '{
 #     voluntaryHomeQuarantine: The level to which entire households self-isolate when one member
 #                    of the household has symptoms.
 #                    One of "mild"/"moderate"/"aggressive"
+#
+# If an NA is supplied  to any of the following quantities an array of zeros will be created
+# of the correct length as output.
+#
+# myCritRecov: The total number of confirmed cases in the region before the calibration date.
 
 outputJSON <- function(myt0,
                        mydaysarray,
@@ -86,7 +91,8 @@ outputJSON <- function(myt0,
                        mycalibrationDate,
                        mycalibrationDeathCount,
                        myr0,
-                       myinterventionPeriods
+                       myinterventionPeriods,
+                       myCritRecov
 
 ){
     ## Time section
@@ -109,9 +115,19 @@ outputJSON <- function(myt0,
                        subregion=mysubregion,
                        parameters=myparameters)
 
+    ## Aggregates section
+
+    # Create a default vector with 0s for data not available
+    default <- numeric(length(mydaysarray))
+
+    if(is.na(myCritRecov)){myCritRecov <- default}
+
+    myaggregates <- list(CritRecov = myCritRecov)
+
     ## Build up the object to be output to JSON
-    myobject <- list(time=mytime,
-                     metadata=mymetadata)
+    myobject <- list(time = mytime,
+                     metadata = mymetadata,
+                     aggregates = myaggregates)
 
     ## Output to JSON
     toJSON(myobject,pretty = TRUE,auto_unbox = TRUE, na ="null")
@@ -143,7 +159,8 @@ outputJSON(myt0 = "2021-05-27",
            mycalibrationDate = "2021-05-27",
            mycalibrationDeathCount=1755,
            myr0 = NA,
-           myinterventionPeriods= interventions
+           myinterventionPeriods= interventions,
+           myCritRecov = NA
            )
 
 
