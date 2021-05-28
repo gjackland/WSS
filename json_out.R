@@ -64,14 +64,19 @@ json <- '{
 #       model will use its own default value.
 # myinterventionPeriods: a list array containing the following properties:
 #     caseIsolation: The level to which individuals with symptoms self-isolate.
+#                    One of "mild"/"moderate"/"aggressive"
 #     reductionPopulationContact (required): The estimated reduction in population contact resulting from
 #                                 all of the above interventions. Some models require this generalized
 #                                 parameter instead of the individual interventions.
+#                     Number.
 #     schoolClosure: The level of school closure in the region.
+#                    One of "mild"/"moderate"/"aggressive"
 #     socialDistancing: The level of social distancing in the region.
+#                    One of "mild"/"moderate"/"aggressive"
 #     startDate (required): An ISO-8601 string encoding the date that these interventions begin.
-#     voluntaryHomeQuarantine:
-
+#     voluntaryHomeQuarantine: The level to which entire households self-isolate when one member
+#                    of the household has symptoms.
+#                    One of "mild"/"moderate"/"aggressive"
 
 outputJSON <- function(myt0,
                        mydaysarray,
@@ -113,15 +118,32 @@ outputJSON <- function(myt0,
 
 }
 
-outputJSON("2021-05-27",
-           c(1,2,3,4,5,6),
-           "GB",
-           "ENG",
-           43464,
-           "2021-05-27",
-           1755,
-           NA,
-           NA
+# Build a list of interventions:
+int1 <- list(caseIsolation="aggressive",
+             reductionPopulationContact=38,
+             schoolClosure="aggressive",
+             startDate="2020-03-13",
+             voluntaryHomeQuarantine="aggressive")
+int2 <- list(caseIsolation="aggressive",
+             reductionPopulationContact=57,
+             schoolClosure="aggressive",
+             socialDistancing="moderate",
+             startDate="2020-03-19",
+             voluntaryHomeQuarantine="aggressive")
+
+interventions <- list(int1,int2)
+
+# Example input - labels are optional unless arguments are given in a different
+# order.
+outputJSON(myt0 = "2021-05-27",
+           mydaysarray = c(1,2,3,4,5,6),
+           myregion = "GB",
+           mysubregion = "ENG",
+           mycalibrationCaseCount = 43464,
+           mycalibrationDate = "2021-05-27",
+           mycalibrationDeathCount=1755,
+           myr0 = NA,
+           myinterventionPeriods= interventions
            )
 
 
