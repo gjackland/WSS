@@ -1,6 +1,50 @@
 # Function to output JSON for the web-ui interface.
 library(jsonlite)
 
+## Usage example
+#
+# # Build a list of interventions:
+# int1 <- list(caseIsolation="aggressive",
+#              reductionPopulationContact=38,
+#              schoolClosure="aggressive",
+#              startDate="2020-03-13",
+#              voluntaryHomeQuarantine="aggressive")
+# int2 <- list(caseIsolation="aggressive",
+#              reductionPopulationContact=57,
+#              schoolClosure="aggressive",
+#              socialDistancing="moderate",
+#              startDate="2020-03-19",
+#              voluntaryHomeQuarantine="aggressive")
+#
+# interventions <- list(int1,int2)
+#
+# # Labels are optional unless arguments are given in a different
+# # order. All arguments must be present
+#
+# outputJSON(myt0 = "2021-05-27",
+#            mydaysarray = c(1,2,3,4,5,6),
+#            myregion = "GB",
+#            mysubregion = "ENG",
+#            mycalibrationCaseCount = 43464,
+#            mycalibrationDate = "2021-05-27",
+#            mycalibrationDeathCount=1755,
+#            myr0 = NA,
+#            myinterventionPeriods= interventions,
+#            myCritRecov = NA,
+#            myCritical = NA,
+#            myILI = NA,
+#            myMild = NA,
+#            myR = NA,
+#            mySARI = NA,
+#            mycumCritRecov = NA,
+#            mycumCritical = NA,
+#            mycumILI = NA,
+#            mycumMild = NA,
+#            mycumSARI = NA,
+#            myincDeath = NA
+# )
+#
+#---------------------------------------------------
 # The JSON output schema:
 #
 # https://raw.githubusercontent.com/covid-policy-modelling/model-runner/epcc/packages/api/schema/output.json
@@ -9,6 +53,8 @@ library(jsonlite)
 #
 # https://github.com/covid-policy-modelling/model-runner/blob/main/packages/api/src/model-output.ts
 # https://github.com/covid-policy-modelling/web-ui/tree/main/data
+#
+#---------------------------------------------------
 #
 # Arguments to the function:
 #
@@ -55,7 +101,7 @@ library(jsonlite)
 # mycumMild: Total number of mild cases since the beginning of the epidemic.
 # mycumSARI: Total number of severe acute respiratory illnesses since the beginning of the epidemic.
 # myincDeath: Number of deaths occurring on this day.
-
+#---------------------------------------------------
 outputJSON <- function(myt0,
                        mydaysarray,
                        myregion,
@@ -76,9 +122,7 @@ outputJSON <- function(myt0,
                        mycumILI,
                        mycumMild,
                        mycumSARI,
-                       myincDeath
-
-){
+                       myincDeath){
     ## Time section
     time0 <- myt0
     myextent <- c(min(mydaysarray),max(mydaysarray))
@@ -140,48 +184,3 @@ outputJSON <- function(myt0,
     toJSON(myobject,pretty = TRUE,auto_unbox = TRUE, na ="null")
 
 }
-
-# Build a list of interventions:
-int1 <- list(caseIsolation="aggressive",
-             reductionPopulationContact=38,
-             schoolClosure="aggressive",
-             startDate="2020-03-13",
-             voluntaryHomeQuarantine="aggressive")
-int2 <- list(caseIsolation="aggressive",
-             reductionPopulationContact=57,
-             schoolClosure="aggressive",
-             socialDistancing="moderate",
-             startDate="2020-03-19",
-             voluntaryHomeQuarantine="aggressive")
-
-interventions <- list(int1,int2)
-
-# Example input - labels are optional unless arguments are given in a different
-# order.
-outputJSON(myt0 = "2021-05-27",
-           mydaysarray = c(1,2,3,4,5,6),
-           myregion = "GB",
-           mysubregion = "ENG",
-           mycalibrationCaseCount = 43464,
-           mycalibrationDate = "2021-05-27",
-           mycalibrationDeathCount=1755,
-           myr0 = NA,
-           myinterventionPeriods= interventions,
-           myCritRecov = NA,
-           myCritical = NA,
-           myILI = NA,
-           myMild = NA,
-           myR = NA,
-           mySARI = NA,
-           mycumCritRecov = NA,
-           mycumCritical = NA,
-           mycumILI = NA,
-           mycumMild = NA,
-           mycumSARI = NA,
-           myincDeath = NA
-           )
-
-
-
-
-toJSON(myobject,pretty = TRUE,auto_unbox = TRUE, na ="null")
