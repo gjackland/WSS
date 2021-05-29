@@ -131,9 +131,6 @@ outputJSON <- function(myt0,
                    timestamps=mydaysarray,
                    extent=myextent)
 
-    # Length of the the array
-    n <-  length(mydaysarray)
-
     ## Metadata section
     myparameters <- list(calibrationCaseCount=mycalibrationCaseCount,
                          calibrationDate=mycalibrationDate,
