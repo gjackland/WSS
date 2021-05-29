@@ -737,11 +737,48 @@ lines(PredictCasesSmoothR,x=dfR$date, col="blue",lwd=2)
 #lines(PredictCasesMeanR,x=comdat$date, col="green")
 
 lines(PredictCasesLin,x=comdat$date, col="orange")
-sum(PredictCases)
-sum(PredictCasesSmoothR)
-sum(PredictCasesMeanR)
-sum(PredictCasesLin)
-sum(comdat$allCases)
+
+if(interactive()){
+  sum(PredictCases)
+  sum(PredictCasesSmoothR)
+  sum(PredictCasesMeanR)
+  sum(PredictCasesLin)
+  sum(comdat$allCases)
+}
+
+# Load code to function to output to the web-ui interface
+# From stackoverflow: 6456501
+if(!exists("outputJSON", mode="function")) source("json_out.R")
+
+# # Beginning of time series
+t0 <-  min(dfR$date)
+
+# Get the days for which data will be output
+days <- as.integer(dfR$date - t0)
+
+# Labels are optional
+outputJSON(myt0 = t0,
+           mydaysarray = days,
+           myregion = "GB",
+           mysubregion = "ENG", # see https://en.wikipedia.org/wiki/ISO_3166-2:GB
+           mycalibrationCaseCount = NA,  # ADD VALUE, eg single number
+           mycalibrationDate = NA,       # ADD VALUE, eg "2021-05-12"
+           mycalibrationDeathCount=NA,   # ADD VALUE, eg single number
+           myr0 = NA,
+           myinterventionPeriods= NA,
+           myCritRecov = NA,
+           myCritical = NA,
+           myILI = NA,
+           myMild = NA,
+           myR = dfR$gjaR,
+           mySARI = NA,
+           mycumCritRecov = NA,
+           mycumCritical = NA,
+           mycumILI = NA,
+           mycumMild = NA,
+           mycumSARI = NA,
+           myincDeath = NA
+)
 
 #####  Figures and analysis for https://www.medrxiv.org/content/10.1101/2021.04.14.21255385v1
 
@@ -848,8 +885,6 @@ rm(day,area)
 
 
 #  Regional plots, with CFR input by hand
-
-
 plot(regdeaths$London*55,x=regdeaths$date)
 lines(reglnpredict$London,x=reglnpredict$date)
 lines(reggampredict$London,x=reglnpredict$date)
@@ -873,9 +908,6 @@ logcasesageplot = ggplot(logcases, aes(x = date)) +
   ggtitle("All age groups separately lognormal distributed")
 logcasesageplot
 rm(logcasesageplot)
-
-
-
 
 
 plot#### Fig 2. Distributions ####
@@ -945,25 +977,27 @@ WSS$date = WSS$date + 12
 
 #### Model Fit Stats ####
 #Get Autumn model fits
-model = lm(filter(comdat, date %in% daterange)$allDeaths ~ filter(gampred, date %in% daterange)$allCasesPred)
-summary(model)
+if(interactive()){
+  model = lm(filter(comdat, date %in% daterange)$allDeaths ~ filter(gampred, date %in% daterange)$allCasesPred)
+  summary(model)
 
-model = lm(filter(comdat, date %in% daterange)$allDeaths ~ filter(logpred, date %in% daterange)$allCasesPred)
-summary(model)
+  model = lm(filter(comdat, date %in% daterange)$allDeaths ~ filter(logpred, date %in% daterange)$allCasesPred)
+  summary(model)
 
-model = lm(filter(comdat, date %in% daterange)$allDeaths ~ filter(WSS, date %in% daterange)$values)
-summary(model)
+  model = lm(filter(comdat, date %in% daterange)$allDeaths ~ filter(WSS, date %in% daterange)$values)
+  summary(model)
 
-#Get overall model fits
-model = lm(comdat$allDeaths ~ gampred$allCasesPred)
-summary(model)
+  #Get overall model fits
+  model = lm(comdat$allDeaths ~ gampred$allCasesPred)
+  summary(model)
 
-model = lm(comdat$allDeaths ~ logpred$allCasesPred)
-summary(model)
+  model = lm(comdat$allDeaths ~ logpred$allCasesPred)
+  summary(model)
 
-model = lm(filter(comdat, date %in% WSS$date)$allDeaths ~ WSS$values)
-summary(model)
-rm(model)
+  model = lm(filter(comdat, date %in% WSS$date)$allDeaths ~ WSS$values)
+  summary(model)
+  rm(model)
+}
 
 #### Model plots ####
 #Plot prediction against reality

@@ -148,18 +148,18 @@ outputJSON <- function(myt0,
     # Create a default vector with 0s for data not available
     default <- numeric(length(mydaysarray))
 
-    if(is.na(myCritRecov)){myCritRecov <- default}
-    if(is.na(myCritical)){myCritical <- default}
-    if(is.na(myILI)){myILI <- default}
-    if(is.na(myMild)){myMild <- default}
-    if(is.na(myR)){myR <- default}
-    if(is.na(mySARI)){mySARI <- default}
-    if(is.na(mycumCritRecov)){mycumCritRecov <- default}
-    if(is.na(mycumCritical)){mycumCritical <- default}
-    if(is.na(mycumILI)){mycumILI <- default}
-    if(is.na(mycumMild)){mycumMild <- default}
-    if(is.na(mycumSARI)){mycumSARI <- default}
-    if(is.na(myincDeath)){myincDeath <- default}
+    if(length(myCritRecov) == 1){if(is.na(myCritRecov)){myCritRecov <- default}}
+    if(length(myCritical) == 1){if(is.na(myCritical)){myCritical <- default}}
+    if(length(myILI) == 1){if(is.na(myILI)){myILI <- default}}
+    if(length(myMild) == 1){if(is.na(myMild)){myMild <- default}}
+    if(length(myR) == 1){if(is.na(myR)){myR <- default}}
+    if(length(mySARI) == 1){if(is.na(mySARI)){mySARI <- default}}
+    if(length(mycumCritRecov) == 1){if(is.na(mycumCritRecov)){mycumCritRecov <- default}}
+    if(length(mycumCritical) == 1){if(is.na(mycumCritical)){mycumCritical <- default}}
+    if(length(mycumILI) == 1){if(is.na(mycumILI)){mycumILI <- default}}
+    if(length(mycumMild) == 1){if(is.na(mycumMild)){mycumMild <- default}}
+    if(length(mycumSARI) == 1){if(is.na(mycumSARI)){mycumSARI <- default}}
+    if(length(myincDeath) == 1){if(is.na(myincDeath)){myincDeath <- default}}
 
     myaggregates <- list(CritRecov = myCritRecov,
                          Critical = myCritical,
