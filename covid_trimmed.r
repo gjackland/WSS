@@ -385,20 +385,9 @@ dfR$p75<-dfR$gjaR
 dfR$p80<-dfR$gjaR
 dfR$p85<-dfR$gjaR
 dfR$p90<-dfR$gjaR
-# df#Ito: gjaR[i]<-(1+(comdat$allCases[i]-comdat$allCases[i-1])*2*genTime/(comdat$allCases[i]+comdat$allCases[i-1]))
-#  #Stratanovitch calculus
+#Ito: gjaR[i]<-(1+(comdat$allCases[i]-comdat$allCases[i-1])*2*genTime/(comdat$allCases[i]+comdat$allCases[i-1]))
+#Stratanovitch calculus
 # rawR averages cases over previous genTime days - assumes genTime is the same as infectious period
-
-# Check if there are any zero cases in the data
-if(any(casedat==0)){
-  for(name in names(casedat)){
-    if(any(casedat[name]==0)){
-      warning("Zero values found for ",name," for the date(s) ",
-              paste(casedat[["date"]][which(casedat[name]==0)],collapse = ", "),".")
-    }
-  }
-}
-
 #  Generate R over all regions and ages
 for(i in ((genTime+1):length(dfR$gjaR))    ){
   dfR$gjaR[i]=(1+(comdat$allCases[i]-comdat$allCases[i-1])*genTime/(comdat$allCases[i-1]))
@@ -438,7 +427,6 @@ for(i in ((genTime+1):length(dfR$gjaR))    ){
   }else{
     dfR$p90[i] = NA
   }
-
 }
 
 for (i in 3:17){dfR[i,1]=dfR[i,2]}
@@ -640,10 +628,10 @@ lines(y=Rest$England_LowerBound,x=Rest$Date-sagedelay)
 lines(y=Rest$England_UpperBound,x=Rest$Date-sagedelay)
 lines(predict(loess(p30 ~ x, data=dfR,span=lospan)),col='red',x=dfR$date,title("30-34"))
 
-plot(smooth.spline(dfR$p10,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4))
+plot(smooth.spline(dfR$p35,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4))
 lines(y=Rest$England_LowerBound,x=Rest$Date-sagedelay)
 lines(y=Rest$England_UpperBound,x=Rest$Date-sagedelay)
-lines(predict(loess(p10 ~ x, data=dfR,span=lospan)),col='red',x=dfR$date,title("35-39"))
+lines(predict(loess(p35 ~ x, data=dfR,span=lospan)),col='red',x=dfR$date,title("35-39"))
 
 plot(smooth.spline(dfR$p40,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4))
 lines(y=Rest$England_LowerBound,x=Rest$Date-sagedelay)
@@ -690,7 +678,7 @@ lines(y=Rest$England_LowerBound,x=Rest$Date-sagedelay)
 lines(y=Rest$England_UpperBound,x=Rest$Date-sagedelay)
 lines(predict(loess(p80 ~ x, data=dfR,span=lospan)),col='red',x=dfR$date,title("80-85"))
 
-plot(smooth.spline(dfR$p85,df=12,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4))
+plot(smooth.spline(dfR$p85,df=19,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4))
 lines(y=Rest$England_LowerBound,x=Rest$Date-sagedelay)
 lines(y=Rest$England_UpperBound,x=Rest$Date-sagedelay)
 lines(predict(loess(p85 ~ x, data=dfR,span=lospan)),col='red',x=dfR$date,title("85-89"))
@@ -904,7 +892,7 @@ for (area in 2:10){
   lines(reglnpredict[2:279,area])}
 #Plots
 logcasesageplot = ggplot(logcases, aes(x = date)) +
-  geom_line(aes(y = rowSums(logcases[,2:20])),na.rm = TRUE) +
+  geom_line(aes(y = rowSums(logcases[,2:20])), na.rm = TRUE) +
   ggtitle("All age groups separately lognormal distributed")
 logcasesageplot
 rm(logcasesageplot)
