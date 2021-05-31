@@ -891,13 +891,13 @@ for (area in 2:10){
   lines(reglnpredict[2:279,area])}
 #Plots
 logcasesageplot = ggplot(logcases, aes(x = date)) +
-  geom_line(aes(y = rowSums(logcases[,2:20]))) +
+  geom_line(aes(y = rowSums(logcases[,2:20])), na.rm = TRUE) +
   ggtitle("All age groups separately lognormal distributed")
 logcasesageplot
 rm(logcasesageplot)
 
 
-plot#### Fig 2. Distributions ####
+#### Fig 2. Distributions ####
 distdat = data.frame(days = 1:29, ln = c(lndist, 0), gam = c(gamdist, 0), exp = c(dexp(1:28, rate = 0.1), 0),
                      shift = c(rep(0, 14), 1, rep(0, 14)),
                      avgshift = c(rep(0, 11), rep((1/7),7), rep(0, 11)))
