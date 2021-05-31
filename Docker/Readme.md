@@ -37,8 +37,8 @@ RUN install2.r --error \
     jsonlite
 
 # Copy the code and any data to the root directory of the image
-COPY ./covid_trimmed.r /
-COPY ./json_out.R
+COPY ./covid_trimmed.r .
+COPY ./json_out.R .
 ADD ./data /data
 
 # Run the code when the docker instance is activated
