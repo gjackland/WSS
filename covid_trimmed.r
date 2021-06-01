@@ -382,20 +382,9 @@ dfR$p75<-dfR$gjaR
 dfR$p80<-dfR$gjaR
 dfR$p85<-dfR$gjaR
 dfR$p90<-dfR$gjaR
-# df#Ito: gjaR[i]<-(1+(comdat$allCases[i]-comdat$allCases[i-1])*2*genTime/(comdat$allCases[i]+comdat$allCases[i-1]))
-#  #Stratanovitch calculus
+#Ito: gjaR[i]<-(1+(comdat$allCases[i]-comdat$allCases[i-1])*2*genTime/(comdat$allCases[i]+comdat$allCases[i-1]))
+#Stratanovitch calculus
 # rawR averages cases over previous genTime days - assumes genTime is the same as infectious period
-
-# Check if there are any zero cases in the data
-if(any(casedat==0)){
-  for(name in names(casedat)){
-    if(any(casedat[name]==0)){
-      warning("Zero values found for ",name," for the date(s) ",
-              paste(casedat[["date"]][which(casedat[name]==0)],collapse = ", "),".")
-    }
-  }
-}
-
 #  Generate R over all regions and ages
 for(i in ((genTime+1):length(dfR$gjaR))    ){
   dfR$gjaR[i]=(1+(comdat$allCases[i]-comdat$allCases[i-1])*genTime/(comdat$allCases[i-1]))
@@ -431,7 +420,7 @@ for(i in ((genTime+1):length(dfR$gjaR))    ){
   dfR$p80[i]=1+log(casedat$'80_84'[i]/casedat$'80_84'[i-1])*genTime
   dfR$p85[i]=1+log(casedat$'85_89'[i]/casedat$'85_89'[i-1])*genTime
   dfR$p90[i]=1+log(casedat$'90+'[i]/casedat$'90+'[i-1])*genTime
-}
+  }
 
 for (i in 3:17){dfR[i,1]=dfR[i,2]}
 
@@ -631,10 +620,10 @@ lines(y=Rest$England_LowerBound,x=Rest$Date-sagedelay)
 lines(y=Rest$England_UpperBound,x=Rest$Date-sagedelay)
 lines(predict(loess(p30 ~ x, data=dfR,span=lospan)),col='red',x=dfR$date,title("30-34"))
 
-plot(smooth.spline(dfR$p10,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4))
+plot(smooth.spline(dfR$p35,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4))
 lines(y=Rest$England_LowerBound,x=Rest$Date-sagedelay)
 lines(y=Rest$England_UpperBound,x=Rest$Date-sagedelay)
-lines(predict(loess(p10 ~ x, data=dfR,span=lospan)),col='red',x=dfR$date,title("35-39"))
+lines(predict(loess(p35 ~ x, data=dfR,span=lospan)),col='red',x=dfR$date,title("35-39"))
 
 plot(smooth.spline(dfR$p40,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4))
 lines(y=Rest$England_LowerBound,x=Rest$Date-sagedelay)
@@ -681,7 +670,7 @@ lines(y=Rest$England_LowerBound,x=Rest$Date-sagedelay)
 lines(y=Rest$England_UpperBound,x=Rest$Date-sagedelay)
 lines(predict(loess(p80 ~ x, data=dfR,span=lospan)),col='red',x=dfR$date,title("80-85"))
 
-plot(smooth.spline(dfR$p85,df=12,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4))
+plot(smooth.spline(dfR$p85,df=19,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4))
 lines(y=Rest$England_LowerBound,x=Rest$Date-sagedelay)
 lines(y=Rest$England_UpperBound,x=Rest$Date-sagedelay)
 lines(predict(loess(p85 ~ x, data=dfR,span=lospan)),col='red',x=dfR$date,title("85-89"))
@@ -724,11 +713,49 @@ lines(comdat$allCases,x=comdat$date, col="red")
 lines(PredictCasesSmoothR,x=dfR$date, col="blue",lwd=2)
 #lines(PredictCasesMeanR,x=comdat$date, col="green")
 lines(PredictCasesLin,x=comdat$date, col="orange")
-sum(PredictCases)
-sum(PredictCasesSmoothR)
-sum(PredictCasesMeanR)
-sum(PredictCasesLin)
-sum(comdat$allCases)
+
+if(interactive()){
+  sum(PredictCases)
+  sum(PredictCasesSmoothR)
+  sum(PredictCasesMeanR)
+  sum(PredictCasesLin)
+  sum(comdat$allCases)
+}
+
+# Load code to function to output to the web-ui interface
+# From stackoverflow: 6456501
+if(!exists("outputJSON", mode="function")) source("json_out.R")
+
+# # Beginning of time series
+t0 <-  min(dfR$date)
+
+# Get the days for which data will be output
+days <- as.integer(dfR$date - t0)
+
+# Labels are optional
+outputJSON(myt0 = t0,
+           mydaysarray = days,
+           myregion = "GB",
+           mysubregion = "ENG", # see https://en.wikipedia.org/wiki/ISO_3166-2:GB
+           mycalibrationCaseCount = NA,  # ADD VALUE, eg single number
+           mycalibrationDate = NA,       # ADD VALUE, eg "2021-05-12"
+           mycalibrationDeathCount=NA,   # ADD VALUE, eg single number
+           myr0 = NA,
+           myinterventionPeriods= NA,
+           myCritRecov = NA,
+           myCritical = NA,
+           myILI = NA,
+           myMild = NA,
+           myR = dfR$gjaR,
+           mySARI = NA,
+           mycumCritRecov = NA,
+           mycumCritical = NA,
+           mycumILI = NA,
+           mycumMild = NA,
+           mycumSARI = NA,
+           myincDeath = NA
+)
+
 #####  Figures and analysis for https://www.medrxiv.org/content/10.1101/2021.04.14.21255385v1
 
 
@@ -834,8 +861,6 @@ rm(day,area)
 
 
 #  Regional plots, with CFR input by hand
-
-
 plot(regdeaths$London*55,x=regdeaths$date)
 lines(reglnpredict$London,x=reglnpredict$date)
 lines(reggampredict$London,x=reglnpredict$date)
@@ -855,16 +880,13 @@ for (area in 2:10){
   lines(reglnpredict[2:279,area])}
 #Plots
 logcasesageplot = ggplot(logcases, aes(x = date)) +
-  geom_line(aes(y = rowSums(logcases[,2:20]))) +
+  geom_line(aes(y = rowSums(logcases[,2:20])), na.rm = TRUE) +
   ggtitle("All age groups separately lognormal distributed")
 logcasesageplot
 rm(logcasesageplot)
 
 
-
-
-
-plot#### Fig 2. Distributions ####
+#### Fig 2. Distributions ####
 distdat = data.frame(days = 1:29, ln = c(lndist, 0), gam = c(gamdist, 0), exp = c(dexp(1:28, rate = 0.1), 0),
                      shift = c(rep(0, 14), 1, rep(0, 14)),
                      avgshift = c(rep(0, 11), rep((1/7),7), rep(0, 11)))
@@ -931,33 +953,35 @@ WSS$date = WSS$date + 12
 
 #### Model Fit Stats ####
 #Get Autumn model fits
-model = lm(filter(comdat, date %in% daterange)$allDeaths ~ filter(gampred, date %in% daterange)$allCasesPred)
-summary(model)
+if(interactive()){
+  model = lm(filter(comdat, date %in% daterange)$allDeaths ~ filter(gampred, date %in% daterange)$allCasesPred)
+  summary(model)
 
-model = lm(filter(comdat, date %in% daterange)$allDeaths ~ filter(logpred, date %in% daterange)$allCasesPred)
-summary(model)
+  model = lm(filter(comdat, date %in% daterange)$allDeaths ~ filter(logpred, date %in% daterange)$allCasesPred)
+  summary(model)
 
-model = lm(filter(comdat, date %in% daterange)$allDeaths ~ filter(WSS, date %in% daterange)$values)
-summary(model)
+  model = lm(filter(comdat, date %in% daterange)$allDeaths ~ filter(WSS, date %in% daterange)$values)
+  summary(model)
 
-#Get overall model fits
-model = lm(comdat$allDeaths ~ gampred$allCasesPred)
-summary(model)
+  #Get overall model fits
+  model = lm(comdat$allDeaths ~ gampred$allCasesPred)
+  summary(model)
 
-model = lm(comdat$allDeaths ~ logpred$allCasesPred)
-summary(model)
+  model = lm(comdat$allDeaths ~ logpred$allCasesPred)
+  summary(model)
 
-model = lm(filter(comdat, date %in% WSS$date)$allDeaths ~ WSS$values)
-summary(model)
-rm(model)
+  model = lm(filter(comdat, date %in% WSS$date)$allDeaths ~ WSS$values)
+  summary(model)
+  rm(model)
+}
 
 #### Model plots ####
 #Plot prediction against reality
 ggplot(data = comdat, aes(x = date)) +
-  geom_line(mapping = aes(y = allDeaths, color = "Deaths (Government Figures)"), size = 1) +
-  geom_line(data = gampred, aes(y = allCasesPred, color = "Gamma Model Predicted Deaths"), size = 1) +
-  geom_line(data = logpred, aes(y = allCasesPred, color = "Lognormal Model Predicted Deaths"), size = 1) +
-  geom_line(data = WSS, aes(y = values, color = "WSS Original"), size = 1) +
+  geom_line(mapping = aes(y = allDeaths, color = "Deaths (Government Figures)"), size = 1, na.rm = TRUE) +
+  geom_line(data = gampred, aes(y = allCasesPred, color = "Gamma Model Predicted Deaths"), size = 1, na.rm = TRUE) +
+  geom_line(data = logpred, aes(y = allCasesPred, color = "Lognormal Model Predicted Deaths"), size = 1, na.rm = TRUE) +
+  geom_line(data = WSS, aes(y = values, color = "WSS Original"), size = 1, na.rm = TRUE) +
   labs(title = "Predicted Deaths vs. Actual Deaths", color = "Legend") +
   ylab("Deaths") +
   xlab("Date") +
