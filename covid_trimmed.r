@@ -35,17 +35,17 @@ baseurl <- "https://api.coronavirus.data.gov.uk/v2/data?"
 startdate <- as.Date("2020/07/25")
 #  To one week ago (-7)
 enddate <-  Sys.Date()-7
-# Start and end date - the data to collect data from
-#startdate <- as.Date("2020/09/22")
+#  Dates for the plots
 plotdate=as.Date(c("2020-09-22",as.character(enddate)))
 # Date of Christmas Eve
-XMstart=153
+XMas= as.Date("2020/12/25")
+XMstart=as.integer(XMas-startdate)
 
 # Wanted to plot a Smooth spline discontinuous at
 #UK lockdown Oct 31 (day 98) -Dec 2  (day 130) Jan 6 (day 165)  (day 1 = July 25)
-lock1 = 98
-unlock1 = lock1+32
-lock2 = lock1+67
+lock1 = as.integer(as.Date("2020/10/31")-startdate)
+unlock1 = as.integer(as.Date("2020/12/02")-startdate)
+lock2 = lock1+as.integer(as.Date("2021/12/06")-startdate)
 test_delay=7
 lock1=lock1+test_delay
 unlock1=unlock1+test_delay
