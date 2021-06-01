@@ -33,7 +33,7 @@ baseurl <- "https://api.coronavirus.data.gov.uk/v2/data?"
 
 # Start and end date - the data to collect data from
 startdate <- as.Date("2020/07/25")
-#  To one week ago (-7)
+# To one week ago (-7)
 enddate <-  Sys.Date()-7
 
 # Total cases, deaths, tests
@@ -276,6 +276,7 @@ comdat %>% ggplot(aes(x=date,y=allCases)) + geom_line() +
 
 
 #remove weekend effect,  assuming each weekday has same number of cases over the epidemic, and national averages hold regionally
+
 days <-1:7
 weeks<-as.integer(length(comdat$allCases)/7)-1
 
@@ -286,6 +287,7 @@ for(i in 1:weeks){
 }
 casetot=sum(days)
 days=7*days/casetot
+
 
 # REscale comdat and regcases
 for(i in 1:length(comdat$allCases)){
@@ -316,8 +318,7 @@ for (area in 2:10){
   for (i in 153:164){
     regcases[i,area]<-Xmasav[area]-Xmasgrad*(158.5-i)/12.0
   }
-  }
-
+}
 
 for (i in 2:ncol(casedat)) {
   for (j in 1:nrow(casedat)) {
@@ -327,6 +328,7 @@ for (i in 2:ncol(casedat)) {
 }
 #Fix Xmas and weekend anomaly in age data
 for (i in 2:ncol(casedat) ){
+
     Xmasav = sum(casedat[153:164,i])/12
     Xmasgrad=Xmasav/25
     for (iday in 153:164){
@@ -334,6 +336,7 @@ for (i in 2:ncol(casedat) ){
     }
 }
 rm(Xmasav,Xmasgrad,weeks,i,iday,j,indexday)
+
 # Set false positive adjustment at 0.004
 for(i in 1:length(comdat$allCases)){
   comdat$fpCases[i]=comdat$allCases[i]-0.004*as.integer(comdat$tests[i])
@@ -419,8 +422,12 @@ for(i in ((genTime+1):length(dfR$gjaR))    ){
   dfR$p75[i]=1+log(casedat$'75_79'[i]/casedat$'75_79'[i-1])*genTime
   dfR$p80[i]=1+log(casedat$'80_84'[i]/casedat$'80_84'[i-1])*genTime
   dfR$p85[i]=1+log(casedat$'85_89'[i]/casedat$'85_89'[i-1])*genTime
-  dfR$p90[i]=1+log(casedat$'90+'[i]/casedat$'90+'[i-1])*genTime
+  if(casedat$'90+'[i] != 0 & casedat$'90+'[i-1] != 0){
+    dfR$p90[i]=1+log(casedat$'90+'[i]/casedat$'90+'[i-1])*genTime
+  }else{
+    dfR$p90[i] = NA
   }
+}
 
 for (i in 3:17){dfR[i,1]=dfR[i,2]}
 
@@ -441,7 +448,7 @@ dfR$weeklyR[length(dfR$weeklyR)-2]=1.0
 #lines(y=Rest$England_LowerBound,x=Rest$Date)
 #lines(y=Rest$England_UpperBound,x=Rest$Date)
 # Wanted to plot a Smooth spline discontinuous at
-#UK lockdown Oct 31 (day 98) -Dec 2  (day 130) Jan 6 (day 165)  (day 1 = July 25)
+# UK lockdown Oct 31 (day 98) -Dec 2  (day 130) Jan 6 (day 165)  (day 1 = July 25)
 
 # Making the time windows agree
 Govdat <- Rest[Rest$Date >= min(comdat$date) & Rest$Date <= max(comdat$date),]
@@ -466,7 +473,6 @@ Govdat <- Rest[Rest$Date >= min(comdat$date) & Rest$Date <= max(comdat$date),]
 #              colour="green",alpha=0.25) + ylim(0,2.5) +
 #  xlab("Date") + ylab("R value")
 
-
 nospl=3
 test_delay=7
 lock1=98+test_delay
@@ -486,10 +492,11 @@ smoothR98$date<-dfR$date[1:lock1]
 smoothR130<-smooth.spline(dfR$bylogR[lock1:unlock1],df=nospl)
 smoothR130$date<-dfR$date[lock1:unlock1]
 smoothR164<-smooth.spline(dfR$bylogR[unlock1:lock2],df=nospl)
+
 smoothR164$x=smoothR164$x+unlock1
 smoothR164$date<-dfR$date[unlock1:lock2]
 smoothRend<-smooth.spline(dfR$bylogR[lock2:length(dfR$date)],df=nospl)
-smoothRend$x=smoothRend$x+lock2
+
 smoothRend$date<-dfR$date[lock2:length(dfR$gjaR)]
 dfR$piecewise<-dfR$gjaR
 for (i in 1:lock1){dfR$piecewise[i]=smoothR98$y[i]}
@@ -509,7 +516,7 @@ for (i in 8:17){
 
 plot(smoothweightR$y,ylab="Agegroup R-number",xlab="Date",x=dfR$date)
 for (i in 18:length(dfR)){
-  lines(smooth.spline(dfR[i],df=19)$y,col=i,x=dfR$date)
+  lines(smooth.spline(na.omit(dfR[i]),df=19)$y,col=i,x=dfR$date[!is.na(dfR[i])])
 }
 
 plot(smoothweightR$y,x=smoothweightR$date,ylab="R-number",xlab="Date after Aug 25",ylim=c(0.6,1.4))
@@ -524,6 +531,7 @@ lines(predict(loess(gjaR ~ x, data=dfR,span=0.2)),col='red',x=dfR$date)
 lines(predict(loess(gjaR ~ x, data=dfR,span=0.3)),col='red',x=dfR$date)
 lines(predict(loess(gjaR ~ x, data=dfR,span=0.5)),col='red',x=dfR$date)
 lines(predict(loess(gjaR ~ x, data=dfR,span=1.0)),col='red',x=dfR$date)
+
 plot(smoothweightR$y,ylab="R-number",xlab="Day")
 #  Plot R continuous with many splines.  Not sure when fitting noise here!
 for (ismooth in 4:28){
@@ -675,14 +683,16 @@ lines(y=Rest$England_LowerBound,x=Rest$Date-sagedelay)
 lines(y=Rest$England_UpperBound,x=Rest$Date-sagedelay)
 lines(predict(loess(p85 ~ x, data=dfR,span=lospan)),col='red',x=dfR$date,title("85-89"))
 
-plot(smooth.spline(dfR$p90,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4))
+plot(smooth.spline(na.omit(dfR$p90),df=spdf,w=sqrt(comdat$allCases[!is.na(dfR$p90)]))$y,ylab="R-number",xlab="Date",
+     x=dfR$date[!is.na(dfR$p90)],ylim=c(0.6,1.4))
 lines(y=Rest$England_LowerBound,x=Rest$Date-sagedelay)
 lines(y=Rest$England_UpperBound,x=Rest$Date-sagedelay)
-lines(predict(loess(p90 ~ x, data=dfR,span=lospan)),col='red',x=dfR$date,title("90+"))
+lines(predict(loess(p90 ~ x, data=dfR,span=lospan)),col='red',x=dfR$date[!is.na(dfR$p90)],title("90+"))
 
 
-#Reverse Engineer cases from R-number - requires stratonovich calculus to get reversibility
+# Reverse Engineer cases from R-number - requires stratonovich calculus to get reversibility
 # Initializations
+
 #rm(PredictCases,PredictCasesSmoothR)
 PredictCases <- dfR$bylogR
 PredictCasesRaw <- dfR$rawR
@@ -690,6 +700,7 @@ PredictCasesSmoothR<- dfR$bylogR
 PredictCasesMeanR<- dfR$bylogR
 PredictCasesLin <-dfR$gjaR
 #  Use the same weekend-adjusted initial condition, regardless of smoothing effect
+
 PredictCases[1]=comdat$allCases[1]
 PredictCasesRaw[1]=PredictCases[1]
 PredictCasesSmoothR[1]=PredictCases[1]
@@ -712,6 +723,7 @@ plot(PredictCases,x=dfR$date,xlab="Date",ylab="Cases backdeduced from R")
 lines(comdat$allCases,x=comdat$date, col="red")
 lines(PredictCasesSmoothR,x=dfR$date, col="blue",lwd=2)
 #lines(PredictCasesMeanR,x=comdat$date, col="green")
+
 lines(PredictCasesLin,x=comdat$date, col="orange")
 
 if(interactive()){
