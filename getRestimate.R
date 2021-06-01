@@ -9,6 +9,13 @@ library(readODS, warn.conflicts = FALSE, quietly = TRUE)
 library(xml2, warn.conflicts = FALSE, quietly = TRUE)
 library(rvest, warn.conflicts = FALSE, quietly = TRUE)
 
+# From stackoverflow 14469522
+stop_quietly <- function() {
+  opt <- options(show.error.messages = FALSE)
+  on.exit(options(opt))
+  stop()
+}
+
 # Get the Government R estimates
 # URL data of where the information is held
 Rurl <- "https://www.gov.uk/guidance/the-r-value-and-growth-rate"
@@ -21,7 +28,7 @@ read_html(Rurl) %>% html_nodes(xpath='//a[contains(text(),"time series of publis
 file <- basename(Rurl)
 
 # Print available data
-message(paste0("\nCurrent available data: ",file,"."))
+message(paste0("\nCurrent data file available: ",file,"."))
 
 # Create a data subdirectory if it does not exist
 if(!dir.exists("data")){
@@ -32,7 +39,8 @@ if(!dir.exists("data")){
 if(!file.exists(paste0("data/",file))){
   download.file(Rurl,destfile = paste0("data/",file),quiet = TRUE)
 }else{
-  stop("Data file already exists locally, not downloading again.\n")
+  message("Data file already exists locally, not downloading again. Terminating ...\n\n")
+  stop_quietly()
 }
 
 # Read the contents of the file
