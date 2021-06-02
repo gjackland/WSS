@@ -137,7 +137,7 @@ outputJSON <- function(myt0,
                          r0=myr0,
                          calibrationDeathCount=mycalibrationDeathCount,
                          interventionPeriods=myinterventionPeriods
-                         )
+    )
 
     mymetadata <- list(region=myregion,
                        subregion=mysubregion,
@@ -178,13 +178,13 @@ outputJSON <- function(myt0,
     ## Build up the object to be output to JSON
     myobject <- list(time = mytime,
                      metadata = mymetadata,
-                     aggregates = myaggregates)
+                     aggregate = myaggregates)
 
     ## Output to JSON
     if(dir.exists("/data/output")){
-      write_json(myobject, "/data/output/data.json", pretty = TRUE, auto_unbox = TRUE, na ="null")
+        write_json(myobject, "/data/output/data.json", pretty = TRUE, auto_unbox = TRUE, na ="null")
     }else{
-      toJSON(myobject,pretty = TRUE,auto_unbox = TRUE, na ="null")
+        toJSON(myobject,pretty = TRUE,auto_unbox = TRUE, na ="null")
     }
 
 }
