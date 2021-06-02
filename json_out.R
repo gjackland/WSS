@@ -178,7 +178,7 @@ outputJSON <- function(myt0,
     ## Build up the object to be output to JSON
     myobject <- list(time = mytime,
                      metadata = mymetadata,
-                     aggregate = myaggregates)
+                     aggregate = list(metrics=myaggregates))
 
     ## Output to JSON
     if(dir.exists("/data/output")){
