@@ -181,6 +181,11 @@ outputJSON <- function(myt0,
                      aggregates = myaggregates)
 
     ## Output to JSON
-    toJSON(myobject,pretty = TRUE,auto_unbox = TRUE, na ="null")
+    if(dir.exists("/data/output")){
+      jsonout <- toJSON(myobject,pretty = TRUE,auto_unbox = TRUE, na ="null")
+      write_json(jsonout, "/data/output/data.json")
+    }else{
+      toJSON(myobject,pretty = TRUE,auto_unbox = TRUE, na ="null")
+    }
 
 }
