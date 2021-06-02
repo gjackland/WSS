@@ -11,7 +11,6 @@ if(interactive()){
   # Remove existing variables
   rm(list = ls())
 }
-
 # Read packages used by the script
 library(readr, warn.conflicts = FALSE, quietly = TRUE)
 library(dplyr, warn.conflicts = FALSE, quietly = TRUE)
@@ -38,14 +37,14 @@ enddate <-  Sys.Date()-7
 #  Dates for the plots
 plotdate=as.Date(c("2020-09-22",as.character(enddate)))
 # Date of Christmas Eve
-XMas= as.Date("2020/12/25")
+XMas= as.Date("2020/12/24")
 XMstart=as.integer(XMas-startdate)
-
+XMend=XMstart+11
 # Wanted to plot a Smooth spline discontinuous at
 #UK lockdown Oct 31 (day 98) -Dec 2  (day 130) Jan 6 (day 165)  (day 1 = July 25)
 lock1 = as.integer(as.Date("2020/10/31")-startdate)
 unlock1 = as.integer(as.Date("2020/12/02")-startdate)
-lock2 = lock1+as.integer(as.Date("2021/12/06")-startdate)
+lock2 = as.integer(as.Date("2021/01/06")-startdate)
 test_delay=7
 lock1=lock1+test_delay
 unlock1=unlock1+test_delay
@@ -314,7 +313,7 @@ for(i in 1:length(comdat$allCases)){
 }
 
 # Fix Xmas anomaly over 12 days in comdat,regcases by linear fit
-XMend=XMstart+12
+
 Xmasav<-1:11
 Xmasav[1] = sum(comdat$allCases[XMstart:XMend])/12
 Xmasgrad=comdat$allCases[XMend]-comdat$allCases[XMstart]
@@ -355,9 +354,10 @@ rm(Xmasav,Xmasgrad,weeks,i,iday,j,indexday)
 for(i in 1:length(comdat$allCases)){
   comdat$fpCases[i]=comdat$allCases[i]-0.004*as.integer(comdat$tests[i])
 }
-plot(comdat$allCases)
-lines(comdat$fpCases, col="red")
+plot(comdat$inputCases,x=comdat$date,xlab="Date",ylab="Cases")
 
+lines(comdat$allCases,x=comdat$date, col="green",lwd=2)
+lines(comdat$fpCases, x=comdat$date,col="red",lwd=2)
 # Calculation of Rnumber, generation time = 4 days
 genTime=5
 
@@ -481,7 +481,7 @@ Govdat <- Rest[Rest$Date >= min(comdat$date) & Rest$Date <= max(comdat$date),]
 #  xlab("Date") + ylab("R value")
 
 
-nospl=3
+nospl=4
 
 spdf=12
 lospan=0.3
@@ -524,18 +524,20 @@ for (i in 18:length(dfR)){
   lines(smooth.spline(dfR[i],df=spdf)$y,col=i,x=dfR$date)
 }
 
-plot(smoothweightR$y,x=smoothweightR$date,ylab="R-number",xlab="Date after Aug 25",ylim=c(0.6,1.4),xlim=plotdate)
+plot(dfR$piecewise,x=smoothweightR$date,ylab="R-number",xlab="Date after Aug 25",title("England"),ylim=c(0.6,1.4),xlim=plotdate,cex.lab=2.5, cex.axis=2.5, cex.main=2.5, cex.sub=2.5)
 #lines(smoothweightRfp$y,x=smoothweightRfp$date,col="blue")
 lines(y=Rest$England_LowerBound,x=Rest$Date-sagedelay)
 lines(y=Rest$England_UpperBound,x=Rest$Date-sagedelay)
-lines(dfR$piecewise,col="blue",lwd=2,x=dfR$date)
+lines(smoothweightR$y,col="blue",lwd=2,x=dfR$date)
 
 
 #lines(predict(loess(gjaR ~ x, data=dfR,span=0.1)),col='red',x=dfR$date)
 #lines(predict(loess(gjaR ~ x, data=dfR,span=0.2)),col='red',x=dfR$date)
-#lines(predict(loess(gjaR ~ x, data=dfR,span=0.3)),col='red',x=dfR$date)
-lines(predict(loess(gjaR ~ x, data=dfR,span=0.5)),col='red',x=dfR$date)
-#lines(predict(loess(gjaR ~ x, data=dfR,span=1.0)),col='red',x=dfR$date)
+lines(predict(loess(gjaR ~ x, data=dfR,span=0.3,weight=sqrt(comdat$allCases))),col='green',x=dfR$date,lwd=2)
+lines(predict(loess(gjaR ~ x, data=dfR,span=0.3)),col='green',x=dfR$date)
+lines(predict(loess(bylogR ~ x, data=dfR,span=0.3,weight=sqrt(comdat$allCases))),col='red',x=dfR$date,lwd=2)
+lines(predict(loess(bylogR ~ x, data=dfR,span=0.3)),col='red',x=dfR$date)
+
 plot(smoothweightR$y,ylab="R-number",xlab="Day")
 #  Plot R continuous with many splines.  Not sure when fitting noise here!
 for (ismooth in 4:28){
@@ -554,142 +556,169 @@ Rest %>% ggplot(aes(x=Date)) + geom_ribbon(aes(Date,min=England_LowerBound,max=E
   ylab("R Estimate") + xlab("Date")  # + geom_line(comdat,aes(date,R))
 
 #Plot Regional R data vs Government  spdf is spline smoothing factor, lospan for loess
-
-plot(smooth.spline(dfR$Lon,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),xlim=plotdate)
+pdf(file = 'Lon.pdf')
+plot(smooth.spline(dfR$Lon,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),xlim=plotdate,cex.lab=2.5, cex.axis=2.5, cex.main=2.5, cex.sub=2.5)
 lines(y=Rest$Lon_LowerBound,x=Rest$Date-sagedelay)
 lines(y=Rest$Lon_UpperBound,x=Rest$Date-sagedelay)
 lines(predict(loess(Lon ~ x, data=dfR,span=lospan)),col='red',x=dfR$date,title("London"))
-
-plot(smooth.spline(dfR$NW,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),xlim=plotdate)
+dev.off()
+pdf(file = 'NW.pdf')
+plot(smooth.spline(dfR$NW,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),xlim=plotdate,cex.lab=2.5, cex.axis=2.5, cex.main=2.5, cex.sub=2.5)
 lines(y=Rest$NW_LowerBound,x=Rest$Date-sagedelay)
 lines(y=Rest$NW_UpperBound,x=Rest$Date-sagedelay)
 lines(predict(loess(NW ~ x, data=dfR,span=lospan)),col='red',x=dfR$date,title("North West"))
-
-
-plot(smooth.spline(dfR$NE,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),xlim=plotdate)
+dev.off()
+pdf(file = 'NE.pdf')
+plot(smooth.spline(dfR$NE,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),xlim=plotdate,cex.lab=2.5, cex.axis=2.5, cex.main=2.5, cex.sub=2.5)
 lines(y=Rest$NEY_LowerBound,x=Rest$Date-sagedelay)
 lines(y=Rest$NEY_UpperBound,x=Rest$Date-sagedelay)
 lines(predict(loess(NE ~ x, data=dfR,span=lospan)),col='red',x=dfR$date,title("North East"))
-
-plot(smooth.spline(dfR$SW,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),xlim=plotdate)
+dev.off()
+pdf(file = 'SW.pdf')
+plot(smooth.spline(dfR$SW,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),xlim=plotdate,cex.lab=2.5, cex.axis=2.5, cex.main=2.5, cex.sub=2.5)
 lines(y=Rest$SW_LowerBound,x=Rest$Date-sagedelay)
 lines(y=Rest$SW_UpperBound,x=Rest$Date-sagedelay)
 lines(predict(loess(SW ~ x, data=dfR,span=lospan)),col='red',x=dfR$date,title("South West"))
 
-plot(smooth.spline(dfR$SE,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),xlim=plotdate)
+dev.off()
+pdf(file = 'SE.pdf')
+plot(smooth.spline(dfR$SE,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),xlim=plotdate,cex.lab=2.5, cex.axis=2.5, cex.main=2.5, cex.sub=2.5)
 lines(y=Rest$SE_LowerBound,x=Rest$Date-sagedelay)
 lines(y=Rest$SE_UpperBound,x=Rest$Date-sagedelay)
 lines(predict(loess(SE ~ x, data=dfR,span=lospan)),col='red',x=dfR$date,title("South East"))
-
-plot(smooth.spline(dfR$EE,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),xlim=plotdate)
+dev.off()
+pdf(file = 'EE.pdf')
+plot(smooth.spline(dfR$EE,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),xlim=plotdate,cex.lab=2.5, cex.axis=2.5, cex.main=2.5, cex.sub=2.5)
 lines(y=Rest$EEng_LowerBound,x=Rest$Date-sagedelay)
 lines(y=Rest$EEng_UpperBound,x=Rest$Date-sagedelay)
 lines(predict(loess(EE ~ x, data=dfR,span=lospan)),col='red',x=dfR$date,title("East England"))
-
-plot(smooth.spline(dfR$EM,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),xlim=plotdate)
+dev.off()
+pdf(file = 'EM.pdf')
+plot(smooth.spline(dfR$EM,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),xlim=plotdate,cex.lab=2.5, cex.axis=2.5, cex.main=2.5, cex.sub=2.5)
 lines(y=Rest$Mid_LowerBound,x=Rest$Date-sagedelay)
 lines(y=Rest$Mid_UpperBound,x=Rest$Date-sagedelay)
 lines(predict(loess(EM ~ x, data=dfR,span=lospan)),col='red',x=dfR$date,title("East Midlands"))
-
-plot(smooth.spline(dfR$WM,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),xlim=plotdate)
+dev.off()
+pdf(file = 'WM.pdf')
+plot(smooth.spline(dfR$WM,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),xlim=plotdate,cex.lab=2.5, cex.axis=2.5, cex.main=2.5, cex.sub=2.5)
 lines(y=Rest$Mid_LowerBound,x=Rest$Date-sagedelay)
 lines(y=Rest$Mid_UpperBound,x=Rest$Date-sagedelay)
 lines(predict(loess(WM ~ x, data=dfR,span=lospan)),col='red',x=dfR$date,title("West Midlands"))
-
-plot(smooth.spline(dfR$YH,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),xlim=plotdate)
+dev.off()
+pdf(file = 'YH.pdf')
+plot(smooth.spline(dfR$YH,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),xlim=plotdate,cex.lab=2.5, cex.axis=2.5, cex.main=2.5, cex.sub=2.5)
 lines(y=Rest$NEY_LowerBound,x=Rest$Date-sagedelay)
 lines(y=Rest$NEY_UpperBound,x=Rest$Date-sagedelay)
 lines(predict(loess(YH ~ x, data=dfR,span=lospan)),col='red',x=dfR$date,title("Yorkshire"))
-
-plot(smooth.spline(dfR$p05,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),xlim=plotdate)
+dev.off()
+pdf(file = 'p05.pdf')
+plot(smooth.spline(dfR$p05,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),xlim=plotdate,cex.lab=2.5, cex.axis=2.5, cex.main=2.5, cex.sub=2.5)
 lines(y=Rest$England_LowerBound,x=Rest$Date-sagedelay)
 lines(y=Rest$England_UpperBound,x=Rest$Date-sagedelay)
 lines(predict(loess(p05 ~ x, data=dfR,span=lospan)),col='red',x=dfR$date,title("05-09"))
-
-plot(smooth.spline(dfR$p10,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),xlim=plotdate)
+dev.off()
+pdf(file = 'p10.pdf')
+plot(smooth.spline(dfR$p10,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),xlim=plotdate,cex.lab=2.5, cex.axis=2.5, cex.main=2.5, cex.sub=2.5)
 lines(y=Rest$England_LowerBound,x=Rest$Date-sagedelay)
 lines(y=Rest$England_UpperBound,x=Rest$Date-sagedelay)
 lines(predict(loess(p10 ~ x, data=dfR,span=lospan)),col='red',x=dfR$date,title("10-14"))
-
-plot(smooth.spline(dfR$p15,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),xlim=plotdate)
+dev.off()
+pdf(file = 'p15.pdf')
+plot(smooth.spline(dfR$p15,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),xlim=plotdate,cex.lab=2.5, cex.axis=2.5, cex.main=2.5, cex.sub=2.5)
 lines(y=Rest$England_LowerBound,x=Rest$Date-sagedelay)
 lines(y=Rest$England_UpperBound,x=Rest$Date-sagedelay)
 lines(predict(loess(p15 ~ x, data=dfR,span=lospan)),col='red',x=dfR$date,title("15-19"))
-
-plot(smooth.spline(dfR$p20,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),xlim=plotdate)
+dev.off()
+pdf(file = 'p20.pdf')
+plot(smooth.spline(dfR$p20,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),xlim=plotdate,cex.lab=2.5, cex.axis=2.5, cex.main=2.5, cex.sub=2.5)
 lines(y=Rest$England_LowerBound,x=Rest$Date-sagedelay)
 lines(y=Rest$England_UpperBound,x=Rest$Date-sagedelay)
 lines(predict(loess(p20 ~ x, data=dfR,span=lospan)),col='red',x=dfR$date,title("20-24"))
-
-plot(smooth.spline(dfR$p25,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),xlim=plotdate)
+dev.off()
+pdf(file = 'p25.pdf')
+plot(smooth.spline(dfR$p25,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),xlim=plotdate,cex.lab=2.5, cex.axis=2.5, cex.main=2.5, cex.sub=2.5)
 lines(y=Rest$England_LowerBound,x=Rest$Date-sagedelay)
 lines(y=Rest$England_UpperBound,x=Rest$Date-sagedelay)
 lines(predict(loess(p25 ~ x, data=dfR,span=lospan)),col='red',x=dfR$date,title("25-29"))
-
-plot(smooth.spline(dfR$p30,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),xlim=plotdate)
+dev.off()
+pdf(file = 'p30.pdf')
+plot(smooth.spline(dfR$p30,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),xlim=plotdate,cex.lab=2.5, cex.axis=2.5, cex.main=2.5, cex.sub=2.5)
 lines(y=Rest$England_LowerBound,x=Rest$Date-sagedelay)
 lines(y=Rest$England_UpperBound,x=Rest$Date-sagedelay)
 lines(predict(loess(p30 ~ x, data=dfR,span=lospan)),col='red',x=dfR$date,title("30-34"))
-
-plot(smooth.spline(dfR$p35,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),xlim=plotdate)
+dev.off()
+pdf(file = 'p35.pdf')
+plot(smooth.spline(dfR$p35,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),xlim=plotdate,cex.lab=2.5, cex.axis=2.5, cex.main=2.5, cex.sub=2.5)
 lines(y=Rest$England_LowerBound,x=Rest$Date-sagedelay)
 lines(y=Rest$England_UpperBound,x=Rest$Date-sagedelay)
 lines(predict(loess(p35 ~ x, data=dfR,span=lospan)),col='red',x=dfR$date,title("35-39"))
-
-plot(smooth.spline(dfR$p40,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),xlim=plotdate)
+dev.off()
+pdf(file = 'p40.pdf')
+plot(smooth.spline(dfR$p40,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),xlim=plotdate,cex.lab=2.5, cex.axis=2.5, cex.main=2.5, cex.sub=2.5)
 lines(y=Rest$England_LowerBound,x=Rest$Date-sagedelay)
 lines(y=Rest$England_UpperBound,x=Rest$Date-sagedelay)
 lines(predict(loess(p40 ~ x, data=dfR,span=lospan)),col='red',x=dfR$date,title("40-44"))
-
-plot(smooth.spline(dfR$p45,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),xlim=plotdate)
+dev.off()
+pdf(file = 'p45.pdf')
+plot(smooth.spline(dfR$p45,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),xlim=plotdate,cex.lab=2.5, cex.axis=2.5, cex.main=2.5, cex.sub=2.5)
 lines(y=Rest$England_LowerBound,x=Rest$Date-sagedelay)
 lines(y=Rest$England_UpperBound,x=Rest$Date-sagedelay)
 lines(predict(loess(p45 ~ x, data=dfR,span=lospan)),col='red',x=dfR$date,title("45-49"))
-
-plot(smooth.spline(dfR$p50,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),xlim=plotdate)
+dev.off()
+pdf(file = 'p50.pdf')
+plot(smooth.spline(dfR$p50,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),xlim=plotdate,cex.lab=2.5, cex.axis=2.5, cex.main=2.5, cex.sub=2.5)
 lines(y=Rest$England_LowerBound,x=Rest$Date-sagedelay)
 lines(y=Rest$England_UpperBound,x=Rest$Date-sagedelay)
 lines(predict(loess(p50 ~ x, data=dfR,span=lospan)),col='red',x=dfR$date,title("50-54"))
-
-plot(smooth.spline(dfR$p55,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),xlim=plotdate)
+dev.off()
+pdf(file = 'p55.pdf')
+plot(smooth.spline(dfR$p55,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),xlim=plotdate,cex.lab=2.5, cex.axis=2.5, cex.main=2.5, cex.sub=2.5)
 lines(y=Rest$England_LowerBound,x=Rest$Date-sagedelay)
 lines(y=Rest$England_UpperBound,x=Rest$Date-sagedelay)
 lines(predict(loess(p55 ~ x, data=dfR,span=lospan)),col='red',x=dfR$date,title("55-59"))
-
-plot(smooth.spline(dfR$p60,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),xlim=plotdate)
+dev.off()
+pdf(file = 'p60.pdf')
+plot(smooth.spline(dfR$p60,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),xlim=plotdate,cex.lab=2.5, cex.axis=2.5, cex.main=2.5, cex.sub=2.5)
 lines(y=Rest$England_LowerBound,x=Rest$Date-sagedelay)
 lines(y=Rest$England_UpperBound,x=Rest$Date-sagedelay)
 lines(predict(loess(p60 ~ x, data=dfR,span=lospan)),col='red',x=dfR$date,title("60-64"))
-
-plot(smooth.spline(dfR$p65,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),xlim=plotdate)
+dev.off()
+pdf(file = 'p65.pdf')
+plot(smooth.spline(dfR$p65,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),xlim=plotdate,cex.lab=2.5, cex.axis=2.5, cex.main=2.5, cex.sub=2.5)
 lines(y=Rest$England_LowerBound,x=Rest$Date-sagedelay)
 lines(y=Rest$England_UpperBound,x=Rest$Date-sagedelay)
 lines(predict(loess(p65 ~ x, data=dfR,span=lospan)),col='red',x=dfR$date,title("65-69"))
-
-plot(smooth.spline(dfR$p70,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),xlim=plotdate)
+dev.off()
+pdf(file = 'p70.pdf')
+plot(smooth.spline(dfR$p70,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),xlim=plotdate,cex.lab=2.5, cex.axis=2.5, cex.main=2.5, cex.sub=2.5)
 lines(y=Rest$England_LowerBound,x=Rest$Date-sagedelay)
 lines(y=Rest$England_UpperBound,x=Rest$Date-sagedelay)
 lines(predict(loess(p70 ~ x, data=dfR,span=lospan)),col='red',x=dfR$date,title("70-74"))
-
-plot(smooth.spline(dfR$p75,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),xlim=plotdate)
+dev.off()
+pdf(file = 'p75.pdf')
+plot(smooth.spline(dfR$p75,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),xlim=plotdate,cex.lab=2.5, cex.axis=2.5, cex.main=2.5, cex.sub=2.5)
 lines(y=Rest$England_LowerBound,x=Rest$Date-sagedelay)
 lines(y=Rest$England_UpperBound,x=Rest$Date-sagedelay)
 lines(predict(loess(p75 ~ x, data=dfR,span=lospan)),col='red',x=dfR$date,title("75-79"))
-
-plot(smooth.spline(dfR$p80,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),xlim=plotdate)
+dev.off()
+pdf(file = 'p80.pdf')
+plot(smooth.spline(dfR$p80,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),xlim=plotdate,cex.lab=2.5, cex.axis=2.5, cex.main=2.5, cex.sub=2.5)
 lines(y=Rest$England_LowerBound,x=Rest$Date-sagedelay)
 lines(y=Rest$England_UpperBound,x=Rest$Date-sagedelay)
 lines(predict(loess(p80 ~ x, data=dfR,span=lospan)),col='red',x=dfR$date,title("80-85"))
-
-plot(smooth.spline(dfR$p85,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),xlim=plotdate)
+dev.off()
+pdf(file = 'p85.pdf')
+plot(smooth.spline(dfR$p85,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),xlim=plotdate,cex.lab=2.5, cex.axis=2.5, cex.main=2.5, cex.sub=2.5)
 lines(y=Rest$England_LowerBound,x=Rest$Date-sagedelay)
 lines(y=Rest$England_UpperBound,x=Rest$Date-sagedelay)
 lines(predict(loess(p85 ~ x, data=dfR,span=lospan)),col='red',x=dfR$date,title("85-89"))
-
-plot(smooth.spline(dfR$p90,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),xlim=plotdate)
+dev.off()
+pdf(file = 'p90.pdf')
+plot(smooth.spline(dfR$p90,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),xlim=plotdate,cex.lab=2.5, cex.axis=2.5, cex.main=2.5, cex.sub=2.5)
 lines(y=Rest$England_LowerBound,x=Rest$Date-sagedelay)
 lines(y=Rest$England_UpperBound,x=Rest$Date-sagedelay)
 lines(predict(loess(p90 ~ x, data=dfR,span=lospan)),col='red',x=dfR$date,title("90+"))
+dev.off()
 
 
 #Reverse Engineer cases from R-number - requires stratonovich calculus to get reversibility
