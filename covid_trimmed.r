@@ -601,12 +601,12 @@ for (i in (lock2+1):length(dfR$date)){dfR$piecewise[i]=smoothRend$y[i-lock2]}
 
 plot(smoothweightR$y,ylab="Region R-number",xlab="Date",x=dfR$date)
 for (i in 8:17){
-  lines(smooth.spline(dfR[i],df=19)$y,col=i,x=dfR$date)
+  lines(smooth.spline(na.omit(dfR[i]),df=19)$y,col=i,x=dfR$date[!is.na(dfR[i])])
 }
 
 plot(smoothweightR$y,ylab="Agegroup R-number",xlab="Date",x=dfR$date)
 for (i in 18:length(dfR)){
-  lines(smooth.spline(dfR[i],df=19)$y,col=i,x=dfR$date)
+  lines(smooth.spline(na.omit(dfR[i]),df=19)$y,col=i,x=dfR$date[!is.na(dfR[i])])
 }
 
 plot(dfR$piecewise,x=smoothweightR$date,ylab="R-number",xlab="Date after Aug 25",title("England"),ylim=c(0.6,1.4),xlim=plotdate,cex.lab=2.5, cex.axis=2.5, cex.main=2.5, cex.sub=2.5)
