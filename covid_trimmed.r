@@ -992,12 +992,9 @@ lines(reglnpredict$`Yorkshire and The Humber`,x=reglnpredict$date)
 for (area in 2:10){
   lines(reglnpredict[2:279,area])}
 #Plots
-logcasesageplot = ggplot(logcases, aes(x = date)) +
+ggplot(logcases, aes(x = date)) +
   geom_line(aes(y = rowSums(logcases[,2:20]))) +
   ggtitle("All age groups separately lognormal distributed")
-logcasesageplot
-rm(logcasesageplot)
-
 
 #### Fig 2. Distributions ####
 distdat = data.frame(days = 1:29, ln = c(lndist, 0), gam = c(gamdist, 0), exp = c(dexp(1:28, rate = 0.1), 0),
