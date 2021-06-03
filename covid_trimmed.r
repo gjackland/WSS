@@ -183,9 +183,12 @@ deathurl <- paste0(baseurl,
                    "format=csv")
 
 # Explicitly define the types for the columns
+# coltypes <- cols(col_character(), col_character(),col_character(),
+#                  col_date(format="%Y-%m-%d"),col_character(),
+#                  col_integer(), col_integer(), col_double())
 coltypes <- cols(col_character(), col_character(),col_character(),
                  col_date(format="%Y-%m-%d"),col_character(),
-                 col_integer(), col_integer(), col_double())
+                 col_double(), col_double(), col_double())
 # Read the data
 deathdat <-  read_csv(file = deathurl, col_types = coltypes)
 
