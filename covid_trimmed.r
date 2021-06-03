@@ -165,8 +165,6 @@ ageurl <- paste0(baseurl,
 coltypes <- cols(col_character(), col_character(),col_character(),
                  col_date(format="%Y-%m-%d"), col_character(),
                  col_double(), col_double(), col_double())
-#col_integer(), col_integer(), col_double())
-
 # read in the data
 casedat <-  read_csv(file = ageurl, col_types = coltypes)
 
@@ -427,6 +425,7 @@ ggplot(comdat,aes(x=date)) +
   xlab("Dates") + ylab("Cases")
 
 # Calculation of Rnumber, generation time 
+
 genTime=5
 
 
@@ -452,6 +451,7 @@ for (iday in (2:length(casedat$date))){
 
 
 # Create a vector to hold the results
+
 dfR=data.frame(x=1.0:length(comdat$date),date=comdat$date,gjaR=1:length(comdat$date))
 dfR$rawR<-dfR$gjaR
 dfR$fpR<-dfR$gjaR
@@ -553,8 +553,32 @@ dfR$weeklyR[length(dfR$weeklyR)]=1.0
 dfR$weeklyR[length(dfR$weeklyR)-1]=1.0
 dfR$weeklyR[length(dfR$weeklyR)-2]=1.0
 
+  (day 1 = July 25)
+
 # Making the time windows agree
 Govdat <- Rest[Rest$Date >= min(comdat$date) & Rest$Date <= max(comdat$date),]
+
+# Plot
+#d1 <- as.Date("2020-10-31")
+#d2 <- as.Date("2020-12-02")
+#ggplot(dfR) +
+#           geom_point(aes(x=date,y=rawR),alpha=0.5) +
+#           geom_point(aes(x=date,y=gjaR),colour="red", alpha=0.5) +
+#           geom_line(aes(x=date,y=weeklyR),colour="blue") +
+#           geom_ribbon(data=Govdat,aes(Date,min=England_LowerBound,max=England_UpperBound),
+#                       colour="green",alpha=0.25) +
+#           xlab("Date") + ylab("R value")
+
+# Zoom in
+#  ggplot(dfR) +
+#  geom_point(aes(x=date,y=rawR),alpha=0.5) +
+#  geom_point(aes(x=date,y=gjaR),colour="red", alpha=0.5) +
+#  geom_line(aes(x=date,y=weeklyR),colour="blue") +
+#    geom_ribbon(data=Govdat,aes(Date,min=England_LowerBound,max=England_UpperBound),
+#              colour="green",alpha=0.25) + ylim(0,2.5) +
+#  xlab("Date") + ylab("R value")
+
+
 
 
 nospl=4
@@ -634,6 +658,7 @@ Rest %>% ggplot(aes(x=Date)) + geom_ribbon(aes(Date,min=England_LowerBound,max=E
   ylab("R Estimate") + xlab("Date")  # + geom_line(comdat,aes(date,R))
 
 #Plot Regional R data vs Government  spdf is spline smoothing factor, lospan for loess
+
 
 if(interactive()){
   pdf(file = 'Lon.pdf')
@@ -804,7 +829,7 @@ if(interactive()){
 
 #Reverse Engineer cases from R-number - requires stratonovich calculus to get reversibility
 # Initializations
-rm(PredictCases,PredictCasesSmoothR.PredictCasesRaw)
+
 PredictCases <- dfR$bylogR
 PredictCasesRaw <- dfR$rawR
 PredictCasesSmoothR<- dfR$bylogR
@@ -817,6 +842,7 @@ PredictCasesSmoothR=PredictCases
 PredictCasesMeanR<- PredictCases
 smoothR<-smooth.spline(dfR$bylogR,df=24)
 meanR=mean(dfR$rawR)
+
 for(i in (genTime+1):length(dfR$gjaR)){
   PredictCases[i]=PredictCases[i-1]*exp((dfR$bylogR[i]-1)/genTime)
   PredictCasesLin[i]=PredictCases[i-1]*(1.0+(dfR$gjaR[i]-1)/genTime)
