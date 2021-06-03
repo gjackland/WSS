@@ -405,7 +405,7 @@ for (iage in 2:ncol(casedat) ){
         casedat[i,iage]=as.integer(Xmasav-Xmasgrad*(((XMend+XMstart)/2)-i)/XMdays)
     }
 }
-rm(Xmasav,Xmasgrad,weeks,i,iday,j,indexday)
+rm(Xmasav,Xmasgrad,weeks,i,j,indexday)
 # Set false positive adjustment at 0.004
 for(i in 1:length(comdat$allCases)){
   comdat$fpCases[i]=comdat$allCases[i]-0.004*as.integer(comdat$tests[i])
