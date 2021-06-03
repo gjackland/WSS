@@ -468,6 +468,7 @@ dfR$EE<-dfR$gjaR
 dfR$Lon<-dfR$gjaR
 dfR$SE<-dfR$gjaR
 dfR$SW<-dfR$gjaR
+dfR$Scot<-dfR$gjaR
 dfR$p00<-dfR$gjaR
 dfR$p05<-dfR$gjaR
 dfR$p10<-dfR$gjaR
@@ -517,6 +518,7 @@ for(i in ((genTime+1):length(dfR$gjaR))    ){
   dfR$Lon[i]=1+log(regcases$London[i]/regcases$London[i-1])*genTime
   dfR$SE[i]=1+log(regcases$`South East`[i]/regcases$`South East`[i-1])*genTime
   dfR$SW[i]=1+log(regcases$`South West`[i]/regcases$`South West`[i-1])*genTime
+  dfR$Scot[i]=1+log(scotdat$allCases[i]/scotdat$allCases[i-1])*genTime
   dfR$p00[i]=1+log(casedat$'00_04'[i]/casedat$'00_04'[i-1])*genTime
   dfR$p05[i]=1+log(casedat$'05_09'[i]/casedat$'05_09'[i-1])*genTime
   dfR$p10[i]=1+log(casedat$'10_14'[i]/casedat$'10_14'[i-1])*genTime
@@ -666,6 +668,12 @@ Rest %>% ggplot(aes(x=Date)) + geom_ribbon(aes(Date,min=England_LowerBound,max=E
 
 #Plot Regional R data vs Government  spdf is spline smoothing factor, lospan for loess
 
+
+
+plot(smooth.spline(dfR$Scot,df=spdf,w=sqrt(scotdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),xlim=plotdate,cex.lab=2.0, cex.axis=2.0, cex.main=2.0, cex.sub=2.0)
+lines(y=Rest$UK_LowerBound,x=Rest$Date-sagedelay)
+lines(y=Rest$UK_UpperBound,x=Rest$Date-sagedelay)
+lines(predict(loess(Scot ~ x, data=dfR,span=lospan)),col='red',x=dfR$date,title("Scotland (UK SAGE limits)"))
 
 pdf(file = 'Lon.pdf')
 plot(smooth.spline(dfR$Lon,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),xlim=plotdate,cex.lab=2.0, cex.axis=2.0, cex.main=2.0, cex.sub=2.0)
