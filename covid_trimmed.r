@@ -410,10 +410,18 @@ rm(Xmasav,Xmasgrad,weeks,i,j,indexday)
 for(i in 1:length(comdat$allCases)){
   comdat$fpCases[i]=comdat$allCases[i]-0.004*as.integer(comdat$tests[i])
 }
-plot(comdat$inputCases,x=comdat$date,xlab="Date",ylab="Cases")
 
+plot(comdat$inputCases,x=comdat$date,xlab="Date",ylab="Cases")
 lines(comdat$allCases,x=comdat$date, col="green",lwd=2)
 lines(comdat$fpCases, x=comdat$date,col="red",lwd=2)
+
+# Same graph using ggplot
+ggplot(comdat,aes(x=date)) +
+  geom_point(aes(y=inputCases),alpha=0.5) +
+  geom_line(aes(y=allCases), colour="green", size=1.5) +
+  geom_line(aes(y=fpCases),colour="red", size=1.5) +
+  xlab("Dates") + ylab("Cases")
+
 # Calculation of Rnumber, generation time = 4 days
 genTime=5
 
