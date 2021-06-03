@@ -511,7 +511,11 @@ for(i in ((genTime+1):length(dfR$gjaR))    ){
   dfR$p75[i]=1+log(casedat$'75_79'[i]/casedat$'75_79'[i-1])*genTime
   dfR$p80[i]=1+log(casedat$'80_84'[i]/casedat$'80_84'[i-1])*genTime
   dfR$p85[i]=1+log(casedat$'85_89'[i]/casedat$'85_89'[i-1])*genTime
-  dfR$p90[i]=1+log(casedat$'90+'[i]/casedat$'90+'[i-1])*genTime
+  if(casedat$'90+'[i] != 0 & casedat$'90+'[i-1] != 0){ # Deal with 0 cases
+    dfR$p90[i]=1+log(casedat$'90+'[i]/casedat$'90+'[i-1])*genTime
+  }else{
+    dfR$p90[i] = NA
+  }
 }
 
 for (i in 3:17){dfR[i,1]=dfR[i,2]}
