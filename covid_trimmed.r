@@ -415,11 +415,11 @@ plot(comdat$inputCases,x=comdat$date,xlab="Date",ylab="Cases")
 lines(comdat$allCases,x=comdat$date, col="green",lwd=2)
 lines(comdat$fpCases, x=comdat$date,col="red",lwd=2)
 
-# Same graph using ggplot
+# Same graph using ggplot - alpha sets a level of transparency between 0 (opaque) to 1 (transparent)
 ggplot(comdat,aes(x=date)) +
   geom_point(aes(y=inputCases),alpha=0.5) +
-  geom_line(aes(y=allCases), colour="green", size=1.5) +
-  geom_line(aes(y=fpCases),colour="red", size=1.5) +
+  geom_line(aes(y=allCases), colour="green", size=1.5, alpha=0.5) +
+  geom_line(aes(y=fpCases),colour="red", size=1.5, alpha=0.5) +
   xlab("Dates") + ylab("Cases")
 
 # Calculation of Rnumber, generation time = 4 days
