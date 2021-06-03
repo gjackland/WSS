@@ -184,7 +184,12 @@ outputJSON <- function(myt0,
     if(dir.exists("/data/output")){
         write_json(myobject, "/data/output/data.json", pretty = TRUE, auto_unbox = TRUE, na ="null")
     }else{
-        toJSON(myobject,pretty = TRUE,auto_unbox = TRUE, na ="null")
+       if(dir.exists("./data")){
+         message("JSON output written to ./data/data.json")
+         write_json(myobject, "./data/data.json", pretty = TRUE, auto_unbox = TRUE, na ="null")
+       }else{
+         toJSON(myobject,pretty = TRUE,auto_unbox = TRUE, na ="null")
+       }
     }
 
 }
