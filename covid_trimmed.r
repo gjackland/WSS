@@ -8,8 +8,8 @@
 #### Header ####
 
 if(interactive()){
-  # Remove existing variables
-  rm(list = ls())
+    # Remove existing variables
+    rm(list = ls())
 }
 
 # Read packages used by the script
@@ -60,9 +60,9 @@ comdat <- comdat %>%  select(date,
                              tests = newPCRTestsByPublishDate,
                              inputCases = newCasesBySpecimenDate,
                              fpCases = newCasesBySpecimenDate) %>%
-  filter(date >= startdate &
-           date <= enddate ) %>%
-  arrange(date)
+filter(date >= startdate &
+       date <= enddate ) %>%
+arrange(date)
 
 # All UK cases (to estimate pre-Sept England Cases)
 ukcaseurl <- paste0(baseurl,
@@ -78,9 +78,9 @@ ukcasedat <-  read_csv(file = ukcaseurl, col_types = coltypes)
 
 # Transform the data
 ukcasedat <- ukcasedat %>%  select(date = date, tests = newPCRTestsByPublishDate) %>%
-  filter(date >= startdate &
+    filter(date >= startdate &
            date <= enddate ) %>%
-  arrange(date)
+arrange(date)
 # cases by age
 ageurl <- paste0(baseurl,
                  "areaType=nation&",
@@ -101,11 +101,11 @@ casedat <-  read_csv(file = ageurl, col_types = coltypes)
 # 60+ and 00_59 columns, filter dates to be between the start and end
 # dates and order the output by date
 casedat <- casedat %>%
-  select(date = date, age = age, values = cases) %>%
-  pivot_wider(id_cols = date, names_from = age, values_from = values) %>%
-  select(-unassigned, -"60+", -"00_59") %>%
-  filter(date >= startdate & date <= enddate) %>%
-  arrange(date)
+    select(date = date, age = age, values = cases) %>%
+    pivot_wider(id_cols = date, names_from = age, values_from = values) %>%
+    select(-unassigned, -"60+", -"00_59") %>%
+    filter(date >= startdate & date <= enddate) %>%
+    arrange(date)
 
 #deaths by age
 deathurl <- paste0(baseurl,
@@ -125,12 +125,12 @@ deathdat <-  read_csv(file = deathurl, col_types = coltypes)
 # for dates between the start and end date inclusive and then ensure that we
 # end up with the same columns as for the case data above.
 deathdat <- deathdat %>%
-  select(date = date, age = age, values = deaths) %>%
-  pivot_wider(id_cols = date, names_from = age, values_from = values) %>%
-  select(-"60+", -"00_59") %>%
-  filter(date >= startdate & date <= enddate) %>%
-  arrange(date) %>%
-  select(names(casedat))#deaths by age
+    select(date = date, age = age, values = deaths) %>%
+    pivot_wider(id_cols = date, names_from = age, values_from = values) %>%
+    select(-"60+", -"00_59") %>%
+    filter(date >= startdate & date <= enddate) %>%
+    arrange(date) %>%
+    select(names(casedat))#deaths by age
 
 
 #  Read in the Vaccination data
@@ -150,7 +150,7 @@ vacdat <-  read_csv(file = vacurl, col_types = coltypes)
 # for dates between the start and end date inclusive and then ensure that we
 # end up with the same columns as for the case data above.
 vacdat <- vacdat %>%
-  select(date = date,  values =cumVaccinationFirstDoseUptakeByPublishDatePercentage)
+    select(date = date,  values =cumVaccinationFirstDoseUptakeByPublishDatePercentage)
 #  Scotland data https://api.coronavirus.data.gov.uk/v2/data?areaType=nation&areaCode=S92000003&metric=newCasesBySpecimenDate&metric=newDeaths28DaysByDeathDate&metric=newDeaths28DaysByPublishDate&format=csv
 # https://www.opendata.nhs.scot/dataset/covid-19-in-scotland/resource/9393bd66-5012-4f01-9bc5-e7a10accacf4
 
@@ -162,10 +162,10 @@ scoturl <-  paste0(baseurl,
                    "metric=newDeaths28DaysByPublishDate&",
                    "format=csv")
 coltypes <-  cols(
-  date = col_date(format = "%Y-%m-%d"),
-  newCasesBySpecimenDate = col_double(),
-  newDeaths28DaysByPublishDate = col_double(),
-  newDeaths28DaysByDeathDate = col_double()
+                  date = col_date(format = "%Y-%m-%d"),
+                  newCasesBySpecimenDate = col_double(),
+                  newDeaths28DaysByPublishDate = col_double(),
+                  newDeaths28DaysByDeathDate = col_double()
 )
 #  trying and failing to get data from PHS
 scotdeaths<- read.csv(file="https://www.opendata.nhs.scot/dataset/covid-19-in-scotland/resource/9393bd66-5012-4f01-9bc5-e7a10accacf4")
@@ -175,13 +175,13 @@ scotdat <-  read_csv(file = scoturl, col_types = coltypes)
 
 # Transform the data
 scotdat <- scotdat %>%  select(date,
-                             allCases = newCasesBySpecimenDate,
-                             allDeaths = newDeaths28DaysByDeathDate,
-                             inputCases = newCasesBySpecimenDate,
-                             fpCases = newCasesBySpecimenDate) %>%
-  filter(date >= startdate &
-           date <= enddate ) %>%
-  arrange(date)
+                               allCases = newCasesBySpecimenDate,
+                               allDeaths = newDeaths28DaysByDeathDate,
+                               inputCases = newCasesBySpecimenDate,
+                               fpCases = newCasesBySpecimenDate) %>%
+filter(date >= startdate &
+       date <= enddate ) %>%
+arrange(date)
 
 
 #  Regional data
@@ -193,12 +193,12 @@ regurl <- paste0(baseurl,
 
 # Specify the column types
 coltypes <-  cols(
-  areaCode = col_character(),
-  areaName = col_character(),
-  areaType = col_character(),
-  date = col_date(format = "%Y-%m-%d"),
-  newCasesBySpecimenDate = col_double(),
-  newDeaths28DaysByDeathDate = col_double()
+                  areaCode = col_character(),
+                  areaName = col_character(),
+                  areaType = col_character(),
+                  date = col_date(format = "%Y-%m-%d"),
+                  newCasesBySpecimenDate = col_double(),
+                  newDeaths28DaysByDeathDate = col_double()
 )
 
 # Read in the data
@@ -208,18 +208,18 @@ regdat <-  read_csv(file = regurl, col_types = coltypes)
 regcases <- regdat %>%  select(date,areaName,areaCode,
                                Cases = newCasesBySpecimenDate
                                ) %>%
-  pivot_wider(id_cols = date, names_from = areaName, values_from = Cases) %>%
-  filter(date >= startdate &
-           date <= enddate )%>%
-  arrange(date)
+pivot_wider(id_cols = date, names_from = areaName, values_from = Cases) %>%
+filter(date >= startdate &
+       date <= enddate )%>%
+arrange(date)
 
 regdeaths <- regdat %>%  select(date,areaName,
-                               Deaths = newDeaths28DaysByDeathDate,
-                               ) %>%
-  pivot_wider(id_cols = date, names_from = areaName, values_from = Deaths) %>%
-  filter(date >= startdate &
-           date <= enddate )%>%
-  arrange(date)
+                                Deaths = newDeaths28DaysByDeathDate,
+                                ) %>%
+pivot_wider(id_cols = date, names_from = areaName, values_from = Deaths) %>%
+filter(date >= startdate &
+       date <= enddate )%>%
+arrange(date)
 
 #  Get age data for regions because can't download simultaneously
 regurl2 <- paste0(baseurl,
@@ -230,14 +230,14 @@ regurl2 <- paste0(baseurl,
 
 # specify the column types
 coltypes <- cols(
-  areaCode = col_character(),
-  areaName = col_character(),
-  areaType = col_character(),
-  date = col_date(format = "%Y-%m-%d"),
-  age = col_character(),
-  cases = col_double(),
-  rollingSum = col_double(),
-  rollingRate = col_double()
+                 areaCode = col_character(),
+                 areaName = col_character(),
+                 areaType = col_character(),
+                 date = col_date(format = "%Y-%m-%d"),
+                 age = col_character(),
+                 cases = col_double(),
+                 rollingSum = col_double(),
+                 rollingRate = col_double()
 )
 
 # Read in the data
@@ -245,22 +245,22 @@ regagedat <-  read_csv(file = regurl2, col_types = coltypes)
 
 # Transform the data
 regagedat <- regagedat %>%  select(date, areaName, age, cases) %>%
-  filter(date >= startdate &
+    filter(date >= startdate &
            date <= enddate ) %>%
-  arrange(date)
+arrange(date)
 
 # Read in the UK government R estimate data from a csv file
 coltypes <- cols(
-  Date = col_date(format = "%Y-%m-%d"), UK_LowerBound = col_double(),
-  UK_UpperBound = col_double(), England_LowerBound = col_double(),
-  England_UpperBound = col_double(), EEng_LowerBound = col_double(),
-  EEng_UpperBound = col_double(), Lon_LowerBound = col_double(),
-  Lon_UpperBound = col_double(), Mid_LowerBound = col_double(),
-  Mid_UpperBound = col_double(), NEY_LowerBound = col_double(),
-  NEY_UpperBound = col_double(), NW_LowerBound = col_double(),
-  NW_UpperBound = col_double(), SE_LowerBound = col_double(),
-  SE_UpperBound = col_double(), SW_LowerBound = col_double(),
-  SW_UpperBound = col_double()
+                 Date = col_date(format = "%Y-%m-%d"), UK_LowerBound = col_double(),
+                 UK_UpperBound = col_double(), England_LowerBound = col_double(),
+                 England_UpperBound = col_double(), EEng_LowerBound = col_double(),
+                 EEng_UpperBound = col_double(), Lon_LowerBound = col_double(),
+                 Lon_UpperBound = col_double(), Mid_LowerBound = col_double(),
+                 Mid_UpperBound = col_double(), NEY_LowerBound = col_double(),
+                 NEY_UpperBound = col_double(), NW_LowerBound = col_double(),
+                 NW_UpperBound = col_double(), SE_LowerBound = col_double(),
+                 SE_UpperBound = col_double(), SW_LowerBound = col_double(),
+                 SW_UpperBound = col_double()
 )
 Rest <- read_csv(file="data/R_estimate.csv", col_types = coltypes)
 
@@ -272,7 +272,7 @@ rm(ukcasedat)
 #plot(y=comdat$allCases, x=comdat$date, xlab="Date" , ylab="All cases")
 # MAA: Same plot using ggplot
 comdat %>% ggplot(aes(x=date,y=allCases)) + geom_line() +
-  xlab("Date") + ylab("All cases")
+    xlab("Date") + ylab("All cases")
 
 
 #remove weekend effect,  assuming each weekday has same number of cases over the epidemic, and national averages hold regionally
@@ -281,9 +281,9 @@ days <-1:7
 weeks<-as.integer(length(comdat$allCases)/7)-1
 
 for(i in 1:weeks){
-  for(j in 1:7){
-    days[j]<-days[j]+comdat$allCases[7*i+j]
-  }
+    for(j in 1:7){
+        days[j]<-days[j]+comdat$allCases[7*i+j]
+    }
 }
 casetot=sum(days)
 days=7*days/casetot
@@ -291,12 +291,12 @@ days=7*days/casetot
 
 # REscale comdat and regcases
 for(i in 1:length(comdat$allCases)){
-  indexday=(i-1)%%7+1
-  comdat$allCases[i]=comdat$allCases[i]/days[indexday]
-  scotdat$allCases[i]=scotdat$allCases[i]/days[indexday]
-  for (area in 2:10){
-    regcases[i,area]=regcases[i,area]/days[indexday]
-  }
+    indexday=(i-1)%%7+1
+    comdat$allCases[i]=comdat$allCases[i]/days[indexday]
+    scotdat$allCases[i]=scotdat$allCases[i]/days[indexday]
+    for (area in 2:10){
+        regcases[i,area]=regcases[i,area]/days[indexday]
+    }
 }
 
 # Fix Xmas anomaly over 12 days in comdat,regcases by linear fit
@@ -304,27 +304,27 @@ Xmasav<-1:11
 Xmasav[1] = sum(comdat$allCases[153:164])/12
 Xmasgrad=comdat$allCases[164]-comdat$allCases[153]
 for (i in 153:164){
-  comdat$allCases[i]=Xmasav[1]-Xmasgrad*(158.5-i)/12
+    comdat$allCases[i]=Xmasav[1]-Xmasgrad*(158.5-i)/12
 }
 Xmasav[11] = sum(scotdat$allCases[153:164])/12
 Xmasgrad=scotdat$allCases[164]-scotdat$allCases[153]
 for (i in 153:164){
-  scotdat$allCases[i]=Xmasav[11]-Xmasgrad*(158.5-i)/12
+    scotdat$allCases[i]=Xmasav[11]-Xmasgrad*(158.5-i)/12
 }
 #  Fix Xmas anomaly in regions
 for (area in 2:10){
-  Xmasav[area] <- sum(regcases[153:164,area])/12
-  Xmasgrad<-regcases[164,area]-regcases[153,area]
-  for (i in 153:164){
-    regcases[i,area]<-Xmasav[area]-Xmasgrad*(158.5-i)/12.0
-  }
+    Xmasav[area] <- sum(regcases[153:164,area])/12
+    Xmasgrad<-regcases[164,area]-regcases[153,area]
+    for (i in 153:164){
+        regcases[i,area]<-Xmasav[area]-Xmasgrad*(158.5-i)/12.0
+    }
 }
 
 for (i in 2:ncol(casedat)) {
-  for (j in 1:nrow(casedat)) {
-    indexday=(j-1)%%7+1
-    casedat[j,i] <- as.integer(casedat[j,i]/days[indexday])
-  }
+    for (j in 1:nrow(casedat)) {
+        indexday=(j-1)%%7+1
+        casedat[j,i] <- as.integer(casedat[j,i]/days[indexday])
+    }
 }
 #Fix Xmas and weekend anomaly in age data
 for (i in 2:ncol(casedat) ){
@@ -339,7 +339,7 @@ rm(Xmasav,Xmasgrad,weeks,i,iday,j,indexday)
 
 # Set false positive adjustment at 0.004
 for(i in 1:length(comdat$allCases)){
-  comdat$fpCases[i]=comdat$allCases[i]-0.004*as.integer(comdat$tests[i])
+    comdat$fpCases[i]=comdat$allCases[i]-0.004*as.integer(comdat$tests[i])
 }
 plot(comdat$allCases)
 lines(comdat$fpCases, col="red")
@@ -390,43 +390,43 @@ dfR$p90<-dfR$gjaR
 # rawR averages cases over previous genTime days - assumes genTime is the same as infectious period
 #  Generate R over all regions and ages
 for(i in ((genTime+1):length(dfR$gjaR))    ){
-  dfR$gjaR[i]=(1+(comdat$allCases[i]-comdat$allCases[i-1])*genTime/(comdat$allCases[i-1]))
-  dfR$rawR[i]=1+ (comdat$allCases[i]-mean(comdat$allCases[(i-genTime):(i-1)]))*2/comdat$allCases[i-1]
-#  dfR$rawR[i]=(1+(comdat$inputCases[i]-comdat$inputCases[i-1])*genTime/(comdat$inputCases[i-1]))
-  dfR$fpR[i]=(1+(comdat$fpCases[i]-comdat$fpCases[i-1])*genTime/(comdat$fpCases[i-1]))
-  dfR$bylogR[i]=1+log(comdat$allCases[i]/comdat$allCases[i-1])*genTime
-  dfR$NE[i]=1+log(regcases$`North East`[i]/regcases$`North East`[i-1])*genTime
-  dfR$NW[i]=1+log(regcases$`North West`[i]/regcases$`North West`[i-1])*genTime
-  dfR$YH[i]=1+log(regcases$`Yorkshire and The Humber`[i]/regcases$`Yorkshire and The Humber`[i-1])*genTime
-  dfR$EM[i]=1+log(regcases$`East Midlands`[i]/regcases$`East Midlands`[i-1])*genTime
-  dfR$WM[i]=1+log(regcases$`West Midlands`[i]/regcases$`West Midlands`[i-1])*genTime
-  dfR$EE[i]=1+log(regcases$`East of England`[i]/regcases$`East of England`[i-1])*genTime
-  dfR$Lon[i]=1+log(regcases$London[i]/regcases$London[i-1])*genTime
-  dfR$SE[i]=1+log(regcases$`South East`[i]/regcases$`South East`[i-1])*genTime
-  dfR$SW[i]=1+log(regcases$`South West`[i]/regcases$`South West`[i-1])*genTime
-  dfR$p00[i]=1+log(casedat$'00_04'[i]/casedat$'00_04'[i-1])*genTime
-  dfR$p05[i]=1+log(casedat$'05_09'[i]/casedat$'05_09'[i-1])*genTime
-  dfR$p10[i]=1+log(casedat$'10_14'[i]/casedat$'10_14'[i-1])*genTime
-  dfR$p15[i]=1+log(casedat$'15_19'[i]/casedat$'15_19'[i-1])*genTime
-  dfR$p20[i]=1+log(casedat$'20_24'[i]/casedat$'20_24'[i-1])*genTime
-  dfR$p25[i]=1+log(casedat$'25_29'[i]/casedat$'25_29'[i-1])*genTime
-  dfR$p30[i]=1+log(casedat$'30_34'[i]/casedat$'30_34'[i-1])*genTime
-  dfR$p35[i]=1+log(casedat$'35_39'[i]/casedat$'35_39'[i-1])*genTime
-  dfR$p40[i]=1+log(casedat$'40_44'[i]/casedat$'40_44'[i-1])*genTime
-  dfR$p45[i]=1+log(casedat$'45_49'[i]/casedat$'45_49'[i-1])*genTime
-  dfR$p50[i]=1+log(casedat$'50_54'[i]/casedat$'50_54'[i-1])*genTime
-  dfR$p55[i]=1+log(casedat$'55_59'[i]/casedat$'55_59'[i-1])*genTime
-  dfR$p60[i]=1+log(casedat$'60_64'[i]/casedat$'60_64'[i-1])*genTime
-  dfR$p65[i]=1+log(casedat$'65_69'[i]/casedat$'65_69'[i-1])*genTime
-  dfR$p70[i]=1+log(casedat$'70_74'[i]/casedat$'70_74'[i-1])*genTime
-  dfR$p75[i]=1+log(casedat$'75_79'[i]/casedat$'75_79'[i-1])*genTime
-  dfR$p80[i]=1+log(casedat$'80_84'[i]/casedat$'80_84'[i-1])*genTime
-  dfR$p85[i]=1+log(casedat$'85_89'[i]/casedat$'85_89'[i-1])*genTime
-  if(casedat$'90+'[i] != 0 & casedat$'90+'[i-1] != 0){
-    dfR$p90[i]=1+log(casedat$'90+'[i]/casedat$'90+'[i-1])*genTime
-  }else{
-    dfR$p90[i] = NA
-  }
+    dfR$gjaR[i]=(1+(comdat$allCases[i]-comdat$allCases[i-1])*genTime/(comdat$allCases[i-1]))
+    dfR$rawR[i]=1+ (comdat$allCases[i]-mean(comdat$allCases[(i-genTime):(i-1)]))*2/comdat$allCases[i-1]
+    #  dfR$rawR[i]=(1+(comdat$inputCases[i]-comdat$inputCases[i-1])*genTime/(comdat$inputCases[i-1]))
+    dfR$fpR[i]=(1+(comdat$fpCases[i]-comdat$fpCases[i-1])*genTime/(comdat$fpCases[i-1]))
+    dfR$bylogR[i]=1+log(comdat$allCases[i]/comdat$allCases[i-1])*genTime
+    dfR$NE[i]=1+log(regcases$`North East`[i]/regcases$`North East`[i-1])*genTime
+    dfR$NW[i]=1+log(regcases$`North West`[i]/regcases$`North West`[i-1])*genTime
+    dfR$YH[i]=1+log(regcases$`Yorkshire and The Humber`[i]/regcases$`Yorkshire and The Humber`[i-1])*genTime
+    dfR$EM[i]=1+log(regcases$`East Midlands`[i]/regcases$`East Midlands`[i-1])*genTime
+    dfR$WM[i]=1+log(regcases$`West Midlands`[i]/regcases$`West Midlands`[i-1])*genTime
+    dfR$EE[i]=1+log(regcases$`East of England`[i]/regcases$`East of England`[i-1])*genTime
+    dfR$Lon[i]=1+log(regcases$London[i]/regcases$London[i-1])*genTime
+    dfR$SE[i]=1+log(regcases$`South East`[i]/regcases$`South East`[i-1])*genTime
+    dfR$SW[i]=1+log(regcases$`South West`[i]/regcases$`South West`[i-1])*genTime
+    dfR$p00[i]=1+log(casedat$'00_04'[i]/casedat$'00_04'[i-1])*genTime
+    dfR$p05[i]=1+log(casedat$'05_09'[i]/casedat$'05_09'[i-1])*genTime
+    dfR$p10[i]=1+log(casedat$'10_14'[i]/casedat$'10_14'[i-1])*genTime
+    dfR$p15[i]=1+log(casedat$'15_19'[i]/casedat$'15_19'[i-1])*genTime
+    dfR$p20[i]=1+log(casedat$'20_24'[i]/casedat$'20_24'[i-1])*genTime
+    dfR$p25[i]=1+log(casedat$'25_29'[i]/casedat$'25_29'[i-1])*genTime
+    dfR$p30[i]=1+log(casedat$'30_34'[i]/casedat$'30_34'[i-1])*genTime
+    dfR$p35[i]=1+log(casedat$'35_39'[i]/casedat$'35_39'[i-1])*genTime
+    dfR$p40[i]=1+log(casedat$'40_44'[i]/casedat$'40_44'[i-1])*genTime
+    dfR$p45[i]=1+log(casedat$'45_49'[i]/casedat$'45_49'[i-1])*genTime
+    dfR$p50[i]=1+log(casedat$'50_54'[i]/casedat$'50_54'[i-1])*genTime
+    dfR$p55[i]=1+log(casedat$'55_59'[i]/casedat$'55_59'[i-1])*genTime
+    dfR$p60[i]=1+log(casedat$'60_64'[i]/casedat$'60_64'[i-1])*genTime
+    dfR$p65[i]=1+log(casedat$'65_69'[i]/casedat$'65_69'[i-1])*genTime
+    dfR$p70[i]=1+log(casedat$'70_74'[i]/casedat$'70_74'[i-1])*genTime
+    dfR$p75[i]=1+log(casedat$'75_79'[i]/casedat$'75_79'[i-1])*genTime
+    dfR$p80[i]=1+log(casedat$'80_84'[i]/casedat$'80_84'[i-1])*genTime
+    dfR$p85[i]=1+log(casedat$'85_89'[i]/casedat$'85_89'[i-1])*genTime
+    if(casedat$'90+'[i] != 0 & casedat$'90+'[i-1] != 0){
+        dfR$p90[i]=1+log(casedat$'90+'[i]/casedat$'90+'[i-1])*genTime
+    }else{
+        dfR$p90[i] = NA
+    }
 }
 
 for (i in 3:17){dfR[i,1]=dfR[i,2]}
@@ -511,12 +511,12 @@ for (i in (lock2+1):length(dfR$date)){dfR$piecewise[i]=smoothRend$y[i-lock2]}
 
 plot(smoothweightR$y,ylab="Region R-number",xlab="Date",x=dfR$date)
 for (i in 8:17){
-  lines(smooth.spline(dfR[i],df=19)$y,col=i,x=dfR$date)
+    lines(smooth.spline(dfR[i],df=19)$y,col=i,x=dfR$date)
 }
 
 plot(smoothweightR$y,ylab="Agegroup R-number",xlab="Date",x=dfR$date)
 for (i in 18:length(dfR)){
-  lines(smooth.spline(na.omit(dfR[i]),df=19)$y,col=i,x=dfR$date[!is.na(dfR[i])])
+    lines(smooth.spline(na.omit(dfR[i]),df=19)$y,col=i,x=dfR$date[!is.na(dfR[i])])
 }
 
 plot(smoothweightR$y,x=smoothweightR$date,ylab="R-number",xlab="Date after Aug 25",ylim=c(0.6,1.4))
@@ -535,8 +535,8 @@ lines(predict(loess(gjaR ~ x, data=dfR,span=1.0)),col='red',x=dfR$date)
 plot(smoothweightR$y,ylab="R-number",xlab="Day")
 #  Plot R continuous with many splines.  Not sure when fitting noise here!
 for (ismooth in 4:28){
-#   lines(smooth.spline(as.vector(gjaR),df=ismooth,w=sqrt(comdat$allCases)))
-  lines(smooth.spline(dfR$weeklyR,df=ismooth),col="blue")}
+    #   lines(smooth.spline(as.vector(gjaR),df=ismooth,w=sqrt(comdat$allCases)))
+    lines(smooth.spline(dfR$weeklyR,df=ismooth),col="blue")}
 points(dfR$bylogR, col = "red")
 lines(smooth.spline(dfR$bylogR,df=14))
 # Plot the UB and LB for the UK R estimates, have added a line commented out
@@ -547,7 +547,7 @@ lines(smooth.spline(dfR$bylogR,df=14))
 # are for your benefit Graeme. You probably wnat to move this plot until after
 # you have calculated your own Restimate.
 Rest %>% ggplot(aes(x=Date)) + geom_ribbon(aes(Date,min=England_LowerBound,max=England_UpperBound),colour="red",alpha=0.25) +
-  ylab("R Estimate") + xlab("Date")  # + geom_line(comdat,aes(date,R))
+    ylab("R Estimate") + xlab("Date")  # + geom_line(comdat,aes(date,R))
 
 #Plot Regional R data vs Government  spdf is spline smoothing factor, lospan for loess
 spdf=12
@@ -708,17 +708,17 @@ PredictCasesMeanR[1]<- PredictCases[1]
 smoothR<-smooth.spline(dfR$bylogR,df=24)
 meanR=mean(dfR$rawR)
 for(i in 2:length(dfR$gjaR)){
-  PredictCases[i]=PredictCases[i-1]*exp((dfR$bylogR[i]-1)/genTime)
-  PredictCasesLin[i]=PredictCases[i-1]*(1.0+(dfR$gjaR[i]-1)/genTime)
-  PredictCasesRaw[i]=PredictCasesRaw[i-1]*(1.0+(dfR$rawR[i]-1)/genTime)
-  PredictCasesMeanR[i]=PredictCasesMeanR[i-1]*(1.0+(meanR-1)/genTime)
+    PredictCases[i]=PredictCases[i-1]*exp((dfR$bylogR[i]-1)/genTime)
+    PredictCasesLin[i]=PredictCases[i-1]*(1.0+(dfR$gjaR[i]-1)/genTime)
+    PredictCasesRaw[i]=PredictCasesRaw[i-1]*(1.0+(dfR$rawR[i]-1)/genTime)
+    PredictCasesMeanR[i]=PredictCasesMeanR[i-1]*(1.0+(meanR-1)/genTime)
 
-#  Averaging R is not the same as averaging e^R
-#  Noise suppresses the growth rate in the model, Smoothed R grows too fast
-   ri=smoothR$y[i]  # Fudge factor *0.94663
-#   Multiplier chosen to match final cases with df=24
+    #  Averaging R is not the same as averaging e^R
+    #  Noise suppresses the growth rate in the model, Smoothed R grows too fast
+    ri=smoothR$y[i]  # Fudge factor *0.94663
+    #   Multiplier chosen to match final cases with df=24
     PredictCasesSmoothR[i]=PredictCasesSmoothR[i-1]*(1.0+(ri-1)/genTime)
-  }
+}
 plot(PredictCases,x=dfR$date,xlab="Date",ylab="Cases backdeduced from R")
 lines(comdat$allCases,x=comdat$date, col="red")
 lines(PredictCasesSmoothR,x=dfR$date, col="blue",lwd=2)
@@ -727,11 +727,11 @@ lines(PredictCasesSmoothR,x=dfR$date, col="blue",lwd=2)
 lines(PredictCasesLin,x=comdat$date, col="orange")
 
 if(interactive()){
-  sum(PredictCases)
-  sum(PredictCasesSmoothR)
-  sum(PredictCasesMeanR)
-  sum(PredictCasesLin)
-  sum(comdat$allCases)
+    sum(PredictCases)
+    sum(PredictCasesSmoothR)
+    sum(PredictCasesMeanR)
+    sum(PredictCasesLin)
+    sum(comdat$allCases)
 }
 
 # Load code to function to output to the web-ui interface
@@ -749,11 +749,11 @@ outputJSON(myt0 = t0,
            mydaysarray = days,
            myregion = "GB",
            mysubregion = "ENG", # see https://en.wikipedia.org/wiki/ISO_3166-2:GB
-           mycalibrationCaseCount = NA,  # ADD VALUE, eg single number
-           mycalibrationDate = NA,       # ADD VALUE, eg "2021-05-12"
-           mycalibrationDeathCount=NA,   # ADD VALUE, eg single number
+           mycalibrationCaseCount = 0,  # ADD VALUE, eg single number
+           mycalibrationDate = '1970-01-01',       # ADD VALUE, eg "2021-05-12"
+           mycalibrationDeathCount= 0,   # ADD VALUE, eg single number
            myr0 = NA,
-           myinterventionPeriods= NA,
+           myinterventionPeriods = numeric(),
            myCritRecov = NA,
            myCritical = NA,
            myILI = NA,
@@ -805,8 +805,8 @@ title(main = "Cases and Deaths")
 
 
 deathmap = image(deathdat$date, 1:19, as.matrix(deathdat[2:20]),
-                xlab = "", ylab = "", col = hcl.colors(96, "Reds", rev = TRUE),
-                axes = F, mgp = c(3.3, 1, 0))
+                 xlab = "", ylab = "", col = hcl.colors(96, "Reds", rev = TRUE),
+                 axes = F, mgp = c(3.3, 1, 0))
 axis.Date(1, at=seq(min(deathdat$date), max(deathdat$date), by="1 month"), format="%m-%Y")
 axis(2, 1:19, labels = groups, las = 1, cex.axis = 0.8)
 title(main = "Deaths heatmap")
@@ -818,10 +818,10 @@ logmean = 2.534
 logsd = 0.613
 lndist = dlnorm(1:28, logmean, logsd) #params from Hawryluk et al.
 ggplot(data.frame(index = 1:28, prop = lndist)) +
-  geom_point(aes(x = index, y = prop)) +
-  labs(title = "Discretised Lognormal Distribution (Hawryluk)") +
-  xlab("Time to Death") +
-  ylab("Proportion of day zero cases")
+    geom_point(aes(x = index, y = prop)) +
+    labs(title = "Discretised Lognormal Distribution (Hawryluk)") +
+    xlab("Time to Death") +
+    ylab("Proportion of day zero cases")
 rm(logmean, logsd)
 
 #### AGE GROUPS - Gamma distribution ####
@@ -830,10 +830,10 @@ alpha = 4.447900991
 beta = 4.00188764
 gamdist = dgamma(1:28, shape = alpha, scale = beta) #params from Verity et al.
 ggplot(data.frame(index = 1:28, prop = gamdist)) +
-  geom_point(aes(x = index, y = prop)) +
-  labs(title = "Discretised Gamma Distribution (Verity)") +
-  xlab("Time to Death") +
-  ylab("Proportion of day zero cases")
+    geom_point(aes(x = index, y = prop)) +
+    labs(title = "Discretised Gamma Distribution (Verity)") +
+    xlab("Time to Death") +
+    ylab("Proportion of day zero cases")
 rm(alpha, beta)
 
 #Spread each age group's cases by the distribution
@@ -842,10 +842,10 @@ gamcases <- logcases
 logcases[2:20] = NA_real_
 gamcases[2:20] = NA_real_
 for (agegroup in 2:20) {
-  for (day in 28:nrow(logcases)) {
-    logcases[day,agegroup] = sum(casedat[(day-27):day,agegroup] * rev(lndist))
-    gamcases[day,agegroup] = sum(casedat[(day-27):day,agegroup] * rev(gamdist))
-  }
+    for (day in 28:nrow(logcases)) {
+        logcases[day,agegroup] = sum(casedat[(day-27):day,agegroup] * rev(lndist))
+        gamcases[day,agegroup] = sum(casedat[(day-27):day,agegroup] * rev(gamdist))
+    }
 }
 rm(agegroup, day)
 
@@ -853,22 +853,22 @@ rm(agegroup, day)
 comdat$logcaseload = 0
 comdat$gamcaseload = 0
 for (day in 28:nrow(comdat)) {
-  comdat$logcaseload[day] = sum(comdat$allCases[(day-27):day] * rev(lndist))
-  comdat$gamcaseload[day] = sum(comdat$allCases[(day-27):day] * rev(gamdist))
+    comdat$logcaseload[day] = sum(comdat$allCases[(day-27):day] * rev(lndist))
+    comdat$gamcaseload[day] = sum(comdat$allCases[(day-27):day] * rev(gamdist))
 }
 scotdat$logcaseload = 0
 scotdat$gamcaseload = 0
 for (day in 28:nrow(comdat)) {
-  scotdat$logcaseload[day] = sum(scotdat$allCases[(day-27):day] * rev(lndist))
-  scotdat$gamcaseload[day] = sum(scotdat$allCases[(day-27):day] * rev(gamdist))
+    scotdat$logcaseload[day] = sum(scotdat$allCases[(day-27):day] * rev(lndist))
+    scotdat$gamcaseload[day] = sum(scotdat$allCases[(day-27):day] * rev(gamdist))
 }
 #  Spread Regional cases by the lognormal & gammadistribution
 reglnpredict<-regdeaths
 reggampredict<-regdeaths
 for (area in 2:10){
-for (day in 28:nrow(comdat)){
-  reglnpredict[day,area] = sum(regcases[(day-27):day,area] * rev(lndist))
-  reggampredict[day,area] = sum(regcases[(day-27):day,area] * rev(gamdist))}}
+    for (day in 28:nrow(comdat)){
+        reglnpredict[day,area] = sum(regcases[(day-27):day,area] * rev(lndist))
+        reggampredict[day,area] = sum(regcases[(day-27):day,area] * rev(gamdist))}}
 rm(day,area)
 
 
@@ -889,11 +889,11 @@ lines(reglnpredict$`West Midlands`,x=reglnpredict$date)
 lines(reglnpredict$`Yorkshire and The Humber`,x=reglnpredict$date)
 
 for (area in 2:10){
-  lines(reglnpredict[2:279,area])}
+    lines(reglnpredict[2:279,area])}
 #Plots
 logcasesageplot = ggplot(logcases, aes(x = date)) +
-  geom_line(aes(y = rowSums(logcases[,2:20])), na.rm = TRUE) +
-  ggtitle("All age groups separately lognormal distributed")
+    geom_line(aes(y = rowSums(logcases[,2:20])), na.rm = TRUE) +
+    ggtitle("All age groups separately lognormal distributed")
 logcasesageplot
 rm(logcasesageplot)
 
@@ -903,134 +903,134 @@ distdat = data.frame(days = 1:29, ln = c(lndist, 0), gam = c(gamdist, 0), exp = 
                      shift = c(rep(0, 14), 1, rep(0, 14)),
                      avgshift = c(rep(0, 11), rep((1/7),7), rep(0, 11)))
 ggplot(data = distdat, aes(x = days)) +
-  geom_line(aes(y = ln, color = "Lognormal"), size = 1) +
-  geom_line(aes(y = gam, color = "Gamma"), size = 1) +
-  geom_line(aes(y = exp, color = "Exponential"), size = 1) +
-  geom_line(aes(y = shift, color = "Shift"), size = 1) +
-  geom_line(aes(y = avgshift, color = "7-day Average and Shift"), size = 1) +
-  labs(title = "Distributions", y = "Fraction of Deaths", x = "Days after case detected",
-       colour = "Legend") +
-  scale_color_manual(values = c("Lognormal" = "red", "Gamma" = "blue", "Exponential" = "green", "Shift" = "orange", "7-day Average and Shift" = "maroon")) +
-  scale_x_continuous(breaks =  0:30) +
-  coord_cartesian(ylim=c(0, 0.15)) +
-  theme_bw()
+    geom_line(aes(y = ln, color = "Lognormal"), size = 1) +
+    geom_line(aes(y = gam, color = "Gamma"), size = 1) +
+    geom_line(aes(y = exp, color = "Exponential"), size = 1) +
+    geom_line(aes(y = shift, color = "Shift"), size = 1) +
+    geom_line(aes(y = avgshift, color = "7-day Average and Shift"), size = 1) +
+    labs(title = "Distributions", y = "Fraction of Deaths", x = "Days after case detected",
+         colour = "Legend") +
+           scale_color_manual(values = c("Lognormal" = "red", "Gamma" = "blue", "Exponential" = "green", "Shift" = "orange", "7-day Average and Shift" = "maroon")) +
+           scale_x_continuous(breaks =  0:30) +
+           coord_cartesian(ylim=c(0, 0.15)) +
+           theme_bw()
 
 
-#### AGE GROUPS - Gamma Model ####
-#Calculate age-group CFRs to fit Oct-Nov from Gamma
-gamageweights = data.frame(agegroup = names(casedat[2:20]), weight = 0, lowerbound = 0, upperbound = 0)
-for (agegroup in 2:20) {
-  daterange = seq.Date(as.Date("2020-10-01"), as.Date("2020-11-30"), by = "day")
-  thesedeaths = unlist(filter(deathdat, date %in% daterange)[,agegroup])
-  thesecases = unlist(filter(gamcases, date %in% daterange)[,agegroup])
-  model = summary(lm(thesedeaths ~ thesecases))
-  gamageweights[agegroup-1, "weight"] <- coef(model)[2,1]
-  gamageweights[agegroup-1, "lowerbound"] <- coef(model)[2,1] - (2*coef(model)[2,2])
-  gamageweights[agegroup-1, "upperbound"] <- coef(model)[2,1] + (2*coef(model)[2,2])
-}
-write.csv(gamageweights[10:19,], "forpub.csv")
-rm(model)
+       #### AGE GROUPS - Gamma Model ####
+       #Calculate age-group CFRs to fit Oct-Nov from Gamma
+       gamageweights = data.frame(agegroup = names(casedat[2:20]), weight = 0, lowerbound = 0, upperbound = 0)
+       for (agegroup in 2:20) {
+           daterange = seq.Date(as.Date("2020-10-01"), as.Date("2020-11-30"), by = "day")
+           thesedeaths = unlist(filter(deathdat, date %in% daterange)[,agegroup])
+           thesecases = unlist(filter(gamcases, date %in% daterange)[,agegroup])
+           model = summary(lm(thesedeaths ~ thesecases))
+           gamageweights[agegroup-1, "weight"] <- coef(model)[2,1]
+           gamageweights[agegroup-1, "lowerbound"] <- coef(model)[2,1] - (2*coef(model)[2,2])
+           gamageweights[agegroup-1, "upperbound"] <- coef(model)[2,1] + (2*coef(model)[2,2])
+       }
+       write.csv(gamageweights[10:19,], "forpub.csv")
+       rm(model)
 
-gampred = gamcases
-for (agegroup in 2:20) {
-  gampred[,agegroup] = gamcases[, agegroup] * gamageweights$weight[agegroup-1]
-}
-gampred$allCasesPred = rowSums(gampred[,2:20])
+       gampred = gamcases
+       for (agegroup in 2:20) {
+           gampred[,agegroup] = gamcases[, agegroup] * gamageweights$weight[agegroup-1]
+       }
+       gampred$allCasesPred = rowSums(gampred[,2:20])
 
-#### AGE GROUPS - Lognormal Model ####
-#Calculate age-group CFRs to fit Oct-Nov from Lognormal
-logageweights = data.frame(agegroup = names(casedat[2:20]), weight = 0, lowerbound = 0, upperbound = 0)
-for (agegroup in 2:20) {
-  daterange = seq.Date(as.Date("2020-10-01"), as.Date("2020-11-30"), by = "day")
-  thesedeaths = unlist(filter(deathdat, date %in% daterange)[,agegroup])
-  thesecases = unlist(filter(logcases, date %in% daterange)[,agegroup])
-  model = summary(lm(thesedeaths ~ thesecases))
-  logageweights[agegroup-1, "weight"] <- coef(model)[2,1]
-  logageweights[agegroup-1, "lowerbound"] <- coef(model)[2,1] - (2*coef(model)[2,2])
-  logageweights[agegroup-1, "upperbound"] <- coef(model)[2,1] + (2*coef(model)[2,2])
-}
-rm(model)
+       #### AGE GROUPS - Lognormal Model ####
+       #Calculate age-group CFRs to fit Oct-Nov from Lognormal
+       logageweights = data.frame(agegroup = names(casedat[2:20]), weight = 0, lowerbound = 0, upperbound = 0)
+       for (agegroup in 2:20) {
+           daterange = seq.Date(as.Date("2020-10-01"), as.Date("2020-11-30"), by = "day")
+           thesedeaths = unlist(filter(deathdat, date %in% daterange)[,agegroup])
+           thesecases = unlist(filter(logcases, date %in% daterange)[,agegroup])
+           model = summary(lm(thesedeaths ~ thesecases))
+           logageweights[agegroup-1, "weight"] <- coef(model)[2,1]
+           logageweights[agegroup-1, "lowerbound"] <- coef(model)[2,1] - (2*coef(model)[2,2])
+           logageweights[agegroup-1, "upperbound"] <- coef(model)[2,1] + (2*coef(model)[2,2])
+       }
+       rm(model)
 
-logpred = logcases
-for (agegroup in 2:20) {
-  logpred[,agegroup] = logcases[, agegroup] * logageweights$weight[agegroup-1]
-}
-logpred$allCasesPred = rowSums(logpred[,2:20])
+       logpred = logcases
+       for (agegroup in 2:20) {
+           logpred[,agegroup] = logcases[, agegroup] * logageweights$weight[agegroup-1]
+       }
+       logpred$allCasesPred = rowSums(logpred[,2:20])
 
-#### Original WSS (hardcoded) ####
-WSS = data.frame(date = c("28/07/2020", "29/07/2020", "30/07/2020", "31/07/2020", "01/08/2020", "02/08/2020", "03/08/2020", "04/08/2020", "05/08/2020", "06/08/2020", "07/08/2020", "08/08/2020", "09/08/2020", "10/08/2020", "11/08/2020", "12/08/2020", "13/08/2020", "14/08/2020", "15/08/2020", "16/08/2020", "17/08/2020", "18/08/2020", "19/08/2020", "20/08/2020", "21/08/2020", "22/08/2020", "23/08/2020", "24/08/2020", "25/08/2020", "26/08/2020", "27/08/2020", "28/08/2020", "29/08/2020", "30/08/2020", "31/08/2020", "01/09/2020", "02/09/2020", "03/09/2020", "04/09/2020", "05/09/2020", "06/09/2020", "07/09/2020", "08/09/2020", "09/09/2020", "10/09/2020", "11/09/2020", "12/09/2020", "13/09/2020", "14/09/2020", "15/09/2020", "16/09/2020", "17/09/2020", "18/09/2020", "19/09/2020", "20/09/2020", "21/09/2020", "22/09/2020", "23/09/2020", "24/09/2020", "25/09/2020", "26/09/2020", "27/09/2020", "28/09/2020", "29/09/2020", "30/09/2020", "01/10/2020", "02/10/2020", "03/10/2020", "04/10/2020", "05/10/2020", "06/10/2020", "07/10/2020", "08/10/2020", "09/10/2020", "10/10/2020", "11/10/2020", "12/10/2020", "13/10/2020", "14/10/2020", "15/10/2020", "16/10/2020", "17/10/2020", "18/10/2020", "19/10/2020", "20/10/2020", "21/10/2020", "22/10/2020", "23/10/2020", "24/10/2020", "25/10/2020", "26/10/2020", "27/10/2020", "28/10/2020", "29/10/2020", "30/10/2020", "31/10/2020", "01/11/2020", "02/11/2020", "03/11/2020", "04/11/2020", "05/11/2020", "06/11/2020", "07/11/2020", "08/11/2020", "09/11/2020", "10/11/2020", "11/11/2020", "12/11/2020", "13/11/2020", "14/11/2020", "15/11/2020", "16/11/2020", "17/11/2020", "18/11/2020", "19/11/2020", "20/11/2020", "21/11/2020", "22/11/2020", "23/11/2020", "24/11/2020", "25/11/2020", "26/11/2020", "27/11/2020", "28/11/2020", "29/11/2020", "30/11/2020", "01/12/2020", "02/12/2020", "03/12/2020", "04/12/2020", "05/12/2020", "06/12/2020", "07/12/2020", "08/12/2020", "09/12/2020", "10/12/2020", "11/12/2020", "12/12/2020", "13/12/2020", "14/12/2020", "15/12/2020", "16/12/2020", "17/12/2020", "18/12/2020", "19/12/2020", "20/12/2020", "21/12/2020", "22/12/2020", "23/12/2020", "24/12/2020", "25/12/2020", "26/12/2020", "27/12/2020", "28/12/2020", "29/12/2020", "30/12/2020", "31/12/2020", "01/01/21", "02/01/21", "03/01/21", "04/01/21", "05/01/21", "06/01/21", "07/01/21", "08/01/21", "09/01/21", "10/01/21", "11/01/21", "12/01/21", "13/01/21", "14/01/21", "15/01/21", "16/01/21"),
-                 values = c(15,15,14,15,16,16,17,17,17,18,19,18,17,17,17,16,16,14,13,13,13,12,12,12,12,12,12,12,13,14,14,13,15,20,24,27,29,31,38,41,39,39,39,38,38,36,37,39,40,41,43,46,48,50,53,58,61,63,64,70,76,81,86,94,101,107,117,125,136,144,151,152,156,165,172,177,185,194,204,210,222,239,251,264,274,280,287,294,294,297,304,312,313,314,337,347,356,356,359,365,374,373,383,391,397,402,402,398,391,383,369,355,340,332,322,305,293,284,277,273,267,266,268,268,267,268,269,271,275,274,277,285,297,309,320,333,356,374,392,409,425,437,447,466,487,502,497,459,483,516,510,589,646,690,730,778,801,890,884,889,918,980,959,939,921,904,885,870,849,821,856,804,751))
-WSS$date = dmy(WSS$date)
-WSS$date = WSS$date + 12
+       #### Original WSS (hardcoded) ####
+       WSS = data.frame(date = c("28/07/2020", "29/07/2020", "30/07/2020", "31/07/2020", "01/08/2020", "02/08/2020", "03/08/2020", "04/08/2020", "05/08/2020", "06/08/2020", "07/08/2020", "08/08/2020", "09/08/2020", "10/08/2020", "11/08/2020", "12/08/2020", "13/08/2020", "14/08/2020", "15/08/2020", "16/08/2020", "17/08/2020", "18/08/2020", "19/08/2020", "20/08/2020", "21/08/2020", "22/08/2020", "23/08/2020", "24/08/2020", "25/08/2020", "26/08/2020", "27/08/2020", "28/08/2020", "29/08/2020", "30/08/2020", "31/08/2020", "01/09/2020", "02/09/2020", "03/09/2020", "04/09/2020", "05/09/2020", "06/09/2020", "07/09/2020", "08/09/2020", "09/09/2020", "10/09/2020", "11/09/2020", "12/09/2020", "13/09/2020", "14/09/2020", "15/09/2020", "16/09/2020", "17/09/2020", "18/09/2020", "19/09/2020", "20/09/2020", "21/09/2020", "22/09/2020", "23/09/2020", "24/09/2020", "25/09/2020", "26/09/2020", "27/09/2020", "28/09/2020", "29/09/2020", "30/09/2020", "01/10/2020", "02/10/2020", "03/10/2020", "04/10/2020", "05/10/2020", "06/10/2020", "07/10/2020", "08/10/2020", "09/10/2020", "10/10/2020", "11/10/2020", "12/10/2020", "13/10/2020", "14/10/2020", "15/10/2020", "16/10/2020", "17/10/2020", "18/10/2020", "19/10/2020", "20/10/2020", "21/10/2020", "22/10/2020", "23/10/2020", "24/10/2020", "25/10/2020", "26/10/2020", "27/10/2020", "28/10/2020", "29/10/2020", "30/10/2020", "31/10/2020", "01/11/2020", "02/11/2020", "03/11/2020", "04/11/2020", "05/11/2020", "06/11/2020", "07/11/2020", "08/11/2020", "09/11/2020", "10/11/2020", "11/11/2020", "12/11/2020", "13/11/2020", "14/11/2020", "15/11/2020", "16/11/2020", "17/11/2020", "18/11/2020", "19/11/2020", "20/11/2020", "21/11/2020", "22/11/2020", "23/11/2020", "24/11/2020", "25/11/2020", "26/11/2020", "27/11/2020", "28/11/2020", "29/11/2020", "30/11/2020", "01/12/2020", "02/12/2020", "03/12/2020", "04/12/2020", "05/12/2020", "06/12/2020", "07/12/2020", "08/12/2020", "09/12/2020", "10/12/2020", "11/12/2020", "12/12/2020", "13/12/2020", "14/12/2020", "15/12/2020", "16/12/2020", "17/12/2020", "18/12/2020", "19/12/2020", "20/12/2020", "21/12/2020", "22/12/2020", "23/12/2020", "24/12/2020", "25/12/2020", "26/12/2020", "27/12/2020", "28/12/2020", "29/12/2020", "30/12/2020", "31/12/2020", "01/01/21", "02/01/21", "03/01/21", "04/01/21", "05/01/21", "06/01/21", "07/01/21", "08/01/21", "09/01/21", "10/01/21", "11/01/21", "12/01/21", "13/01/21", "14/01/21", "15/01/21", "16/01/21"),
+                        values = c(15,15,14,15,16,16,17,17,17,18,19,18,17,17,17,16,16,14,13,13,13,12,12,12,12,12,12,12,13,14,14,13,15,20,24,27,29,31,38,41,39,39,39,38,38,36,37,39,40,41,43,46,48,50,53,58,61,63,64,70,76,81,86,94,101,107,117,125,136,144,151,152,156,165,172,177,185,194,204,210,222,239,251,264,274,280,287,294,294,297,304,312,313,314,337,347,356,356,359,365,374,373,383,391,397,402,402,398,391,383,369,355,340,332,322,305,293,284,277,273,267,266,268,268,267,268,269,271,275,274,277,285,297,309,320,333,356,374,392,409,425,437,447,466,487,502,497,459,483,516,510,589,646,690,730,778,801,890,884,889,918,980,959,939,921,904,885,870,849,821,856,804,751))
+       WSS$date = dmy(WSS$date)
+       WSS$date = WSS$date + 12
 
-#### Model Fit Stats ####
-#Get Autumn model fits
-if(interactive()){
-  model = lm(filter(comdat, date %in% daterange)$allDeaths ~ filter(gampred, date %in% daterange)$allCasesPred)
-  summary(model)
+       #### Model Fit Stats ####
+       #Get Autumn model fits
+       if(interactive()){
+           model = lm(filter(comdat, date %in% daterange)$allDeaths ~ filter(gampred, date %in% daterange)$allCasesPred)
+           summary(model)
 
-  model = lm(filter(comdat, date %in% daterange)$allDeaths ~ filter(logpred, date %in% daterange)$allCasesPred)
-  summary(model)
+           model = lm(filter(comdat, date %in% daterange)$allDeaths ~ filter(logpred, date %in% daterange)$allCasesPred)
+           summary(model)
 
-  model = lm(filter(comdat, date %in% daterange)$allDeaths ~ filter(WSS, date %in% daterange)$values)
-  summary(model)
+           model = lm(filter(comdat, date %in% daterange)$allDeaths ~ filter(WSS, date %in% daterange)$values)
+           summary(model)
 
-  #Get overall model fits
-  model = lm(comdat$allDeaths ~ gampred$allCasesPred)
-  summary(model)
+           #Get overall model fits
+           model = lm(comdat$allDeaths ~ gampred$allCasesPred)
+           summary(model)
 
-  model = lm(comdat$allDeaths ~ logpred$allCasesPred)
-  summary(model)
+           model = lm(comdat$allDeaths ~ logpred$allCasesPred)
+           summary(model)
 
-  model = lm(filter(comdat, date %in% WSS$date)$allDeaths ~ WSS$values)
-  summary(model)
-  rm(model)
-}
+           model = lm(filter(comdat, date %in% WSS$date)$allDeaths ~ WSS$values)
+           summary(model)
+           rm(model)
+       }
 
-#### Model plots ####
-#Plot prediction against reality
-ggplot(data = comdat, aes(x = date)) +
-  geom_line(mapping = aes(y = allDeaths, color = "Deaths (Government Figures)"), size = 1, na.rm = TRUE) +
-  geom_line(data = gampred, aes(y = allCasesPred, color = "Gamma Model Predicted Deaths"), size = 1, na.rm = TRUE) +
-  geom_line(data = logpred, aes(y = allCasesPred, color = "Lognormal Model Predicted Deaths"), size = 1, na.rm = TRUE) +
-  geom_line(data = WSS, aes(y = values, color = "WSS Original"), size = 1, na.rm = TRUE) +
-  labs(title = "Predicted Deaths vs. Actual Deaths", color = "Legend") +
-  ylab("Deaths") +
-  xlab("Date") +
-  scale_color_manual(values = c("Deaths (Government Figures)" = "Blue",
-                                "Gamma Model Predicted Deaths" = "Red",
-                                "Lognormal Model Predicted Deaths" = "Green",
-                                "WSS Original" = "Orange")) +
-  scale_x_date(date_breaks = "1 month", date_labels = "%b") +
-  theme_bw()
+       #### Model plots ####
+       #Plot prediction against reality
+       ggplot(data = comdat, aes(x = date)) +
+           geom_line(mapping = aes(y = allDeaths, color = "Deaths (Government Figures)"), size = 1, na.rm = TRUE) +
+           geom_line(data = gampred, aes(y = allCasesPred, color = "Gamma Model Predicted Deaths"), size = 1, na.rm = TRUE) +
+           geom_line(data = logpred, aes(y = allCasesPred, color = "Lognormal Model Predicted Deaths"), size = 1, na.rm = TRUE) +
+           geom_line(data = WSS, aes(y = values, color = "WSS Original"), size = 1, na.rm = TRUE) +
+           labs(title = "Predicted Deaths vs. Actual Deaths", color = "Legend") +
+           ylab("Deaths") +
+           xlab("Date") +
+           scale_color_manual(values = c("Deaths (Government Figures)" = "Blue",
+                                         "Gamma Model Predicted Deaths" = "Red",
+                                         "Lognormal Model Predicted Deaths" = "Green",
+                                         "WSS Original" = "Orange")) +
+           scale_x_date(date_breaks = "1 month", date_labels = "%b") +
+           theme_bw()
 
 
-#### Plot all lognormal-derived CFRs ####
-rollframe = as.data.frame(apply(logcases[,2:20], 2, rollmean, 7, na.pad = T))
-rollframe$date = logcases$date
-rollframe = pivot_longer(rollframe, cols = colnames(logcases[11:20]),
-                         names_to = "agegroup", names_prefix = "X", values_to = "Cases")
+       #### Plot all lognormal-derived CFRs ####
+       rollframe = as.data.frame(apply(logcases[,2:20], 2, rollmean, 7, na.pad = T))
+       rollframe$date = logcases$date
+       rollframe = pivot_longer(rollframe, cols = colnames(logcases[11:20]),
+                                names_to = "agegroup", names_prefix = "X", values_to = "Cases")
 
-deathroll = as.data.frame(apply(deathdat[,2:20], 2, rollmean, 7, na.pad = T))
-deathroll$date = deathdat$date
-deathframe = pivot_longer(deathroll, cols = colnames(deathdat[11:20]),
-                         names_to = "agegroup", names_prefix = "X", values_to = "Deaths")
+       deathroll = as.data.frame(apply(deathdat[,2:20], 2, rollmean, 7, na.pad = T))
+       deathroll$date = deathdat$date
+       deathframe = pivot_longer(deathroll, cols = colnames(deathdat[11:20]),
+                                 names_to = "agegroup", names_prefix = "X", values_to = "Deaths")
 
-rollframe$Deaths = deathframe$Deaths
-rollframe$CFR = rollframe$Deaths/rollframe$Cases
-rm(deathframe)
-rollframe = rollframe[301:(nrow(rollframe)-30),]
+       rollframe$Deaths = deathframe$Deaths
+       rollframe$CFR = rollframe$Deaths/rollframe$Cases
+       rm(deathframe)
+       rollframe = rollframe[301:(nrow(rollframe)-30),]
 
-plot = ggplot() +
-  geom_line(data = rollframe, aes(x = date, y = CFR, color = agegroup), size = 1.1) +
-  scale_colour_manual(values = rev(brewer.pal(10,"Set3"))) +
-  labs(title = paste("Case Fatality Ratios by age group -  7-day rolling averages"),
-       subtitle = "Lognormal model",
-       x = "Date", y = "CFR") +
-  scale_x_date(date_breaks = "1 month", date_labels = "%b") +
-  theme_bw() +
-  geom_rect(aes(xmin=as.Date("2020/12/01"), xmax=as.Date("2021/01/16"), ymin=0, ymax=Inf), fill = "red", alpha = 0.1) +
-  geom_rect(aes(xmin=as.Date("2021/01/17"), xmax=Sys.Date(), ymin=0, ymax=Inf), fill = "green", alpha = 0.1)
-print(plot)
+       plot = ggplot() +
+           geom_line(data = rollframe, aes(x = date, y = CFR, color = agegroup), size = 1.1) +
+           scale_colour_manual(values = rev(brewer.pal(10,"Set3"))) +
+           labs(title = paste("Case Fatality Ratios by age group -  7-day rolling averages"),
+                subtitle = "Lognormal model",
+                x = "Date", y = "CFR") +
+           scale_x_date(date_breaks = "1 month", date_labels = "%b") +
+           theme_bw() +
+           geom_rect(aes(xmin=as.Date("2020/12/01"), xmax=as.Date("2021/01/16"), ymin=0, ymax=Inf), fill = "red", alpha = 0.1) +
+           geom_rect(aes(xmin=as.Date("2021/01/17"), xmax=Sys.Date(), ymin=0, ymax=Inf), fill = "green", alpha = 0.1)
+       print(plot)
 
 
