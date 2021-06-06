@@ -439,6 +439,8 @@ for(idate in 1:(nrow(casedat))){
     SARI[idate,iage]<-0.0
     CRIT[idate,iage]<-0.0
     CRITREC[idate,iage]<-0.0
+    RECOV<-0.0
+    DEATH<-0.0
   }}
     
 #Make 28 day cdfs.  these are same for all age groups, but fractions Prop/CFR vary
