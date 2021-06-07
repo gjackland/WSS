@@ -653,7 +653,7 @@ Rest %>% ggplot(aes(x=Date)) + geom_ribbon(aes(Date,min=England_LowerBound,max=E
 #Plot Regional R data vs Government  spdf is spline smoothing factor, lospan for loess
 
 #  various options to silence pdf writing
-pdfpo=FALSE
+pdfpo=TRUE
 
 if(pdfpo){
 
@@ -868,9 +868,6 @@ lines(PredictCases,x=comdat$date, col="red")
 lines(PredictCasesSmoothR,x=dfR$date, col="blue",lwd=2)
 lines(PredictCasesMeanR,x=comdat$date, col="green",lwd=2)
 lines(PredictCasesLoessR,x=comdat$date, col="violet",lwd=2)
-
-
-
 
 
 # Load code to function to output to the web-ui interface
