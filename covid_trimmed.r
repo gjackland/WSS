@@ -439,8 +439,8 @@ for(idate in 1:(nrow(casedat))){
     SARI[idate,iage]<-0.0
     CRIT[idate,iage]<-0.0
     CRITREC[idate,iage]<-0.0
-    RECOV<-0.0
-    DEATH<-0.0
+    RECOV[idate,iage]<-0.0
+    DEATH[idate,iage]<-0.0
   }}
     
 #Make 28 day cdfs.  these are same for all age groups, but fractions Prop/CFR vary
@@ -476,14 +476,14 @@ for (iday in (2:lengthofdata)){
     CRIT[iday,iage]=CRIT[(iday-1),iage]+casedat[iday,iage]*covidsimAge$Prop_Critical_ByAge[iage-1]
 # Prepare for their future  
    for (itime in (2:length(ILIToSARI))){
-     dx1= ILI[iday,iage]* ILIToSARI[itime] * covidsimAge$Prop_SARI_ByAge[iage-1]
-     dx2 = ILI[iday,iage]* ILIToRecovery[itime] *(1.0-covidsimAge$Prop_SARI_ByAge[iage-1])
-     dx3 = SARI[iday,iage]* SARIToRecovery[itime]*(1.0-covidsimAge$Prop_Critical_ByAge[iage-1]-covidsimAge$CFR_Critical_ByAge[iage-1])
-     dx4 = SARI[iday,iage]* SARIToCritical[itime]*covidsimAge$Prop_Critical_ByAge[iage-1]
-     dx5 = SARI[iday,iage]* SARIToDeath[itime]*covidsimAge$CFR_SARI_ByAge[iage-1]
-     dx6 = CRIT[iday,iage]*CriticalToCritRecov[itime]*(1.0-covidsimAge$CFR_Critical_ByAge[iage-1])
-     dx7 = CRIT[iday,iage]*CriticalToDeath[itime]*covidsimAge$CFR_Critical_ByAge[iage-1]
-     dx8 = CRITREC[iday,iage]*CritRecovToRecov[itime]
+     dx1= as.double(ILI[iday,iage]* ILIToSARI[itime] * covidsimAge$Prop_SARI_ByAge[iage-1])
+     dx2 = as.double(ILI[iday,iage]* ILIToRecovery[itime] *(1.0-covidsimAge$Prop_SARI_ByAge[iage-1]))
+     dx3 = as.double(SARI[iday,iage]* SARIToRecovery[itime]*(1.0-covidsimAge$Prop_Critical_ByAge[iage-1]-covidsimAge$CFR_Critical_ByAge[iage-1]))
+     dx4 = as.double(SARI[iday,iage]* SARIToCritical[itime]*covidsimAge$Prop_Critical_ByAge[iage-1])
+     dx5 = as.double(SARI[iday,iage]* SARIToDeath[itime]*covidsimAge$CFR_SARI_ByAge[iage-1])
+     dx6 = as.double(CRIT[iday,iage]*CriticalToCritRecov[itime]*(1.0-covidsimAge$CFR_Critical_ByAge[iage-1]))
+     dx7 = as.double(CRIT[iday,iage]*CriticalToDeath[itime]*covidsimAge$CFR_Critical_ByAge[iage-1])
+     dx8 = as.double(CRITREC[iday,iage]*CritRecovToRecov[itime])
      SARI[iday+itime,iage]=SARI[iday+itime,iage]+dx1-dx3-dx4-dx5
      ILI[iday+itime,iage]= ILI[iday+itime,iage] - dx1 - dx2
      CRIT[iday+itime,iage]= CRIT[iday+itime,iage] +dx4 - dx6-dx7 
