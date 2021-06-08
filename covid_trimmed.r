@@ -27,7 +27,7 @@ setwd(".")
 # Turn off scientific notation.
 options(scipen = 999)
 
-#Copy transition rates from covidsim.  There are three different functions for ICDFs, no idea why.  x-axis divided into 20 blocks of 5%.  
+#Copy transition rates from covidsim.  There are three different functions for ICDFs, no idea why.  x-axis divided into 20 blocks of 5%.
 #Will need to invert this
 
 covidsimAge<-data.frame(
@@ -430,6 +430,7 @@ ggplot(comdat,aes(x=date)) +
 #  Choose to use lognormal with logsd=logmean/4.0.  Data not available to do better
 logmean = 2.534
 MildToRecovery=dlnorm(1:28, logmean,  logmean/4.0) # These "Milds" are never recorded
+
 logmean=2
 ILIToRecovery=dlnorm(1:28, logmean,  logmean/4.0) 
 ILIToSARI=dlnorm(1:28, logmean,  logmean/4.0)
@@ -445,7 +446,7 @@ CritRecovToRecov=dlnorm(1:28, logmean,  logmean/4.0)
 
 #  Normalise these distributions
 MildToRecovery=MildToRecovery/sum(MildToRecovery)
-ILIToRecovery=ILIToRecovery/sum(ILIToRecovery) 
+ILIToRecovery=ILIToRecovery/sum(ILIToRecovery)
 ILIToSARI=ILIToSARI/sum(ILIToSARI)
 SARIToRecovery=SARIToRecovery/sum(SARIToRecovery)
 SARIToDeath=SARIToDeath/sum(SARIToDeath)
@@ -486,6 +487,7 @@ oldCRIT <- CRIT
 oldCRITREC <- CRITREC
 
 #  Set day 1.  This assumes - wrongly - that there were zero cases before, but should autocorrect as those cases get resolved 
+
 #  covidsimAge has no date row, so need to use iage-1
 for (iage in (2:ncol(ILI))) {
   ILI[1,iage]=casedat[1,iage]*covidsimAge$Prop_ILI_ByAge[iage-1]
@@ -495,13 +497,10 @@ for (iage in (2:ncol(ILI))) {
 
 
 
-
-
-
   for (iage in (18:18) ){  #(2:ncol(ILI))){  Reduced to one age group for debugging
         for (iday in (2:lengthofdata)){    # Add new cases to Mild (ignored), ILI, SARI and CRIT people in each  age group.
     # Bring forward cases from yesterday
-    # Current values will typically be negative, as they are sums of people leaving the compartment 
+    # Current values will typically be negative, as they are sums of people leaving the compartment
     # Nobody changes age band.
 # ILI comes in from todays casedat
     newILI[iday,iage]=as.double(casedat[iday,iage]*covidsimAge$Prop_ILI_ByAge[(iage-1)])
@@ -528,7 +527,7 @@ for (iage in (2:ncol(ILI))) {
       toSARI= newILI[iday,iage] *covidsimAge$Prop_SARI_ByAge[(iage-1)] *ILIToSARI[time]
       oldILI[(iday+time),iage]=recover + toSARI+ oldILI[(iday+time),iage]
       RECOV[(iday+time),iage]=RECOV[(iday+time),iage]+recover
-    }
+   }
     #  todays new SARI  leave to  SARI to CRIT REC or DEAD    
     for (time in (1:length(ILIToSARI))){
       recover=newSARI[iday,iage] *(1.0-covidsimAge$CFR_SARI_ByAge[(iage-1)]-covidsimAge$Prop_Critical_ByAge[(iage-1)]) *SARIToRecovery[time]
@@ -559,8 +558,9 @@ for (iage in (2:ncol(ILI))) {
         }
     
   }
+
 # Create a vector to hold the results for various R-numbers
-ninit <- as.double(1:nrow(comdat))
+
 dfR <- data.frame(x=1.0:length(comdat$date),
 date=comdat$date, gjaR=ninit, rawR=ninit,  fpR=ninit,  weeklyR=ninit,  bylogR=ninit,
   NE=ninit,  NW=ninit,  YH=ninit,  EM=ninit,  WM=ninit,  EE=ninit,  Lon=ninit,  SE=ninit,  SW=ninit,  Scot=ninit,
@@ -926,7 +926,7 @@ for(i in (genTime+22):length(dfR$gjaR)){
 denoise=sum(PredictCasesLoessR)/sum(comdat$allCases)
 #  Averaging R is not the same as averaging e^R
 #  Noise suppresses the growth rate in the model, Smoothed R grows too fast
-#   Multiplier chosen to match final cases, because it is super-sensitive to noise in the initial day  
+#   Multiplier chosen to match final cases, because it is super-sensitive to noise in the initial day
 #
 
 PredictCasesLoessR=PredictCasesLoessR*sum(comdat$allCases)/sum(PredictCasesLoessR)
@@ -941,6 +941,18 @@ lines(PredictCasesSmoothR,x=dfR$date, col="blue",lwd=2)
 lines(PredictCasesMeanR,x=comdat$date, col="green",lwd=2)
 lines(PredictCasesLoessR,x=comdat$date, col="violet",lwd=2)
 
+# ggplot version of the same graph
+tmpdat <- tibble(date=comdat$date,PredictCases=PredictCases,
+                 PredictCasesLoessR=PredictCasesLoessR,
+                 PredictCasesSmoothR=PredictCasesSmoothR,
+                 PredictCasesMeanR=PredictCasesMeanR)
+ggplot(comdat,aes(x=date)) + geom_point(aes(y=allCases),alpha=0.5) +
+   geom_line(data=tmpdat, aes(x=date,y=PredictCases),colour="red",alpha=0.75) +
+   geom_line(data=tmpdat, aes(x=date,y=PredictCasesSmoothR),colour="blue",alpha=0.75) +
+   geom_line(data=tmpdat, aes(x=date,y=PredictCasesMeanR),colour="green",alpha=0.75) +
+   geom_line(data=tmpdat, aes(x=date,y=PredictCasesLoessR),colour="violet",alpha=0.75) +
+   xlab("Date") + ylab("Cases backdeduced from R")
+rm(tmpdat)
 
 # Load code to function to output to the web-ui interface
 # From stackoverflow: 6456501
@@ -1226,7 +1238,7 @@ rollframe$CFR = rollframe$Deaths/rollframe$Cases
 rm(deathframe)
 rollframe = rollframe[301:(nrow(rollframe)-30),]
 
-plot = ggplot() +
+ggplot() +
   geom_line(data = rollframe, aes(x = date, y = CFR, color = agegroup), size = 1.1, na.rm = TRUE) +
   scale_colour_manual(values = rev(brewer.pal(10,"Set3"))) +
   labs(title = paste("Case Fatality Ratios by age group -  7-day rolling averages"),
@@ -1236,311 +1248,7 @@ plot = ggplot() +
   theme_bw() +
   geom_rect(aes(xmin=as.Date("2020/12/01"), xmax=as.Date("2021/01/16"), ymin=0, ymax=Inf), fill = "red", alpha = 0.1) +
   geom_rect(aes(xmin=as.Date("2021/01/17"), xmax=Sys.Date(), ymin=0, ymax=Inf), fill = "green", alpha = 0.1)
-print(plot)
 
-#!/usr/bin/env Rscript
-#
-# Weight, Scale and Shift (WSS) Code
-#
-# Copyright 2021 Graeme Ackland, The University of Edinburgh,
-#                James Ackland, The University of Cambridge
-#  
-#### Header ####
-
-if(interactive()){
-  # Remove existing variables
-  rm(list = ls())
-}
-# Read packages used by the script
-library(readr, warn.conflicts = FALSE, quietly = TRUE)
-library(dplyr, warn.conflicts = FALSE, quietly = TRUE)
-library(tidyr, warn.conflicts = FALSE, quietly = TRUE)
-library(ggplot2, warn.conflicts = FALSE, quietly = TRUE)
-library(lubridate, warn.conflicts = FALSE, quietly = TRUE)
-library(zoo, warn.conflicts = FALSE, quietly = TRUE)
-library(RColorBrewer, warn.conflicts = FALSE, quietly = TRUE)
-
-# Set the working directory from where the script is run.
-setwd(".")
-
-# Turn off scientific notation.
-options(scipen = 999)
-
-covidsimAge<-data.frame(
-"Prop_Mild_ByAge"=c(
-0.666244874,	0.666307235,	0.666002907,	0.665309462,	0.663636419,	0.660834577,	0.657465236,	0.65343285,	0.650261465,	0.64478501,	0.633943755,	0.625619329,	0.609080537,	0.600364976,	0.5838608,	0.566553872,	0.564646465,	0.564646465,	0.564646465
-),
-"Prop_ILI_ByAge"=c(
-0.333122437,  0.333153617,	0.333001453, 0.332654731, 0.33181821, 0.330417289, 0.328732618, 0.326716425, 0.325130732, 0.322392505, 0.316971878, 0.312809664, 0.304540269, 0.300182488, 0.2919304, 0.283276936, 0.282323232, 0.282323232, 0.282323232
-),
-"Prop_SARI_ByAge"=c(
-0.000557744, 0.000475283, 0.000877703, 0.001794658, 0.004006955, 0.007711884, 0.012167229, 0.017359248, 0.021140307, 0.027047193, 0.03708932, 0.039871236, 0.040788928, 0.027444452, 0.101605674, 0.142001415, 0.150469697, 0.150469697, 0.150469697
-),
-"Prop_Critical_ByAge"=
-c(7.49444E-05, 6.38641E-05, 0.000117937, 0.000241149, 0.000538417, 0.00103625, 0.001634918, 0.002491477, 0.003467496, 0.005775292, 0.011995047, 0.021699771, 0.045590266, 0.072008084, 0.022603126, 0.008167778, 0.002560606, 0.002560606, 0.002560606
-),
-"CFR_Critical_ByAge"=c(
-0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896
-),
-"CFR_SARI_ByAge"=c(
-0.125893251, 0.12261338, 0.135672867, 0.152667869, 0.174303077, 0.194187895, 0.209361731, 0.224432564, 0.237013516, 0.257828065, 0.290874602, 0.320763971, 0.362563751, 0.390965457, 0.421151485, 0.447545892, 0.482, 0.482, 0.482
-),
-"CFR_ILI_ByAge"=c(
-0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  0,  0,  0)
-)
-
-covidsimICDF<-data.frame(
-"MildToRecovery_icdf"=c(
-0, 0.341579599, 0.436192391, 0.509774887, 0.574196702, 0.633830053, 0.690927761, 0.74691114, 0.802830695, 0.859578883, 0.918015187, 0.97906363, 1.043815683, 1.113669859, 1.190557274, 1.277356871, 1.378761429, 1.50338422, 1.670195767, 1.938414132, 2.511279379
-),
-"ILIToRecovery_icdf"=c(
-0, 0.341579599, 0.436192391, 0.509774887, 0.574196702, 0.633830053, 0.690927761, 0.74691114, 0.802830695, 0.859578883, 0.918015187, 0.97906363, 1.043815683, 1.113669859, 1.190557274, 1.277356871, 1.378761429, 1.50338422, 1.670195767, 1.938414132, 2.511279379
-),
-"ILIToSARI_icdf"=c(
-0, 0.341579599, 0.436192391, 0.509774887, 0.574196702, 0.633830053, 0.690927761, 0.74691114, 0.802830695, 0.859578883, 0.918015187, 0.97906363, 1.043815683, 1.113669859, 1.190557274, 1.277356871, 1.378761429, 1.50338422, 1.670195767, 1.938414132, 2.511279379
-),
-"SARIToRecovery_icdf"=c(
-0, 0.634736097, 1.217461548, 1.805695261, 2.41206761, 3.044551205, 3.71010552, 4.415905623, 5.170067405, 5.982314035, 6.864787504, 7.833196704, 8.908589322, 10.12027655, 11.51100029, 13.14682956, 15.13821107, 17.69183155, 21.27093904, 27.35083955, 41.35442157
-),
-"SARIToDeath_icdf"=c(
-0, 1.703470233, 2.39742257, 2.970367222, 3.491567676, 3.988046604, 4.474541783, 4.960985883, 5.455292802, 5.964726999, 6.496796075, 7.06004732, 7.665014091, 8.325595834, 9.061367792, 9.901900127, 10.8958347, 12.133068, 13.81280888, 16.56124574, 22.5803431
-),
-"SARIToCritical_icdf"=c(
-0, 0.108407687, 0.220267228, 0.337653773, 0.46159365, 0.593106462, 0.733343356, 0.88367093, 1.045760001, 1.221701998, 1.414175806, 1.62669998, 1.864032461, 2.132837436, 2.442868902, 2.809242289, 3.257272257, 3.834402667, 4.647120033, 6.035113821, 9.253953212
-),
-"CriticalToCritRecov_icdf"=c(
-0, 1.308310071, 1.87022015, 2.338694632, 2.76749788, 3.177830401, 3.581381361, 3.986127838, 4.398512135, 4.824525291, 5.270427517, 5.743406075, 6.252370864, 6.809125902, 7.430338867, 8.141231404, 8.983341913, 10.03350866, 11.46214198, 13.80540164, 18.95469153
-),
-"CriticalToDeath_icdf"=c(
-0, 1.60649128, 2.291051747, 2.860938008, 3.382077741, 3.880425012, 4.37026577, 4.861330415, 5.361460943, 5.877935626, 6.4183471, 6.991401405, 7.607881726, 8.282065409, 9.034104744, 9.894486491, 10.91341144, 12.18372915, 13.9113346, 16.74394356, 22.96541429
-),
-"CritRecovToRecov_icdf"=c(
-0, 0.133993315, 0.265922775, 0.402188416, 0.544657341, 0.694774487, 0.853984373, 1.023901078, 1.206436504, 1.403942719, 1.619402771, 1.856711876, 2.121118605, 2.419957988, 2.763950408, 3.169692564, 3.664959893, 4.301777536, 5.196849239, 6.7222126, 10.24997697
-))
-##covidsim has 17 agegroups.  We need 19,  assume same params for 85_89 & 90+ as for 80+
-
-
-####, Read data ####
-# Base URL to get the data
-baseurl <- "https://api.coronavirus.data.gov.uk/v2/data?"
-
-# Start and end date - the data to collect data from
-startdate <- as.Date("2020/07/25")
-#  To one week ago (-7)
-enddate <-  Sys.Date()-7
-
-#  Dates for the plots
-plotdate=as.Date(c("2020-09-22",as.character(enddate)))
-# Date of Christmas Eve
-XMas= as.Date("2020/12/24")
-XMstart=as.integer(XMas-startdate)
-XMdays=12
-XMend=XMstart+11
-# Wanted to plot a Smooth spline discontinuous at
-#UK lockdown Oct 31 (day 98) -Dec 2  (day 130) Jan 6 (day 165)  (day 1 = July 25)
-lock1 = as.integer(as.Date("2020/10/31")-startdate)
-unlock1 = as.integer(as.Date("2020/12/02")-startdate)
-lock2 = as.integer(as.Date("2021/01/06")-startdate)
-test_delay=7
-lock1=lock1+test_delay
-unlock1=unlock1+test_delay
-lock2=lock2+test_delay
-sagedelay=16 # Delay in producing R-number, for plots
-
-
-# Total cases, deaths, tests
-casesurl <- paste0(baseurl,
-                   "areaType=nation&",
-                   "areaCode=E92000001&",
-                   "metric=newCasesBySpecimenDate&",
-                   "metric=newDeaths28DaysByDeathDate&",
-                   "metric=newPCRTestsByPublishDate&",
-                   "format=csv")
-
-# Explicitly define the types for the columns
-coltypes <- cols(col_character(), col_character(),col_character(),
-                 col_date(format="%Y-%m-%d"), col_integer(),
-                 col_integer(), col_integer())
-
-# Read the data
-comdat <-  read_csv(file = casesurl, col_types = coltypes)
-
-# Transform the data
-comdat <- comdat %>%  select(date,
-                             allCases = newCasesBySpecimenDate,
-                             allDeaths = newDeaths28DaysByDeathDate,
-                             tests = newPCRTestsByPublishDate,
-                             inputCases = newCasesBySpecimenDate,
-                             fpCases = newCasesBySpecimenDate) %>%
-  filter(date >= startdate &
-           date <= enddate ) %>%
-  arrange(date)
-
-# All UK cases (to estimate pre-Sept England Cases)
-ukcaseurl <- paste0(baseurl,
-                    "areaType=overview&",
-                    "metric=newPCRTestsByPublishDate&",
-                    "format=csv")
-
-# Explicitly define the types for the columns
-coltypes <- cols(col_character(), col_character(),col_character(),
-                 col_date(format="%Y-%m-%d"), col_integer())
-# Read the data
-ukcasedat <-  read_csv(file = ukcaseurl, col_types = coltypes)
-
-# Transform the data
-ukcasedat <- ukcasedat %>%  select(date = date, tests = newPCRTestsByPublishDate) %>%
-  filter(date >= startdate &
-           date <= enddate ) %>%
-  arrange(date)
-# cases by age
-ageurl <- paste0(baseurl,
-                 "areaType=nation&",
-                 "areaCode=E92000001&",
-                 "metric=newCasesBySpecimenDateAgeDemographics&",
-                 "format=csv")
-
-# Explicitly define the types for the columns
-# Age is a character as it giving a range, e.g. 00_04, 05_09, ...
-coltypes <- cols(col_character(), col_character(),col_character(),
-                 col_date(format="%Y-%m-%d"), col_character(),
-                 col_double(), col_double(), col_double())
-# read in the data
-casedat <-  read_csv(file = ageurl, col_types = coltypes)
-
-# Remap the ages column to be the header rows, remove the unassigned,
-# 60+ and 00_59 columns, filter dates to be between the start and end
-# dates and order the output by date
-casedat <- casedat %>%
-  select(date = date, age = age, values = cases) %>%
-  pivot_wider(id_cols = date, names_from = age, values_from = values) %>%
-  select(-unassigned, -"60+", -"00_59") %>%
-  filter(date >= startdate & date <= enddate) %>%
-  arrange(date)
-
-#deaths by age
-deathurl <- paste0(baseurl,
-                   "areaType=nation&",
-                   "areaCode=E92000001&",
-                   "metric=newDeaths28DaysByDeathDateAgeDemographics&",
-                   "format=csv")
-
-# Explicitly define the types for the columns
-# coltypes <- cols(col_character(), col_character(),col_character(),
-#                  col_date(format="%Y-%m-%d"),col_character(),
-#                  col_integer(), col_integer(), col_double())
-coltypes <- cols(col_character(), col_character(),col_character(),
-                 col_date(format="%Y-%m-%d"),col_character(),
-                 col_double(), col_double(), col_double())
-# Read the data
-deathdat <-  read_csv(file = deathurl, col_types = coltypes)
-
-# Map the ages column to become column headings for the different age groups
-# for dates between the start and end date inclusive and then ensure that we
-# end up with the same columns as for the case data above.
-deathdat <- deathdat %>%
-  select(date = date, age = age, values = deaths) %>%
-  pivot_wider(id_cols = date, names_from = age, values_from = values) %>%
-  select(-"60+", -"00_59") %>%
-  filter(date >= startdate & date <= enddate) %>%
-  arrange(date) %>%
-  select(names(casedat))#deaths by age
-
-
-#  Read in the Vaccination data
-vacurl <- paste0(baseurl,
-                 "areaType=nation&",
-                 "areaCode=E92000001&",
-                 "metric=cumVaccinationFirstDoseUptakeByPublishDatePercentage&",
-                 "format=csv")
-
-# Explicitly define the types for the columns
-coltypes <- cols(col_character(), col_character(),col_character(),
-                 col_date(format="%Y-%m-%d"), col_double())
-# Read the data
-vacdat <-  read_csv(file = vacurl, col_types = coltypes)
-
-# Map the ages column to become column headings for the different age groups
-# for dates between the start and end date inclusive and then ensure that we
-# end up with the same columns as for the case data above.
-vacdat <- vacdat %>%
-  select(date = date,  values =cumVaccinationFirstDoseUptakeByPublishDatePercentage)
-#  Scotland data https://api.coronavirus.data.gov.uk/v2/data?areaType=nation&areaCode=S92000003&metric=newCasesBySpecimenDate&metric=newDeaths28DaysByDeathDate&metric=newDeaths28DaysByPublishDate&format=csv
-# https://www.opendata.nhs.scot/dataset/covid-19-in-scotland/resource/9393bd66-5012-4f01-9bc5-e7a10accacf4
-
-scoturl <-  paste0(baseurl,
-                   "areaType=nation&",
-                   "areaCode=S92000003&",
-                   "metric=newDeaths28DaysByDeathDate&",
-                   "metric=newCasesBySpecimenDate&",
-                   "metric=newDeaths28DaysByPublishDate&",
-                   "format=csv")
-coltypes <-  cols(
-  date = col_date(format = "%Y-%m-%d"),
-  newCasesBySpecimenDate = col_double(),
-  newDeaths28DaysByPublishDate = col_double(),
-  newDeaths28DaysByDeathDate = col_double()
-)
-#  trying and failing to get data from PHS
-scotdeaths<- read.csv(file="https://www.opendata.nhs.scot/dataset/covid-19-in-scotland/resource/9393bd66-5012-4f01-9bc5-e7a10accacf4")
-#scotdeaths<- read.csv(file="https://www.opendata.nhs.scot/api/3/action/datastore_search?resource_id=9393bd66-5012-4f01-9bc5-e7a10accacf4")
-# Read in the data
-scotdat <-  read_csv(file = scoturl, col_types = coltypes)
-
-# Transform the data
-scotdat <- scotdat %>%  select(date,
-                             allCases = newCasesBySpecimenDate,
-                             allDeaths = newDeaths28DaysByDeathDate,
-                             inputCases = newCasesBySpecimenDate,
-                             fpCases = newCasesBySpecimenDate) %>%
-  filter(date >= startdate &
-           date <= enddate ) %>%
-  arrange(date)
-
-
-#  Regional data
-regurl <- paste0(baseurl,
-                 "areaType=region&",
-                 "metric=newDeaths28DaysByDeathDate&",
-                 "metric=newCasesBySpecimenDate&",
-                 "format=csv")
-
-# Specify the column types
-coltypes <-  cols(
-  areaCode = col_character(),
-  areaName = col_character(),
-  areaType = col_character(),
-  date = col_date(format = "%Y-%m-%d"),
-  newCasesBySpecimenDate = col_double(),
-  newDeaths28DaysByDeathDate = col_double()
-)
-
-# Read in the data
-regdat <-  read_csv(file = regurl, col_types = coltypes)
-
-# Transform the data
-regcases <- regdat %>%  select(date,areaName,areaCode,
-                               Cases = newCasesBySpecimenDate
-                               ) %>%
-  pivot_wider(id_cols = date, names_from = areaName, values_from = Cases) %>%
-  filter(date >= startdate &
-           date <= enddate )%>%
-  arrange(date)
-
-regdeaths <- regdat %>%  select(date,areaName,
-                               Deaths = newDeaths28DaysByDeathDate,
-                               ) %>%
-  pivot_wider(id_cols = date, names_from = areaName, values_from = Deaths) %>%
-  filter(date >= startdate &
-           date <= enddate )%>%
-  arrange(date)
-
-#  Get age data for regions because can't download simultaneously
-regurl2 <- paste0(baseurl,
-                  "areaType=region&",
-                  "metric=newCasesBySpecimenDateAgeDemographics&",
-                  "metric=newDeathsBySpecimenDateAgeDemographics&",
-                  "format=csv")
 
 # specify the column types
 coltypes <- cols(
@@ -2415,4 +2123,5 @@ plot = ggplot() +
   geom_rect(aes(xmin=as.Date("2020/12/01"), xmax=as.Date("2021/01/16"), ymin=0, ymax=Inf), fill = "red", alpha = 0.1) +
   geom_rect(aes(xmin=as.Date("2021/01/17"), xmax=Sys.Date(), ymin=0, ymax=Inf), fill = "green", alpha = 0.1)
 print(plot)
+
 
