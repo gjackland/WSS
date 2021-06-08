@@ -1163,7 +1163,7 @@ rollframe$CFR = rollframe$Deaths/rollframe$Cases
 rm(deathframe)
 rollframe = rollframe[301:(nrow(rollframe)-30),]
 
-plot = ggplot() +
+plotCFR = ggplot() +
   geom_line(data = rollframe, aes(x = date, y = CFR, color = agegroup), size = 1.1, na.rm = TRUE) +
   scale_colour_manual(values = rev(brewer.pal(10,"Set3"))) +
   labs(title = paste("Case Fatality Ratios by age group -  7-day rolling averages"),
@@ -1173,7 +1173,7 @@ plot = ggplot() +
   theme_bw() +
   geom_rect(aes(xmin=as.Date("2020/12/01"), xmax=as.Date("2021/01/16"), ymin=0, ymax=Inf), fill = "red", alpha = 0.1) +
   geom_rect(aes(xmin=as.Date("2021/01/17"), xmax=Sys.Date(), ymin=0, ymax=Inf), fill = "green", alpha = 0.1)
-print(plot)
+print(plotCFR)
 
 #!/usr/bin/env Rscript
 #
