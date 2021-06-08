@@ -424,6 +424,32 @@ ggplot(comdat,aes(x=date)) +
   xlab("Dates") + ylab("Cases")
 
 # Calculation of Rnumber, generation time = 4 days
+
+
+#Make 28 day cdfs.  these are same for all age groups, but fractions Prop/CFR vary
+#  Choose to use lognormal with logsd=logmean/4.0.  Data not available to do better
+logmean = 2.534
+
+MildToRecovery=dlnorm(1:28, logmean,  logmean/4.0) # These "Milds" are never recorded
+ILIToRecovery=dlnorm(1:28, logmean,  logmean/4.0) 
+ILIToSARI=dlnorm(1:28, logmean,  logmean/4.0)
+SARIToRecovery=dlnorm(1:28, logmean,  logmean/4.0)
+SARIToDeath=dlnorm(1:28, logmean,  logmean/4.0)
+SARIToCritical=dlnorm(1:28, logmean,  logmean/4.0)
+CriticalToCritRecov=dlnorm(1:28, logmean,  logmean/4.0)
+CriticalToDeath=dlnorm(1:28, logmean,  logmean/4.0)
+CritRecovToRecov=dlnorm(1:28, logmean,  logmean/4.0)
+#  Normalise these distributions
+MildToRecovery=MildToRecovery/sum(MildToRecovery)
+ILIToRecovery=ILIToRecovery/sum(ILIToRecovery) 
+ILIToSARI=ILIToSARI/sum(ILIToSARI)
+SARIToRecovery=SARIToRecovery/sum(SARIToRecovery)
+SARIToDeath=SARIToDeath/sum(SARIToDeath)
+SARIToCritical=SARIToCritical/sum(SARIToCritical)
+CriticalToCritRecov=CriticalToCritRecov/sum(CriticalToCritRecov)
+CriticalToDeath=CriticalToDeath/sum(CriticalToDeath)
+CritRecovToRecov=CritRecovToRecov/sum(CriticalToCritRecov)
+#  Follow infections through ILI (Case) - SARI (Hospital) - Crit (ICU) - CritRecov (Hospital)- Deaths
 genTime=5
 #  These are the numbers in each compartment at a given time
 ILI<-deathdat
@@ -441,33 +467,6 @@ CRIT[cols] <- 0.0
 CRITREC[cols] <- 0.0 
 RECOV[cols] <- 0.0 
 DEATH[cols] <- 0.0 
-
-#Make 28 day cdfs.  these are same for all age groups, but fractions Prop/CFR vary
-#  Choose to use lognormal with logsd=logmean/4.0.  Data not available to do better
-logmean = 2.534
-
-MildToRecovery=dlnorm(1:28, logmean,  logmean/4.0) # These "Milds" are never recorded
-ILIToRecovery=dlnorm(1:28, logmean,  logmean/4.0) 
-ILIToSARI=dlnorm(1:28, logmean,  logmean/4.0)
-SARIToRecovery=dlnorm(1:28, logmean,  logmean/4.0)
-SARIToDeath=dlnorm(1:28, logmean,  logmean/4.0)
-SARIToCritical=dlnorm(1:28, logmean,  logmean/4.0)
-CriticalToCritRecov=dlnorm(1:28, logmean,  logmean/4.0)
-CriticalToDeath=dlnorm(1:28, logmean,  logmean/4.0)
-CritRecovToRecov=dlnorm(1:28, logmean,  logmean/4.0)
-#  Normalise these distributions
-MildToRecovery=MildToRecovery/sum()
-ILIToRecovery=dlnorm(1:28, logmean,  logmean/4.0) 
-ILIToSARI=dlnorm(1:28, logmean,  logmean/4.0)
-SARIToRecovery=dlnorm(1:28, logmean,  logmean/4.0)
-SARIToDeath=dlnorm(1:28, logmean,  logmean/4.0)
-SARIToCritical=dlnorm(1:28, logmean,  logmean/4.0)
-CriticalToCritRecov=dlnorm(1:28, logmean,  logmean/4.0)
-CriticalToDeath=dlnorm(1:28, logmean,  logmean/4.0)
-CritRecovToRecov=dlnorm(1:28, logmean,  logmean/4.0)
-
-#  Follow infections through ILI (Case) - SARI (Hospital) - Crit (ICU) - CritRecov (Hospital)- Deaths
-
 #  Set day 1.  This assumes - wrongly - that there were zero cases before, but should autocorrect as those cases get resolved 
 #  covidsimAge has no date row, so need to use iage-1
 for (iage in (2:ncol(ILI))) {
@@ -477,32 +476,40 @@ for (iage in (2:ncol(ILI))) {
 }
 
 lengthofdata=  length(casedat$date)-length(ILIToSARI)
-for (iday in (2:lengthofdata)){
+
   for (iage in (18:18) ){  #(2:ncol(ILI))){  Reduced to one age group for debugging
-    # Add new cases to Mild (ignored), ILI, SARi and Crit people in each  age group.  Nobody changes age band.
-    ILI[iday,iage]=ILI[(iday-1),iage]+casedat[iday,iage]*covidsimAge$Prop_ILI_ByAge[iage-1]
-    SARI[iday,iage]=SARI[(iday-1),iage]+casedat[iday,iage]*covidsimAge$Prop_SARI_ByAge[iage-1]
-    CRIT[iday,iage]=CRIT[(iday-1),iage]+casedat[iday,iage]*covidsimAge$Prop_Critical_ByAge[iage-1]
+        for (iday in (2:200)){ #lengthofdata)){    # Add new cases to Mild (ignored), ILI, SARI and CRIT people in each  age group.
+    # Bring forward cases from yesterday
+    # Current values will typically be negative, as they are sums of people leaving the compartment 
+    # Nobody changes age band.
+    newILI=as.double(casedat[iday,iage]*covidsimAge$Prop_ILI_ByAge[iage-1]+ILI[iday,iage])
+    newSARI=as.double(casedat[iday,iage]*covidsimAge$Prop_SARI_ByAge[iage-1]+SARI[iday,iage])
+    newCRIT=as.double(casedat[iday,iage]*covidsimAge$Prop_Critical_ByAge[iage-1]+CRIT[iday,iage])
+    newCRITREC=as.double(CRITREC[iday,iage])
+    ILI[iday,iage]=ILI[(iday-1),iage]+newILI
+    SARI[iday,iage]=SARI[(iday-1),iage]+newSARI
+    CRIT[iday,iage]=CRIT[(iday-1),iage]+newCRIT
     # Prepare for their future  
-    for (itime in (2:length(ILIToSARI))){
-      dx1= as.double(ILI[iday,iage]* ILIToSARI[itime] * covidsimAge$Prop_SARI_ByAge[iage-1])
-      dx2 = as.double(ILI[iday,iage]* ILIToRecovery[itime] *(1.0-covidsimAge$Prop_SARI_ByAge[iage-1]))
-      dx3 = as.double(SARI[iday,iage]* SARIToRecovery[itime]*(1.0-covidsimAge$Prop_Critical_ByAge[iage-1]-covidsimAge$CFR_Critical_ByAge[iage-1]))
-      dx4 = as.double(SARI[iday,iage]* SARIToCritical[itime]*covidsimAge$Prop_Critical_ByAge[iage-1])
-      dx5 = as.double(SARI[iday,iage]* SARIToDeath[itime]*covidsimAge$CFR_SARI_ByAge[iage-1])
-      dx6 = as.double(CRIT[iday,iage]*CriticalToCritRecov[itime]*(1.0-covidsimAge$CFR_Critical_ByAge[iage-1]))
-      dx7 = as.double(CRIT[iday,iage]*CriticalToDeath[itime]*covidsimAge$CFR_Critical_ByAge[iage-1])
-      dx8 = as.double(CRITREC[iday,iage]*CritRecovToRecov[itime])
+    for (itime in (1:length(ILIToSARI))){
+      dx1= as.double(newILI* ILIToSARI[itime] * covidsimAge$Prop_SARI_ByAge[iage-1])
+      dx2 = as.double(newILI* ILIToRecovery[itime] *(1.0-covidsimAge$Prop_SARI_ByAge[iage-1]))
+      dx3 = as.double(newSARI* SARIToRecovery[itime]*(1.0-covidsimAge$Prop_Critical_ByAge[iage-1]-covidsimAge$CFR_Critical_ByAge[iage-1]))
+      dx4 = as.double(newSARI* SARIToCritical[itime]*covidsimAge$Prop_Critical_ByAge[iage-1])
+      dx5 = as.double(newSARI* SARIToDeath[itime]*covidsimAge$CFR_SARI_ByAge[iage-1])
+      dx6 = as.double(newCRIT* CriticalToCritRecov[itime]*(1.0-covidsimAge$CFR_Critical_ByAge[iage-1]))
+      dx7 = as.double(newCRIT*CriticalToDeath[itime]*covidsimAge$CFR_Critical_ByAge[iage-1])
+      dx8 = as.double(newCRITREC*CritRecovToRecov[itime])
       SARI[iday+itime,iage]=SARI[iday+itime,iage]+dx1-dx3-dx4-dx5
       ILI[iday+itime,iage]= ILI[iday+itime,iage] - dx1 - dx2
       CRIT[iday+itime,iage]= CRIT[iday+itime,iage] +dx4 - dx6-dx7 
       CRITREC[iday+itime,iage]= CRITREC[iday+itime,iage] +dx6-dx8
       DEATH[iday+itime,iage]=DEATH[iday+itime,iage]+dx5+dx7
       RECOV[iday+itime,iage]=RECOV[iday+itime,iage]+dx2+dx3+dx8
+ #     cat(iday,dx1,dx2,dx3,newILI,newCRIT,newCRITREC,newSARI,"\n")
     }
   }
 }
-# Create a vector to hold the resultsninit <- as.double(1:nrow(comdat))
+plot# Create a vector to hold the resultsninit <- as.double(1:nrow(comdat))
 ninit <- as.double(1:nrow(comdat))
 dfR <- data.frame(x=1.0:length(comdat$date),
 date=comdat$date, gjaR=ninit, rawR=ninit,  fpR=ninit,  weeklyR=ninit,  bylogR=ninit,
