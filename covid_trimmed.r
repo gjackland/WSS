@@ -27,7 +27,7 @@ setwd(".")
 # Turn off scientific notation.
 options(scipen = 999)
 
-#Copy transition rates from covidsim.  There are three different functions for ICDFs, no idea why.  x-axis divided into 20 blocks of 5%.  
+#Copy transition rates from covidsim.  There are three different functions for ICDFs, no idea why.  x-axis divided into 20 blocks of 5%.
 #Will need to invert this
 
 covidsimAge<-data.frame(
@@ -424,51 +424,70 @@ ggplot(comdat,aes(x=date)) +
   xlab("Dates") + ylab("Cases")
 
 # Calculation of Rnumber, generation time = 4 days
-genTime=5
-#  These are the numbers in each compartment at a given time
-ILI<-deathdat
-SARI<-deathdat
-CRIT<-deathdat
-CRITREC<-deathdat
-RECOV<-deathdat
-DEATH<-deathdat
-#  Zero arrays. 
 
-cols <- names(DEATH)[2:ncol(DEATH)]
-ILI[cols] <- 0.0 
-SARI[cols] <- 0.0 
-CRIT[cols] <- 0.0 
-CRITREC[cols] <- 0.0 
-RECOV[cols] <- 0.0 
-DEATH[cols] <- 0.0 
 
 #Make 28 day cdfs.  these are same for all age groups, but fractions Prop/CFR vary
 #  Choose to use lognormal with logsd=logmean/4.0.  Data not available to do better
 logmean = 2.534
-
 MildToRecovery=dlnorm(1:28, logmean,  logmean/4.0) # These "Milds" are never recorded
+
+logmean=2
 ILIToRecovery=dlnorm(1:28, logmean,  logmean/4.0) 
 ILIToSARI=dlnorm(1:28, logmean,  logmean/4.0)
+logmean=1
 SARIToRecovery=dlnorm(1:28, logmean,  logmean/4.0)
 SARIToDeath=dlnorm(1:28, logmean,  logmean/4.0)
 SARIToCritical=dlnorm(1:28, logmean,  logmean/4.0)
+logmean=1.5
 CriticalToCritRecov=dlnorm(1:28, logmean,  logmean/4.0)
 CriticalToDeath=dlnorm(1:28, logmean,  logmean/4.0)
-CritRecovToRecov=dlnorm(1:28, logmean,  logmean/4.0)
-#  Normalise these distributions
-MildToRecovery=MildToRecovery/sum()
-ILIToRecovery=dlnorm(1:28, logmean,  logmean/4.0) 
-ILIToSARI=dlnorm(1:28, logmean,  logmean/4.0)
-SARIToRecovery=dlnorm(1:28, logmean,  logmean/4.0)
-SARIToDeath=dlnorm(1:28, logmean,  logmean/4.0)
-SARIToCritical=dlnorm(1:28, logmean,  logmean/4.0)
-CriticalToCritRecov=dlnorm(1:28, logmean,  logmean/4.0)
-CriticalToDeath=dlnorm(1:28, logmean,  logmean/4.0)
+logmean=0.5
 CritRecovToRecov=dlnorm(1:28, logmean,  logmean/4.0)
 
+#  Normalise these distributions
+MildToRecovery=MildToRecovery/sum(MildToRecovery)
+ILIToRecovery=ILIToRecovery/sum(ILIToRecovery)
+ILIToSARI=ILIToSARI/sum(ILIToSARI)
+SARIToRecovery=SARIToRecovery/sum(SARIToRecovery)
+SARIToDeath=SARIToDeath/sum(SARIToDeath)
+SARIToCritical=SARIToCritical/sum(SARIToCritical)
+CriticalToCritRecov=CriticalToCritRecov/sum(CriticalToCritRecov)
+CriticalToDeath=CriticalToDeath/sum(CriticalToDeath)
+CritRecovToRecov=CritRecovToRecov/sum(CriticalToCritRecov)
 #  Follow infections through ILI (Case) - SARI (Hospital) - Crit (ICU) - CritRecov (Hospital)- Deaths
+genTime=5
+
+#  Zero dataframes. 
+#  These are the numbers in each compartment at a given time
+lengthofdata=  length(casedat$date)#-length(ILIToSARI)
+
+#extend to allow for predictions (eventually)
+ILI<-deathdat
+for (i in length(casedat$date):(length(casedat$date)+length(ILIToSARI)) ){
+  for (j in ncol(ILI)){
+ILI[i,j] = 0.0
+}  }
+cols <- names(ILI)[2:ncol(ILI)]
+ILI[cols] = 0.0 
+SARI <- ILI
+CRIT <- ILI 
+CRITREC <- ILI 
+RECOV <- ILI 
+DEATH <- ILI 
+
+#These are the new arrivals in each category.  NOT the increase.  Recov and death just increase
+#Initialize with day 1 in place
+newILI <- ILI
+newSARI <- SARI
+newCRIT <- CRIT
+newCRITREC <- CRITREC
+oldILI <- ILI
+oldSARI <- SARI
+oldCRIT <- CRIT
+oldCRITREC <- CRITREC
 
 #  Set day 1.  This assumes - wrongly - that there were zero cases before, but should autocorrect as those cases get resolved 
+
 #  covidsimAge has no date row, so need to use iage-1
 for (iage in (2:ncol(ILI))) {
   ILI[1,iage]=casedat[1,iage]*covidsimAge$Prop_ILI_ByAge[iage-1]
@@ -476,34 +495,72 @@ for (iage in (2:ncol(ILI))) {
   CRIT[1,iage]=casedat[1,iage]*covidsimAge$Prop_Critical_ByAge[iage-1]
 }
 
-lengthofdata=  length(casedat$date)-length(ILIToSARI)
-for (iday in (2:lengthofdata)){
+
+
   for (iage in (18:18) ){  #(2:ncol(ILI))){  Reduced to one age group for debugging
-    # Add new cases to Mild (ignored), ILI, SARi and Crit people in each  age group.  Nobody changes age band.
-    ILI[iday,iage]=ILI[(iday-1),iage]+casedat[iday,iage]*covidsimAge$Prop_ILI_ByAge[iage-1]
-    SARI[iday,iage]=SARI[(iday-1),iage]+casedat[iday,iage]*covidsimAge$Prop_SARI_ByAge[iage-1]
-    CRIT[iday,iage]=CRIT[(iday-1),iage]+casedat[iday,iage]*covidsimAge$Prop_Critical_ByAge[iage-1]
-    # Prepare for their future  
-    for (itime in (2:length(ILIToSARI))){
-      dx1= as.double(ILI[iday,iage]* ILIToSARI[itime] * covidsimAge$Prop_SARI_ByAge[iage-1])
-      dx2 = as.double(ILI[iday,iage]* ILIToRecovery[itime] *(1.0-covidsimAge$Prop_SARI_ByAge[iage-1]))
-      dx3 = as.double(SARI[iday,iage]* SARIToRecovery[itime]*(1.0-covidsimAge$Prop_Critical_ByAge[iage-1]-covidsimAge$CFR_Critical_ByAge[iage-1]))
-      dx4 = as.double(SARI[iday,iage]* SARIToCritical[itime]*covidsimAge$Prop_Critical_ByAge[iage-1])
-      dx5 = as.double(SARI[iday,iage]* SARIToDeath[itime]*covidsimAge$CFR_SARI_ByAge[iage-1])
-      dx6 = as.double(CRIT[iday,iage]*CriticalToCritRecov[itime]*(1.0-covidsimAge$CFR_Critical_ByAge[iage-1]))
-      dx7 = as.double(CRIT[iday,iage]*CriticalToDeath[itime]*covidsimAge$CFR_Critical_ByAge[iage-1])
-      dx8 = as.double(CRITREC[iday,iage]*CritRecovToRecov[itime])
-      SARI[iday+itime,iage]=SARI[iday+itime,iage]+dx1-dx3-dx4-dx5
-      ILI[iday+itime,iage]= ILI[iday+itime,iage] - dx1 - dx2
-      CRIT[iday+itime,iage]= CRIT[iday+itime,iage] +dx4 - dx6-dx7 
-      CRITREC[iday+itime,iage]= CRITREC[iday+itime,iage] +dx6-dx8
-      DEATH[iday+itime,iage]=DEATH[iday+itime,iage]+dx5+dx7
-      RECOV[iday+itime,iage]=RECOV[iday+itime,iage]+dx2+dx3+dx8
+        for (iday in (2:lengthofdata)){    # Add new cases to Mild (ignored), ILI, SARI and CRIT people in each  age group.
+    # Bring forward cases from yesterday
+    # Current values will typically be negative, as they are sums of people leaving the compartment
+    # Nobody changes age band.
+# ILI comes in from todays casedat
+    newILI[iday,iage]=as.double(casedat[iday,iage]*covidsimAge$Prop_ILI_ByAge[(iage-1)])
+#  SARI come in direct from todays casedat, and anticipate conversion from older ILI
+    newSARI[iday,iage]=as.double(casedat[iday,iage])
+    for (time in (1:length(ILIToSARI))){
+      newSARI[(iday+time),iage]=newILI[iday,iage] *covidsimAge$Prop_SARI_ByAge[(iage-1)] *ILIToSARI[time]
+      +newSARI[(iday+time),iage]
+    }      
+#  CRIT comes in direct from todays casedat and converted from SARI   
+    newCRIT[iday,iage]=as.double( casedat[iday,iage]*covidsimAge$Prop_Critical_ByAge[(iage-1)])
+    for (time in (1:length(SARIToCritical))){
+      newCRIT[(iday+time),iage]=newSARI[iday,iage] *covidsimAge$Prop_Critical_ByAge[(iage-1)] *SARIToCritical[time]
+      +newCRIT[(iday+time),iage]
+      }  
+#  CRITREC comes only from CRIT  
+    for (time in (1:length(CriticalToCritRecov))){
+      newCRITREC[(iday+time),iage]=newCRIT[iday,iage] *(1.0-covidsimAge$CFR_Critical_ByAge[(iage-1)]) *CriticalToCritRecov[time]
+      +newCRITREC[(iday+time),iage]
+    } 
+    #  todays new ILIs will leave ILI to SARI    or REC
+    for (time in (1:length(ILIToSARI))){
+      recover=newILI[iday,iage] *(1.0-covidsimAge$Prop_SARI_ByAge[(iage-1)]) *ILIToRecovery[time]
+      toSARI= newILI[iday,iage] *covidsimAge$Prop_SARI_ByAge[(iage-1)] *ILIToSARI[time]
+      oldILI[(iday+time),iage]=recover + toSARI+ oldILI[(iday+time),iage]
+      RECOV[(iday+time),iage]=RECOV[(iday+time),iage]+recover
+   }
+    #  todays new SARI  leave to  SARI to CRIT REC or DEAD    
+    for (time in (1:length(ILIToSARI))){
+      recover=newSARI[iday,iage] *(1.0-covidsimAge$CFR_SARI_ByAge[(iage-1)]-covidsimAge$Prop_Critical_ByAge[(iage-1)]) *SARIToRecovery[time]
+      toCRIT= newSARI[iday,iage] *covidsimAge$Prop_Critical_ByAge[(iage-1)] *SARIToCritical[time]
+      dead=   newSARI[iday,iage] *covidsimAge$CFR_SARI_ByAge[(iage-1)] *SARIToDeath[time]
+       oldSARI[(iday+time),iage]= recover+toCRIT+dead+oldSARI[(iday+time),iage]
+       RECOV[(iday+time),iage]=RECOV[(iday+time),iage]+recover
+       DEATH[(iday+time),iage]=DEATH[(iday+time),iage]+dead
     }
+    
+    #  todays new CRIT  leave to   CRITREC or DEAD    
+    for (time in (1:length(SARIToCritical))){
+      toCR = newCRIT[iday,iage] *(1.0-covidsimAge$CFR_Critical_ByAge[(iage-1)]) * CriticalToCritRecov[time]
+      dead = newCRIT[iday,iage] *covidsimAge$CFR_Critical_ByAge[(iage-1)]       * CriticalToDeath[time]
+      oldCRIT[(iday+time),iage]=toCR+dead+oldCRIT[(iday+time),iage]
+      DEATH[(iday+time),iage]=DEATH[(iday+time),iage]+dead 
+    }
+    #  todays new CRITREC will leave to  RECOVER    
+    for (time in (1:length(SARIToCritical))){
+    oldCRITREC[(iday+time),iage]=CritRecovToRecov[iage-1]*newCRITREC[iday,iage]
+    RECOV[(iday+time),iage]=RECOV[(iday+time),iage]+CritRecovToRecov[iage-1]*newCRITREC[iday,iage]
+    }
+#  Finally, update todays totals: New cases + transfers from other compartments - transfers to other compartments + leftover from yesterday   
+    ILI[iday,iage]=ILI[iday,iage]+newILI[iday,iage]-oldILI[iday,iage]+ILI[(iday-1),iage]
+    SARI[iday,iage]=SARI[iday,iage]+newSARI[iday,iage]-oldSARI[iday,iage]+SARI[(iday-1),iage]
+    CRIT[iday,iage]=CRIT[iday,iage]+newCRIT[iday,iage]-oldCRIT[iday,iage]+CRIT[(iday-1),iage]
+    CRITREC[iday,iage]=CRITREC[iday,iage]+newCRITREC[iday,iage]-oldCRITREC[iday,iage]+ILI[(iday-1),iage]
+        }
+    
   }
-}
-# Create a vector to hold the resultsninit <- as.double(1:nrow(comdat))
-ninit <- as.double(1:nrow(comdat))
+
+# Create a vector to hold the results for various R-numbers
+
 dfR <- data.frame(x=1.0:length(comdat$date),
 date=comdat$date, gjaR=ninit, rawR=ninit,  fpR=ninit,  weeklyR=ninit,  bylogR=ninit,
   NE=ninit,  NW=ninit,  YH=ninit,  EM=ninit,  WM=ninit,  EE=ninit,  Lon=ninit,  SE=ninit,  SW=ninit,  Scot=ninit,
@@ -667,6 +724,12 @@ pdfpo=FALSE
 if(pdfpo){
 
 if(interactive()){
+  pdf(file = 'Scot.pdf')
+  plot(smooth.spline(dfR$Scot,df=spdf,w=sqrt(scotdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),xlim=plotdate,cex.lab=2.0, cex.axis=2.0, cex.main=2.0, cex.sub=2.0,title("Scotland"))
+  lines(y=Rest$UK_LowerBound,x=Rest$Date-sagedelay)
+  lines(y=Rest$UK_UpperBound,x=Rest$Date-sagedelay)
+  lines(predict(loess(Lon ~ x, data=dfR,span=lospan)),col='red',x=dfR$date)
+  dev.off()
   pdf(file = 'Lon.pdf')
   plot(smooth.spline(dfR$Lon,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),xlim=plotdate,cex.lab=2.0, cex.axis=2.0, cex.main=2.0, cex.sub=2.0)
   lines(y=Rest$Lon_LowerBound,x=Rest$Date-sagedelay)
@@ -863,7 +926,7 @@ for(i in (genTime+22):length(dfR$gjaR)){
 denoise=sum(PredictCasesLoessR)/sum(comdat$allCases)
 #  Averaging R is not the same as averaging e^R
 #  Noise suppresses the growth rate in the model, Smoothed R grows too fast
-#   Multiplier chosen to match final cases, because it is super-sensitive to noise in the initial day  
+#   Multiplier chosen to match final cases, because it is super-sensitive to noise in the initial day
 #
 
 PredictCasesLoessR=PredictCasesLoessR*sum(comdat$allCases)/sum(PredictCasesLoessR)
@@ -878,6 +941,18 @@ lines(PredictCasesSmoothR,x=dfR$date, col="blue",lwd=2)
 lines(PredictCasesMeanR,x=comdat$date, col="green",lwd=2)
 lines(PredictCasesLoessR,x=comdat$date, col="violet",lwd=2)
 
+# ggplot version of the same graph
+tmpdat <- tibble(date=comdat$date,PredictCases=PredictCases,
+                 PredictCasesLoessR=PredictCasesLoessR,
+                 PredictCasesSmoothR=PredictCasesSmoothR,
+                 PredictCasesMeanR=PredictCasesMeanR)
+ggplot(comdat,aes(x=date)) + geom_point(aes(y=allCases),alpha=0.5) +
+   geom_line(data=tmpdat, aes(x=date,y=PredictCases),colour="red",alpha=0.75) +
+   geom_line(data=tmpdat, aes(x=date,y=PredictCasesSmoothR),colour="blue",alpha=0.75) +
+   geom_line(data=tmpdat, aes(x=date,y=PredictCasesMeanR),colour="green",alpha=0.75) +
+   geom_line(data=tmpdat, aes(x=date,y=PredictCasesLoessR),colour="violet",alpha=0.75) +
+   xlab("Date") + ylab("Cases backdeduced from R")
+rm(tmpdat)
 
 # Load code to function to output to the web-ui interface
 # From stackoverflow: 6456501
@@ -1163,7 +1238,8 @@ rollframe$CFR = rollframe$Deaths/rollframe$Cases
 rm(deathframe)
 rollframe = rollframe[301:(nrow(rollframe)-30),]
 
-plotCFR = ggplot() +
+
+plotCFR = ggplot() 
   geom_line(data = rollframe, aes(x = date, y = CFR, color = agegroup), size = 1.1, na.rm = TRUE) +
   scale_colour_manual(values = rev(brewer.pal(10,"Set3"))) +
   labs(title = paste("Case Fatality Ratios by age group -  7-day rolling averages"),
@@ -1435,50 +1511,6 @@ scotdat <- scotdat %>%  select(date,
   arrange(date)
 
 
-#  Regional data
-regurl <- paste0(baseurl,
-                 "areaType=region&",
-                 "metric=newDeaths28DaysByDeathDate&",
-                 "metric=newCasesBySpecimenDate&",
-                 "format=csv")
-
-# Specify the column types
-coltypes <-  cols(
-  areaCode = col_character(),
-  areaName = col_character(),
-  areaType = col_character(),
-  date = col_date(format = "%Y-%m-%d"),
-  newCasesBySpecimenDate = col_double(),
-  newDeaths28DaysByDeathDate = col_double()
-)
-
-# Read in the data
-regdat <-  read_csv(file = regurl, col_types = coltypes)
-
-# Transform the data
-regcases <- regdat %>%  select(date,areaName,areaCode,
-                               Cases = newCasesBySpecimenDate
-                               ) %>%
-  pivot_wider(id_cols = date, names_from = areaName, values_from = Cases) %>%
-  filter(date >= startdate &
-           date <= enddate )%>%
-  arrange(date)
-
-regdeaths <- regdat %>%  select(date,areaName,
-                               Deaths = newDeaths28DaysByDeathDate,
-                               ) %>%
-  pivot_wider(id_cols = date, names_from = areaName, values_from = Deaths) %>%
-  filter(date >= startdate &
-           date <= enddate )%>%
-  arrange(date)
-
-#  Get age data for regions because can't download simultaneously
-regurl2 <- paste0(baseurl,
-                  "areaType=region&",
-                  "metric=newCasesBySpecimenDateAgeDemographics&",
-                  "metric=newDeathsBySpecimenDateAgeDemographics&",
-                  "format=csv")
-
 # specify the column types
 coltypes <- cols(
   areaCode = col_character(),
@@ -1644,6 +1676,7 @@ dfR$EE<-dfR$gjaR
 dfR$Lon<-dfR$gjaR
 dfR$SE<-dfR$gjaR
 dfR$SW<-dfR$gjaR
+dfR$Scot<-dfR$gjaR
 dfR$p00<-dfR$gjaR
 dfR$p05<-dfR$gjaR
 dfR$p10<-dfR$gjaR
@@ -1694,6 +1727,7 @@ for(i in ((genTime+1):length(dfR$gjaR))    ){
   dfR$Lon[i]=1+log(regcases$London[i]/regcases$London[i-1])*genTime
   dfR$SE[i]=1+log(regcases$`South East`[i]/regcases$`South East`[i-1])*genTime
   dfR$SW[i]=1+log(regcases$`South West`[i]/regcases$`South West`[i-1])*genTime
+  dfR$Scot[i]=1+log(scotdat$allCases[i]/scotdat$allCases[i-1])*genTime
   dfR$p00[i]=1+log(casedat$'00_04'[i]/casedat$'00_04'[i-1])*genTime
   dfR$p05[i]=1+log(casedat$'05_09'[i]/casedat$'05_09'[i-1])*genTime
   dfR$p10[i]=1+log(casedat$'10_14'[i]/casedat$'10_14'[i-1])*genTime
@@ -1731,7 +1765,7 @@ dfR$weeklyR[length(dfR$weeklyR)]=1.0
 dfR$weeklyR[length(dfR$weeklyR)-1]=1.0
 dfR$weeklyR[length(dfR$weeklyR)-2]=1.0
 
-  (day 1 = July 25)
+
 
 # Making the time windows agree
 Govdat <- Rest[Rest$Date >= min(comdat$date) & Rest$Date <= max(comdat$date),]
@@ -1839,6 +1873,12 @@ Rest %>% ggplot(aes(x=Date)) + geom_ribbon(aes(Date,min=England_LowerBound,max=E
 
 
 if(interactive()){
+  pdf(file = 'Scot.pdf')
+  plot(smooth.spline(dfR$Scot,df=spdf,w=sqrt(scotdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),xlim=plotdate,cex.lab=2.0, cex.axis=2.0, cex.main=2.0, cex.sub=2.0)
+  lines(y=Rest$UK_LowerBound,x=Rest$Date-sagedelay)
+  lines(y=Rest$UK_UpperBound,x=Rest$Date-sagedelay)
+  lines(predict(loess(Lon ~ x, data=dfR,span=lospan)),col='red',x=dfR$date,title("Scotland"))
+  dev.off()
   pdf(file = 'Lon.pdf')
   plot(smooth.spline(dfR$Lon,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),xlim=plotdate,cex.lab=2.0, cex.axis=2.0, cex.main=2.0, cex.sub=2.0)
   lines(y=Rest$Lon_LowerBound,x=Rest$Date-sagedelay)
@@ -2344,4 +2384,5 @@ plot = ggplot() +
   geom_rect(aes(xmin=as.Date("2020/12/01"), xmax=as.Date("2021/01/16"), ymin=0, ymax=Inf), fill = "red", alpha = 0.1) +
   geom_rect(aes(xmin=as.Date("2021/01/17"), xmax=Sys.Date(), ymin=0, ymax=Inf), fill = "green", alpha = 0.1)
 print(plot)
+
 
