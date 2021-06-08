@@ -509,7 +509,8 @@ lengthofdata=  length(casedat$date)-length(ILIToSARI)
     }
   }
 }
-plot# Create a vector to hold the resultsninit <- as.double(1:nrow(comdat))
+
+# Create a vector to hold the resultsninit <- as.double(1:nrow(comdat))
 ninit <- as.double(1:nrow(comdat))
 dfR <- data.frame(x=1.0:length(comdat$date),
 date=comdat$date, gjaR=ninit, rawR=ninit,  fpR=ninit,  weeklyR=ninit,  bylogR=ninit,
@@ -887,15 +888,16 @@ lines(PredictCasesLoessR,x=comdat$date, col="violet",lwd=2)
 
 # ggplot version of the same graph
 tmpdat <- tibble(date=comdat$date,PredictCases=PredictCases,
-                PredictCasesLoessR=PredictCasesLoessR,
-                PredictCasesSmoothR=PredictCasesSmoothR,
-                PredictCasesMeanR=PredictCasesMeanR)
+                 PredictCasesLoessR=PredictCasesLoessR,
+                 PredictCasesSmoothR=PredictCasesSmoothR,
+                 PredictCasesMeanR=PredictCasesMeanR)
 ggplot(comdat,aes(x=date)) + geom_point(aes(y=allCases),alpha=0.5) +
    geom_line(data=tmpdat, aes(x=date,y=PredictCases),colour="red",alpha=0.75) +
    geom_line(data=tmpdat, aes(x=date,y=PredictCasesSmoothR),colour="blue",alpha=0.75) +
    geom_line(data=tmpdat, aes(x=date,y=PredictCasesMeanR),colour="green",alpha=0.75) +
    geom_line(data=tmpdat, aes(x=date,y=PredictCasesLoessR),colour="violet",alpha=0.75) +
    xlab("Date") + ylab("Cases backdeduced from R")
+rm(tmpdat)
 
 # Load code to function to output to the web-ui interface
 # From stackoverflow: 6456501
@@ -1181,7 +1183,7 @@ rollframe$CFR = rollframe$Deaths/rollframe$Cases
 rm(deathframe)
 rollframe = rollframe[301:(nrow(rollframe)-30),]
 
-plot = ggplot() +
+ggplot() +
   geom_line(data = rollframe, aes(x = date, y = CFR, color = agegroup), size = 1.1, na.rm = TRUE) +
   scale_colour_manual(values = rev(brewer.pal(10,"Set3"))) +
   labs(title = paste("Case Fatality Ratios by age group -  7-day rolling averages"),
@@ -1191,5 +1193,5 @@ plot = ggplot() +
   theme_bw() +
   geom_rect(aes(xmin=as.Date("2020/12/01"), xmax=as.Date("2021/01/16"), ymin=0, ymax=Inf), fill = "red", alpha = 0.1) +
   geom_rect(aes(xmin=as.Date("2021/01/17"), xmax=Sys.Date(), ymin=0, ymax=Inf), fill = "green", alpha = 0.1)
-print(plot)
+
 
