@@ -27,59 +27,61 @@ setwd(".")
 # Turn off scientific notation.
 options(scipen = 999)
 
+#Copy transition rates from covidsim.  There are three different functions for ICDFs, no idea why.  x-axis divided into 20 blocks of 5%.
+#Will need to invert this
+
 covidsimAge<-data.frame(
-"Prop_Mild_ByAge"=c(
-0.666244874,	0.666307235,	0.666002907,	0.665309462,	0.663636419,	0.660834577,	0.657465236,	0.65343285,	0.650261465,	0.64478501,	0.633943755,	0.625619329,	0.609080537,	0.600364976,	0.5838608,	0.566553872,	0.564646465,	0.564646465,	0.564646465
-),
-"Prop_ILI_ByAge"=c(
-0.333122437,  0.333153617,	0.333001453, 0.332654731, 0.33181821, 0.330417289, 0.328732618, 0.326716425, 0.325130732, 0.322392505, 0.316971878, 0.312809664, 0.304540269, 0.300182488, 0.2919304, 0.283276936, 0.282323232, 0.282323232, 0.282323232
-),
-"Prop_SARI_ByAge"=c(
-0.000557744, 0.000475283, 0.000877703, 0.001794658, 0.004006955, 0.007711884, 0.012167229, 0.017359248, 0.021140307, 0.027047193, 0.03708932, 0.039871236, 0.040788928, 0.027444452, 0.101605674, 0.142001415, 0.150469697, 0.150469697, 0.150469697
-),
-"Prop_Critical_ByAge"=
-c(7.49444E-05, 6.38641E-05, 0.000117937, 0.000241149, 0.000538417, 0.00103625, 0.001634918, 0.002491477, 0.003467496, 0.005775292, 0.011995047, 0.021699771, 0.045590266, 0.072008084, 0.022603126, 0.008167778, 0.002560606, 0.002560606, 0.002560606
-),
-"CFR_Critical_ByAge"=c(
-0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896
-),
-"CFR_SARI_ByAge"=c(
-0.125893251, 0.12261338, 0.135672867, 0.152667869, 0.174303077, 0.194187895, 0.209361731, 0.224432564, 0.237013516, 0.257828065, 0.290874602, 0.320763971, 0.362563751, 0.390965457, 0.421151485, 0.447545892, 0.482, 0.482, 0.482
-),
-"CFR_ILI_ByAge"=c(
-0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  0,  0,  0)
+  "Prop_Mild_ByAge"=c(
+    0.666244874,	0.666307235,	0.666002907,	0.665309462,	0.663636419,	0.660834577,	0.657465236,	0.65343285,	0.650261465,	0.64478501,	0.633943755,	0.625619329,	0.609080537,	0.600364976,	0.5838608,	0.566553872,	0.564646465,	0.564646465,	0.564646465
+  ),
+  "Prop_ILI_ByAge"=c(
+    0.333122437,  0.333153617,	0.333001453, 0.332654731, 0.33181821, 0.330417289, 0.328732618, 0.326716425, 0.325130732, 0.322392505, 0.316971878, 0.312809664, 0.304540269, 0.300182488, 0.2919304, 0.283276936, 0.282323232, 0.282323232, 0.282323232
+  ),
+  "Prop_SARI_ByAge"=c(
+    0.000557744, 0.000475283, 0.000877703, 0.001794658, 0.004006955, 0.007711884, 0.012167229, 0.017359248, 0.021140307, 0.027047193, 0.03708932, 0.039871236, 0.040788928, 0.027444452, 0.101605674, 0.142001415, 0.150469697, 0.150469697, 0.150469697
+  ),
+  "Prop_Critical_ByAge"=
+    c(7.49444E-05, 6.38641E-05, 0.000117937, 0.000241149, 0.000538417, 0.00103625, 0.001634918, 0.002491477, 0.003467496, 0.005775292, 0.011995047, 0.021699771, 0.045590266, 0.072008084, 0.022603126, 0.008167778, 0.002560606, 0.002560606, 0.002560606
+    ),
+  "CFR_Critical_ByAge"=c(
+    0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896
+  ),
+  "CFR_SARI_ByAge"=c(
+    0.125893251, 0.12261338, 0.135672867, 0.152667869, 0.174303077, 0.194187895, 0.209361731, 0.224432564, 0.237013516, 0.257828065, 0.290874602, 0.320763971, 0.362563751, 0.390965457, 0.421151485, 0.447545892, 0.482, 0.482, 0.482
+  ),
+  "CFR_ILI_ByAge"=c(
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  0,  0,  0)
 )
 
 covidsimICDF<-data.frame(
-"MildToRecovery_icdf"=c(
-0, 0.341579599, 0.436192391, 0.509774887, 0.574196702, 0.633830053, 0.690927761, 0.74691114, 0.802830695, 0.859578883, 0.918015187, 0.97906363, 1.043815683, 1.113669859, 1.190557274, 1.277356871, 1.378761429, 1.50338422, 1.670195767, 1.938414132, 2.511279379
-),
-"ILIToRecovery_icdf"=c(
-0, 0.341579599, 0.436192391, 0.509774887, 0.574196702, 0.633830053, 0.690927761, 0.74691114, 0.802830695, 0.859578883, 0.918015187, 0.97906363, 1.043815683, 1.113669859, 1.190557274, 1.277356871, 1.378761429, 1.50338422, 1.670195767, 1.938414132, 2.511279379
-),
-"ILIToSARI_icdf"=c(
-0, 0.341579599, 0.436192391, 0.509774887, 0.574196702, 0.633830053, 0.690927761, 0.74691114, 0.802830695, 0.859578883, 0.918015187, 0.97906363, 1.043815683, 1.113669859, 1.190557274, 1.277356871, 1.378761429, 1.50338422, 1.670195767, 1.938414132, 2.511279379
-),
-"SARIToRecovery_icdf"=c(
-0, 0.634736097, 1.217461548, 1.805695261, 2.41206761, 3.044551205, 3.71010552, 4.415905623, 5.170067405, 5.982314035, 6.864787504, 7.833196704, 8.908589322, 10.12027655, 11.51100029, 13.14682956, 15.13821107, 17.69183155, 21.27093904, 27.35083955, 41.35442157
-),
-"SARIToDeath_icdf"=c(
-0, 1.703470233, 2.39742257, 2.970367222, 3.491567676, 3.988046604, 4.474541783, 4.960985883, 5.455292802, 5.964726999, 6.496796075, 7.06004732, 7.665014091, 8.325595834, 9.061367792, 9.901900127, 10.8958347, 12.133068, 13.81280888, 16.56124574, 22.5803431
-),
-"SARIToCritical_icdf"=c(
-0, 0.108407687, 0.220267228, 0.337653773, 0.46159365, 0.593106462, 0.733343356, 0.88367093, 1.045760001, 1.221701998, 1.414175806, 1.62669998, 1.864032461, 2.132837436, 2.442868902, 2.809242289, 3.257272257, 3.834402667, 4.647120033, 6.035113821, 9.253953212
-),
-"CriticalToCritRecov_icdf"=c(
-0, 1.308310071, 1.87022015, 2.338694632, 2.76749788, 3.177830401, 3.581381361, 3.986127838, 4.398512135, 4.824525291, 5.270427517, 5.743406075, 6.252370864, 6.809125902, 7.430338867, 8.141231404, 8.983341913, 10.03350866, 11.46214198, 13.80540164, 18.95469153
-),
-"CriticalToDeath_icdf"=c(
-0, 1.60649128, 2.291051747, 2.860938008, 3.382077741, 3.880425012, 4.37026577, 4.861330415, 5.361460943, 5.877935626, 6.4183471, 6.991401405, 7.607881726, 8.282065409, 9.034104744, 9.894486491, 10.91341144, 12.18372915, 13.9113346, 16.74394356, 22.96541429
-),
-"CritRecovToRecov_icdf"=c(
-0, 0.133993315, 0.265922775, 0.402188416, 0.544657341, 0.694774487, 0.853984373, 1.023901078, 1.206436504, 1.403942719, 1.619402771, 1.856711876, 2.121118605, 2.419957988, 2.763950408, 3.169692564, 3.664959893, 4.301777536, 5.196849239, 6.7222126, 10.24997697
-))
+  "MildToRecovery_icdf"=c(
+    0, 0.341579599, 0.436192391, 0.509774887, 0.574196702, 0.633830053, 0.690927761, 0.74691114, 0.802830695, 0.859578883, 0.918015187, 0.97906363, 1.043815683, 1.113669859, 1.190557274, 1.277356871, 1.378761429, 1.50338422, 1.670195767, 1.938414132, 2.511279379
+  ),
+  "ILIToRecovery_icdf"=c(
+    0, 0.341579599, 0.436192391, 0.509774887, 0.574196702, 0.633830053, 0.690927761, 0.74691114, 0.802830695, 0.859578883, 0.918015187, 0.97906363, 1.043815683, 1.113669859, 1.190557274, 1.277356871, 1.378761429, 1.50338422, 1.670195767, 1.938414132, 2.511279379
+  ),
+  "ILIToSARI_icdf"=c(
+    0, 0.341579599, 0.436192391, 0.509774887, 0.574196702, 0.633830053, 0.690927761, 0.74691114, 0.802830695, 0.859578883, 0.918015187, 0.97906363, 1.043815683, 1.113669859, 1.190557274, 1.277356871, 1.378761429, 1.50338422, 1.670195767, 1.938414132, 2.511279379
+  ),
+  "SARIToRecovery_icdf"=c(
+    0, 0.634736097, 1.217461548, 1.805695261, 2.41206761, 3.044551205, 3.71010552, 4.415905623, 5.170067405, 5.982314035, 6.864787504, 7.833196704, 8.908589322, 10.12027655, 11.51100029, 13.14682956, 15.13821107, 17.69183155, 21.27093904, 27.35083955, 41.35442157
+  ),
+  "SARIToDeath_icdf"=c(
+    0, 1.703470233, 2.39742257, 2.970367222, 3.491567676, 3.988046604, 4.474541783, 4.960985883, 5.455292802, 5.964726999, 6.496796075, 7.06004732, 7.665014091, 8.325595834, 9.061367792, 9.901900127, 10.8958347, 12.133068, 13.81280888, 16.56124574, 22.5803431
+  ),
+  "SARIToCritical_icdf"=c(
+    0, 0.108407687, 0.220267228, 0.337653773, 0.46159365, 0.593106462, 0.733343356, 0.88367093, 1.045760001, 1.221701998, 1.414175806, 1.62669998, 1.864032461, 2.132837436, 2.442868902, 2.809242289, 3.257272257, 3.834402667, 4.647120033, 6.035113821, 9.253953212
+  ),
+  "CriticalToCritRecov_icdf"=c(
+    0, 1.308310071, 1.87022015, 2.338694632, 2.76749788, 3.177830401, 3.581381361, 3.986127838, 4.398512135, 4.824525291, 5.270427517, 5.743406075, 6.252370864, 6.809125902, 7.430338867, 8.141231404, 8.983341913, 10.03350866, 11.46214198, 13.80540164, 18.95469153
+  ),
+  "CriticalToDeath_icdf"=c(
+    0, 1.60649128, 2.291051747, 2.860938008, 3.382077741, 3.880425012, 4.37026577, 4.861330415, 5.361460943, 5.877935626, 6.4183471, 6.991401405, 7.607881726, 8.282065409, 9.034104744, 9.894486491, 10.91341144, 12.18372915, 13.9113346, 16.74394356, 22.96541429
+  ),
+  "CritRecovToRecov_icdf"=c(
+    0, 0.133993315, 0.265922775, 0.402188416, 0.544657341, 0.694774487, 0.853984373, 1.023901078, 1.206436504, 1.403942719, 1.619402771, 1.856711876, 2.121118605, 2.419957988, 2.763950408, 3.169692564, 3.664959893, 4.301777536, 5.196849239, 6.7222126, 10.24997697
+  ))
 ##covidsim has 17 agegroups.  We need 19,  assume same params for 85_89 & 90+ as for 80+
-
 
 ####, Read data ####
 # Base URL to get the data
@@ -247,10 +249,10 @@ scotdat <-  read_csv(file = scoturl, col_types = coltypes)
 
 # Transform the data
 scotdat <- scotdat %>%  select(date,
-                             allCases = newCasesBySpecimenDate,
-                             allDeaths = newDeaths28DaysByDeathDate,
-                             inputCases = newCasesBySpecimenDate,
-                             fpCases = newCasesBySpecimenDate) %>%
+                               allCases = newCasesBySpecimenDate,
+                               allDeaths = newDeaths28DaysByDeathDate,
+                               inputCases = newCasesBySpecimenDate,
+                               fpCases = newCasesBySpecimenDate) %>%
   filter(date >= startdate &
            date <= enddate ) %>%
   arrange(date)
@@ -279,15 +281,15 @@ regdat <-  read_csv(file = regurl, col_types = coltypes)
 # Transform the data
 regcases <- regdat %>%  select(date,areaName,areaCode,
                                Cases = newCasesBySpecimenDate
-                               ) %>%
+) %>%
   pivot_wider(id_cols = date, names_from = areaName, values_from = Cases) %>%
   filter(date >= startdate &
            date <= enddate )%>%
   arrange(date)
 
 regdeaths <- regdat %>%  select(date,areaName,
-                               Deaths = newDeaths28DaysByDeathDate,
-                               ) %>%
+                                Deaths = newDeaths28DaysByDeathDate,
+) %>%
   pivot_wider(id_cols = date, names_from = areaName, values_from = Deaths) %>%
   filter(date >= startdate &
            date <= enddate )%>%
@@ -397,11 +399,11 @@ for (i in 2:ncol(casedat)) {
 
 # Fix Xmas and weekend anomaly in age data
 for (iage in 2:ncol(casedat) ){
-    Xmasav = sum(casedat[XMstart:XMend,iage])/XMdays
-    Xmasgrad<-casedat[XMend,iage]-casedat[XMstart,iage]
-    for (i in XMstart:XMend){
-        casedat[i,iage]=as.integer(Xmasav-Xmasgrad*(((XMend+XMstart)/2)-i)/XMdays)
-    }
+  Xmasav = sum(casedat[XMstart:XMend,iage])/XMdays
+  Xmasgrad<-casedat[XMend,iage]-casedat[XMstart,iage]
+  for (i in XMstart:XMend){
+    casedat[i,iage]=as.integer(Xmasav-Xmasgrad*(((XMend+XMstart)/2)-i)/XMdays)
+  }
 }
 rm(Xmasav,Xmasgrad,weeks,i,j,indexday)
 
@@ -422,72 +424,98 @@ ggplot(comdat,aes(x=date)) +
   xlab("Dates") + ylab("Cases")
 
 # Calculation of Rnumber, generation time = 4 days
+
+
+#Make 28 day cdfs.  these are same for all age groups, but fractions Prop/CFR vary
+#  Choose to use lognormal with logsd=logmean/4.0.  Data not available to do better
+logmean = 2.534
+
+MildToRecovery=dlnorm(1:28, logmean,  logmean/4.0) # These "Milds" are never recorded
+ILIToRecovery=dlnorm(1:28, logmean,  logmean/4.0)
+ILIToSARI=dlnorm(1:28, logmean,  logmean/4.0)
+SARIToRecovery=dlnorm(1:28, logmean,  logmean/4.0)
+SARIToDeath=dlnorm(1:28, logmean,  logmean/4.0)
+SARIToCritical=dlnorm(1:28, logmean,  logmean/4.0)
+CriticalToCritRecov=dlnorm(1:28, logmean,  logmean/4.0)
+CriticalToDeath=dlnorm(1:28, logmean,  logmean/4.0)
+CritRecovToRecov=dlnorm(1:28, logmean,  logmean/4.0)
+#  Normalise these distributions
+MildToRecovery=MildToRecovery/sum(MildToRecovery)
+ILIToRecovery=ILIToRecovery/sum(ILIToRecovery)
+ILIToSARI=ILIToSARI/sum(ILIToSARI)
+SARIToRecovery=SARIToRecovery/sum(SARIToRecovery)
+SARIToDeath=SARIToDeath/sum(SARIToDeath)
+SARIToCritical=SARIToCritical/sum(SARIToCritical)
+CriticalToCritRecov=CriticalToCritRecov/sum(CriticalToCritRecov)
+CriticalToDeath=CriticalToDeath/sum(CriticalToDeath)
+CritRecovToRecov=CritRecovToRecov/sum(CriticalToCritRecov)
+#  Follow infections through ILI (Case) - SARI (Hospital) - Crit (ICU) - CritRecov (Hospital)- Deaths
 genTime=5
+#  These are the numbers in each compartment at a given time
+ILI<-deathdat
+SARI<-deathdat
+CRIT<-deathdat
+CRITREC<-deathdat
+RECOV<-deathdat
+DEATH<-deathdat
+#  Zero arrays.
 
-#############################################################
-#   Other WSS predictions using the covidsim parameters
-#############################################################
-#   Need to break down everything by age groups  Make some new dataframes
-#  Take covidsim's ILI (Influenza-like-illness) to be same as case data
-SARIdat<-deathdat
-CRITdat<-deathdat
-
-
-for(iage in 2:(ncol(casedat)-1)){
-  SARIdat[1:length(SARIdat$date),iage]<-0.1
-  CRITdat[1:length(CRITdat$date),iage]<-0.0
+cols <- names(DEATH)[2:ncol(DEATH)]
+ILI[cols] <- 0.0
+SARI[cols] <- 0.0
+CRIT[cols] <- 0.0
+CRITREC[cols] <- 0.0
+RECOV[cols] <- 0.0
+DEATH[cols] <- 0.0
+#  Set day 1.  This assumes - wrongly - that there were zero cases before, but should autocorrect as those cases get resolved
+#  covidsimAge has no date row, so need to use iage-1
+for (iage in (2:ncol(ILI))) {
+  ILI[1,iage]=casedat[1,iage]*covidsimAge$Prop_ILI_ByAge[iage-1]
+  SARI[1,iage]=casedat[1,iage]*covidsimAge$Prop_SARI_ByAge[iage-1]
+  CRIT[1,iage]=casedat[1,iage]*covidsimAge$Prop_Critical_ByAge[iage-1]
 }
 
-for (iday in (2:length(casedat$date))){
-  for (itime in (2:length(covidsimICDF$ILIToSARI_icdf))){
-    SARIdat[iday+itime,iage]=
-      casedat[iday,iage] *covidsimICDF$ILIToSARI_icdf[itime]*covidsimAge$Prop_SARI_ByAge[iage]
+lengthofdata=  length(casedat$date)-length(ILIToSARI)
+
+  for (iage in (18:18) ){  #(2:ncol(ILI))){  Reduced to one age group for debugging
+        for (iday in (2:200)){ #lengthofdata)){    # Add new cases to Mild (ignored), ILI, SARI and CRIT people in each  age group.
+    # Bring forward cases from yesterday
+    # Current values will typically be negative, as they are sums of people leaving the compartment
+    # Nobody changes age band.
+    newILI=as.double(casedat[iday,iage]*covidsimAge$Prop_ILI_ByAge[iage-1]+ILI[iday,iage])
+    newSARI=as.double(casedat[iday,iage]*covidsimAge$Prop_SARI_ByAge[iage-1]+SARI[iday,iage])
+    newCRIT=as.double(casedat[iday,iage]*covidsimAge$Prop_Critical_ByAge[iage-1]+CRIT[iday,iage])
+    newCRITREC=as.double(CRITREC[iday,iage])
+    ILI[iday,iage]=ILI[(iday-1),iage]+newILI
+    SARI[iday,iage]=SARI[(iday-1),iage]+newSARI
+    CRIT[iday,iage]=CRIT[(iday-1),iage]+newCRIT
+    # Prepare for their future
+    for (itime in (1:length(ILIToSARI))){
+      dx1= as.double(newILI* ILIToSARI[itime] * covidsimAge$Prop_SARI_ByAge[iage-1])
+      dx2 = as.double(newILI* ILIToRecovery[itime] *(1.0-covidsimAge$Prop_SARI_ByAge[iage-1]))
+      dx3 = as.double(newSARI* SARIToRecovery[itime]*(1.0-covidsimAge$Prop_Critical_ByAge[iage-1]-covidsimAge$CFR_Critical_ByAge[iage-1]))
+      dx4 = as.double(newSARI* SARIToCritical[itime]*covidsimAge$Prop_Critical_ByAge[iage-1])
+      dx5 = as.double(newSARI* SARIToDeath[itime]*covidsimAge$CFR_SARI_ByAge[iage-1])
+      dx6 = as.double(newCRIT* CriticalToCritRecov[itime]*(1.0-covidsimAge$CFR_Critical_ByAge[iage-1]))
+      dx7 = as.double(newCRIT*CriticalToDeath[itime]*covidsimAge$CFR_Critical_ByAge[iage-1])
+      dx8 = as.double(newCRITREC*CritRecovToRecov[itime])
+      SARI[iday+itime,iage]=SARI[iday+itime,iage]+dx1-dx3-dx4-dx5
+      ILI[iday+itime,iage]= ILI[iday+itime,iage] - dx1 - dx2
+      CRIT[iday+itime,iage]= CRIT[iday+itime,iage] +dx4 - dx6-dx7
+      CRITREC[iday+itime,iage]= CRITREC[iday+itime,iage] +dx6-dx8
+      DEATH[iday+itime,iage]=DEATH[iday+itime,iage]+dx5+dx7
+      RECOV[iday+itime,iage]=RECOV[iday+itime,iage]+dx2+dx3+dx8
+ #     cat(iday,dx1,dx2,dx3,newILI,newCRIT,newCRITREC,newSARI,"\n")
+    }
   }
 }
 
-# Create a vector to hold the results
-#fpR <- vector(mode=mode(comdat$fpCases),length=length(gjaR))
-#bylogR <-fpR
-#dfR=data.frame(gjaR=gjaR,x=1:length(gjaR),bylogR=bylogR,fpR=fpR,rawR=rawR,date=comdat$date)
+# Create a vector to hold the resultsninit <- as.double(1:nrow(comdat))
 ninit <- as.double(1:nrow(comdat))
 dfR <- data.frame(x=1.0:length(comdat$date),
-                  date=comdat$date,
-                  gjaR=ninit,
-                  rawR=ninit,
-                  fpR=ninit,
-                  weeklyR=ninit,
-                  bylogR=ninit,
-                  NE=ninit,
-                  NW=ninit,
-                  YH=ninit,
-                  EM=ninit,
-                  WM=ninit,
-                  EE=ninit,
-                  Lon=ninit,
-                  SE=ninit,
-                  SW=ninit,
-                  Scot=ninit,
-                  p00=ninit,
-                  p05=ninit,
-                  p10=ninit,
-                  p15=ninit,
-                  p20=ninit,
-                  p25=ninit,
-                  p30=ninit,
-                  p35=ninit,
-                  p40=ninit,
-                  p45=ninit,
-                  p50=ninit,
-                  p55=ninit,
-                  p60=ninit,
-                  p65=ninit,
-                  p70=ninit,
-                  p75=ninit,
-                  p80=ninit,
-                  p85=ninit,
-                  p90=ninit
-                  )
-
+date=comdat$date, gjaR=ninit, rawR=ninit,  fpR=ninit,  weeklyR=ninit,  bylogR=ninit,
+  NE=ninit,  NW=ninit,  YH=ninit,  EM=ninit,  WM=ninit,  EE=ninit,  Lon=ninit,  SE=ninit,  SW=ninit,  Scot=ninit,
+  p00=ninit,  p05=ninit,  p10=ninit,  p15=ninit,  p20=ninit,  p25=ninit,  p30=ninit,  p35=ninit,  p40=ninit,  p45=ninit,  p50=ninit,  p55=ninit,  p60=ninit,  p65=ninit,  p70=ninit,  p75=ninit,  p80=ninit,  p85=ninit,  p90=ninit  )
 # df#Ito: gjaR[i]<-(1+(comdat$allCases[i]-comdat$allCases[i-1])*2*genTime/(comdat$allCases[i]+comdat$allCases[i-1]))
 #  #Stratanovitch calculus
 # rawR averages cases over previous genTime days - assumes genTime is the same as infectious period
@@ -502,11 +530,10 @@ if(any(casedat==0)){
   }
 }
 
-#  Generate R over all regions and ages
+#  Generate R over all regions and ages,  gjaR is Ito, rawR is stratonovich, bylogR is harmonicIto fpR includes false positive correction
 for(i in ((genTime+1):length(dfR$gjaR))    ){
   dfR$gjaR[i]=(1+(comdat$allCases[i]-comdat$allCases[i-1])*genTime/(comdat$allCases[i-1]))
   dfR$rawR[i]=1+ (comdat$allCases[i]-mean(comdat$allCases[(i-genTime):(i-1)]))*2/comdat$allCases[i-1]
-#  dfR$rawR[i]=(1+(comdat$inputCases[i]-comdat$inputCases[i-1])*genTime/(comdat$inputCases[i-1]))
   dfR$fpR[i]=(1+(comdat$fpCases[i]-comdat$fpCases[i-1])*genTime/(comdat$fpCases[i-1]))
   dfR$bylogR[i]=1+log(comdat$allCases[i]/comdat$allCases[i-1])*genTime
   dfR$NE[i]=1+log(regcases$`North East`[i]/regcases$`North East`[i-1])*genTime
@@ -561,18 +588,11 @@ dfR$weeklyR[length(dfR$weeklyR)-1]=1.0
 dfR$weeklyR[length(dfR$weeklyR)-2]=1.0
 
 #Plot various types of smoothing on the R data
-#plot(x=dfR$date,y=dfR$rawR,ylab="R",xlab="date")
-#points(x=dfR$date,y=dfR$gjaR,col="red")
-#lines(x=dfR$date,y=dfR$weeklyR, lwd=3)
-#lines(y=Rest$England_LowerBound,x=Rest$Date)
-#lines(y=Rest$England_UpperBound,x=Rest$Date)
-# Wanted to plot a Smooth spline discontinuous at
-#UK lockdown Oct 31 (day 98) -Dec 2  (day 130) Jan 6 (day 165)  (day 1 = July 25)
 
 # Making the time windows agree
 Govdat <- Rest[Rest$Date >= min(comdat$date) & Rest$Date <= max(comdat$date),]
 
-
+#  Parameters for fitting splines and Loess
 nospl=4
 spdf=12
 lospan=0.3
@@ -606,21 +626,18 @@ for (i in (lock2+1):length(dfR$date)){dfR$piecewise[i]=smoothRend$y[i-lock2]}
 
 plot(smoothweightR$y,ylab="Region R-number",xlab="Date",x=dfR$date)
 for (i in 8:17){
-  lines(smooth.spline(na.omit(dfR[i]),df=19)$y,col=i,x=dfR$date[!is.na(dfR[i])])
+  lines(smooth.spline(na.omit(dfR[i]),df=spdf)$y,col=i,x=dfR$date[!is.na(dfR[i])])
 }
 
 plot(smoothweightR$y,ylab="Agegroup R-number",xlab="Date",x=dfR$date)
 for (i in 18:length(dfR)){
-  lines(smooth.spline(na.omit(dfR[i]),df=19)$y,col=i,x=dfR$date[!is.na(dfR[i])])
+  lines(smooth.spline(na.omit(dfR[i]),df=spdf)$y,col=i,x=dfR$date[!is.na(dfR[i])])
 }
 
 plot(dfR$piecewise,x=smoothweightR$date,ylab="R-number",xlab="Date after Aug 25",title("England"),ylim=c(0.6,1.4),xlim=plotdate,cex.lab=2.0, cex.axis=2.0, cex.main=2.0, cex.sub=2.0)
-#lines(smoothweightRfp$y,x=smoothweightRfp$date,col="blue")
 lines(y=Rest$England_LowerBound,x=Rest$Date-sagedelay)
 lines(y=Rest$England_UpperBound,x=Rest$Date-sagedelay)
 lines(smoothweightR$y,col="blue",lwd=2,x=dfR$date)
-
-
 #lines(predict(loess(gjaR ~ x, data=dfR,span=0.1)),col='red',x=dfR$date)
 #lines(predict(loess(gjaR ~ x, data=dfR,span=0.2)),col='red',x=dfR$date)
 lines(predict(loess(gjaR ~ x, data=dfR,span=0.3,weight=sqrt(comdat$allCases))),col='green',x=dfR$date,lwd=2)
@@ -631,8 +648,9 @@ lines(predict(loess(bylogR ~ x, data=dfR,span=0.3)),col='red',x=dfR$date)
 plot(smoothweightR$y,ylab="R-number",xlab="Day")
 #  Plot R continuous with many splines.  Not sure when fitting noise here!
 for (ismooth in 4:28){
-#   lines(smooth.spline(as.vector(gjaR),df=ismooth,w=sqrt(comdat$allCases)))
-  lines(smooth.spline(dfR$weeklyR,df=ismooth),col="blue")}
+#  lines(smooth.spline(dfR$bylogR,df=ismooth,w=sqrt(comdat$allCases)))
+  lines(predict(loess(bylogR ~ x, data=dfR,span=(4.0/ismooth))),col='red')
+  }
 points(dfR$bylogR, col = "red")
 lines(smooth.spline(dfR$bylogR,df=14))
 # Plot the UB and LB for the UK R estimates, have added a line commented out
@@ -645,175 +663,13 @@ lines(smooth.spline(dfR$bylogR,df=14))
 Rest %>% ggplot(aes(x=Date)) + geom_ribbon(aes(Date,min=England_LowerBound,max=England_UpperBound),colour="red",alpha=0.25) +
   ylab("R Estimate") + xlab("Date")  # + geom_line(comdat,aes(date,R))
 
-# Plot Regional R data vs Government  spdf is spline smoothing factor, lospan for loess
-plot(smooth.spline(dfR$Scot,df=spdf,w=sqrt(scotdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),xlim=plotdate,cex.lab=2.0, cex.axis=2.0, cex.main=2.0, cex.sub=2.0)
-lines(y=Rest$UK_LowerBound,x=Rest$Date-sagedelay)
-lines(y=Rest$UK_UpperBound,x=Rest$Date-sagedelay)
-lines(predict(loess(Scot ~ x, data=dfR,span=lospan)),col='red',x=dfR$date,title("Scotland (UK SAGE limits)"))
 
-pdf(file = 'Lon.pdf')
-plot(smooth.spline(dfR$Lon,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),xlim=plotdate,cex.lab=2.0, cex.axis=2.0, cex.main=2.0, cex.sub=2.0)
-lines(y=Rest$Lon_LowerBound,x=Rest$Date-sagedelay)
-lines(y=Rest$Lon_UpperBound,x=Rest$Date-sagedelay)
-lines(predict(loess(Lon ~ x, data=dfR,span=lospan)),col='red',x=dfR$date,title("London"))
-invisible(dev.off())
-pdf(file = 'NW.pdf')
-plot(smooth.spline(dfR$NW,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),xlim=plotdate,cex.lab=2.0, cex.axis=2.0, cex.main=2.0, cex.sub=2.0)
-lines(y=Rest$NW_LowerBound,x=Rest$Date-sagedelay)
-lines(y=Rest$NW_UpperBound,x=Rest$Date-sagedelay)
-lines(predict(loess(NW ~ x, data=dfR,span=lospan)),col='red',x=dfR$date,title("North West"))
-invisible(dev.off())
-pdf(file = 'NE.pdf')
-plot(smooth.spline(dfR$NE,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),xlim=plotdate,cex.lab=2.0, cex.axis=2.0, cex.main=2.0, cex.sub=2.0)
-lines(y=Rest$NEY_LowerBound,x=Rest$Date-sagedelay)
-lines(y=Rest$NEY_UpperBound,x=Rest$Date-sagedelay)
-lines(predict(loess(NE ~ x, data=dfR,span=lospan)),col='red',x=dfR$date,title("North East"))
-invisible(dev.off())
-pdf(file = 'SW.pdf')
-plot(smooth.spline(dfR$SW,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),xlim=plotdate,cex.lab=2.0, cex.axis=2.0, cex.main=2.0, cex.sub=2.0)
-lines(y=Rest$SW_LowerBound,x=Rest$Date-sagedelay)
-lines(y=Rest$SW_UpperBound,x=Rest$Date-sagedelay)
-lines(predict(loess(SW ~ x, data=dfR,span=lospan)),col='red',x=dfR$date,title("South West"))
-invisible(dev.off())
-pdf(file = 'SE.pdf')
-plot(smooth.spline(dfR$SE,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),xlim=plotdate,cex.lab=2.0, cex.axis=2.0, cex.main=2.0, cex.sub=2.0)
-lines(y=Rest$SE_LowerBound,x=Rest$Date-sagedelay)
-lines(y=Rest$SE_UpperBound,x=Rest$Date-sagedelay)
-lines(predict(loess(SE ~ x, data=dfR,span=lospan)),col='red',x=dfR$date,title("South East"))
-invisible(dev.off())
-pdf(file = 'EE.pdf')
-plot(smooth.spline(dfR$EE,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),xlim=plotdate,cex.lab=2.0, cex.axis=2.0, cex.main=2.0, cex.sub=2.0)
-lines(y=Rest$EEng_LowerBound,x=Rest$Date-sagedelay)
-lines(y=Rest$EEng_UpperBound,x=Rest$Date-sagedelay)
-lines(predict(loess(EE ~ x, data=dfR,span=lospan)),col='red',x=dfR$date,title("East England"))
-invisible(dev.off())
-pdf(file = 'EM.pdf')
-plot(smooth.spline(dfR$EM,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),xlim=plotdate,cex.lab=2.0, cex.axis=2.0, cex.main=2.0, cex.sub=2.0)
-lines(y=Rest$Mid_LowerBound,x=Rest$Date-sagedelay)
-lines(y=Rest$Mid_UpperBound,x=Rest$Date-sagedelay)
-lines(predict(loess(EM ~ x, data=dfR,span=lospan)),col='red',x=dfR$date,title("East Midlands"))
-invisible(dev.off())
-pdf(file = 'WM.pdf')
-plot(smooth.spline(dfR$WM,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),xlim=plotdate,cex.lab=2.0, cex.axis=2.0, cex.main=2.0, cex.sub=2.0)
-lines(y=Rest$Mid_LowerBound,x=Rest$Date-sagedelay)
-lines(y=Rest$Mid_UpperBound,x=Rest$Date-sagedelay)
-lines(predict(loess(WM ~ x, data=dfR,span=lospan)),col='red',x=dfR$date,title("West Midlands"))
-invisible(dev.off())
-pdf(file = 'YH.pdf')
-plot(smooth.spline(dfR$YH,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),xlim=plotdate,cex.lab=2.0, cex.axis=2.0, cex.main=2.0, cex.sub=2.0)
-lines(y=Rest$NEY_LowerBound,x=Rest$Date-sagedelay)
-lines(y=Rest$NEY_UpperBound,x=Rest$Date-sagedelay)
-lines(predict(loess(YH ~ x, data=dfR,span=lospan)),col='red',x=dfR$date,title("Yorkshire"))
-invisible(dev.off())
-pdf(file = 'p05.pdf')
-plot(smooth.spline(dfR$p05,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),xlim=plotdate,cex.lab=2.0, cex.axis=2.0, cex.main=2.0, cex.sub=2.0)
-lines(y=Rest$England_LowerBound,x=Rest$Date-sagedelay)
-lines(y=Rest$England_UpperBound,x=Rest$Date-sagedelay)
-lines(predict(loess(p05 ~ x, data=dfR,span=lospan)),col='red',x=dfR$date,title("05-09"))
-invisible(dev.off())
-pdf(file = 'p10.pdf')
-plot(smooth.spline(dfR$p10,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),xlim=plotdate,cex.lab=2.0, cex.axis=2.0, cex.main=2.0, cex.sub=2.0)
-lines(y=Rest$England_LowerBound,x=Rest$Date-sagedelay)
-lines(y=Rest$England_UpperBound,x=Rest$Date-sagedelay)
-lines(predict(loess(p10 ~ x, data=dfR,span=lospan)),col='red',x=dfR$date,title("10-14"))
-invisible(dev.off())
-pdf(file = 'p15.pdf')
-plot(smooth.spline(dfR$p15,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),xlim=plotdate,cex.lab=2.0, cex.axis=2.0, cex.main=2.0, cex.sub=2.0)
-lines(y=Rest$England_LowerBound,x=Rest$Date-sagedelay)
-lines(y=Rest$England_UpperBound,x=Rest$Date-sagedelay)
-lines(predict(loess(p15 ~ x, data=dfR,span=lospan)),col='red',x=dfR$date,title("15-19"))
-invisible(dev.off())
-pdf(file = 'p20.pdf')
-plot(smooth.spline(dfR$p20,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),xlim=plotdate,cex.lab=2.0, cex.axis=2.0, cex.main=2.0, cex.sub=2.0)
-lines(y=Rest$England_LowerBound,x=Rest$Date-sagedelay)
-lines(y=Rest$England_UpperBound,x=Rest$Date-sagedelay)
-lines(predict(loess(p20 ~ x, data=dfR,span=lospan)),col='red',x=dfR$date,title("20-24"))
-invisible(dev.off())
-pdf(file = 'p25.pdf')
-plot(smooth.spline(dfR$p25,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),xlim=plotdate,cex.lab=2.0, cex.axis=2.0, cex.main=2.0, cex.sub=2.0)
-lines(y=Rest$England_LowerBound,x=Rest$Date-sagedelay)
-lines(y=Rest$England_UpperBound,x=Rest$Date-sagedelay)
-lines(predict(loess(p25 ~ x, data=dfR,span=lospan)),col='red',x=dfR$date,title("25-29"))
-invisible(dev.off())
-pdf(file = 'p30.pdf')
-plot(smooth.spline(dfR$p30,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),xlim=plotdate,cex.lab=2.0, cex.axis=2.0, cex.main=2.0, cex.sub=2.0)
-lines(y=Rest$England_LowerBound,x=Rest$Date-sagedelay)
-lines(y=Rest$England_UpperBound,x=Rest$Date-sagedelay)
-lines(predict(loess(p30 ~ x, data=dfR,span=lospan)),col='red',x=dfR$date,title("30-34"))
-invisible(dev.off())
-pdf(file = 'p35.pdf')
-plot(smooth.spline(dfR$p35,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),xlim=plotdate,cex.lab=2.0, cex.axis=2.0, cex.main=2.0, cex.sub=2.0)
-lines(y=Rest$England_LowerBound,x=Rest$Date-sagedelay)
-lines(y=Rest$England_UpperBound,x=Rest$Date-sagedelay)
-lines(predict(loess(p35 ~ x, data=dfR,span=lospan)),col='red',x=dfR$date,title("35-39"))
-invisible(dev.off())
-pdf(file = 'p40.pdf')
-plot(smooth.spline(dfR$p40,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),xlim=plotdate,cex.lab=2.0, cex.axis=2.0, cex.main=2.0, cex.sub=2.0)
-lines(y=Rest$England_LowerBound,x=Rest$Date-sagedelay)
-lines(y=Rest$England_UpperBound,x=Rest$Date-sagedelay)
-lines(predict(loess(p40 ~ x, data=dfR,span=lospan)),col='red',x=dfR$date,title("40-44"))
-invisible(dev.off())
-pdf(file = 'p45.pdf')
-plot(smooth.spline(dfR$p45,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),xlim=plotdate,cex.lab=2.0, cex.axis=2.0, cex.main=2.0, cex.sub=2.0)
-lines(y=Rest$England_LowerBound,x=Rest$Date-sagedelay)
-lines(y=Rest$England_UpperBound,x=Rest$Date-sagedelay)
-lines(predict(loess(p45 ~ x, data=dfR,span=lospan)),col='red',x=dfR$date,title("45-49"))
-invisible(dev.off())
-pdf(file = 'p50.pdf')
-plot(smooth.spline(dfR$p50,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),xlim=plotdate,cex.lab=2.0, cex.axis=2.0, cex.main=2.0, cex.sub=2.0)
-lines(y=Rest$England_LowerBound,x=Rest$Date-sagedelay)
-lines(y=Rest$England_UpperBound,x=Rest$Date-sagedelay)
-lines(predict(loess(p50 ~ x, data=dfR,span=lospan)),col='red',x=dfR$date,title("50-54"))
-invisible(dev.off())
-pdf(file = 'p55.pdf')
-plot(smooth.spline(dfR$p55,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),xlim=plotdate,cex.lab=2.0, cex.axis=2.0, cex.main=2.0, cex.sub=2.0)
-lines(y=Rest$England_LowerBound,x=Rest$Date-sagedelay)
-lines(y=Rest$England_UpperBound,x=Rest$Date-sagedelay)
-lines(predict(loess(p55 ~ x, data=dfR,span=lospan)),col='red',x=dfR$date,title("55-59"))
-invisible(dev.off())
-pdf(file = 'p60.pdf')
-plot(smooth.spline(dfR$p60,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),xlim=plotdate,cex.lab=2.0, cex.axis=2.0, cex.main=2.0, cex.sub=2.0)
-lines(y=Rest$England_LowerBound,x=Rest$Date-sagedelay)
-lines(y=Rest$England_UpperBound,x=Rest$Date-sagedelay)
-lines(predict(loess(p60 ~ x, data=dfR,span=lospan)),col='red',x=dfR$date,title("60-64"))
-invisible(dev.off())
-pdf(file = 'p65.pdf')
-plot(smooth.spline(dfR$p65,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),xlim=plotdate,cex.lab=2.0, cex.axis=2.0, cex.main=2.0, cex.sub=2.0)
-lines(y=Rest$England_LowerBound,x=Rest$Date-sagedelay)
-lines(y=Rest$England_UpperBound,x=Rest$Date-sagedelay)
-lines(predict(loess(p65 ~ x, data=dfR,span=lospan)),col='red',x=dfR$date,title("65-69"))
-invisible(dev.off())
-pdf(file = 'p70.pdf')
-plot(smooth.spline(dfR$p70,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),xlim=plotdate,cex.lab=2.0, cex.axis=2.0, cex.main=2.0, cex.sub=2.0)
-lines(y=Rest$England_LowerBound,x=Rest$Date-sagedelay)
-lines(y=Rest$England_UpperBound,x=Rest$Date-sagedelay)
-lines(predict(loess(p70 ~ x, data=dfR,span=lospan)),col='red',x=dfR$date,title("70-74"))
-invisible(dev.off())
-pdf(file = 'p75.pdf')
-plot(smooth.spline(dfR$p75,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),xlim=plotdate,cex.lab=2.0, cex.axis=2.0, cex.main=2.0, cex.sub=2.0)
-lines(y=Rest$England_LowerBound,x=Rest$Date-sagedelay)
-lines(y=Rest$England_UpperBound,x=Rest$Date-sagedelay)
-lines(predict(loess(p75 ~ x, data=dfR,span=lospan)),col='red',x=dfR$date,title("75-79"))
-invisible(dev.off())
-pdf(file = 'p80.pdf')
-plot(smooth.spline(na.omit(dfR$p80),df=spdf,w=sqrt(comdat$allCases[!is.na(dfR$p80)]))$y,ylab="R-number",xlab="Date",x=dfR$date[!is.na(dfR$p80)],ylim=c(0.6,1.4),xlim=plotdate,cex.lab=2.0, cex.axis=2.0, cex.main=2.0, cex.sub=2.0)
-lines(y=Rest$England_LowerBound,x=Rest$Date-sagedelay)
-lines(y=Rest$England_UpperBound,x=Rest$Date-sagedelay)
-lines(predict(loess(p80 ~ x, data=dfR,span=lospan)),col='red',x=dfR$date[!is.na(dfR$p80)],title("80-85"))
-invisible(dev.off())
-pdf(file = 'p85.pdf')
-plot(smooth.spline(dfR$p85,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),xlim=plotdate,cex.lab=2.0, cex.axis=2.0, cex.main=2.0, cex.sub=2.0)
-lines(y=Rest$England_LowerBound,x=Rest$Date-sagedelay)
-lines(y=Rest$England_UpperBound,x=Rest$Date-sagedelay)
-lines(predict(loess(p85 ~ x, data=dfR,span=lospan)),col='red',x=dfR$date,title("85-89"))
-invisible(dev.off())
-pdf(file = 'p90.pdf')
-plot(smooth.spline(na.omit(dfR$p90),df=spdf,w=sqrt(comdat$allCases[!is.na(dfR$p90)]))$y,ylab="R-number",xlab="Date",x=dfR$date[!is.na(dfR$p90)],ylim=c(0.6,1.4),xlim=plotdate,cex.lab=2.0, cex.axis=2.0, cex.main=2.0, cex.sub=2.0)
-lines(y=Rest$England_LowerBound,x=Rest$Date-sagedelay)
-lines(y=Rest$England_UpperBound,x=Rest$Date-sagedelay)
-lines(predict(loess(p90 ~ x, data=dfR,span=lospan)),col='red',x=dfR$date[!is.na(dfR$p90)],title("90+"))
-invisible(dev.off())
+#Plot Regional R data vs Government  spdf is spline smoothing factor, lospan for loess
 
+#  various options to silence pdf writing
+pdfpo=FALSE
+
+if(pdfpo){
 
 if(interactive()){
   pdf(file = 'Lon.pdf')
@@ -980,52 +836,65 @@ if(interactive()){
   lines(predict(loess(p90 ~ x, data=dfR[!is.na(dfR$p90),],span=lospan)),col='red',x=dfR$date[!is.na(dfR$p90)],title("90+"))
   invisible(dev.off())
 }
-
+}
 
 # Reverse Engineer cases from R-number - requires stratonovich calculus to get reversibility
 # Initializations
 
-#rm(PredictCases,PredictCasesSmoothR)
-PredictCases <- dfR$bylogR
-PredictCasesRaw <- dfR$rawR
-PredictCasesSmoothR<- dfR$bylogR
-PredictCasesMeanR<- dfR$bylogR
-PredictCasesLin <-dfR$gjaR
-# Use the same weekend-adjusted initial condition, regardless of smoothing effect
-PredictCases=comdat$allCases
-PredictCasesRaw=PredictCases
-PredictCasesSmoothR=PredictCases
+
+#  Use the same weekend-adjusted initial condition, regardless of smoothing effect
+#  Start with the "correct" data
+
+PredictCases<-comdat$allCases
+PredictCasesLin<-comdat$allCases
+PredictCasesRaw<-PredictCases
+PredictCasesSmoothR<-PredictCases
+PredictCasesdenoiseR<-PredictCases
 PredictCasesMeanR<- PredictCases
-smoothR<-smooth.spline(dfR$bylogR,df=24)
+PredictCasesLoessR<- PredictCases
+dfR$smoothR<-smooth.spline(dfR$bylogR,df=spdf)$y
+dfR$loessR<-predict(loess(bylogR ~ x, data=dfR,span=lospan))
 meanR=mean(dfR$rawR)
-for(i in 2:length(dfR$gjaR)){
+
+
+for(i in (genTime+22):length(dfR$gjaR)){
   PredictCases[i]=PredictCases[i-1]*exp((dfR$bylogR[i]-1)/genTime)
-  PredictCasesLin[i]=PredictCases[i-1]*(1.0+(dfR$gjaR[i]-1)/genTime)
+  PredictCasesLin[i]=PredictCasesLin[i-1]*(1.0+(dfR$gjaR[i]-1)/genTime)
   PredictCasesRaw[i]=PredictCasesRaw[i-1]*(1.0+(dfR$rawR[i]-1)/genTime)
   PredictCasesMeanR[i]=PredictCasesMeanR[i-1]*(1.0+(meanR-1)/genTime)
-
+  PredictCasesSmoothR[i]=PredictCasesSmoothR[i-1]*exp((dfR$smoothR[i]-1)/genTime)
+  PredictCasesLoessR[i]=PredictCasesLoessR[i-1]*exp((dfR$loessR[i]-1)/genTime)
+  }
+denoise=sum(PredictCasesLoessR)/sum(comdat$allCases)
 #  Averaging R is not the same as averaging e^R
 #  Noise suppresses the growth rate in the model, Smoothed R grows too fast
-   ri=smoothR$y[i]  # Fudge factor *0.94663
-#   Multiplier chosen to match final cases with df=24
-    PredictCasesSmoothR[i]=PredictCasesSmoothR[i-1]*(1.0+(ri-1)/genTime)
-  }
-plot(comdat$allCases,x=comdat$date,xlab="Date",ylab="Cases backdeduced from R",ylim=c(0,100000))
+#  Multiplier chosen to match final cases, because it is super-sensitive to noise in the initial day
+#
+
+PredictCasesLoessR=PredictCasesLoessR*sum(comdat$allCases)/sum(PredictCasesLoessR)
+PredictCasesSmoothR=PredictCasesSmoothR*sum(comdat$allCases)/sum(PredictCasesSmoothR)
+PredictCasesMeanR=PredictCasesMeanR*sum(comdat$allCases)/sum(PredictCasesMeanR)
+
+
+
+plot(comdat$allCases,x=comdat$date,xlab="Date",ylab="Cases backdeduced from R")
 lines(PredictCases,x=comdat$date, col="red")
 lines(PredictCasesSmoothR,x=dfR$date, col="blue",lwd=2)
-#lines(PredictCasesMeanR,x=comdat$date, col="green")
+lines(PredictCasesMeanR,x=comdat$date, col="green",lwd=2)
+lines(PredictCasesLoessR,x=comdat$date, col="violet",lwd=2)
 
-lines(PredictCasesLin,x=comdat$date, col="orange")
-
-if(interactive()){
-  sum(PredictCases)
-  sum(PredictCasesSmoothR)
-  sum(PredictCasesMeanR)
-  sum(PredictCasesLin)
-  sum(comdat$allCases)
-}
-
-
+# ggplot version of the same graph
+tmpdat <- tibble(date=comdat$date,PredictCases=PredictCases,
+                 PredictCasesLoessR=PredictCasesLoessR,
+                 PredictCasesSmoothR=PredictCasesSmoothR,
+                 PredictCasesMeanR=PredictCasesMeanR)
+ggplot(comdat,aes(x=date)) + geom_point(aes(y=allCases),alpha=0.5) +
+   geom_line(data=tmpdat, aes(x=date,y=PredictCases),colour="red",alpha=0.75) +
+   geom_line(data=tmpdat, aes(x=date,y=PredictCasesSmoothR),colour="blue",alpha=0.75) +
+   geom_line(data=tmpdat, aes(x=date,y=PredictCasesMeanR),colour="green",alpha=0.75) +
+   geom_line(data=tmpdat, aes(x=date,y=PredictCasesLoessR),colour="violet",alpha=0.75) +
+   xlab("Date") + ylab("Cases backdeduced from R")
+rm(tmpdat)
 
 # Load code to function to output to the web-ui interface
 # From stackoverflow: 6456501
@@ -1143,14 +1012,14 @@ for (agegroup in 2:20) {
 rm(agegroup, day)
 
 #Spread all cases by the distribution
-comdat$logcaseload = 0
-comdat$gamcaseload = 0
+comdat$logcaseload <- 0
+comdat$gamcaseload <- 0
 for (day in 28:nrow(comdat)) {
   comdat$logcaseload[day] = sum(comdat$allCases[(day-27):day] * rev(lndist))
   comdat$gamcaseload[day] = sum(comdat$allCases[(day-27):day] * rev(gamdist))
 }
-scotdat$logcaseload = 0
-scotdat$gamcaseload = 0
+scotdat$logcaseload <- 0
+scotdat$gamcaseload <- 0
 for (day in 28:nrow(comdat)) {
   scotdat$logcaseload[day] = sum(scotdat$allCases[(day-27):day] * rev(lndist))
   scotdat$gamcaseload[day] = sum(scotdat$allCases[(day-27):day] * rev(gamdist))
@@ -1311,7 +1180,7 @@ rollframe$CFR = rollframe$Deaths/rollframe$Cases
 rm(deathframe)
 rollframe = rollframe[301:(nrow(rollframe)-30),]
 
-plot = ggplot() +
+ggplot() +
   geom_line(data = rollframe, aes(x = date, y = CFR, color = agegroup), size = 1.1, na.rm = TRUE) +
   scale_colour_manual(values = rev(brewer.pal(10,"Set3"))) +
   labs(title = paste("Case Fatality Ratios by age group -  7-day rolling averages"),
@@ -1321,4 +1190,5 @@ plot = ggplot() +
   theme_bw() +
   geom_rect(aes(xmin=as.Date("2020/12/01"), xmax=as.Date("2021/01/16"), ymin=0, ymax=Inf), fill = "red", alpha = 0.1) +
   geom_rect(aes(xmin=as.Date("2021/01/17"), xmax=Sys.Date(), ymin=0, ymax=Inf), fill = "green", alpha = 0.1)
-print(plot)
+
+
