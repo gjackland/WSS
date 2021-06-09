@@ -323,6 +323,11 @@ regagedat <- regagedat %>%  select(date, areaName, age, cases) %>%
            date <= enddate ) %>%
   arrange(date)
 
+
+eddata = read_csv(file = "https://api.coronavirus.data.gov.uk/v2/data?areaType=utla&areaCode=S12000019&metric=newCasesBySpecimenDateAgeDemographics&format=csv"
+)
+
+
 # Read in the UK government R estimate data from a csv file
 coltypes <- cols(
   Date = col_date(format = "%Y-%m-%d"), UK_LowerBound = col_double(),
@@ -461,14 +466,15 @@ genTime=5
 #  These are the numbers in each compartment at a given time
 lengthofdata=  length(casedat$date)#-length(ILIToSARI)
 
-#extend to allow for predictions (eventually)
+#extend ILI longer than deathdat to allow for predictions (eventually)
 ILI<-deathdat
 for (i in length(casedat$date):(length(casedat$date)+length(ILIToSARI)) ){
   for (j in ncol(ILI)){
 ILI[i,j] = 0.0
 }  }
 cols <- names(ILI)[2:ncol(ILI)]
-ILI[cols] = 0.0 
+ILI[cols] = 0.0
+MILD <- ILI
 SARI <- ILI
 CRIT <- ILI 
 CRITREC <- ILI 
@@ -477,10 +483,12 @@ DEATH <- ILI
 
 #These are the new arrivals in each category.  NOT the increase.  Recov and death just increase
 #Initialize with day 1 in place
+newMILD <- MILD
 newILI <- ILI
 newSARI <- SARI
 newCRIT <- CRIT
 newCRITREC <- CRITREC
+oldMILD <- MILD
 oldILI <- ILI
 oldSARI <- SARI
 oldCRIT <- CRIT
@@ -489,74 +497,67 @@ oldCRITREC <- CRITREC
 #  Set day 1.  This assumes - wrongly - that there were zero cases before, but should autocorrect as those cases get resolved 
 
 #  covidsimAge has no date row, so need to use iage-1
-for (iage in (2:ncol(ILI))) {
-  ILI[1,iage]=casedat[1,iage]*covidsimAge$Prop_ILI_ByAge[iage-1]
-  SARI[1,iage]=casedat[1,iage]*covidsimAge$Prop_SARI_ByAge[iage-1]
-  CRIT[1,iage]=casedat[1,iage]*covidsimAge$Prop_Critical_ByAge[iage-1]
-}
 
+MILD[1,2:ncol(MILD)]=casedat[1,2:ncol(casedat)]*covidsimAge$Prop_Critical_ByAge
 
-
-  for (iage in (2:ncol(ILI)) ){  #(2:ncol(ILI))){  Reduced to one age group for debugging
-        for (iday in (2:lengthofdata)){    # Add new cases to Mild (ignored), ILI, SARI and CRIT people in each  age group.
+for (iage in (17:17)){  #(2:ncol(ILI))){  Reduced to one age group for debugging
+        for (iday in (2:lengthofdata)){   
+          xday=iday+length(SARIToCritical)
+          # Add new cases to Mild (ignored), ILI, SARI and CRIT people in each  age group.
     # Bring forward cases from yesterday
     # Current values will typically be negative, as they are sums of people leaving the compartment
     # Nobody changes age band.
-# ILI comes in from todays casedat
-    newILI[iday,iage]=as.double(casedat[iday,iage]*covidsimAge$Prop_ILI_ByAge[(iage-1)])
+# Mild and ILI comes in from todays casedat
+          newMILD[iday,iage]=as.double(casedat[iday,iage]*covidsimAge$Prop_Mild_ByAge[(iage-1)])
+          newILI[iday,iage]=as.double(casedat[iday,iage]*covidsimAge$Prop_ILI_ByAge[(iage-1)])
 #  SARI come in direct from todays casedat, and anticipate conversion from older ILI
     newSARI[iday,iage]=as.double(casedat[iday,iage])
-    for (time in (1:length(ILIToSARI))){
-      newSARI[(iday+time),iage]=newILI[iday,iage] *covidsimAge$Prop_SARI_ByAge[(iage-1)] *ILIToSARI[time]
-      +newSARI[(iday+time),iage]
-    }      
-#  CRIT comes in direct from todays casedat and converted from SARI   
+    newSARI[(iday:xday),iage]= +newSARI[(iday:xday),iage] +as.double(newILI[iday,iage] *covidsimAge$Prop_SARI_ByAge[(iage-1)]) *ILIToSARI 
+
+    #  CRIT comes in direct from todays casedat and converted from SARI   
     newCRIT[iday,iage]=as.double( casedat[iday,iage]*covidsimAge$Prop_Critical_ByAge[(iage-1)])
-    for (time in (1:length(SARIToCritical))){
-      newCRIT[(iday+time),iage]=newSARI[iday,iage] *covidsimAge$Prop_Critical_ByAge[(iage-1)] *SARIToCritical[time]
-      +newCRIT[(iday+time),iage]
-      }  
+    newCRIT[iday:xday,iage] = as.double(newSARI[iday,iage] * covidsimAge$Prop_Critical_ByAge[(iage-1)]) *SARIToCritical+newCRIT[iday:xday,iage]
 #  CRITREC comes only from CRIT  
-    for (time in (1:length(CriticalToCritRecov))){
-      newCRITREC[(iday+time),iage]=newCRIT[iday,iage] *(1.0-covidsimAge$CFR_Critical_ByAge[(iage-1)]) *CriticalToCritRecov[time]
-      +newCRITREC[(iday+time),iage]
-    } 
-    #  todays new ILIs will leave ILI to SARI    or REC
-    for (time in (1:length(ILIToSARI))){
-      recover=newILI[iday,iage] *(1.0-covidsimAge$Prop_SARI_ByAge[(iage-1)]) *ILIToRecovery[time]
-      toSARI= newILI[iday,iage] *covidsimAge$Prop_SARI_ByAge[(iage-1)] *ILIToSARI[time]
-      oldILI[(iday+time),iage]=recover + toSARI+ oldILI[(iday+time),iage]
-      RECOV[(iday+time),iage]=RECOV[(iday+time),iage]+recover
-   }
-    #  todays new SARI  leave to  SARI to CRIT REC or DEAD    
-    for (time in (1:length(ILIToSARI))){
-      recover=newSARI[iday,iage] *(1.0-covidsimAge$CFR_SARI_ByAge[(iage-1)]-covidsimAge$Prop_Critical_ByAge[(iage-1)]) *SARIToRecovery[time]
-      toCRIT= newSARI[iday,iage] *covidsimAge$Prop_Critical_ByAge[(iage-1)] *SARIToCritical[time]
-      dead=   newSARI[iday,iage] *covidsimAge$CFR_SARI_ByAge[(iage-1)] *SARIToDeath[time]
-       oldSARI[(iday+time),iage]= recover+toCRIT+dead+oldSARI[(iday+time),iage]
-       RECOV[(iday+time),iage]=RECOV[(iday+time),iage]+recover
-       DEATH[(iday+time),iage]=DEATH[(iday+time),iage]+dead
-    }
+    newCRITREC[(iday:xday),iage]= as.double(newCRIT[iday,iage]*(1.0-covidsimAge$CFR_Critical_ByAge[(iage-1)])) *CriticalToCritRecov +newCRITREC[(iday:xday),iage]
+  
+    #  todays new MILDs will all leave to REC
+      oldMILD[(iday:xday),iage]=newMILD[iday,iage]*MildToRecovery
+      RECOV[(iday:xday),iage]=RECOV[(iday:xday),iage]+oldMILD[(iday:xday),iage] 
+
+          #  todays new ILIs will leave ILI to SARI    or REC
+        recover=as.numeric(newILI[iday,iage] *(1.0-covidsimAge$Prop_SARI_ByAge[(iage-1)])) *ILIToRecovery
+        toSARI= as.numeric(newILI[iday,iage] *covidsimAge$Prop_SARI_ByAge[(iage-1)]) *ILIToSARI
+        oldILI[(iday:xday),iage]=recover + toSARI+ oldILI[(iday:xday),iage]
+        RECOV[(iday:xday),iage]=RECOV[(iday:xday),iage]+recover
+   
+    #  todays new SARI  leave to  SARI to CRIT REC or DEAD 
+      
+ 
+      recover= as.numeric(newSARI[iday,iage] *(1.0-covidsimAge$CFR_SARI_ByAge[(iage-1)]-covidsimAge$Prop_Critical_ByAge[(iage-1)])) *SARIToRecovery
+      toCRIT= as.numeric(newSARI[iday,iage] *covidsimAge$Prop_Critical_ByAge[(iage-1)]) *SARIToCritical
+      dead=   as.numeric(newSARI[iday,iage] *covidsimAge$CFR_SARI_ByAge[(iage-1)])*SARIToDeath
+      oldSARI[(iday:xday),iage]= recover+toCRIT+dead+oldSARI[(iday:xday),iage]
+       RECOV[(iday:xday),iage]=RECOV[(iday:xday),iage]+recover
+       DEATH[(iday:xday),iage]=DEATH[(iday:xday),iage]+dead
+    
     
     #  todays new CRIT  leave to   CRITREC or DEAD    
-    for (time in (1:length(SARIToCritical))){
-      toCR = newCRIT[iday,iage] *(1.0-covidsimAge$CFR_Critical_ByAge[(iage-1)]) * CriticalToCritRecov[time]
-      dead = newCRIT[iday,iage] *covidsimAge$CFR_Critical_ByAge[(iage-1)]       * CriticalToDeath[time]
-      oldCRIT[(iday+time),iage]=toCR+dead+oldCRIT[(iday+time),iage]
-      DEATH[(iday+time),iage]=DEATH[(iday+time),iage]+dead 
-    }
+    
+      toCR =  CriticalToCritRecov *as.numeric(newCRIT[iday,iage]*(1.0-covidsimAge$CFR_Critical_ByAge[(iage-1)])) 
+      dead = as.numeric(newCRIT[iday,iage] *covidsimAge$CFR_Critical_ByAge[(iage-1)])       * CriticalToDeath
+      oldCRIT[(iday:xday),iage]=toCR+dead+oldCRIT[(iday:xday),iage]
+      DEATH[(iday:xday),iage]=DEATH[(iday:xday),iage]+dead 
+  
     #  todays new CRITREC will leave to  RECOVER    
-    for (time in (1:length(SARIToCritical))){
-    oldCRITREC[(iday+time),iage]=CritRecovToRecov[iage-1]*newCRITREC[iday,iage]
-    RECOV[(iday+time),iage]=RECOV[(iday+time),iage]+CritRecovToRecov[iage-1]*newCRITREC[iday,iage]
-    }
+    oldCRITREC[(iday:xday),iage]=CritRecovToRecov[iage-1]*newCRITREC[iday,iage]
+    RECOV[(iday:xday),iage]=RECOV[(iday:xday),iage]+CritRecovToRecov*as.numeric(newCRITREC[iday,iage])
 #  Finally, update todays totals: New cases + transfers from other compartments - transfers to other compartments + leftover from yesterday   
+    MILD[iday,iage]=MILD[iday,iage]+newMILD[iday,iage]-oldMILD[iday,iage]+MILD[(iday-1),iage]
     ILI[iday,iage]=ILI[iday,iage]+newILI[iday,iage]-oldILI[iday,iage]+ILI[(iday-1),iage]
     SARI[iday,iage]=SARI[iday,iage]+newSARI[iday,iage]-oldSARI[iday,iage]+SARI[(iday-1),iage]
     CRIT[iday,iage]=CRIT[iday,iage]+newCRIT[iday,iage]-oldCRIT[iday,iage]+CRIT[(iday-1),iage]
     CRITREC[iday,iage]=CRITREC[iday,iage]+newCRITREC[iday,iage]-oldCRITREC[iday,iage]+ILI[(iday-1),iage]
-        }
-    
+    }
   }
 
 # Create a vector to hold the results for various R-numbers
@@ -978,7 +979,7 @@ outputJSON(myt0 = t0,
            myCritical = NA,
            myILI = NA,
            myMild = NA,
-           myR = dfR$gjaR,
+           myR = dfR$piecewise,
            mySARI = NA,
            mycumCritRecov = NA,
            mycumCritical = NA,
