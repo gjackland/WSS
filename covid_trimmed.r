@@ -497,7 +497,7 @@ for (iage in (2:ncol(ILI))) {
 
 
 
-  for (iage in (18:18) ){  #(2:ncol(ILI))){  Reduced to one age group for debugging
+  for (iage in (2:ncol(ILI)) ){  #(2:ncol(ILI))){  Reduced to one age group for debugging
         for (iday in (2:lengthofdata)){    # Add new cases to Mild (ignored), ILI, SARI and CRIT people in each  age group.
     # Bring forward cases from yesterday
     # Current values will typically be negative, as they are sums of people leaving the compartment
