@@ -560,7 +560,7 @@ for (iage in (2:ncol(ILI))) {
   }
 
 # Create a vector to hold the results for various R-numbers
-
+ninit <- as.double(1:nrow(comdat)) 
 dfR <- data.frame(x=1.0:length(comdat$date),
 date=comdat$date, gjaR=ninit, rawR=ninit,  fpR=ninit,  weeklyR=ninit,  bylogR=ninit,
   NE=ninit,  NW=ninit,  YH=ninit,  EM=ninit,  WM=ninit,  EE=ninit,  Lon=ninit,  SE=ninit,  SW=ninit,  Scot=ninit,
