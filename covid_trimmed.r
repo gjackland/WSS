@@ -444,7 +444,7 @@ logmean = 2.534
 MildToRecovery=dlnorm(1:28, logmean,  logmean/4.0) # These "Milds" are never recorded
 
 logmean=2
-ILIToRecovery=dlnorm(1:28, logmean,  logmean/4.0) 
+ILIToRecovery=dlnorm(1:28, logmean,  logmean/4.0)
 ILIToSARI=dlnorm(1:28, logmean,  logmean/4.0)
 logmean=1
 SARIToRecovery=dlnorm(1:28, logmean,  logmean/4.0)
@@ -469,7 +469,7 @@ CritRecovToRecov=CritRecovToRecov/sum(CriticalToCritRecov)
 #  Follow infections through ILI (Case) - SARI (Hospital) - Crit (ICU) - CritRecov (Hospital)- Deaths
 genTime=5
 
-#  Zero dataframes. 
+#  Zero dataframes.
 #  These are the numbers in each compartment at a given time
 lengthofdata=  length(casedat$date)#-length(ILIToSARI)
 
@@ -483,10 +483,10 @@ cols <- names(ILI)[2:ncol(ILI)]
 ILI[cols] = 0.0
 MILD <- ILI
 SARI <- ILI
-CRIT <- ILI 
-CRITREC <- ILI 
-RECOV <- ILI 
-DEATH <- ILI 
+CRIT <- ILI
+CRITREC <- ILI
+RECOV <- ILI
+DEATH <- ILI
 
 #These are the new arrivals in each category.  NOT the increase.  Recov and death just increase
 #Initialize with day 1 in place
@@ -501,11 +501,15 @@ oldSARI <- SARI
 oldCRIT <- CRIT
 oldCRITREC <- CRITREC
 
-#  Set day 1.  This assumes - wrongly - that there were zero cases before, but should autocorrect as those cases get resolved 
+#  Set day 1.  This assumes - wrongly - that there were zero cases before, but should autocorrect as those cases get resolved
 
 #  covidsimAge has no date row, so need to use iage-1
 
-MILD[1,2:ncol(MILD)]=casedat[1,2:ncol(casedat)]*covidsimAge$Prop_Critical_ByAge
+MILD[1,2:ncol(MILD)]=casedat[1,2:ncol(casedat)]*covidsimAge$Prop_Mild_ByAge
+ILI[1,2:ncol(ILI)]=casedat[1,2:ncol(casedat)]*covidsimAge$Prop_ILI_ByAge
+SARI[1,2:ncol(SARI)]=casedat[1,2:ncol(casedat)]*covidsimAge$Prop_SARI_ByAge
+CRIT[1,2:ncol(CRIT)]=casedat[1,2:ncol(casedat)]*covidsimAge$Prop_Critical_ByAge
+
 
 for (iage in (17:17)){  #(2:ncol(ILI))){  Reduced to one age group for debugging
         for (iday in (2:lengthofdata)){   
@@ -1247,7 +1251,7 @@ rm(deathframe)
 rollframe = rollframe[301:(nrow(rollframe)-30),]
 
 
-plotCFR = ggplot() 
+plotCFR = ggplot()
   geom_line(data = rollframe, aes(x = date, y = CFR, color = agegroup), size = 1.1, na.rm = TRUE) +
   scale_colour_manual(values = rev(brewer.pal(10,"Set3"))) +
   labs(title = paste("Case Fatality Ratios by age group -  7-day rolling averages"),
@@ -1258,4 +1262,3 @@ plotCFR = ggplot()
   geom_rect(aes(xmin=as.Date("2020/12/01"), xmax=as.Date("2021/01/16"), ymin=0, ymax=Inf), fill = "red", alpha = 0.1) +
   geom_rect(aes(xmin=as.Date("2021/01/17"), xmax=Sys.Date(), ymin=0, ymax=Inf), fill = "green", alpha = 0.1)
 print(plotCFR)
-
