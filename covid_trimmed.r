@@ -6,7 +6,6 @@
 #                James Ackland, The University of Cambridge
 #
 #### Header ####
-
 if(interactive()){
   # Remove existing variables
   rm(list = ls())
@@ -497,7 +496,7 @@ for (iage in (2:ncol(ILI))) {
 
 
 
-  for (iage in (2:ncol(ILI)) ){  #(2:ncol(ILI))){  Reduced to one age group for debugging
+  for (iage in (2:20) ){  #(2:ncol(ILI))){  Reduced to one age group for debugging
         for (iday in (2:lengthofdata)){    # Add new cases to Mild (ignored), ILI, SARI and CRIT people in each  age group.
     # Bring forward cases from yesterday
     # Current values will typically be negative, as they are sums of people leaving the compartment
@@ -560,7 +559,7 @@ for (iage in (2:ncol(ILI))) {
   }
 
 # Create a vector to hold the results for various R-numbers
-ninit <- as.double(1:nrow(comdat)) 
+
 dfR <- data.frame(x=1.0:length(comdat$date),
 date=comdat$date, gjaR=ninit, rawR=ninit,  fpR=ninit,  weeklyR=ninit,  bylogR=ninit,
   NE=ninit,  NW=ninit,  YH=ninit,  EM=ninit,  WM=ninit,  EE=ninit,  Lon=ninit,  SE=ninit,  SW=ninit,  Scot=ninit,
@@ -1250,4 +1249,3 @@ plotCFR = ggplot()
   geom_rect(aes(xmin=as.Date("2020/12/01"), xmax=as.Date("2021/01/16"), ymin=0, ymax=Inf), fill = "red", alpha = 0.1) +
   geom_rect(aes(xmin=as.Date("2021/01/17"), xmax=Sys.Date(), ymin=0, ymax=Inf), fill = "green", alpha = 0.1)
 print(plotCFR)
-
