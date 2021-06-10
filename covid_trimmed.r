@@ -6,7 +6,6 @@
 #                James Ackland, The University of Cambridge
 #
 #### Header ####
-
 if(interactive()){
   # Remove existing variables
   rm(list = ls())
@@ -342,6 +341,14 @@ coltypes <- cols(
   SW_UpperBound = col_double()
 )
 Rest <- read_csv(file="data/R_estimate.csv", col_types = coltypes)
+
+# Read in Scottish R value estimates
+coltypes <- cols(
+                Date = col_date(format = "%Y-%m-%d"),
+                R_LowerBound = col_double(),
+                R_UpperBound = col_double()
+                )
+R_ScotEst <- read_csv(file="data/R_scottish_estimate.csv", col_types = coltypes)
 
 #### Get tests for England pre-Sept by taking the post-Sept fraction of all tests that were in England (0.867)
 comdat$tests[1:58] = as.integer(ukcasedat$tests[1:58] * 0.867)
