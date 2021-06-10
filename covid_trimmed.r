@@ -337,6 +337,14 @@ coltypes <- cols(
 )
 Rest <- read_csv(file="data/R_estimate.csv", col_types = coltypes)
 
+# Read in Scottish R value estimates
+coltypes <- cols(
+                Date = col_date(format = "%Y-%m-%d"),
+                R_LowerBound = col_double(),
+                R_UpperBound = col_double()
+                )
+R_ScotEst <- read_csv(file="data/R_scottish_estimate.csv", col_types = coltypes)
+
 #### Get tests for England pre-Sept by taking the post-Sept fraction of all tests that were in England (0.867)
 comdat$tests[1:58] = as.integer(ukcasedat$tests[1:58] * 0.867)
 rm(ukcasedat)
@@ -431,7 +439,7 @@ logmean = 2.534
 MildToRecovery=dlnorm(1:28, logmean,  logmean/4.0) # These "Milds" are never recorded
 
 logmean=2
-ILIToRecovery=dlnorm(1:28, logmean,  logmean/4.0) 
+ILIToRecovery=dlnorm(1:28, logmean,  logmean/4.0)
 ILIToSARI=dlnorm(1:28, logmean,  logmean/4.0)
 logmean=1
 SARIToRecovery=dlnorm(1:28, logmean,  logmean/4.0)
@@ -456,7 +464,7 @@ CritRecovToRecov=CritRecovToRecov/sum(CriticalToCritRecov)
 #  Follow infections through ILI (Case) - SARI (Hospital) - Crit (ICU) - CritRecov (Hospital)- Deaths
 genTime=5
 
-#  Zero dataframes. 
+#  Zero dataframes.
 #  These are the numbers in each compartment at a given time
 lengthofdata=  length(casedat$date)#-length(ILIToSARI)
 
@@ -467,12 +475,12 @@ for (i in length(casedat$date):(length(casedat$date)+length(ILIToSARI)) ){
 ILI[i,j] = 0.0
 }  }
 cols <- names(ILI)[2:ncol(ILI)]
-ILI[cols] = 0.0 
+ILI[cols] = 0.0
 SARI <- ILI
-CRIT <- ILI 
-CRITREC <- ILI 
-RECOV <- ILI 
-DEATH <- ILI 
+CRIT <- ILI
+CRITREC <- ILI
+RECOV <- ILI
+DEATH <- ILI
 
 #These are the new arrivals in each category.  NOT the increase.  Recov and death just increase
 #Initialize with day 1 in place
@@ -485,7 +493,7 @@ oldSARI <- SARI
 oldCRIT <- CRIT
 oldCRITREC <- CRITREC
 
-#  Set day 1.  This assumes - wrongly - that there were zero cases before, but should autocorrect as those cases get resolved 
+#  Set day 1.  This assumes - wrongly - that there were zero cases before, but should autocorrect as those cases get resolved
 
 #  covidsimAge has no date row, so need to use iage-1
 for (iage in (2:ncol(ILI))) {
@@ -508,18 +516,18 @@ for (iage in (2:ncol(ILI))) {
     for (time in (1:length(ILIToSARI))){
       newSARI[(iday+time),iage]=newILI[iday,iage] *covidsimAge$Prop_SARI_ByAge[(iage-1)] *ILIToSARI[time]
       +newSARI[(iday+time),iage]
-    }      
-#  CRIT comes in direct from todays casedat and converted from SARI   
+    }
+#  CRIT comes in direct from todays casedat and converted from SARI
     newCRIT[iday,iage]=as.double( casedat[iday,iage]*covidsimAge$Prop_Critical_ByAge[(iage-1)])
     for (time in (1:length(SARIToCritical))){
       newCRIT[(iday+time),iage]=newSARI[iday,iage] *covidsimAge$Prop_Critical_ByAge[(iage-1)] *SARIToCritical[time]
       +newCRIT[(iday+time),iage]
-      }  
-#  CRITREC comes only from CRIT  
+      }
+#  CRITREC comes only from CRIT
     for (time in (1:length(CriticalToCritRecov))){
       newCRITREC[(iday+time),iage]=newCRIT[iday,iage] *(1.0-covidsimAge$CFR_Critical_ByAge[(iage-1)]) *CriticalToCritRecov[time]
       +newCRITREC[(iday+time),iage]
-    } 
+    }
     #  todays new ILIs will leave ILI to SARI    or REC
     for (time in (1:length(ILIToSARI))){
       recover=newILI[iday,iage] *(1.0-covidsimAge$Prop_SARI_ByAge[(iage-1)]) *ILIToRecovery[time]
@@ -527,7 +535,7 @@ for (iage in (2:ncol(ILI))) {
       oldILI[(iday+time),iage]=recover + toSARI+ oldILI[(iday+time),iage]
       RECOV[(iday+time),iage]=RECOV[(iday+time),iage]+recover
    }
-    #  todays new SARI  leave to  SARI to CRIT REC or DEAD    
+    #  todays new SARI  leave to  SARI to CRIT REC or DEAD
     for (time in (1:length(ILIToSARI))){
       recover=newSARI[iday,iage] *(1.0-covidsimAge$CFR_SARI_ByAge[(iage-1)]-covidsimAge$Prop_Critical_ByAge[(iage-1)]) *SARIToRecovery[time]
       toCRIT= newSARI[iday,iage] *covidsimAge$Prop_Critical_ByAge[(iage-1)] *SARIToCritical[time]
@@ -536,26 +544,26 @@ for (iage in (2:ncol(ILI))) {
        RECOV[(iday+time),iage]=RECOV[(iday+time),iage]+recover
        DEATH[(iday+time),iage]=DEATH[(iday+time),iage]+dead
     }
-    
-    #  todays new CRIT  leave to   CRITREC or DEAD    
+
+    #  todays new CRIT  leave to   CRITREC or DEAD
     for (time in (1:length(SARIToCritical))){
       toCR = newCRIT[iday,iage] *(1.0-covidsimAge$CFR_Critical_ByAge[(iage-1)]) * CriticalToCritRecov[time]
       dead = newCRIT[iday,iage] *covidsimAge$CFR_Critical_ByAge[(iage-1)]       * CriticalToDeath[time]
       oldCRIT[(iday+time),iage]=toCR+dead+oldCRIT[(iday+time),iage]
-      DEATH[(iday+time),iage]=DEATH[(iday+time),iage]+dead 
+      DEATH[(iday+time),iage]=DEATH[(iday+time),iage]+dead
     }
-    #  todays new CRITREC will leave to  RECOVER    
+    #  todays new CRITREC will leave to  RECOVER
     for (time in (1:length(SARIToCritical))){
     oldCRITREC[(iday+time),iage]=CritRecovToRecov[iage-1]*newCRITREC[iday,iage]
     RECOV[(iday+time),iage]=RECOV[(iday+time),iage]+CritRecovToRecov[iage-1]*newCRITREC[iday,iage]
     }
-#  Finally, update todays totals: New cases + transfers from other compartments - transfers to other compartments + leftover from yesterday   
+#  Finally, update todays totals: New cases + transfers from other compartments - transfers to other compartments + leftover from yesterday
     ILI[iday,iage]=ILI[iday,iage]+newILI[iday,iage]-oldILI[iday,iage]+ILI[(iday-1),iage]
     SARI[iday,iage]=SARI[iday,iage]+newSARI[iday,iage]-oldSARI[iday,iage]+SARI[(iday-1),iage]
     CRIT[iday,iage]=CRIT[iday,iage]+newCRIT[iday,iage]-oldCRIT[iday,iage]+CRIT[(iday-1),iage]
     CRITREC[iday,iage]=CRITREC[iday,iage]+newCRITREC[iday,iage]-oldCRITREC[iday,iage]+ILI[(iday-1),iage]
         }
-    
+
   }
 
 # Create a vector to hold the results for various R-numbers
@@ -1238,7 +1246,7 @@ rm(deathframe)
 rollframe = rollframe[301:(nrow(rollframe)-30),]
 
 
-plotCFR = ggplot() 
+plotCFR = ggplot()
   geom_line(data = rollframe, aes(x = date, y = CFR, color = agegroup), size = 1.1, na.rm = TRUE) +
   scale_colour_manual(values = rev(brewer.pal(10,"Set3"))) +
   labs(title = paste("Case Fatality Ratios by age group -  7-day rolling averages"),
