@@ -1,6 +1,6 @@
 #!/usr/bin/env Rscript
 #
-# Code to get the UK reproductive number (R) from UK.
+# Code to get the UK reproductive number (R) estimate.
 #
 library(tibble, warn.conflicts = FALSE, quietly = TRUE)
 library(readr, warn.conflicts = FALSE, quietly = TRUE)
