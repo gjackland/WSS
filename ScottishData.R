@@ -50,10 +50,20 @@ BoardsToCouncils <- list(
 
 # Getting data ------------------------------------------------------------
 
+# Start and end date - the data to collect data from
+startdate <- as.Date("2020/07/25")
+
+# To one week ago (-7)
+enddate <-  Sys.Date()-7
+
 # Base url for UK data
 baseurl <- "https://api.coronavirus.data.gov.uk/v2/data?"
 
 # Compose URL to download by upper local tier authority
+# Getting:
+#          newDeaths28DaysByDeathDate
+#          newCasesBySpecimenDat
+#
 regurl <- paste0(baseurl,
                  "areaType=utla&",
                  "metric=newDeaths28DaysByDeathDate&",
@@ -71,10 +81,41 @@ cols <-  cols(
 )
 
 # Get the data
-dat <- read_csv(regurl,col_types = cols)
+alldat <- read_csv(regurl,col_types = cols)
 
-# Keep only the Scottish data by council authtority
-ScottishData <- dat[dat$areaName %in% ScottishAuthorities,]
+# Keep only the Scottish data by council authority
+ScotCasesDeaths <- alldat[alldat$areaName %in% ScottishAuthorities,]
+
+# Get rid of all the data (quite sizeable)
+rm(alldat)
+
+# Get cases by age by tier authority
+ageurl <- paste0(baseurl,
+                 "areaType=utla&",
+                 "metric=newCasesBySpecimenDateAgeDemographics&",
+                 "format=csv")
+
+# Column types
+coltypes <- cols(
+  areaCode = col_character(),
+  areaName = col_character(),
+  areaType = col_character(),
+  date = col_date(format = "%Y-%m-%d"),
+  age = col_character(),
+  cases = col_double(),
+  rollingSum = col_double(),
+  rollingRate = col_double()
+)
+
+# Get all the data - ALL English data - no Scottish regions
+allagedat <- read_csv(ageurl, col_types = coltypes)
+
+# Restrict to Scottish regions and change from long to wide format
+# allagedat %>% filter(areaName %in% ScottishAuthorities) %>%  # Keep only Scottish regions
+#               select(date = date, age = age, values = cases, area = areaName) %>%
+#               pivot_wider(names_from = age, values_from = values ) %>%
+#               filter(date >= startdate & date <= enddate) %>%
+#               arrange(date) -> scotagedat
 
 # Getting data by NHS region but this only supports English NHS regions
 trust <- paste0(baseurl,
