@@ -347,6 +347,54 @@ Rest <- read_csv(file="data/R_estimate.csv", col_types = coltypes)
 #                 )
 # R_ScotEst <- read_csv(file="data/R_scottish_estimate.csv", col_types = coltypes)
 
+# Scottish Daily Case Trends By Health Board
+#
+# See: https://www.opendata.nhs.scot/dataset/covid-19-in-scotland/resource/2dd8534b-0a6f-4744-9253-9565d62f96c2
+#
+
+# URL from which to pull the data
+dailycasesurl = "https://www.opendata.nhs.scot/dataset/b318bddf-a4dc-4262-971f-0ba329e09b87/resource/2dd8534b-0a6f-4744-9253-9565d62f96c2/download/trend_hb_20210610.csv"
+
+# Column types
+coltypes <- cols(
+  Date = col_date(format = "%Y%m%d"),
+  HB = col_character(),
+  HBName = col_character(),
+  DailyPositive = col_double(),
+  CumulativePositive = col_double(),
+  CrudeRatePositive = col_double(),
+  CrudeRate7DayPositive = col_double(),
+  DailyDeaths = col_double(),
+  CumulativeDeaths = col_double(),
+  CrudeRateDeaths = col_double(),
+  DailyNegative = col_double(),
+  CumulativeNegative = col_double(),
+  CrudeRateNegative = col_double(),
+  TotalTests = col_double(),
+  PositiveTests = col_double(),
+  PositivePercentage = col_double(),
+  PositivePercentage7Day = col_double(),
+  TotalPillar1 = col_double(),
+  TotalPillar2 = col_double(),
+  HospitalAdmissions = col_double(),
+  HospitalAdmissionsQF = col_character(),
+  ICUAdmissions = col_double(),
+  ICUAdmissionsQF = col_character(),
+  PositivePillar1 = col_double(),
+  PositivePillar2 = col_double()
+)
+
+# Get the data
+scotdailycases = read_csv(dailycasesurl, col_types = coltypes)
+
+# Make the NHS boards the columns - DailyPositives are the values
+scotdailycases %>% select(date=Date,board=HBName, cases=DailyPositive)  %>%
+  pivot_wider(names_from = board, values_from = cases) %>%
+  filter(date >= startdate & date <= enddate )         %>%
+  arrange(date) -> scotdailycasesbyboard
+
+# Join the scotdailycases with regcases by date
+regcases <- inner_join(regcases,scotdailycasesbyboard, by = c("date"="date"))
 
 #### Get tests for England pre-Sept by taking the post-Sept fraction of all tests that were in England (0.867)
 comdat$tests[1:58] = as.integer(ukcasedat$tests[1:58] * 0.867)
