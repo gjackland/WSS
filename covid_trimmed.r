@@ -224,7 +224,7 @@ vacdat <-  read_csv(file = vacurl, col_types = coltypes)
 # end up with the same columns as for the case data above.
 vacdat <- vacdat %>%
   select(date = date,  values =cumVaccinationFirstDoseUptakeByPublishDatePercentage)
-#  Scotland data https://api.coronavirus.data.gov.uk/v2/data?areaType=nation&areaCode=S92000003&metric=newCasesBySpecimenDate&metric=newDeaths28DaysByDeathDate&metric=newDeaths28DaysByPublishDate&format=csv
+# Scotland data https://api.coronavirus.data.gov.uk/v2/data?areaType=nation&areaCode=S92000003&metric=newCasesBySpecimenDate&metric=newDeaths28DaysByDeathDate&metric=newDeaths28DaysByPublishDate&format=csv
 # https://www.opendata.nhs.scot/dataset/covid-19-in-scotland/resource/9393bd66-5012-4f01-9bc5-e7a10accacf4
 
 scoturl <-  paste0(baseurl,
@@ -240,7 +240,7 @@ coltypes <-  cols(
   newDeaths28DaysByPublishDate = col_number(),
   newDeaths28DaysByDeathDate = col_number()
 )
-#  trying and failing to get data from PHS
+#  Trying and failing to get data from PHS
 #scotdeaths<- read.csv(file="https://www.opendata.nhs.scot/api/3/action/datastore_search?resource_id=9393bd66-5012-4f01-9bc5-e7a10accacf4")
 # Read in the data
 scotdat <-  read_csv(file = scoturl, col_types = coltypes)
@@ -293,14 +293,14 @@ regdeaths <- regdat %>%  select(date,areaName,
            date <= enddate )%>%
   arrange(date)
 
-#  Get age data for regions because can't download simultaneously
+# Get age data for regions because can't download simultaneously
 regurl2 <- paste0(baseurl,
                   "areaType=region&",
                   "metric=newCasesBySpecimenDateAgeDemographics&",
                   "metric=newDeathsBySpecimenDateAgeDemographics&",
                   "format=csv")
 
-# specify the column types
+# Specify the column types 
 coltypes <- cols(
   areaCode = col_character(),
   areaName = col_character(),
@@ -339,13 +339,61 @@ coltypes <- cols(
 Rest <- read_csv(file="data/R_estimate.csv", col_types = coltypes)
 
 # Read in Scottish R value estimates
-coltypes <- cols(
-                Date = col_date(format = "%Y-%m-%d"),
-                R_LowerBound = col_number(),
-                R_UpperBound = col_number()
-                )
-R_ScotEst <- read_csv(file="data/R_scottish_estimate.csv", col_types = coltypes)
+# coltypes <- cols(
+#                 Date = col_date(format = "%Y-%m-%d"),
+#                 R_LowerBound = col_number(),
+#                 R_UpperBound = col_number()
+#                 )
+# R_ScotEst <- read_csv(file="data/R_scottish_estimate.csv", col_types = coltypes)
 
+# Scottish Daily Case Trends By Health Board
+#
+# See: https://www.opendata.nhs.scot/dataset/covid-19-in-scotland/resource/2dd8534b-0a6f-4744-9253-9565d62f96c2
+#
+
+# URL from which to pull the data
+dailycasesurl = "https://www.opendata.nhs.scot/dataset/b318bddf-a4dc-4262-971f-0ba329e09b87/resource/2dd8534b-0a6f-4744-9253-9565d62f96c2/download/trend_hb_20210610.csv"
+
+# Column types
+coltypes <- cols(
+  Date = col_date(format = "%Y%m%d"),
+  HB = col_character(),
+  HBName = col_character(),
+  DailyPositive = col_double(),
+  CumulativePositive = col_double(),
+  CrudeRatePositive = col_double(),
+  CrudeRate7DayPositive = col_double(),
+  DailyDeaths = col_double(),
+  CumulativeDeaths = col_double(),
+  CrudeRateDeaths = col_double(),
+  DailyNegative = col_double(),
+  CumulativeNegative = col_double(),
+  CrudeRateNegative = col_double(),
+  TotalTests = col_double(),
+  PositiveTests = col_double(),
+  PositivePercentage = col_double(),
+  PositivePercentage7Day = col_double(),
+  TotalPillar1 = col_double(),
+  TotalPillar2 = col_double(),
+  HospitalAdmissions = col_double(),
+  HospitalAdmissionsQF = col_character(),
+  ICUAdmissions = col_double(),
+  ICUAdmissionsQF = col_character(),
+  PositivePillar1 = col_double(),
+  PositivePillar2 = col_double()
+)
+
+# Get the data
+scotdailycases = read_csv(dailycasesurl, col_types = coltypes)
+
+# Make the NHS boards the columns - DailyPositives are the values
+scotdailycases %>% select(date=Date,board=HBName, cases=DailyPositive)  %>%
+  pivot_wider(names_from = board, values_from = cases) %>%
+  filter(date >= startdate & date <= enddate )         %>%
+  arrange(date) -> scotdailycasesbyboard
+
+# Join the scotdailycases with regcases by date
+regcases <- inner_join(regcases,scotdailycasesbyboard, by = c("date"="date"))
 
 #### Get tests for England pre-Sept by taking the post-Sept fraction of all tests that were in England (0.867)
 comdat$tests[1:58] = as.integer(ukcasedat$tests[1:58] * 0.867)
@@ -514,7 +562,7 @@ CRIT[1,2:ncol(CRIT)]=casedat[1,2:ncol(casedat)]*covidsimAge$Prop_Critical_ByAge
 # Current values will typically be negative, as they are sums of people leaving the compartment
 # Nobody changes age band.  Vectorize over distributions
 for (iage in (2:20)){  #(2:ncol(ILI))){  Reduced to one age group for debugging
-  for (iday in (2:lengthofdata)){   
+  for (iday in (2:lengthofdata)){
     xday=iday+length(SARIToCritical)
 
     # Mild and ILI comes in from todays casedat, add to those from the past
@@ -522,25 +570,25 @@ for (iage in (2:20)){  #(2:ncol(ILI))){  Reduced to one age group for debugging
     newILI[iday,iage]=as.numeric(casedat[iday,iage]*covidsimAge$Prop_ILI_ByAge[(iage-1)])+newILI[iday,iage]
     newSARI[iday,iage]=as.numeric(casedat[iday,iage]*covidsimAge$Prop_SARI_ByAge[(iage-1)])+newSARI[iday,iage]
     newCRIT[iday,iage]=as.numeric(casedat[iday,iage]*covidsimAge$Prop_Critical_ByAge[(iage-1)])+newCRIT[iday,iage]
-    
+
     # All todays new MILDs will all leave to REC across distribution
     MtoR=as.numeric(newMILD[iday,iage])          *      MildToRecovery
     oldMILD[(iday:xday),iage]=oldMILD[(iday:xday),iage]+MtoR
 #   ILI will go to SA/RI and REC
-    ItoS = as.numeric(newILI[iday,iage] *  covidsimAge$Prop_SARI_ByAge[(iage-1)])     *ILIToSARI 
-    ItoR = as.numeric(newILI[iday,iage] *(1.0-covidsimAge$Prop_SARI_ByAge[(iage-1)])) *ILIToSARI 
+    ItoS = as.numeric(newILI[iday,iage] *  covidsimAge$Prop_SARI_ByAge[(iage-1)])     *ILIToSARI
+    ItoR = as.numeric(newILI[iday,iage] *(1.0-covidsimAge$Prop_SARI_ByAge[(iage-1)])) *ILIToSARI
     newSARI[(iday:xday),iage]=newSARI[(iday:xday),iage]+ItoS
     oldILI[(iday:xday),iage]=oldILI[(iday:xday),iage]+ItoR+ItoS
-#  SARI will go to REC, DEATH, CRIT        
+#  SARI will go to REC, DEATH, CRIT
     StoC = as.numeric(newSARI[iday,iage] *covidsimAge$Prop_Critical_ByAge[(iage-1)]) *SARIToCritical
-    StoD = as.numeric(newSARI[iday,iage] *covidsimAge$CFR_SARI_ByAge[(iage-1)])      *SARIToDeath    
+    StoD = as.numeric(newSARI[iday,iage] *covidsimAge$CFR_SARI_ByAge[(iage-1)])      *SARIToDeath
     StoR = as.numeric(newSARI[iday,iage] *(1.0-covidsimAge$Prop_Critical_ByAge[(iage-1)]-covidsimAge$CFR_SARI_ByAge[(iage-1)]) )*SARIToRecovery
     newCRIT[(iday:xday),iage]=newCRIT[(iday:xday),iage]+StoC
-    oldSARI[(iday:xday),iage]=oldSARI[(iday:xday),iage]+StoR+StoC+StoD    
-    
+    oldSARI[(iday:xday),iage]=oldSARI[(iday:xday),iage]+StoR+StoC+StoD
+
 #  CRIT  goes to CRITREC DEATH
-    CtoD = as.numeric(newCRIT[iday,iage]* covidsimAge$CFR_Critical_ByAge[(iage-1)]) *CriticalToDeath 
-    CtoCR = as.numeric(newCRIT[iday,iage]*(1.0-covidsimAge$CFR_Critical_ByAge[(iage-1)])) *CriticalToCritRecov 
+    CtoD = as.numeric(newCRIT[iday,iage]* covidsimAge$CFR_Critical_ByAge[(iage-1)]) *CriticalToDeath
+    CtoCR = as.numeric(newCRIT[iday,iage]*(1.0-covidsimAge$CFR_Critical_ByAge[(iage-1)])) *CriticalToCritRecov
     newCRITREC[(iday:xday),iage]=newCRITREC[(iday:xday),iage]+CtoCR
     oldCRIT[(iday:xday),iage]=oldCRIT[(iday:xday),iage]+CtoD+CtoCR
 
@@ -548,7 +596,7 @@ for (iage in (2:20)){  #(2:ncol(ILI))){  Reduced to one age group for debugging
     DEATH[(iday:xday),iage]=DEATH[(iday:xday),iage]+CtoD+StoD
     RECOV[(iday:xday),iage]=RECOV[(iday:xday),iage]+StoR+ItoR+MtoR
 
-    #  Finally, update todays totals: New cases + transfers from other compartments - transfers to other compartments + leftover from yesterday   
+    #  Finally, update todays totals: New cases + transfers from other compartments - transfers to other compartments + leftover from yesterday
     MILD[iday,iage]=MILD[iday,iage]+newMILD[iday,iage]-oldMILD[iday,iage]+MILD[(iday-1),iage]
     ILI[iday,iage]=ILI[iday,iage]+newILI[iday,iage]-oldILI[iday,iage]+ILI[(iday-1),iage]
     SARI[iday,iage]=SARI[iday,iage]+newSARI[iday,iage]-oldSARI[iday,iage]+SARI[(iday-1),iage]
@@ -557,7 +605,7 @@ for (iage in (2:20)){  #(2:ncol(ILI))){  Reduced to one age group for debugging
   }
 }
 # Create a vector to hold the results for various R-numbers
-ninit <- as.numeric(1:nrow(comdat)) 
+ninit <- as.numeric(1:nrow(comdat))
 dfR <- data.frame(x=1.0:length(comdat$date),
 date=comdat$date, gjaR=ninit, rawR=ninit,  fpR=ninit,  weeklyR=ninit,  bylogR=ninit,
   NE=ninit,  NW=ninit,  YH=ninit,  EM=ninit,  WM=ninit,  EE=ninit,  Lon=ninit,  SE=ninit,  SW=ninit,  Scot=ninit,
@@ -573,7 +621,7 @@ if(any(casedat==0)){
       warning("Zero values found for ",name," for the date(s) ",
               paste(casedat[["date"]][which(casedat[name]==0)],collapse = ", "),".")
     }
-  }  
+  }
 }
 
 #  Generate R over all regions and ages,  gjaR is Ito, rawR is stratonovich, bylogR is harmonicIto fpR includes false positive correction
@@ -1247,6 +1295,7 @@ rollframe = rollframe[301:(nrow(rollframe)-30),]
     geom_rect(aes(xmin=as.Date("2020/12/01"), xmax=as.Date("2021/01/16"), ymin=0, ymax=Inf), fill = "red", alpha = 0.1) +
     geom_rect(aes(xmin=as.Date("2021/01/17"), xmax=Sys.Date(), ymin=0, ymax=Inf), fill = "green", alpha = 0.1)
   print(CFRplot)
+
 
   # Generate smoothed CFRs 
 CFR<-logcases[(30:nrow(logcases)),(1:20)]
