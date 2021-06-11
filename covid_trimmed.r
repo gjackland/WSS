@@ -512,7 +512,7 @@ CRIT[1,2:ncol(CRIT)]=casedat[1,2:ncol(casedat)]*covidsimAge$Prop_Critical_ByAge
 # Add new cases to Mild (ignored), ILI, SARI and CRIT people in each  age group.
 # Bring forward cases from yesterday
 # Current values will typically be negative, as they are sums of people leaving the compartment
-# Nobody changes age band.
+# Nobody changes age band.  Vectorize over distributions
 for (iage in (2:20)){  #(2:ncol(ILI))){  Reduced to one age group for debugging
   for (iday in (2:lengthofdata)){   
     xday=iday+length(SARIToCritical)
@@ -573,7 +573,7 @@ if(any(casedat==0)){
       warning("Zero values found for ",name," for the date(s) ",
               paste(casedat[["date"]][which(casedat[name]==0)],collapse = ", "),".")
     }
-  }
+  }  
 }
 
 #  Generate R over all regions and ages,  gjaR is Ito, rawR is stratonovich, bylogR is harmonicIto fpR includes false positive correction
