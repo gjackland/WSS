@@ -3,7 +3,6 @@
 
 # Scottish regions --------------------------------------------------------
 
-
 # List from https://en.wikipedia.org/wiki/Local_government_in_Scotland
 # NHS Western Isles = Bòrd SSN nan Eilean Siar
 ScottishAuthorities <- c("Inverclyde","Renfrewshire","West Dunbartonshire",
@@ -166,6 +165,34 @@ coltypes <- cols(
 
 # Get the data
 dailycases = read_csv(dailycasesurl, col_types = coltypes)
+
+# Daily Case Trends By Age and Sex
+# See:
+# https://www.opendata.nhs.scot/dataset/covid-19-in-scotland/resource/9393bd66-5012-4f01-9bc5-e7a10accacf4
+
+# Data URL
+ageurl <- "https://www.opendata.nhs.scot/dataset/b318bddf-a4dc-4262-971f-0ba329e09b87/resource/9393bd66-5012-4f01-9bc5-e7a10accacf4/download/trend_agesex_20210610.csv"
+
+# Define the column types
+coltypes <- cols(
+                Date = col_date(format = "%Y%m%d"),
+                Country = col_character(),
+                Sex = col_character(),
+                SexQF = col_character(),
+                AgeGroup = col_character(),
+                AgeGroupQF = col_character(),
+                DailyPositive = col_double(),
+                CumulativePositive = col_double(),
+                CrudeRatePositive = col_double(),
+                DailyDeaths = col_double(),
+                CumulativeDeaths = col_double(),
+                CrudeRateDeaths = col_double(),
+                CumulativeNegative = col_double(),
+                CrudeRateNegative = col_double()
+                )
+
+# Get the data
+scotagedat <- read_csv(ageurl, col_types = coltypes)
 
 # Querying CKAN -----------------------------------------------------------
 
