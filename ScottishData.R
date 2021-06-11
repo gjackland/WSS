@@ -168,7 +168,8 @@ coltypes <- cols(
 # Get the data
 scotdat <- read_csv(scoturl,col_types = coltypes)
 
-# Daily Case Trends By Health Board
+# Scottish Daily Case Trends By Health Board
+#
 # See: https://www.opendata.nhs.scot/dataset/covid-19-in-scotland/resource/2dd8534b-0a6f-4744-9253-9565d62f96c2
 #
 
@@ -205,7 +206,13 @@ coltypes <- cols(
               )
 
 # Get the data
-dailycases = read_csv(dailycasesurl, col_types = coltypes)
+scotdailycases = read_csv(dailycasesurl, col_types = coltypes)
+
+# Make the NHS boards the columns - DailyPositives are the values
+scotdailycases %>% select(date=Date,board=HBName, cases=DailyPositive)  %>%
+                   pivot_wider(names_from = board, values_from = cases) %>%
+                   filter(date >= startdate & date <= enddate )         %>%
+                   arrange(date) -> scotdailycasesbyboard
 
 # Daily Case Trends By Age and Sex
 # See:
