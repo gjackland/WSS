@@ -253,3 +253,4 @@ tags <- tag_list(as="table")
 corona <- tag_show("coronavirus", as = "table")
 
 pckg <- package_show("covid-19-wider-impacts-deaths", as ="table")
+
