@@ -7,7 +7,6 @@
 #
 #### Header ####
 if(interactive()){
-
   # Remove existing variables
   rm(list = ls())
 }
@@ -241,7 +240,7 @@ coltypes <-  cols(
   newDeaths28DaysByPublishDate = col_number(),
   newDeaths28DaysByDeathDate = col_number()
 )
-# Trying and failing to get data from PHS
+#  Trying and failing to get data from PHS
 #scotdeaths<- read.csv(file="https://www.opendata.nhs.scot/api/3/action/datastore_search?resource_id=9393bd66-5012-4f01-9bc5-e7a10accacf4")
 # Read in the data
 scotdat <-  read_csv(file = scoturl, col_types = coltypes)
@@ -301,7 +300,7 @@ regurl2 <- paste0(baseurl,
                   "metric=newDeathsBySpecimenDateAgeDemographics&",
                   "format=csv")
 
-# Specify the column types
+# Specify the column types 
 coltypes <- cols(
   areaCode = col_character(),
   areaName = col_character(),
@@ -1280,7 +1279,7 @@ deathframe = pivot_longer(deathroll, cols = colnames(deathdat[11:20]),
                          names_to = "agegroup", names_prefix = "X", values_to = "Deaths")
 
 rollframe$Deaths = deathframe$Deaths
-rollframe$CFR = rollframe$Deaths/rollframe$Cases
+rollframe$CFR =  rollframe$Deaths/rollframe$Cases
 rm(deathframe)
 rollframe = rollframe[301:(nrow(rollframe)-30),]
 
@@ -1296,3 +1295,19 @@ rollframe = rollframe[301:(nrow(rollframe)-30),]
     geom_rect(aes(xmin=as.Date("2020/12/01"), xmax=as.Date("2021/01/16"), ymin=0, ymax=Inf), fill = "red", alpha = 0.1) +
     geom_rect(aes(xmin=as.Date("2021/01/17"), xmax=Sys.Date(), ymin=0, ymax=Inf), fill = "green", alpha = 0.1)
   print(CFRplot)
+
+
+  # Generate smoothed CFRs 
+CFR<-logcases[(30:nrow(logcases)),(1:20)]
+CFR[is.na(CFR)]=1
+CFR[2:20]=deathdat[(30:nrow(logcases)),(2:20)]/CFR[2:20]
+CFR[is.na(CFR)]=0
+
+plot(smooth.spline(CFR[12])$y,x=CFR$date,type="l",ylim=c(0.0,0.4),ylab="CFR",xlab="date")
+for (i in 13:20){
+lines(smooth.spline(CFR[i],df=7)$y,x=CFR$date,type="l",ylim=c(0.0,0.35),col=i)
+}
+
+                        
+
+
