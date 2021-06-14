@@ -563,7 +563,7 @@ CRIT[1,2:ncol(CRIT)]=casedat[1,2:ncol(casedat)]*covidsimAge$Prop_Critical_ByAge
 # Bring forward cases from yesterday
 # Current values will typically be negative, as they are sums of people leaving the compartment
 # Nobody changes age band.  Vectorize over distributions
-for (iage in (2:20)){  #(2:ncol(ILI))){  Reduced to one age group for debugging
+for (iage in (2:ncol(ILI))){
   for (iday in (2:lengthofdata)){
     xday=iday+length(SARIToCritical)
 
@@ -576,12 +576,12 @@ for (iage in (2:20)){  #(2:ncol(ILI))){  Reduced to one age group for debugging
     # All todays new MILDs will all leave to REC across distribution
     MtoR=as.numeric(newMILD[iday,iage])          *      MildToRecovery
     oldMILD[(iday:xday),iage]=oldMILD[(iday:xday),iage]+MtoR
-#   ILI will go to SA/RI and REC
+    # ILI will go to SA/RI and REC
     ItoS = as.numeric(newILI[iday,iage] *  covidsimAge$Prop_SARI_ByAge[(iage-1)])     *ILIToSARI
     ItoR = as.numeric(newILI[iday,iage] *(1.0-covidsimAge$Prop_SARI_ByAge[(iage-1)])) *ILIToSARI
     newSARI[(iday:xday),iage]=newSARI[(iday:xday),iage]+ItoS
     oldILI[(iday:xday),iage]=oldILI[(iday:xday),iage]+ItoR+ItoS
-#  SARI will go to REC, DEATH, CRIT
+    # SARI will go to REC, DEATH, CRIT
     StoC = as.numeric(newSARI[iday,iage] *covidsimAge$Prop_Critical_ByAge[(iage-1)]) *SARIToCritical
     StoD = as.numeric(newSARI[iday,iage] *covidsimAge$CFR_SARI_ByAge[(iage-1)])      *SARIToDeath
     StoR = as.numeric(newSARI[iday,iage] *(1.0-covidsimAge$Prop_Critical_ByAge[(iage-1)]-covidsimAge$CFR_SARI_ByAge[(iage-1)]) )*SARIToRecovery
