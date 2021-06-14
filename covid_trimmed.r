@@ -300,7 +300,7 @@ regurl2 <- paste0(baseurl,
                   "metric=newDeathsBySpecimenDateAgeDemographics&",
                   "format=csv")
 
-# Specify the column types 
+# Specify the column types
 coltypes <- cols(
   areaCode = col_character(),
   areaName = col_character(),
@@ -417,7 +417,7 @@ casetot=sum(days)
 days=7*days/casetot
 
 # Rescale comdat and regcases
-for(i in 1:length(comdat$allCases)){
+for(i in 1:nrow(comdat)){
   indexday=(i-1)%%7+1
   comdat$allCases[i]=comdat$allCases[i]/days[indexday]
   scotdat$allCases[i]=scotdat$allCases[i]/days[indexday]
@@ -522,12 +522,13 @@ lengthofdata=  length(casedat$date)#-length(ILIToSARI)
 
 #extend ILI longer than deathdat to allow for predictions (eventually)
 ILI<-deathdat
-for (i in length(casedat$date):(length(casedat$date)+length(ILIToSARI)) ){
+for (i in length(casedat$date):(nrow(casedat)+length(ILIToSARI)) ){
   for (j in ncol(ILI)){
-ILI[i,j] = 0.0
-  }  }
+       ILI[i,j] = 0.0
+  }
+}
 cols <- names(ILI)[2:ncol(ILI)]
-ILI[cols] = 0.0
+ILI[cols] <-  0.0
 MILD <- ILI
 SARI <- ILI
 CRIT <- ILI
@@ -535,8 +536,8 @@ CRITREC <- ILI
 RECOV <- ILI
 DEATH <- ILI
 
-#These are the new arrivals in each category.  NOT the increase.  Recov and death just increase
-#Initialize with day 1 in place
+# These are the new arrivals in each category.  NOT the increase.  Recov and death just increase
+# Initialize with day 1 in place
 newMILD <- MILD
 newILI <- ILI
 newSARI <- SARI
@@ -548,7 +549,8 @@ oldSARI <- SARI
 oldCRIT <- CRIT
 oldCRITREC <- CRITREC
 
-#  Set day 1.  This assumes - wrongly - that there were zero cases before, but should autocorrect as those cases get resolved
+#  Set day 1.  This assumes - wrongly - that there were zero cases before,
+#              but should autocorrect as those cases get resolved
 
 #  covidsimAge has no date row, so need to use iage-1
 
@@ -588,17 +590,18 @@ for (iage in (2:20)){  #(2:ncol(ILI))){  Reduced to one age group for debugging
     newCRIT[(iday:xday),iage]=newCRIT[(iday:xday),iage]+StoC
     oldSARI[(iday:xday),iage]=oldSARI[(iday:xday),iage]+StoR+StoC+StoD
 
-#  CRIT  goes to CRITREC DEATH
+    # CRIT  goes to CRITREC DEATH
     CtoD = as.numeric(newCRIT[iday,iage]* covidsimAge$CFR_Critical_ByAge[(iage-1)]) *CriticalToDeath
     CtoCR = as.numeric(newCRIT[iday,iage]*(1.0-covidsimAge$CFR_Critical_ByAge[(iage-1)])) *CriticalToCritRecov
     newCRITREC[(iday:xday),iage]=newCRITREC[(iday:xday),iage]+CtoCR
     oldCRIT[(iday:xday),iage]=oldCRIT[(iday:xday),iage]+CtoD+CtoCR
 
-#  DEATH and RECOV are cumulative, again anticipating where "new" will end up.
+    # DEATH and RECOV are cumulative, again anticipating where "new" will end up.
     DEATH[(iday:xday),iage]=DEATH[(iday:xday),iage]+CtoD+StoD
     RECOV[(iday:xday),iage]=RECOV[(iday:xday),iage]+StoR+ItoR+MtoR
 
-    #  Finally, update todays totals: New cases + transfers from other compartments - transfers to other compartments + leftover from yesterday
+    # Finally, update todays totals: New cases + transfers from other compartments -
+    # transfers to other compartments + leftover from yesterday
     MILD[iday,iage]=MILD[iday,iage]+newMILD[iday,iage]-oldMILD[iday,iage]+MILD[(iday-1),iage]
     ILI[iday,iage]=ILI[iday,iage]+newILI[iday,iage]-oldILI[iday,iage]+ILI[(iday-1),iage]
     SARI[iday,iage]=SARI[iday,iage]+newSARI[iday,iage]-oldSARI[iday,iage]+SARI[(iday-1),iage]
@@ -611,7 +614,7 @@ for (iage in (2:20)){  #(2:ncol(ILI))){  Reduced to one age group for debugging
 # Create a vector to hold the results for various R-numbers
 ninit <- as.numeric(1:nrow(comdat))/as.numeric(1:nrow(comdat))
 dfR <- data.frame(x=1.0:length(comdat$date),
-date=comdat$date, gjaR=ninit, rawR=ninit,  fpR=ninit,  weeklyR=ninit,  bylogR=ninit,
+  date=comdat$date, gjaR=ninit, rawR=ninit,  fpR=ninit,  weeklyR=ninit,  bylogR=ninit,
   NE=ninit,  NW=ninit,  YH=ninit,  EM=ninit,  WM=ninit,  EE=ninit,  Lon=ninit,  SE=ninit,  SW=ninit,  Scot=ninit,
   Ayr=ninit, Bord=ninit, Dum=ninit, For=ninit, Gra=ninit, Hig=ninit, Lot=ninit, Ork=ninit, Shet=ninit, WI=ninit, Fif=ninit, Tay=ninit, Gla=ninit, Lan=ninit,
   p00=ninit,  p05=ninit,  p10=ninit,  p15=ninit,  p20=ninit,  p25=ninit,  p30=ninit,  p35=ninit,  p40=ninit,  p45=ninit,  p50=ninit,  p55=ninit,  p60=ninit,  p65=ninit,  p70=ninit,  p75=ninit,  p80=ninit,  p85=ninit,  p90=ninit  )
@@ -705,7 +708,7 @@ dfR$weeklyR[length(dfR$weeklyR)-2]=1.0
 # Making the time windows agree
 Govdat <- Rest[Rest$Date >= min(comdat$date) & Rest$Date <= max(comdat$date),]
 
-#  Parameters for fitting splines and Loess
+# Parameters for fitting splines and Loess
 nospl=4
 spdf=12
 lospan=0.3
@@ -1313,7 +1316,7 @@ rm(deathframe)
 rollframe = rollframe[301:(nrow(rollframe)-30),]
 
 
-  CFRplot = ggplot() +
+  ggplot() +
   geom_line(data = rollframe, aes(x = date, y = CFR, color = agegroup), size = 1.1, na.rm = TRUE) +
     scale_colour_manual(values = rev(brewer.pal(10,"Set3"))) +
     labs(title = paste("Case Fatality Ratios by age group -  7-day rolling averages"),
@@ -1323,10 +1326,9 @@ rollframe = rollframe[301:(nrow(rollframe)-30),]
     theme_bw() +
     geom_rect(aes(xmin=as.Date("2020/12/01"), xmax=as.Date("2021/01/16"), ymin=0, ymax=Inf), fill = "red", alpha = 0.1) +
     geom_rect(aes(xmin=as.Date("2021/01/17"), xmax=Sys.Date(), ymin=0, ymax=Inf), fill = "green", alpha = 0.1)
-  print(CFRplot)
 
 
-  # Generate smoothed CFRs 
+# Generate smoothed CFRs
 CFR<-logcases[(30:nrow(logcases)),(1:20)]
 CFR[is.na(CFR)]=1
 CFR[2:20]=deathdat[(30:nrow(logcases)),(2:20)]/CFR[2:20]
@@ -1334,9 +1336,9 @@ CFR[is.na(CFR)]=0
 
 plot(smooth.spline(CFR[12])$y,x=CFR$date,type="l",ylim=c(0.0,0.4),ylab="CFR",xlab="date")
 for (i in 13:20){
-lines(smooth.spline(CFR[i],df=7)$y,x=CFR$date,type="l",ylim=c(0.0,0.35),col=i)
+    lines(smooth.spline(CFR[i],df=7)$y,x=CFR$date,type="l",ylim=c(0.0,0.35),col=i)
 }
 
-                        
+
 
 
