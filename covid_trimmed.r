@@ -1033,7 +1033,7 @@ rm(tmpdat)
 
 # Load code to function to output to the web-ui interface
 # From stackoverflow: 6456501
-if(!exists("outputJSON", mode="function")) source("json_out.R")
+if(!exists("outputJSON", mode="function")) source("json_wss.R")
 
 # # Beginning of time series
 t0 <-  min(dfR$date)
