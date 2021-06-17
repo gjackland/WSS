@@ -615,8 +615,8 @@ for (iage in (2:ncol(ILI))){
 ninit <- as.numeric(1:nrow(comdat))/as.numeric(1:nrow(comdat))
 dfR <- data.frame(x=1.0:length(comdat$date),
   date=comdat$date, gjaR=ninit, rawR=ninit,  fpR=ninit,  weeklyR=ninit,  bylogR=ninit,
-  p00=ninit,  p05=ninit,  p10=ninit,  p15=ninit,  p20=ninit,  p25=ninit,  p30=ninit,  
-  p35=ninit,  p40=ninit,  p45=ninit,  p50=ninit,  p55=ninit,  p60=ninit,  p65=ninit,  
+  p00=ninit,  p05=ninit,  p10=ninit,  p15=ninit,  p20=ninit,  p25=ninit,  p30=ninit,
+  p35=ninit,  p40=ninit,  p45=ninit,  p50=ninit,  p55=ninit,  p60=ninit,  p65=ninit,
   p70=ninit,  p75=ninit,  p80=ninit,  p85=ninit,  p90=ninit  )
 # df#Ito: gjaR[i]<-(1+(comdat$allCases[i]-comdat$allCases[i-1])*2*genTime/(comdat$allCases[i]+comdat$allCases[i-1]))
 #  #Stratanovitch calculus
@@ -641,10 +641,9 @@ rat[rat==-Inf]=1.0
 
 plot(smooth.spline(exp((rat$Scotland[180:317]-1)/genTime),df=12)$y,x=rat$date[180:317],ylim=c(0.9,1.1))
 
-
-
 startplot <- rat$date[200]
 endplot <- rat$date[nrow(rat)-5]
+
 
 rat %>% filter(startplot < date & date < endplot) %>%  
   pivot_longer(!date,names_to = "Region", values_to="R") %>% 
@@ -968,6 +967,18 @@ rm(tmpdat)
 # Load code to function to output to the web-ui interface
 # From stackoverflow: 6456501
 if(!exists("outputJSON", mode="function")) source("json_wss.R")
+
+# Get requested outputs from the web-ui. For the web-ui the
+# file must be "/data/input/inputFile.json".
+if(dir.exists("/data/input")){
+  infile <- "/data/input/inputFile.json"
+}else{
+  infile <- "data/sample-inputFile.json"
+}
+dataIn <- getInput(infile)
+
+region <- dataIn$region
+subregion <- dataIn$subregion
 
 # # Beginning of time series
 t0 <-  min(dfR$date)
