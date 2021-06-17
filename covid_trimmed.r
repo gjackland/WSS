@@ -969,7 +969,12 @@ if(!exists("outputJSON", mode="function")) source("json_wss.R")
 
 # Get requested outputs from the web-ui. For the web-ui the
 # file must be "/data/input/inputFile.json".
-dataIn <- getInput("data/sample-inputFile.json")
+if(dir.exists("/data/input")){
+  infile <- "/data/input/inputFile.json"
+}else{
+  infile <- "data/sample-inputFile.json"
+}
+dataIn <- getInput(infile)
 
 region <- dataIn$region
 subregion <- dataIn$subregion
