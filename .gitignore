@@ -8,4 +8,4 @@ Rplots.pdf
 forpub.csv
 data/AgeDeathDemographics.csv
 *.pdf
-data/*.json
+data/data.json
