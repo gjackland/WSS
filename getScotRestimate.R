@@ -73,5 +73,8 @@ Rest %>%  pivot_wider(names_from=Variable, values_from = Value) %>%
 
 
 # Write the data to a CSV file
-write_csv(Rest,file="data/R_scottish_estimate.csv")
+outfile <- "data/R_scottish_estimate.csv"
+write_csv(Rest,file=outfile)
 
+# Write message saying data has been output
+message("Data has been output to ",outfile,".")

@@ -1,7 +1,60 @@
 # Function to output JSON for the web-ui interface.
 library(jsonlite)
 
-## Usage example
+## Get input from the web-ui.
+#
+# For usage in the web-ui the filename has to be: /data/input/inputFile.json
+# To use outwith the web-ui a sample file, data/sample-inputFile.json, has been
+# provided. If the file cannot be found a warning message will be issued and
+# execution will continue. Usage:
+#
+# dataIn <- getInput("data/sample-inputFile.json")
+#
+# The input schema can be found at:
+#
+# https://raw.githubusercontent.com/covid-policy-modelling/model-runner/epcc/packages/api/schema/input.json
+#
+# The following data is made available and the mechanism for accessing.
+#
+# dataIn$region - the region to be modeled
+# dataIn$subregion - the subregion to be modeled
+# dataIn$parameters$calibrationDate - An ISO-8601 string, e.g. "2021-06-17",
+#                   encoding the date of the most recent case data in the region.
+# dataIn$parameters$calibrationCaseCount -The total number of confirmed cases in
+#                  the region before the calibration date.
+# dataIn$parameters$calibrationDeathCount - The total number of deaths in the
+#                  region before the calibration date.
+# dataIn$parameters$interventionPeriods - A list of time periods, each with a
+#                  different set of interventions. This may contain (only the
+#                  startDate and reductionPopulationContact are required):
+#
+#      startDate - An ISO-8601 string encoding the date that these interventions
+#                  begin.
+#      reductionPopulationContact - The estimated reduction in population contact
+#                  resulting from all of the above interventions. Some models
+#                  require this generalized parameter instead of the individual
+#                  interventions.
+#      socialDistancing - The level of social distancing in the region.
+#      schoolClosure - The level of school closure in the region.
+#      voluntaryHomeQuarantine - The level to which entire households self-isolate
+#                                when one member of the household has symptoms.
+#      caseIsolation - The level to which individuals with symptoms self-isolate.
+#
+# dataIn$parameters$r0 - The assumed reproduction number for the virus.
+#                  If this is null, then each model will use its own default value.
+#
+
+getInput <- function(filename)
+{
+    if(file.exists(filename)){
+        jsonin <- read_json(filename, simplifyVector = TRUE)
+        return(jsonin)
+    }else{
+        warning("File: ",filename," not found.")
+    }
+}
+
+## Output Usage example
 #
 # # Build a list of interventions:
 # int1 <- list(caseIsolation="aggressive",
@@ -183,13 +236,11 @@ outputJSON <- function(myt0,
     ## Output to JSON
     if(dir.exists("/data/output")){
         write_json(myobject, "/data/output/data.json", pretty = TRUE, auto_unbox = TRUE, na ="null")
-    }else{
-       if(dir.exists("./data")){
+    }else if(dir.exists("./data")){
          message("JSON output written to ./data/data.json")
          write_json(myobject, "./data/data.json", pretty = TRUE, auto_unbox = TRUE, na ="null")
-       }else{
+    }else{
          toJSON(myobject,pretty = TRUE,auto_unbox = TRUE, na ="null")
-       }
     }
 
 }

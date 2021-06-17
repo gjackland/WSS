@@ -53,8 +53,8 @@ BoardsToCouncils <- list(
 # Start and end date - the data to collect data from
 startdate <- as.Date("2020/07/25")
 
-# To one week ago (-7)
-enddate <-  Sys.Date()-7
+# WAS To one week ago (-7)  NOW read in all the data
+enddate <-  Sys.Date()
 
 # Base url for UK data
 baseurl <- "https://api.coronavirus.data.gov.uk/v2/data?"
