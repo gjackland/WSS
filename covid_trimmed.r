@@ -615,8 +615,8 @@ for (iage in (2:ncol(ILI))){
 ninit <- as.numeric(1:nrow(comdat))/as.numeric(1:nrow(comdat))
 dfR <- data.frame(x=1.0:length(comdat$date),
   date=comdat$date, gjaR=ninit, rawR=ninit,  fpR=ninit,  weeklyR=ninit,  bylogR=ninit,
-  p00=ninit,  p05=ninit,  p10=ninit,  p15=ninit,  p20=ninit,  p25=ninit,  p30=ninit,  
-  p35=ninit,  p40=ninit,  p45=ninit,  p50=ninit,  p55=ninit,  p60=ninit,  p65=ninit,  
+  p00=ninit,  p05=ninit,  p10=ninit,  p15=ninit,  p20=ninit,  p25=ninit,  p30=ninit,
+  p35=ninit,  p40=ninit,  p45=ninit,  p50=ninit,  p55=ninit,  p60=ninit,  p65=ninit,
   p70=ninit,  p75=ninit,  p80=ninit,  p85=ninit,  p90=ninit  )
 # df#Ito: gjaR[i]<-(1+(comdat$allCases[i]-comdat$allCases[i-1])*2*genTime/(comdat$allCases[i]+comdat$allCases[i-1]))
 #  #Stratanovitch calculus
@@ -645,14 +645,14 @@ plot(smooth.spline(rat$`NHS Orkney`[180:317],df=18)$y,x=rat$date[180:317],ylim=c
 start <- rat$date[100]
 end <- rat$date[317]
 
-rat %>% filter(start < date & date < end) %>% 
-  pivot_longer(!date,names_to = "Region", values_to="R") %>% 
+rat %>% filter(start < date & date < end) %>%
+  pivot_longer(!date,names_to = "Region", values_to="R") %>%
   ggplot(aes(x=date, y=R, colour=Region)) + coord_cartesian(ylim=c(0.8,1.5)) + geom_smooth(span=0.5
                                                                                           ) +  guides(color = FALSE) + facet_wrap(vars(Region))
 
 
-rat %>% filter(start < date & date < end) %>% 
-  pivot_longer(!date,names_to = "Region", values_to="R") %>% 
+rat %>% filter(start < date & date < end) %>%
+  pivot_longer(!date,names_to = "Region", values_to="R") %>%
   ggplot(aes(x=date, y=R, colour=Region)) + geom_line() +
   guides(color = FALSE) + facet_wrap(vars(Region))
 
@@ -963,6 +963,13 @@ rm(tmpdat)
 # Load code to function to output to the web-ui interface
 # From stackoverflow: 6456501
 if(!exists("outputJSON", mode="function")) source("json_wss.R")
+
+# Get requested outputs from the web-ui. For the web-ui the
+# file must be "/data/input/inputFile.json".
+dataIn <- getInput("data/sample-inputFile.json")
+
+region <- dataIn$region
+subregion <- dataIn$subregion
 
 # # Beginning of time series
 t0 <-  min(dfR$date)
