@@ -648,10 +648,17 @@ rat[is.na(rat)]=1.0
 rat[rat==Inf]=1.0
 rat[rat==-Inf]=1.0
 
-plot(smooth.spline(exp((rat$Scotland[180:317]-1)/genTime),df=12)$y,x=rat$date[180:317],ylim=c(0.9,1.1))
 
-startplot <- rat$date[200]
-endplot <- rat$date[nrow(rat)-5]
+plot(smooth.spline(rat$Scotland[250:317],df=12)$y,x=rat$date[250:317],ylim=c(0.7,1.40),xlab="Date",ylab="R, Scotland")
+
+start <- rat$date[200]
+end <- rat$date[317]
+
+rat %>% filter(start < date & date < end) %>% 
+  pivot_longer(!date,names_to = "Region", values_to="R") %>% 
+  ggplot(aes(x=date, y=R, colour=Region)) + coord_cartesian(ylim=c(0.8,1.5)) + geom_smooth(span=0.8
+                                ) +  guides(color = FALSE) + facet_wrap(vars(Region))
+
 
 
 rat %>% filter(startplot < date & date < endplot) %>%  
@@ -688,18 +695,9 @@ for(i in ((genTime+1):length(dfR$gjaR))    ){
   dfR$p65[i]=1+log(casedat$'65_69'[i]/casedat$'65_69'[i-1])*genTime
   dfR$p70[i]=1+log(casedat$'70_74'[i]/casedat$'70_74'[i-1])*genTime
   dfR$p75[i]=1+log(casedat$'75_79'[i]/casedat$'75_79'[i-1])*genTime
-
-#  if(casedat$'80_84'[i] != 0 & casedat$'80_84'[i-1] != 0){ # Deal with 0 cases
     dfR$p80[i]=1+log(casedat$'80_84'[i]/casedat$'80_84'[i-1])*genTime
-#  }else{
-#    dfR$p80[i] = NA
-#  }
    dfR$p85[i]=1+log(casedat$'85_89'[i]/casedat$'85_89'[i-1])*genTime
-#  if(casedat$'90+'[i] != 0 & casedat$'90+'[i-1] != 0){ # Deal with 0 cases
     dfR$p90[i]=1+log(casedat$'90+'[i]/casedat$'90+'[i-1])*genTime
-#  }else{
-#    dfR$p90[i] = 1.0
-#  }
 }
 
 dfR[is.na(dfR)]=1.0
