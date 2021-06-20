@@ -71,7 +71,7 @@ baseurl <- "https://api.coronavirus.data.gov.uk/v2/data?"
                 "format=csv")
     return(u)
  }
-
+ 
  getDeathURL <- function(reg){
     baseurl <- "https://api.coronavirus.data.gov.uk/v2/data?"
     area <- paste0("areaCode=",reg,"&")
@@ -96,7 +96,7 @@ baseurl <- "https://api.coronavirus.data.gov.uk/v2/data?"
     rollingSum = col_double(),
     rollingRate = col_double()
  )
-
+ 
  # tibble for death demographics
  AgeDeathDemograhics <- tibble()
 
@@ -111,13 +111,35 @@ baseurl <- "https://api.coronavirus.data.gov.uk/v2/data?"
 
     # Get the data
     d <- read_csv(url1,col_types = democols)
-
+    
     # Append data to tibble
     AgeDeathDemograhics <- bind_rows(AgeDeathDemograhics,d)
-}
-
+ }
+ 
 # Write data to a file
  write_csv(AgeDeathDemograhics,"data/AgeDeathDemographics.csv")
 
-# Read the file again using:
-# d <- read_csv(file="data/AgeDeathDemographics.csv",col_types = democols)
+
+#  Get hospital data
+ 
+ HospitalURL <- function(reg){
+ u <- paste0(baseurl,
+             "areaType=overviev&",
+             "metric=covidOccupiedMVBeds&",
+             "metric=hospitalCases&",
+             "metric=newAdmissions&",
+             "format=csv")
+ return(u)
+ }
+ # Get the data
+ urlh=HospitalURL()
+ d <- read_csv("https://api.coronavirus.data.gov.uk/v2/data?areaType=overview&metric=covidOccupiedMVBeds&metric=hospitalCases&metric=newAdmissions&format=csv")
+ 
+ 
+ # Append data to tibble
+ 
+ HospitalData <- tibble()
+ HospitalData <- rev(bind_rows(HospitalData,d))
+ 
+
+ 

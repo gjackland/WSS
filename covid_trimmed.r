@@ -89,7 +89,7 @@ baseurl <- "https://api.coronavirus.data.gov.uk/v2/data?"
 # Start and end date - the data to collect data from
 startdate <- as.Date("2020/07/25")
 #  Lose only the last day of data - use tail correction for reporting delay
-enddate <-  Sys.Date()-1
+enddate <-  Sys.Date()-4
 
 #  Dates for the plots
 plotdate=as.Date(c("2020-09-22",as.character(enddate)))
@@ -254,7 +254,6 @@ scotdat <- scotdat %>%  select(date,
   filter(date >= startdate &
            date <= enddate ) %>%
   arrange(date)
-# Tail effect
 
 
 # Regional data
@@ -398,16 +397,34 @@ regcases <- inner_join(regcases,scotdailycasesbyboard, by = c("date"="date"))
 
 #### Get tests for England pre-Sept by taking the post-Sept fraction of all tests that were in England (0.867)
 comdat$tests[1:58] = as.integer(ukcasedat$tests[1:58] * 0.867)
-rm(ukcasedat)
+
+#### Get the UK hospital data & Append data to tibble
+####  MV beds = CRIT
+####  hospitalCases = SARI+CRIT+CRITREC
+
+d <- read_csv("https://api.coronavirus.data.gov.uk/v2/data?areaType=overview&metric=covidOccupiedMVBeds&metric=hospitalCases&metric=newAdmissions&format=csv")
+HospitalData <- tibble()
+HospitalData <- rev( bind_rows(HospitalData,d) )
+
+HospitalData  <-  HospitalData %>% filter(date >= startdate &
+                          date <= enddate ) %>%
+  arrange(date)
+
+
+# Remove the no longer needed input datas
+rm(ukcasedat,scotdailycases,scotdailycasesbyboard,d)
+
+
 
 # Plot all cases against date.
 comdat %>% ggplot(aes(x=date,y=allCases)) + geom_line() +
   xlab("Date") + ylab("All cases")
+
 #  Tail correction.  Assumes we read in all but the last row
-scotdat$allCases[ncols(scotdat)]=scotdat$allCases[ncols(scotdat)]*1.05
-scotdat$allCases[ncols(scotdat)-1]=scotdat$allCases[ncols(scotdat)-1]*1.005
-scotdailycasesbyboard[(2:15),ncols(scotdailycasesbyboard)]=scotdailycasesbyboard[(2:15),ncols(scotdailycasesbyboard)]*1.05
-scotdailycasesbyboard[(2:15),ncols(scotdailycasesbyboard)-1]=scotdailycasesbyboard[(2:15),ncols(scotdailycasesbyboard)-1]*1.005
+#scotdat$allCases[ncols(scotdat)]=scotdat$allCases[ncols(scotdat)]*1.05
+#scotdat$allCases[ncols(scotdat)-1]=scotdat$allCases[ncols(scotdat)-1]*1.005
+#scotdailycasesbyboard[(2:15),ncols(scotdailycasesbyboard)]=scotdailycasesbyboard[(2:15),ncols(scotdailycasesbyboard)]*1.05
+#scotdailycasesbyboard[(2:15),ncols(scotdailycasesbyboard)-1]=scotdailycasesbyboard[(2:15),ncols(scotdailycasesbyboard)-1]*1.005
 
 # Remove weekend effect,  assuming each weekday has same number of cases over the
 # epidemic, and national averages hold regionally.
@@ -494,7 +511,7 @@ ggplot(comdat,aes(x=date)) +
 logmean = 2.534
 MildToRecovery=dlnorm(1:28, logmean,  logmean/4.0) # These "Milds" are never recorded
 
-logmean=2
+logmean=2.8
 ILIToRecovery=dlnorm(1:28, logmean,  logmean/4.0)
 ILIToSARI=dlnorm(1:28, logmean,  logmean/4.0)
 logmean=1
@@ -649,7 +666,7 @@ rat[rat==Inf]=1.0
 rat[rat==-Inf]=1.0
 
 
-plot(smooth.spline(rat$Scotland[250:317],df=12)$y,x=rat$date[250:317],ylim=c(0.7,1.40),xlab="Date",ylab="R, Scotland")
+plot(smooth.spline(rat$Scotland[250:317],df=6)$y,x=rat$date[250:317],ylim=c(0.7,1.40),xlab="Date",ylab="R, Scotland")
 
 start <- rat$date[200]
 end <- rat$date[317]
@@ -1003,18 +1020,18 @@ outputJSON(myt0 = t0,
            mycalibrationDeathCount=NA,   # ADD VALUE, eg single number
            myr0 = NA,
            myinterventionPeriods= NA,
-           myCritRecov = NA,
-           myCritical = NA,
+           myCritRecov = rowSums(CRITREC[2:20]),
+           myCritical = rowSums(CRIT[2:20]),
            myILI = rowsums(ILI[2:20]),
            myMild = rowSums(MILD[2:20]),
            myR = dfR$piecewise,
            mySARI = rowSums(ILI[2:20]),
-           mycumCritRecov = NA,
-           mycumCritical = NA,
-           mycumILI = NA,
-           mycumMild = NA,
-           mycumSARI = NA,
-           myincDeath = NA
+           mycumCritRecov = cumsum(myCritRecov),
+           mycumCritical = cumsum(myCritical),
+           mycumILI = cumsum(myILI),
+           mycumMild = cumsum(myMild),
+           mycumSARI = cumsum(mySARI),
+           myincDeath = rowSums(DEATH[2:20])
 )
 
 #####  Figures and analysis for https://www.medrxiv.org/content/10.1101/2021.04.14.21255385v1
