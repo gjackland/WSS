@@ -513,7 +513,7 @@ MildToRecovery=dlnorm(1:28, logmean,  logmean/4.0) # These "Milds" are never rec
 
 logmean=log(12.6)
 ILIToRecovery=dlnorm(1:28, logmean,  logmean/4.0)
-logmean(4.0)
+logmean=log(4.0)
 ILIToSARI=dlnorm(1:28, logmean,  logmean/4.0)
 logmean=log(12.6)
 SARIToRecovery=dlnorm(1:28, logmean,  logmean/4.0)
@@ -674,11 +674,12 @@ rat[is.na(rat)]=1.0
 rat[rat==Inf]=1.0
 rat[rat==-Inf]=1.0
 
-
-plot(smooth.spline(rat$Scotland[250:317],df=6)$y,x=rat$date[250:317],ylim=c(0.7,1.40),xlab="Date",ylab="R, Scotland")
-
 startplot <- rat$date[200]
-endplot <- rat$date[317]
+endplot <- rat$date[327]
+
+plot(smooth.spline(rat$Scotland[startplot:endplot],df=6)$y,x=rat$date[startplot:endplot],ylim=c(0.7,1.40),xlab="Date",ylab="R, Scotland")
+
+
 
 rat %>% filter(start < date & date < end) %>% 
   pivot_longer(!date,names_to = "Region", values_to="R") %>% 
