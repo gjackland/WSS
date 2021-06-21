@@ -89,7 +89,7 @@ baseurl <- "https://api.coronavirus.data.gov.uk/v2/data?"
 # Start and end date - the data to collect data from
 startdate <- as.Date("2020/07/25")
 #  Lose only the last day of data - use tail correction for reporting delay
-enddate <-  Sys.Date()-4
+enddate <-  Sys.Date()-1
 
 #  Dates for the plots
 plotdate=as.Date(c("2020-09-22",as.character(enddate)))
@@ -416,16 +416,31 @@ rm(ukcasedat,scotdailycases,scotdailycasesbyboard,d)
 
 
 
-# Plot all cases against date.
+# Plot all cases against date: Used for the paper, uncomment to recreate
+#comdat %>% ggplot(aes(x=date,y=allCases)) + geom_line() +
+#  xlab("Date") + ylab("All cases")
+
+
 comdat %>% ggplot(aes(x=date,y=allCases)) + geom_line() +
-  xlab("Date") + ylab("All cases")
+  xlab("Date") + ylab("All cases") +
+  coord_cartesian(xlim = c(enddate-30, enddate))
 
 #  Tail correction.  Assumes we read in all but the last row
-#scotdat$allCases[ncols(scotdat)]=scotdat$allCases[ncols(scotdat)]*1.05
-#scotdat$allCases[ncols(scotdat)-1]=scotdat$allCases[ncols(scotdat)-1]*1.005
-#scotdailycasesbyboard[(2:15),ncols(scotdailycasesbyboard)]=scotdailycasesbyboard[(2:15),ncols(scotdailycasesbyboard)]*1.05
-#scotdailycasesbyboard[(2:15),ncols(scotdailycasesbyboard)-1]=scotdailycasesbyboard[(2:15),ncols(scotdailycasesbyboard)-1]*1.005
+if(enddate == (Sys.Date()-1)){
+scotdat$allCases[nrow(scotdat)]=scotdat$allCases[nrow(scotdat)]*1.05
+scotdat$allCases[nrow(scotdat)-1]=scotdat$allCases[nrow(scotdat)-1]*1.005
+regcases[nrow(regcases),2:ncol(regcases)]=regcases[nrow(regcases),2:ncol(regcases)]*1.05
+regcases[nrow(regcases-1),2:ncol(regcases)]=regcases[nrow(regcases-1),2:ncol(regcases)]*1.005
+regcases[nrow(regcases),2:ncol(regcases)]=regcases[nrow(regcases),2:ncol(regcases)]*1.05
+regcases[nrow(regcases-1),2:ncol(regcases)]=regcases[nrow(regcases-1),2:ncol(regcases)]*1.005
+}
 
+#  Fix missing data to constant values
+HospitalData<-na.locf(HospitalData)
+casedat<- na.locf(casedat)
+comdat<- na.locf(comdat)
+regcases<-na.locf(regcases)
+scotdat<-na.locf(scotdat)
 # Remove weekend effect,  assuming each weekday has same number of cases over the
 # epidemic, and national averages hold regionally.
 days <-1:7
@@ -487,10 +502,9 @@ for (iage in 2:ncol(casedat) ){
 }
 rm(Xmasav,Xmasgrad,weeks,i,j,indexday)
 
-# Set false positive adjustment at 0.004
-for(i in 1:length(comdat$allCases)){
-  comdat$fpCases[i]=comdat$allCases[i]-0.004*as.integer(comdat$tests[i])
-}
+# Set false positive adjustment at 0.004, extrapolate tests if the last few days are missing
+  comdat$fpCases=comdat$allCases-0.004*as.integer(comdat$tests)
+
 
 plot(comdat$inputCases,x=comdat$date,xlab="Date",ylab="Cases")
 lines(comdat$allCases,x=comdat$date, col="green",lwd=2)
@@ -499,8 +513,8 @@ lines(comdat$fpCases, x=comdat$date,col="red",lwd=2)
 # Same graph using ggplot - alpha sets a level of transparency between 0 (opaque) to 1 (transparent)
 ggplot(comdat,aes(x=date)) +
   geom_point(aes(y=inputCases),alpha=0.5) +
-  geom_line(aes(y=allCases), colour="green", size=1.5, alpha=0.5) +
-  geom_line(aes(y=fpCases),colour="red", size=1.5, alpha=0.5) +
+  geom_line(aes(y=allCases), color="green", size=1.5, alpha=0.5) +
+  geom_line(aes(y=fpCases),color="red", size=1.5, alpha=0.5) +
   xlab("Dates") + ylab("Cases")
 
 # Calculation of Rnumber, generation time = 4 days
@@ -510,11 +524,10 @@ ggplot(comdat,aes(x=date)) +
 #  Choose to use lognormal with logsd=logmean/4.0.  Data not available to do better
 logmean = log(12.6)
 MildToRecovery=dlnorm(1:28, logmean,  logmean/4.0) # These "Milds" are never recorded
-
 logmean=log(12.6)
 ILIToRecovery=dlnorm(1:28, logmean,  logmean/4.0)
-logmean(4.0)
-ILIToSARI=dlnorm(1:28, logmean,  logmean/4.0)
+logmean=log(9.0)
+ILIToSARI=dlnorm(1:28, logmean,  logmean/1.3)
 logmean=log(12.6)
 SARIToRecovery=dlnorm(1:28, logmean,  logmean/4.0)
 logmean=log(6.0)
@@ -524,7 +537,7 @@ SARIToCritical=dlnorm(1:28, logmean,  logmean/4.0)
 logmean=log(7.6) # Mean time spent on ICU, from Faes
 CriticalToCritRecov=dlnorm(1:28, logmean,  logmean/4.0)
 CriticalToDeath=dlnorm(1:28, logmean,  logmean/4.0)
-logmean=log(4) #  Stay in hospital post ICU - needs evidence
+logmean=log(4.0) #  Stay in hospital post ICU - needs evidence
 CritRecovToRecov=dlnorm(1:28, logmean,  logmean/4.0)
 
 #  Normalise these distributions
@@ -545,14 +558,15 @@ if(compartment){
 #  Zero dataframes.
 #  Follow these cases to the end of the CDFs]
 lengthofdata=  length(casedat$date)#
+lengthofspread = length(ILIToRecovery)
 
 #extend ILI longer than deathdat to allow for predictions (eventually)
 ILI<-deathdat
-for (i in length(casedat$date):(nrow(casedat)+length(ILIToSARI)) ){
-  for (j in ncol(ILI)){
-       ILI[i,j] = 0.0
+for (i in lengthofdata:(lengthofdata+lengthofspread) ){
+  ILI[i,(2:20)] = 0.0
+  ILI[i,1] =ILI$date[1]+i-1
   }
-}
+
 cols <- names(ILI)[2:ncol(ILI)]
 ILI[cols] <-  0.0
 MILD <- ILI
@@ -575,7 +589,7 @@ oldSARI <- SARI
 oldCRIT <- CRIT
 oldCRITREC <- CRITREC
 
-# Inter-cpmpartmet probability differs from covidsim's idea of totals ending their illness
+# Inter-compartment probability differs from covidsim's idea of totals ending their illness
 #in that compartment  prior to RECOV/DEATH
 pItoS= (covidsimAge$Prop_Critical_ByAge+covidsimAge$Prop_SARI_ByAge )/
   (covidsimAge$Prop_Critical_ByAge+covidsimAge$Prop_SARI_ByAge+covidsimAge$Prop_ILI_ByAge )
@@ -587,10 +601,11 @@ pStoC=covidsimAge$Prop_Critical_ByAge/(covidsimAge$Prop_Critical_ByAge+covidsimA
 
 #  covidsimAge has no date row, so need to use iage-1
 
-MILD[1,2:ncol(MILD)]=casedat[1,2:ncol(casedat)]*covidsimAge$Prop_Mild_ByAge
-ILI[1,2:ncol(ILI)]=casedat[1,2:ncol(casedat)]*covidsimAge$Prop_ILI_ByAge
-SARI[1,2:ncol(SARI)]=casedat[1,2:ncol(casedat)]*covidsimAge$Prop_SARI_ByAge
-CRIT[1,2:ncol(CRIT)]=casedat[1,2:ncol(casedat)]*covidsimAge$Prop_Critical_ByAge
+MILD[1,(2:ncol(MILD))]=casedat[1,(2:ncol(casedat))]*covidsimAge$Prop_Mild_ByAge
+ILI[1,(2:ncol(ILI))]=casedat[1,(2:ncol(casedat))]*covidsimAge$Prop_ILI_ByAge
+SARI[1,(2:ncol(SARI))]=casedat[1,(2:ncol(casedat))]*covidsimAge$Prop_SARI_ByAge
+CRIT[1,(2:ncol(CRIT))]=casedat[1,(2:ncol(casedat))]*covidsimAge$Prop_Critical_ByAge
+
 
 
 # Add new cases to Mild, ILI, SARI and CRIT people in each  age group.
@@ -600,12 +615,13 @@ CRIT[1,2:ncol(CRIT)]=casedat[1,2:ncol(casedat)]*covidsimAge$Prop_Critical_ByAge
 for (iage in (2:ncol(ILI))){
   for (iday in (2:lengthofdata)){
     xday=iday+length(SARIToCritical)
-
+    iday=iday+1
     # Mild and ILI comes in from todays casedat, add to those from the past
-    newMILD[iday,iage]=as.numeric(casedat[iday,iage]*covidsimAge$Prop_Mild_ByAge[(iage-1)])+newMILD[iday,iage]
-    newILI[iday,iage]=as.numeric(casedat[iday,iage]*covidsimAge$Prop_ILI_ByAge[(iage-1)])+newILI[iday,iage]
-    newSARI[iday,iage]=as.numeric(casedat[iday,iage]*covidsimAge$Prop_SARI_ByAge[(iage-1)])+newSARI[iday,iage]
-    newCRIT[iday,iage]=as.numeric(casedat[iday,iage]*covidsimAge$Prop_Critical_ByAge[(iage-1)])+newCRIT[iday,iage]
+    newMILD[iday,iage]=as.numeric(casedat[iday,iage]*covidsimAge$Prop_Mild_ByAge[(iage-1)])+newILI[iday,iage]
+    newILI[iday,iage]=as.numeric(casedat[iday,iage]*(1.0-covidsimAge$Prop_Mild_ByAge[(iage-1)]) )+newILI[iday,iage]
+
+#    newSARI[iday,iage]=as.numeric(casedat[iday,iage]*covidsimAge$Prop_SARI_ByAge[(iage-1)])+newSARI[iday,iage]
+#    newCRIT[iday,iage]=as.numeric(casedat[iday,iage]*covidsimAge$Prop_Critical_ByAge[(iage-1)])+newCRIT[iday,iage]
 
     # All todays new MILDs will all leave to REC across distribution
     MtoR=as.numeric(newMILD[iday,iage])          *      MildToRecovery
@@ -680,7 +696,7 @@ plot(smooth.spline(rat$Scotland[250:317],df=6)$y,x=rat$date[250:317],ylim=c(0.7,
 startplot <- rat$date[200]
 endplot <- rat$date[317]
 
-rat %>% filter(start < date & date < end) %>% 
+rat %>% filter(startplot < date & date < endplot) %>% 
   pivot_longer(!date,names_to = "Region", values_to="R") %>% 
   ggplot(aes(x=date, y=R, colour=Region)) + coord_cartesian(ylim=c(0.8,1.5)) + geom_smooth(span=0.8
                                 ) +  guides(color = FALSE) + facet_wrap(vars(Region))
@@ -1031,7 +1047,7 @@ outputJSON(myt0 = t0,
            myinterventionPeriods= NA,
            myCritRecov = rowSums(CRITREC[2:20]),
            myCritical = rowSums(CRIT[2:20]),
-           myILI = rowsums(ILI[2:20]),
+           myILI = rowSums(ILI[2:20]),
            myMild = rowSums(MILD[2:20]),
            myR = dfR$piecewise,
            mySARI = rowSums(ILI[2:20]),
