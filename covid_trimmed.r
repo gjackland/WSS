@@ -529,12 +529,14 @@ for (area in 2:length(regcases)){
   }
 }
 
-for (i in 2:ncol(casedat)) {
+#for (i in 2:ncol(casedat)) {
+ range= 2:ncol(casedat)
   for (j in 1:nrow(casedat)) {
     indexday=(j-1)%%7+1
-    casedat[j,i] <- as.integer(casedat[j,i]/days[indexday])
+    casedat[j,range] <- as.integer(casedat[j,range]/days[indexday])
   }
-}
+ rm(j,range)
+#}
 
 # Fix Xmas and weekend anomaly in age data
 for (iage in 2:ncol(casedat) ){
@@ -670,15 +672,14 @@ CFR_Critical_ByAge=covidsimAge$CFR_Critical_ByAge
     
     
     xday=iday+length(SARIToCritical)-1
-    for (iage in (2:ncol(ILI))){
-    
+    agerange=(2:ncol(ILI))
+    ageminus=agerange-1
+   
         # Mild and ILI comes in from todays casedat,  ILI=cases Mild add to those from the past
-    newMILD[iday,iage]=as.numeric(casedat[iday,iage]*Prop_Mild_ByAge[(iage-1)]/covidsimAge$Prop_ILI_ByAge[(iage-1)])+newILI[iday,iage]
-    newILI[iday,iage]=as.numeric(casedat[iday,iage]*(1.0 )+newILI[iday,iage])
-    
-    #    newSARI[iday,iage]=as.numeric(casedat[iday,iage]*covidsimAge$Prop_SARI_ByAge[(iage-1)])+newSARI[iday,iage]
-    #    newCRIT[iday,iage]=as.numeric(casedat[iday,iage]*covidsimAge$Prop_Critical_ByAge[(iage-1)])+newCRIT[iday,iage]
-    
+    newMILD[iday,agerange]=casedat[iday,agerange]*Prop_Mild_ByAge[(ageminus)]/covidsimAge$Prop_ILI_ByAge[ageminus]+newILI[iday,agerange]
+    newILI[iday,agerange]=casedat[iday,agerange]*(1.0 )+newILI[iday,agerange]
+
+    for (iage in agerange){    
     # All todays new MILDs will all leave to REC across distribution
     MtoR=as.numeric(newMILD[iday,iage])          *      MildToRecovery
     oldMILD[(iday:xday),iage]=oldMILD[(iday:xday),iage]+MtoR
@@ -706,15 +707,15 @@ CFR_Critical_ByAge=covidsimAge$CFR_Critical_ByAge
     # DEATH and RECOV are cumulative, again anticipating where "new" will end up.
     DEATH[(iday:xday),iage]=DEATH[(iday:xday),iage]+CtoD+StoD
     RECOV[(iday:xday),iage]=RECOV[(iday:xday),iage]+StoR+ItoR+MtoR+CRtoR
-    
+    }    
     # Finally, update todays totals: New cases + transfers from other compartments -
     # transfers to other compartments + leftover from yesterday
-    MILD[iday,iage]=MILD[iday,iage]+newMILD[iday,iage]-oldMILD[iday,iage]+MILD[(iday-1),iage]
-    ILI[iday,iage]=ILI[iday,iage]+newILI[iday,iage]-oldILI[iday,iage]+ILI[(iday-1),iage]
-    SARI[iday,iage]=SARI[iday,iage]+newSARI[iday,iage]-oldSARI[iday,iage]+SARI[(iday-1),iage]
-    CRIT[iday,iage]=CRIT[iday,iage]+newCRIT[iday,iage]-oldCRIT[iday,iage]+CRIT[(iday-1),iage]
-    CRITREC[iday,iage]=CRITREC[iday,iage]+newCRITREC[iday,iage]-oldCRITREC[iday,iage]+CRITREC[(iday-1),iage]
-}
+    MILD[iday,agerange]=MILD[iday,agerange]+newMILD[iday,agerange]-oldMILD[iday,agerange]+MILD[(iday-1),agerange]
+    ILI[iday,agerange]=ILI[iday,agerange]+newILI[iday,agerange]-oldILI[iday,agerange]+ILI[(iday-1),agerange]
+    SARI[iday,agerange]=SARI[iday,agerange]+newSARI[iday,agerange]-oldSARI[iday,agerange]+SARI[(iday-1),agerange]
+    CRIT[iday,agerange]=CRIT[iday,agerange]+newCRIT[iday,agerange]-oldCRIT[iday,agerange]+CRIT[(iday-1),agerange]
+    CRITREC[iday,agerange]=CRITREC[iday,agerange]+newCRITREC[iday,agerange]-oldCRITREC[iday,agerange]+CRITREC[(iday-1),agerange]
+
 }
 }# End of compartment section
 # Create a vector to hold the results for various R-numbers
