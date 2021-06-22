@@ -581,13 +581,13 @@ compartment <- TRUE
 if(compartment){
   # Zero dataframes.
   # Follow these cases to the end of the CDFs
-  lengthofdata <- length(casedat$date)
-  lengthofspread  <-  length(ILIToRecovery)
+  lengthofdata <- nrow(casedat)
+  lengthofspread <- length(ILIToRecovery)
 
   # extend ILI longer than deathdat to allow for predictions (eventually)
-  ILI<-deathdat
+  ILI <- deathdat
   for (i in lengthofdata:(lengthofdata+lengthofspread) ){
-       ILI[i,(2:20)] <-  0.0
+       ILI[i,(2:ncol(ILI))] <-  0.0
        ILI[i,1]  <- ILI$date[1]+i-1
    }
 
@@ -653,34 +653,34 @@ if(compartment){
          ItoS  <-  as.numeric(newILI[iday,iage] *  pItoS[iage-1])     *ILIToSARI
          ItoR  <-  as.numeric(newILI[iday,iage] *(1.0-pItoS[iage-1])) *ILIToSARI
          newSARI[(iday:xday),iage] <- newSARI[(iday:xday),iage]+ItoS
-        oldILI[(iday:xday),iage] <- oldILI[(iday:xday),iage]+ItoR+ItoS
-        # SARI will go to REC, DEATH, CRIT
-        StoC <- as.numeric(newSARI[iday,iage] *pStoC[iage-1]) *SARIToCritical
-        StoD <- as.numeric(newSARI[iday,iage] *covidsimAge$CFR_SARI_ByAge[iage-1])      *SARIToDeath
-        StoR  <-  as.numeric(newSARI[iday,iage] *(1.0-pStoC[iage-1]-covidsimAge$CFR_SARI_ByAge[iage-1]) )*SARIToRecovery
-        newCRIT[(iday:xday),iage] <- newCRIT[(iday:xday),iage]+StoC
-        oldSARI[(iday:xday),iage] <- oldSARI[(iday:xday),iage]+StoR+StoC+StoD
+         oldILI[(iday:xday),iage] <- oldILI[(iday:xday),iage]+ItoR+ItoS
+         # SARI will go to REC, DEATH, CRIT
+         StoC <- as.numeric(newSARI[iday,iage] *pStoC[iage-1]) *SARIToCritical
+         StoD <- as.numeric(newSARI[iday,iage] *covidsimAge$CFR_SARI_ByAge[iage-1])      *SARIToDeath
+         StoR <-  as.numeric(newSARI[iday,iage] *(1.0-pStoC[iage-1]-covidsimAge$CFR_SARI_ByAge[iage-1]) )*SARIToRecovery
+         newCRIT[(iday:xday),iage] <- newCRIT[(iday:xday),iage]+StoC
+         oldSARI[(iday:xday),iage] <- oldSARI[(iday:xday),iage]+StoR+StoC+StoD
 
-        # CRIT  goes to CRITREC DEATH
-        CtoD  <-  as.numeric(newCRIT[iday,iage]* covidsimAge$CFR_Critical_ByAge[(iage-1)]) *CriticalToDeath
-        CtoCR  <-  as.numeric(newCRIT[iday,iage]*(1.0-covidsimAge$CFR_Critical_ByAge[(iage-1)])) *CriticalToCritRecov
-        newCRITREC[(iday:xday),iage] <- newCRITREC[(iday:xday),iage]+CtoCR
-        oldCRIT[(iday:xday),iage] <- oldCRIT[(iday:xday),iage]+CtoD+CtoCR
+         # CRIT  goes to CRITREC DEATH
+         CtoD  <-  as.numeric(newCRIT[iday,iage]* covidsimAge$CFR_Critical_ByAge[(iage-1)]) *CriticalToDeath
+         CtoCR  <-  as.numeric(newCRIT[iday,iage]*(1.0-covidsimAge$CFR_Critical_ByAge[(iage-1)])) *CriticalToCritRecov
+         newCRITREC[(iday:xday),iage] <- newCRITREC[(iday:xday),iage]+CtoCR
+         oldCRIT[(iday:xday),iage] <- oldCRIT[(iday:xday),iage]+CtoD+CtoCR
 
-        # CRITREC goes to RECOV
-        CRtoR  <-  as.numeric(newCRITREC[iday,iage]) *CritRecovToRecov
-        oldCRITREC[(iday:xday),iage] <- oldCRITREC[(iday:xday),iage]+CRtoR
-        # DEATH and RECOV are cumulative, again anticipating where "new" will end up.
-        DEATH[(iday:xday),iage] <- DEATH[(iday:xday),iage]+CtoD+StoD
-        RECOV[(iday:xday),iage] <- RECOV[(iday:xday),iage]+StoR+ItoR+MtoR+CRtoR
+         # CRITREC goes to RECOV
+         CRtoR  <-  as.numeric(newCRITREC[iday,iage]) *CritRecovToRecov
+         oldCRITREC[(iday:xday),iage] <- oldCRITREC[(iday:xday),iage]+CRtoR
+         # DEATH and RECOV are cumulative, again anticipating where "new" will end up.
+         DEATH[(iday:xday),iage] <- DEATH[(iday:xday),iage]+CtoD+StoD
+         RECOV[(iday:xday),iage] <- RECOV[(iday:xday),iage]+StoR+ItoR+MtoR+CRtoR
 
-        # Finally, update todays totals: New cases + transfers from other compartments -
-        # transfers to other compartments + leftover from yesterday
-        MILD[iday,iage] <- MILD[iday,iage]+newMILD[iday,iage]-oldMILD[iday,iage]+MILD[(iday-1),iage]
-        ILI[iday,iage] <- ILI[iday,iage]+newILI[iday,iage]-oldILI[iday,iage]+ILI[(iday-1),iage]
-        SARI[iday,iage] <- SARI[iday,iage]+newSARI[iday,iage]-oldSARI[iday,iage]+SARI[(iday-1),iage]
-        CRIT[iday,iage] <- CRIT[iday,iage]+newCRIT[iday,iage]-oldCRIT[iday,iage]+CRIT[(iday-1),iage]
-        CRITREC[iday,iage] <- CRITREC[iday,iage]+newCRITREC[iday,iage]-oldCRITREC[iday,iage]+CRITREC[(iday-1),iage]
+         # Finally, update todays totals: New cases + transfers from other compartments -
+         # transfers to other compartments + leftover from yesterday
+         MILD[iday,iage] <- MILD[iday,iage]+newMILD[iday,iage]-oldMILD[iday,iage]+MILD[(iday-1),iage]
+         ILI[iday,iage] <- ILI[iday,iage]+newILI[iday,iage]-oldILI[iday,iage]+ILI[(iday-1),iage]
+         SARI[iday,iage] <- SARI[iday,iage]+newSARI[iday,iage]-oldSARI[iday,iage]+SARI[(iday-1),iage]
+         CRIT[iday,iage] <- CRIT[iday,iage]+newCRIT[iday,iage]-oldCRIT[iday,iage]+CRIT[(iday-1),iage]
+         CRITREC[iday,iage] <- CRITREC[iday,iage]+newCRITREC[iday,iage]-oldCRITREC[iday,iage]+CRITREC[(iday-1),iage]
      }
    }
 }# End of compartment section
@@ -705,13 +705,13 @@ if(any(casedat==0)){
     }
   }
 }
-rat=regcases
+rat <- regcases
 for(i in ((genTime+1):nrow(regcases))    ){
-  rat[i,2:ncol(regcases)]=1+log(regcases[i,2:ncol(regcases)]/regcases[(i-1),2:ncol(regcases)])*genTime
-  }
-rat[is.na(rat)]=1.0
-rat[rat==Inf]=1.0
-rat[rat==-Inf]=1.0
+  rat[i,2:ncol(regcases)] <- 1+log(regcases[i,2:ncol(regcases)]/regcases[(i-1),2:ncol(regcases)])*genTime
+}
+rat[is.na(rat)] <- 1.0
+rat[rat==Inf] <- 1.0
+rat[rat==-Inf] <- 1.0
 
 startplot <- rat$date[200]
 endplot <- rat$date[327]
@@ -719,19 +719,16 @@ endplot <- rat$date[327]
 plot(smooth.spline(rat$Scotland[startplot:endplot],df=6)$y,x=rat$date[startplot:endplot],ylim=c(0.7,1.40),xlab="Date",ylab="R, Scotland")
 
 
-
 rat %>% filter(startplot < date & date < endplot) %>%
   pivot_longer(!date,names_to = "Region", values_to="R") %>%
-  ggplot(aes(x=date, y=R, colour=Region)) + coord_cartesian(ylim=c(0.8,1.5)) + geom_smooth(span=0.8
-                                ) +  guides(color = FALSE) + facet_wrap(vars(Region))
-
-
+  ggplot(aes(x=date, y=R, colour=Region)) + coord_cartesian(ylim=c(0.8,1.5)) +
+  geom_smooth(span=0.8) +  guides(color = "none") + facet_wrap(vars(Region))
 
 rat %>% filter(startplot < date & date < endplot) %>%
   pivot_longer(!date,names_to = "Region", values_to="R") %>%
   ggplot(aes(x=date, y=R, colour=Region)) +
   coord_cartesian(ylim=c(0.5,1.9))+ geom_smooth(span=0.5) +
-  guides(color = FALSE) + facet_wrap(vars(Region))
+  guides(color = "none") + facet_wrap(vars(Region))
 
 #  Unsmoothed version
 #rat %>% filter(startplot < date & date < endplot) %>%
