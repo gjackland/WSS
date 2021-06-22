@@ -90,7 +90,8 @@ baseurl <- "https://api.coronavirus.data.gov.uk/v2/data?"
 startdate <- as.Date("2020/07/25")
 #  Lose only the last day of data - use tail correction for reporting delay
 enddate <-  Sys.Date()-4
-
+# Set the generation time
+genTime=5
 #  Dates for the plots
 plotdate=as.Date(c("2020-09-22",as.character(enddate)))
 # Date of Christmas Eve
@@ -435,6 +436,24 @@ regcases[nrow(regcases),2:ncol(regcases)]=regcases[nrow(regcases),2:ncol(regcase
 regcases[nrow(regcases-1),2:ncol(regcases)]=regcases[nrow(regcases-1),2:ncol(regcases)]*1.005
 }
 
+#  Add variant data to comdat
+
+comdat$Kent<-0.0
+comdat$India<-0.0
+Kentdate <- as.integer(as.Date("2021/01/01")-startdate)
+# Approximate Kent by logistic rise around 2021/01/01  Same gen time, R+0.3 vs Wild
+for (i in 1:nrow(comdat)){
+  x= (i-Kentdate)*0.3/genTime
+  comdat$Kent[i]=1.0/(1.0+exp(-x))
+}
+Indiadate <- as.integer(as.Date("2021/05/15")-startdate)
+# Approximate India by logistic rise around 2021/15/01: see covid19.sanger.  Same genTime R+0.5 vs Kent
+for (i in 1:nrow(comdat)){
+  x= (i-Indiadate)*0.5/genTime
+  comdat$India[i]=1.0/(1.0+exp(-x))
+}
+comdat$Kent<-comdat$Kent-comdat$India
+
 #  Fix missing data to constant values
 HospitalData<-na.locf(HospitalData)
 casedat<- na.locf(casedat)
@@ -526,17 +545,18 @@ logmean = log(12.6)
 MildToRecovery=dlnorm(1:28, logmean,  logmean/4.0) # These "Milds" are never recorded
 logmean=log(12.6)
 ILIToRecovery=dlnorm(1:28, logmean,  logmean/4.0)
-#  Fit  shift & scale from ILI to SARI
+#  Fit  shift & scale from ILI to SARI logmean=log(9) and logsd=9/1.3 give a great fit
+#  lognormal there decays from day 1
 logmean=log(9.0)
 ILIToSARI=dlnorm(1:28, logmean,  logmean/1.3)
 logmean=log(12.6)
-SARIToRecovery=dlnorm(1:28, logmean,  logmean/4.0)
+SARIToRecovery=dlnorm(1:28, logmean,  logmean/2.0)
 logmean=log(6.0)
-SARIToDeath=dlnorm(1:28, logmean,  logmean/4.0)
+SARIToDeath=dlnorm(1:28, logmean,  logmean/2.0)
 logmean=log(6.0)
-SARIToCritical=dlnorm(1:28, logmean,  logmean/4.0)
+SARIToCritical=dlnorm(1:28, logmean,  logmean/2.0)
 logmean=log(7.6) # Mean time spent on ICU, from Faes
-CriticalToCritRecov=dlnorm(1:28, logmean,  logmean/4.0)
+CriticalToCritRecov=dlnorm(1:28, logmean,  logmean/2.0)
 CriticalToDeath=dlnorm(1:28, logmean,  logmean/4.0)
 logmean=log(4.0) #  Stay in hospital post ICU - needs evidence
 CritRecovToRecov=dlnorm(1:28, logmean,  logmean/4.0)
@@ -552,7 +572,7 @@ CriticalToCritRecov=CriticalToCritRecov/sum(CriticalToCritRecov)
 CriticalToDeath=CriticalToDeath/sum(CriticalToDeath)
 CritRecovToRecov=CritRecovToRecov/sum(CritRecovToRecov)
 #  Follow infections through ILI (Case) - SARI (Hospital) - Crit (ICU) - CritRecov (Hospital)- Deaths
-genTime=5
+
 
 compartment=TRUE
 if(compartment){
@@ -617,9 +637,9 @@ for (iage in (2:ncol(ILI))){
   for (iday in (2:lengthofdata)){
     xday=iday+length(SARIToCritical)
     iday=iday+1
-    # Mild and ILI comes in from todays casedat, add to those from the past
-    newMILD[iday,iage]=as.numeric(casedat[iday,iage]*covidsimAge$Prop_Mild_ByAge[(iage-1)])+newILI[iday,iage]
-    newILI[iday,iage]=as.numeric(casedat[iday,iage]*(1.0-covidsimAge$Prop_Mild_ByAge[(iage-1)]) )+newILI[iday,iage]
+    # Mild and ILI comes in from todays casedat,  ILI=cases Mild add to those from the past
+    newMILD[iday,iage]=as.numeric(casedat[iday,iage]*covidsimAge$Prop_Mild_ByAge[(iage-1)]/covidsimAge$Prop_ILI_ByAge[(iage-1)])+newILI[iday,iage]
+    newILI[iday,iage]=as.numeric(casedat[iday,iage]*(1.0 )+newILI[iday,iage])
 
 #    newSARI[iday,iage]=as.numeric(casedat[iday,iage]*covidsimAge$Prop_SARI_ByAge[(iage-1)])+newSARI[iday,iage]
 #    newCRIT[iday,iage]=as.numeric(casedat[iday,iage]*covidsimAge$Prop_Critical_ByAge[(iage-1)])+newCRIT[iday,iage]
@@ -705,7 +725,7 @@ rat %>% filter(startplot < date & date < endplot) %>%
 
 
 
-rat %>% filter(startplot < date & date < endplot) %>%  
+  rat %>% filter(startplot < date & date < endplot) %>%  
   pivot_longer(!date,names_to = "Region", values_to="R") %>% 
   ggplot(aes(x=date, y=R, colour=Region)) + 
   coord_cartesian(ylim=c(0.5,1.9))+ geom_smooth(span=0.5) +  
@@ -1052,7 +1072,7 @@ outputJSON(myt0 = t0,
            myILI = rowSums(ILI[2:20]),
            myMild = rowSums(MILD[2:20]),
            myR = dfR$piecewise,
-           mySARI = rowSums(ILI[2:20]),
+           mySARI = rowSums(SARI[2:20]),
            mycumCritRecov = cumsum(myCritRecov),
            mycumCritical = cumsum(myCritical),
            mycumILI = cumsum(myILI),
