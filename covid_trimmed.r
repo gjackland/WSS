@@ -5,6 +5,7 @@
 # Copyright 2021 Graeme J Ackland, Mario Antonioletti, The University of Edinburgh,
 #                James A Ackland, The University of Cambridge
 #                David J Wallace.
+
 #### Header ####
 if(interactive()){
   # Remove existing variables
@@ -26,8 +27,9 @@ setwd(".")
 # Turn off scientific notation.
 options(scipen = 999)
 
-#Copy transition rates from covidsim.  There are three different functions for ICDFs, no idea why.  x-axis divided into 20 blocks of 5%.
-#Will need to invert this
+# Copy transition rates from covidsim.  There are three different functions for
+# ICDFs, no idea why.  x-axis divided into 20 blocks of 5%.
+# Will need to invert this
 
 covidsimAge<-data.frame(
   "Prop_Mild_ByAge"=c(
@@ -80,7 +82,7 @@ covidsimICDF<-data.frame(
   "CritRecovToRecov_icdf"=c(
     0, 0.133993315, 0.265922775, 0.402188416, 0.544657341, 0.694774487, 0.853984373, 1.023901078, 1.206436504, 1.403942719, 1.619402771, 1.856711876, 2.121118605, 2.419957988, 2.763950408, 3.169692564, 3.664959893, 4.301777536, 5.196849239, 6.7222126, 10.24997697
   ))
-##covidsim has 17 agegroups.  We need 19,  assume same params for 85_89 & 90+ as for 80+
+## covidsim has 17 agegroups.  We need 19,  assume same params for 85_89 & 90+ as for 80+
 
 ####, Read data ####
 # Base URL to get the data
@@ -99,7 +101,7 @@ XMstart=as.integer(XMas-startdate)
 XMdays=12
 XMend=XMstart+11
 # Wanted to plot a Smooth spline discontinuous at
-#UK lockdown Oct 31 (day 98) -Dec 2  (day 130) Jan 6 (day 165)  (day 1 = July 25)
+# UK lockdown Oct 31 (day 98) -Dec 2  (day 130) Jan 6 (day 165)  (day 1 = July 25)
 lock1 = as.integer(as.Date("2020/10/31")-startdate)
 unlock1 = as.integer(as.Date("2020/12/02")-startdate)
 lock2 = as.integer(as.Date("2021/01/06")-startdate)
@@ -108,7 +110,6 @@ lock1=lock1+test_delay
 unlock1=unlock1+test_delay
 lock2=lock2+test_delay
 sagedelay=16 # Delay in producing R-number, for plots
-
 
 # Total cases, deaths, tests
 casesurl <- paste0(baseurl,
@@ -155,6 +156,7 @@ ukcasedat <- ukcasedat %>%  select(date = date, tests = newPCRTestsByPublishDate
   filter(date >= startdate &
            date <= enddate ) %>%
   arrange(date)
+
 # cases by age
 ageurl <- paste0(baseurl,
                  "areaType=nation&",
@@ -181,7 +183,7 @@ casedat <- casedat %>%
   filter(date >= startdate & date <= enddate) %>%
   arrange(date)
 
-#deaths by age
+# deaths by age
 deathurl <- paste0(baseurl,
                    "areaType=nation&",
                    "areaCode=E92000001&",
@@ -401,8 +403,27 @@ comdat$tests[1:58] = as.integer(ukcasedat$tests[1:58] * 0.867)
 #### Get the UK hospital data & Append data to tibble
 ####  MV beds = CRIT
 ####  hospitalCases = SARI+CRIT+CRITREC
+HospitalUrl <- paste0(baseurl,
+                      "areaType=overview&",
+                      "metric=covidOccupiedMVBeds&",
+                      "metric=hospitalCases&",
+                      "metric=newAdmissions&",
+                      "format=csv")
 
-d <- read_csv("https://api.coronavirus.data.gov.uk/v2/data?areaType=overview&metric=covidOccupiedMVBeds&metric=hospitalCases&metric=newAdmissions&format=csv")
+# Column types
+coltypes <-  cols(
+  areaCode = col_character(),
+  areaName = col_character(),
+  areaType = col_character(),
+  date = col_date(format = "%Y-%m-%d"),
+  covidOccupiedMVBeds = col_double(),
+  hospitalCases = col_double(),
+  newAdmissions = col_double()
+)
+
+# Get the data
+d <- read_csv(HospitalUrl, col_types = coltypes)
+
 HospitalData <- tibble()
 HospitalData <- rev( bind_rows(HospitalData,d) )
 
@@ -425,22 +446,23 @@ comdat %>% ggplot(aes(x=date,y=allCases)) + geom_line() +
   xlab("Date") + ylab("All cases") +
   coord_cartesian(xlim = c(enddate-30, enddate))
 
-#  Tail correction.  Assumes we read in all but the last row
+# Tail correction.  Assumes we read in all but the last row
 if(enddate == (Sys.Date()-1)){
-scotdat$allCases[nrow(scotdat)]=scotdat$allCases[nrow(scotdat)]*1.05
-scotdat$allCases[nrow(scotdat)-1]=scotdat$allCases[nrow(scotdat)-1]*1.005
-regcases[nrow(regcases),2:ncol(regcases)]=regcases[nrow(regcases),2:ncol(regcases)]*1.05
-regcases[nrow(regcases-1),2:ncol(regcases)]=regcases[nrow(regcases-1),2:ncol(regcases)]*1.005
-regcases[nrow(regcases),2:ncol(regcases)]=regcases[nrow(regcases),2:ncol(regcases)]*1.05
-regcases[nrow(regcases-1),2:ncol(regcases)]=regcases[nrow(regcases-1),2:ncol(regcases)]*1.005
+  scotdat$allCases[nrow(scotdat)]=scotdat$allCases[nrow(scotdat)]*1.05
+  scotdat$allCases[nrow(scotdat)-1]=scotdat$allCases[nrow(scotdat)-1]*1.005
+  regcases[nrow(regcases),2:ncol(regcases)]=regcases[nrow(regcases),2:ncol(regcases)]*1.05
+  regcases[nrow(regcases-1),2:ncol(regcases)]=regcases[nrow(regcases-1),2:ncol(regcases)]*1.005
+  regcases[nrow(regcases),2:ncol(regcases)]=regcases[nrow(regcases),2:ncol(regcases)]*1.05
+  regcases[nrow(regcases-1),2:ncol(regcases)]=regcases[nrow(regcases-1),2:ncol(regcases)]*1.005
 }
 
-#  Fix missing data to constant values
-HospitalData<-na.locf(HospitalData)
-casedat<- na.locf(casedat)
-comdat<- na.locf(comdat)
-regcases<-na.locf(regcases)
-scotdat<-na.locf(scotdat)
+# Fix missing data to constant values
+HospitalData <- na.locf(HospitalData)
+casedat <- na.locf(casedat)
+comdat <- na.locf(comdat)
+regcases <-na.locf(regcases)
+scotdat <-na.locf(scotdat)
+
 # Remove weekend effect,  assuming each weekday has same number of cases over the
 # epidemic, and national averages hold regionally.
 days <-1:7
@@ -451,35 +473,35 @@ for(i in 1:weeks){
     days[j]<-days[j]+comdat$allCases[7*i+j]
   }
 }
-casetot=sum(days)
-days=7*days/casetot
+casetot <- sum(days)
+days <- 7*days/casetot
 
 # Rescale comdat and regcases
 for(i in 1:nrow(comdat)){
-  indexday=(i-1)%%7+1
-  comdat$allCases[i]=comdat$allCases[i]/days[indexday]
-  scotdat$allCases[i]=scotdat$allCases[i]/days[indexday]
+  indexday <- (i-1)%%7+1
+  comdat$allCases[i] <- comdat$allCases[i]/days[indexday]
+  scotdat$allCases[i] <- scotdat$allCases[i]/days[indexday]
   for (area in 2:length(regcases)){
-    regcases[i,area]=regcases[i,area]/days[indexday]
+    regcases[i,area] <- regcases[i,area]/days[indexday]
   }
 }
 
 # Fix Xmas anomaly over XMdays=12 days in comdat,regcases by linear fit
-Xmasav = sum(comdat$allCases[XMstart:XMend])/XMdays
-Xmasgrad=comdat$allCases[XMend]-comdat$allCases[XMstart]
+Xmasav <- sum(comdat$allCases[XMstart:XMend])/XMdays
+Xmasgrad <- comdat$allCases[XMend]-comdat$allCases[XMstart]
 for (i in XMstart:XMend){
   comdat$allCases[i]=Xmasav-Xmasgrad*(((XMend+XMstart)/2)-i)/XMdays
 }
-Xmasav = sum(scotdat$allCases[XMstart:XMend])/XMdays
-Xmasgrad=scotdat$allCases[XMend]-scotdat$allCases[XMstart]
+Xmasav <- sum(scotdat$allCases[XMstart:XMend])/XMdays
+Xmasgrad <- scotdat$allCases[XMend]-scotdat$allCases[XMstart]
 for (i in XMstart:XMend){
-  scotdat$allCases[i]=Xmasav-Xmasgrad*(((XMend+XMstart)/2)-i)/XMdays
+  scotdat$allCases[i] <- Xmasav-Xmasgrad*(((XMend+XMstart)/2)-i)/XMdays
 }
 
 # Fix Xmas anomaly in regions
 for (area in 2:length(regcases)){
   Xmasav <- sum(regcases[XMstart:XMend,area])/XMdays
-  Xmasgrad<-regcases[XMend,area]-regcases[XMstart,area]
+  Xmasgrad <- regcases[XMend,area]-regcases[XMstart,area]
   for (i in XMstart:XMend){
     regcases[i,area]<-Xmasav-Xmasgrad*(((XMend+XMstart)/2)-i)/XMdays
   }
@@ -494,16 +516,16 @@ for (i in 2:ncol(casedat)) {
 
 # Fix Xmas and weekend anomaly in age data
 for (iage in 2:ncol(casedat) ){
-  Xmasav = sum(casedat[XMstart:XMend,iage])/XMdays
-  Xmasgrad<-casedat[XMend,iage]-casedat[XMstart,iage]
+  Xmasav <- sum(casedat[XMstart:XMend,iage])/XMdays
+  Xmasgrad <- casedat[XMend,iage]-casedat[XMstart,iage]
   for (i in XMstart:XMend){
-    casedat[i,iage]=as.integer(Xmasav-Xmasgrad*(((XMend+XMstart)/2)-i)/XMdays)
+    casedat[i,iage] <- as.integer(Xmasav-Xmasgrad*(((XMend+XMstart)/2)-i)/XMdays)
   }
 }
 rm(Xmasav,Xmasgrad,weeks,i,j,indexday)
 
 # Set false positive adjustment at 0.004, extrapolate tests if the last few days are missing
-  comdat$fpCases=comdat$allCases-0.004*as.integer(comdat$tests)
+comdat$fpCases <- comdat$allCases-0.004*as.integer(comdat$tests)
 
 
 plot(comdat$inputCases,x=comdat$date,xlab="Date",ylab="Cases")
@@ -520,147 +542,147 @@ ggplot(comdat,aes(x=date)) +
 # Calculation of Rnumber, generation time = 4 days
 
 
-#Make 28 day cdfs.  these are same for all age groups, but fractions Prop/CFR vary
-#  Choose to use lognormal with logsd=logmean/4.0.  Data not available to do better
-logmean = log(12.6)
-MildToRecovery=dlnorm(1:28, logmean,  logmean/4.0) # These "Milds" are never recorded
-logmean=log(12.6)
-ILIToRecovery=dlnorm(1:28, logmean,  logmean/4.0)
+# Make 28 day cdfs.  these are same for all age groups, but fractions Prop/CFR vary
+# Choose to use lognormal with logsd=logmean/4.0.  Data not available to do better
+logmean <- log(12.6)
+MildToRecovery <- dlnorm(1:28, logmean,  logmean/4.0) # These "Milds" are never recorded
+logmean <- log(12.6)
+ILIToRecovery <- dlnorm(1:28, logmean,  logmean/4.0)
 #  Fit  shift & scale from ILI to SARI
-logmean=log(9.0)
-ILIToSARI=dlnorm(1:28, logmean,  logmean/1.3)
-logmean=log(12.6)
-SARIToRecovery=dlnorm(1:28, logmean,  logmean/4.0)
-logmean=log(6.0)
-SARIToDeath=dlnorm(1:28, logmean,  logmean/4.0)
-logmean=log(6.0)
-SARIToCritical=dlnorm(1:28, logmean,  logmean/4.0)
-logmean=log(7.6) # Mean time spent on ICU, from Faes
-CriticalToCritRecov=dlnorm(1:28, logmean,  logmean/4.0)
-CriticalToDeath=dlnorm(1:28, logmean,  logmean/4.0)
-logmean=log(4.0) #  Stay in hospital post ICU - needs evidence
-CritRecovToRecov=dlnorm(1:28, logmean,  logmean/4.0)
+logmean <- log(9.0)
+ILIToSARI <- dlnorm(1:28, logmean,  logmean/1.3)
+logmean <- log(12.6)
+SARIToRecovery <- dlnorm(1:28, logmean,  logmean/4.0)
+logmean <- log(6.0)
+SARIToDeath <- dlnorm(1:28, logmean,  logmean/4.0)
+logmean <- log(6.0)
+SARIToCritical <- dlnorm(1:28, logmean,  logmean/4.0)
+logmean <- log(7.6) # Mean time spent on ICU, from Faes
+CriticalToCritRecov <- dlnorm(1:28, logmean,  logmean/4.0)
+CriticalToDeath <- dlnorm(1:28, logmean,  logmean/4.0)
+logmean <- log(4.0) #  Stay in hospital post ICU - needs evidence
+CritRecovToRecov <- dlnorm(1:28, logmean,  logmean/4.0)
 
-#  Normalise these distributions
-MildToRecovery=MildToRecovery/sum(MildToRecovery)
-ILIToRecovery=ILIToRecovery/sum(ILIToRecovery)
-ILIToSARI=ILIToSARI/sum(ILIToSARI)
-SARIToRecovery=SARIToRecovery/sum(SARIToRecovery)
-SARIToDeath=SARIToDeath/sum(SARIToDeath)
-SARIToCritical=SARIToCritical/sum(SARIToCritical)
-CriticalToCritRecov=CriticalToCritRecov/sum(CriticalToCritRecov)
-CriticalToDeath=CriticalToDeath/sum(CriticalToDeath)
-CritRecovToRecov=CritRecovToRecov/sum(CritRecovToRecov)
-#  Follow infections through ILI (Case) - SARI (Hospital) - Crit (ICU) - CritRecov (Hospital)- Deaths
-genTime=5
+# Normalise these distributions
+MildToRecovery <- MildToRecovery/sum(MildToRecovery)
+ILIToRecovery <- ILIToRecovery/sum(ILIToRecovery)
+ILIToSARI <- ILIToSARI/sum(ILIToSARI)
+SARIToRecovery <- SARIToRecovery/sum(SARIToRecovery)
+SARIToDeath <- SARIToDeath/sum(SARIToDeath)
+SARIToCritical <- SARIToCritical/sum(SARIToCritical)
+CriticalToCritRecov <- CriticalToCritRecov/sum(CriticalToCritRecov)
+CriticalToDeath <- CriticalToDeath/sum(CriticalToDeath)
+CritRecovToRecov <- CritRecovToRecov/sum(CritRecovToRecov)
 
-compartment=TRUE
+# Follow infections through ILI (Case) - SARI (Hospital) - Crit (ICU) - CritRecov (Hospital)- Deaths
+genTime <- 5
+
+compartment <- TRUE
 if(compartment){
-#  Zero dataframes.
-#  Follow these cases to the end of the CDFs]
-lengthofdata=  length(casedat$date)#
-lengthofspread = length(ILIToRecovery)
+  # Zero dataframes.
+  # Follow these cases to the end of the CDFs
+  lengthofdata <- length(casedat$date)
+  lengthofspread  <-  length(ILIToRecovery)
 
-#extend ILI longer than deathdat to allow for predictions (eventually)
-ILI<-deathdat
-for (i in lengthofdata:(lengthofdata+lengthofspread) ){
-  ILI[i,(2:20)] = 0.0
-  ILI[i,1] =ILI$date[1]+i-1
-  }
+  # extend ILI longer than deathdat to allow for predictions (eventually)
+  ILI<-deathdat
+  for (i in lengthofdata:(lengthofdata+lengthofspread) ){
+       ILI[i,(2:20)] <-  0.0
+       ILI[i,1]  <- ILI$date[1]+i-1
+   }
 
-cols <- names(ILI)[2:ncol(ILI)]
-ILI[cols] <-  0.0
-MILD <- ILI
-SARI <- ILI
-CRIT <- ILI
-CRITREC <- ILI
-RECOV <- ILI
-DEATH <- ILI
+   cols <- names(ILI)[2:ncol(ILI)]
+   ILI[cols] <-  0.0
+   MILD <- ILI
+   SARI <- ILI
+   CRIT <- ILI
+   CRITREC <- ILI
+   RECOV <- ILI
+   DEATH <- ILI
 
-# These are the new arrivals in each category.  NOT the increase.  Recov and death just increase
-# Initialize with day 1 in place
-newMILD <- MILD
-newILI <- ILI
-newSARI <- SARI
-newCRIT <- CRIT
-newCRITREC <- CRITREC
-oldMILD <- MILD
-oldILI <- ILI
-oldSARI <- SARI
-oldCRIT <- CRIT
-oldCRITREC <- CRITREC
+   # These are the new arrivals in each category.  NOT the increase.
+   # Recov and death just increase
+   # Initialize with day 1 in place
+   newMILD <- MILD
+   newILI <- ILI
+   newSARI <- SARI
+   newCRIT <- CRIT
+   newCRITREC <- CRITREC
+   oldMILD <- MILD
+   oldILI <- ILI
+   oldSARI <- SARI
+   oldCRIT <- CRIT
+   oldCRITREC <- CRITREC
 
-# Inter-compartment probability differs from covidsim's idea of totals ending their illness
-#in that compartment  prior to RECOV/DEATH
-pItoS= (covidsimAge$Prop_Critical_ByAge+covidsimAge$Prop_SARI_ByAge )/
-  (covidsimAge$Prop_Critical_ByAge+covidsimAge$Prop_SARI_ByAge+covidsimAge$Prop_ILI_ByAge )
+   # Inter-compartment probability differs from covidsim's idea of totals ending their illness
+   # in that compartment  prior to RECOV/DEATH
+   pItoS <- (covidsimAge$Prop_Critical_ByAge+covidsimAge$Prop_SARI_ByAge )/
+            (covidsimAge$Prop_Critical_ByAge+covidsimAge$Prop_SARI_ByAge+covidsimAge$Prop_ILI_ByAge )
 
-pStoC=covidsimAge$Prop_Critical_ByAge/(covidsimAge$Prop_Critical_ByAge+covidsimAge$Prop_SARI_ByAge )
+   pStoC <- covidsimAge$Prop_Critical_ByAge/(covidsimAge$Prop_Critical_ByAge+covidsimAge$Prop_SARI_ByAge )
 
-#  Set day 1.  This assumes - wrongly - that there were zero cases before,
-#              but should autocorrect as those cases get resolved
+   #  Set day 1.  This assumes - wrongly - that there were zero cases before,
+   #              but should autocorrect as those cases get resolved
 
-#  covidsimAge has no date row, so need to use iage-1
+   #  covidsimAge has no date row, so need to use iage-1
 
-MILD[1,(2:ncol(MILD))]=casedat[1,(2:ncol(casedat))]*covidsimAge$Prop_Mild_ByAge
-ILI[1,(2:ncol(ILI))]=casedat[1,(2:ncol(casedat))]*covidsimAge$Prop_ILI_ByAge
-SARI[1,(2:ncol(SARI))]=casedat[1,(2:ncol(casedat))]*covidsimAge$Prop_SARI_ByAge
-CRIT[1,(2:ncol(CRIT))]=casedat[1,(2:ncol(casedat))]*covidsimAge$Prop_Critical_ByAge
+   MILD[1,(2:ncol(MILD))] <- casedat[1,(2:ncol(casedat))]*covidsimAge$Prop_Mild_ByAge
+   ILI[1,(2:ncol(ILI))] <- casedat[1,(2:ncol(casedat))]*covidsimAge$Prop_ILI_ByAge
+   SARI[1,(2:ncol(SARI))] <- casedat[1,(2:ncol(casedat))]*covidsimAge$Prop_SARI_ByAge
+   CRIT[1,(2:ncol(CRIT))] <- casedat[1,(2:ncol(casedat))]*covidsimAge$Prop_Critical_ByAge
 
+   # Add new cases to Mild, ILI, SARI and CRIT people in each  age group.
+   # Bring forward cases from yesterday
+   # Current values will typically be negative, as they are sums of people leaving the compartment
+   # Nobody changes age band.  Vectorize over distributions
+   for (iage in (2:ncol(ILI))){
+    for (iday in (2:lengthofdata)){
+         xday <- iday+length(SARIToCritical)
+         iday <- iday+1
+         # Mild and ILI comes in from todays casedat, add to those from the past
+         newMILD[iday,iage] <- as.numeric(casedat[iday,iage]*covidsimAge$Prop_Mild_ByAge[(iage-1)])+newILI[iday,iage]
+         newILI[iday,iage] <- as.numeric(casedat[iday,iage]*(1.0-covidsimAge$Prop_Mild_ByAge[(iage-1)]) )+newILI[iday,iage]
 
+         # newSARI[iday,iage] <- as.numeric(casedat[iday,iage]*covidsimAge$Prop_SARI_ByAge[(iage-1)])+newSARI[iday,iage]
+         # newCRIT[iday,iage] <- as.numeric(casedat[iday,iage]*covidsimAge$Prop_Critical_ByAge[(iage-1)])+newCRIT[iday,iage]
 
-# Add new cases to Mild, ILI, SARI and CRIT people in each  age group.
-# Bring forward cases from yesterday
-# Current values will typically be negative, as they are sums of people leaving the compartment
-# Nobody changes age band.  Vectorize over distributions
-for (iage in (2:ncol(ILI))){
-  for (iday in (2:lengthofdata)){
-    xday=iday+length(SARIToCritical)
-    iday=iday+1
-    # Mild and ILI comes in from todays casedat, add to those from the past
-    newMILD[iday,iage]=as.numeric(casedat[iday,iage]*covidsimAge$Prop_Mild_ByAge[(iage-1)])+newILI[iday,iage]
-    newILI[iday,iage]=as.numeric(casedat[iday,iage]*(1.0-covidsimAge$Prop_Mild_ByAge[(iage-1)]) )+newILI[iday,iage]
+         # All todays new MILDs will all leave to REC across distribution
+         MtoR <- as.numeric(newMILD[iday,iage])          *      MildToRecovery
+         oldMILD[(iday:xday),iage] <- oldMILD[(iday:xday),iage]+MtoR
+         # ILI will go to SA/RI and REC
+         ItoS  <-  as.numeric(newILI[iday,iage] *  pItoS[iage-1])     *ILIToSARI
+         ItoR  <-  as.numeric(newILI[iday,iage] *(1.0-pItoS[iage-1])) *ILIToSARI
+         newSARI[(iday:xday),iage] <- newSARI[(iday:xday),iage]+ItoS
+        oldILI[(iday:xday),iage] <- oldILI[(iday:xday),iage]+ItoR+ItoS
+        # SARI will go to REC, DEATH, CRIT
+        StoC <- as.numeric(newSARI[iday,iage] *pStoC[iage-1]) *SARIToCritical
+        StoD <- as.numeric(newSARI[iday,iage] *covidsimAge$CFR_SARI_ByAge[iage-1])      *SARIToDeath
+        StoR  <-  as.numeric(newSARI[iday,iage] *(1.0-pStoC[iage-1]-covidsimAge$CFR_SARI_ByAge[iage-1]) )*SARIToRecovery
+        newCRIT[(iday:xday),iage] <- newCRIT[(iday:xday),iage]+StoC
+        oldSARI[(iday:xday),iage] <- oldSARI[(iday:xday),iage]+StoR+StoC+StoD
 
-#    newSARI[iday,iage]=as.numeric(casedat[iday,iage]*covidsimAge$Prop_SARI_ByAge[(iage-1)])+newSARI[iday,iage]
-#    newCRIT[iday,iage]=as.numeric(casedat[iday,iage]*covidsimAge$Prop_Critical_ByAge[(iage-1)])+newCRIT[iday,iage]
+        # CRIT  goes to CRITREC DEATH
+        CtoD  <-  as.numeric(newCRIT[iday,iage]* covidsimAge$CFR_Critical_ByAge[(iage-1)]) *CriticalToDeath
+        CtoCR  <-  as.numeric(newCRIT[iday,iage]*(1.0-covidsimAge$CFR_Critical_ByAge[(iage-1)])) *CriticalToCritRecov
+        newCRITREC[(iday:xday),iage] <- newCRITREC[(iday:xday),iage]+CtoCR
+        oldCRIT[(iday:xday),iage] <- oldCRIT[(iday:xday),iage]+CtoD+CtoCR
 
-    # All todays new MILDs will all leave to REC across distribution
-    MtoR=as.numeric(newMILD[iday,iage])          *      MildToRecovery
-    oldMILD[(iday:xday),iage]=oldMILD[(iday:xday),iage]+MtoR
-    # ILI will go to SA/RI and REC
-    ItoS = as.numeric(newILI[iday,iage] *  pItoS[iage-1])     *ILIToSARI
-    ItoR = as.numeric(newILI[iday,iage] *(1.0-pItoS[iage-1])) *ILIToSARI
-    newSARI[(iday:xday),iage]=newSARI[(iday:xday),iage]+ItoS
-    oldILI[(iday:xday),iage]=oldILI[(iday:xday),iage]+ItoR+ItoS
-    # SARI will go to REC, DEATH, CRIT
-    StoC = as.numeric(newSARI[iday,iage] *pStoC[iage-1]) *SARIToCritical
-    StoD = as.numeric(newSARI[iday,iage] *covidsimAge$CFR_SARI_ByAge[iage-1])      *SARIToDeath
-    StoR = as.numeric(newSARI[iday,iage] *(1.0-pStoC[iage-1]-covidsimAge$CFR_SARI_ByAge[iage-1]) )*SARIToRecovery
-    newCRIT[(iday:xday),iage]=newCRIT[(iday:xday),iage]+StoC
-    oldSARI[(iday:xday),iage]=oldSARI[(iday:xday),iage]+StoR+StoC+StoD
+        # CRITREC goes to RECOV
+        CRtoR  <-  as.numeric(newCRITREC[iday,iage]) *CritRecovToRecov
+        oldCRITREC[(iday:xday),iage] <- oldCRITREC[(iday:xday),iage]+CRtoR
+        # DEATH and RECOV are cumulative, again anticipating where "new" will end up.
+        DEATH[(iday:xday),iage] <- DEATH[(iday:xday),iage]+CtoD+StoD
+        RECOV[(iday:xday),iage] <- RECOV[(iday:xday),iage]+StoR+ItoR+MtoR+CRtoR
 
-    # CRIT  goes to CRITREC DEATH
-    CtoD = as.numeric(newCRIT[iday,iage]* covidsimAge$CFR_Critical_ByAge[(iage-1)]) *CriticalToDeath
-    CtoCR = as.numeric(newCRIT[iday,iage]*(1.0-covidsimAge$CFR_Critical_ByAge[(iage-1)])) *CriticalToCritRecov
-    newCRITREC[(iday:xday),iage]=newCRITREC[(iday:xday),iage]+CtoCR
-    oldCRIT[(iday:xday),iage]=oldCRIT[(iday:xday),iage]+CtoD+CtoCR
-
-    # CRITREC goes to RECOV 
-    CRtoR = as.numeric(newCRITREC[iday,iage]) *CritRecovToRecov
-    oldCRITREC[(iday:xday),iage]=oldCRITREC[(iday:xday),iage]+CRtoR
-# DEATH and RECOV are cumulative, again anticipating where "new" will end up.
-    DEATH[(iday:xday),iage]=DEATH[(iday:xday),iage]+CtoD+StoD
-    RECOV[(iday:xday),iage]=RECOV[(iday:xday),iage]+StoR+ItoR+MtoR+CRtoR
-
-    # Finally, update todays totals: New cases + transfers from other compartments -
-    # transfers to other compartments + leftover from yesterday
-    MILD[iday,iage]=MILD[iday,iage]+newMILD[iday,iage]-oldMILD[iday,iage]+MILD[(iday-1),iage]
-    ILI[iday,iage]=ILI[iday,iage]+newILI[iday,iage]-oldILI[iday,iage]+ILI[(iday-1),iage]
-    SARI[iday,iage]=SARI[iday,iage]+newSARI[iday,iage]-oldSARI[iday,iage]+SARI[(iday-1),iage]
-    CRIT[iday,iage]=CRIT[iday,iage]+newCRIT[iday,iage]-oldCRIT[iday,iage]+CRIT[(iday-1),iage]
-    CRITREC[iday,iage]=CRITREC[iday,iage]+newCRITREC[iday,iage]-oldCRITREC[iday,iage]+CRITREC[(iday-1),iage]
-  }
-}
+        # Finally, update todays totals: New cases + transfers from other compartments -
+        # transfers to other compartments + leftover from yesterday
+        MILD[iday,iage] <- MILD[iday,iage]+newMILD[iday,iage]-oldMILD[iday,iage]+MILD[(iday-1),iage]
+        ILI[iday,iage] <- ILI[iday,iage]+newILI[iday,iage]-oldILI[iday,iage]+ILI[(iday-1),iage]
+        SARI[iday,iage] <- SARI[iday,iage]+newSARI[iday,iage]-oldSARI[iday,iage]+SARI[(iday-1),iage]
+        CRIT[iday,iage] <- CRIT[iday,iage]+newCRIT[iday,iage]-oldCRIT[iday,iage]+CRIT[(iday-1),iage]
+        CRITREC[iday,iage] <- CRITREC[iday,iage]+newCRITREC[iday,iage]-oldCRITREC[iday,iage]+CRITREC[(iday-1),iage]
+     }
+   }
 }# End of compartment section
 
 # Create a vector to hold the results for various R-numbers
@@ -698,22 +720,22 @@ plot(smooth.spline(rat$Scotland[startplot:endplot],df=6)$y,x=rat$date[startplot:
 
 
 
-rat %>% filter(startplot < date & date < endplot) %>% 
-  pivot_longer(!date,names_to = "Region", values_to="R") %>% 
+rat %>% filter(startplot < date & date < endplot) %>%
+  pivot_longer(!date,names_to = "Region", values_to="R") %>%
   ggplot(aes(x=date, y=R, colour=Region)) + coord_cartesian(ylim=c(0.8,1.5)) + geom_smooth(span=0.8
                                 ) +  guides(color = FALSE) + facet_wrap(vars(Region))
 
 
 
-rat %>% filter(startplot < date & date < endplot) %>%  
-  pivot_longer(!date,names_to = "Region", values_to="R") %>% 
-  ggplot(aes(x=date, y=R, colour=Region)) + 
-  coord_cartesian(ylim=c(0.5,1.9))+ geom_smooth(span=0.5) +  
+rat %>% filter(startplot < date & date < endplot) %>%
+  pivot_longer(!date,names_to = "Region", values_to="R") %>%
+  ggplot(aes(x=date, y=R, colour=Region)) +
+  coord_cartesian(ylim=c(0.5,1.9))+ geom_smooth(span=0.5) +
   guides(color = FALSE) + facet_wrap(vars(Region))
 
 #  Unsmoothed version
-#rat %>% filter(startplot < date & date < endplot) %>% 
-#  pivot_longer(!date,names_to = "Region", values_to="R") %>% 
+#rat %>% filter(startplot < date & date < endplot) %>%
+#  pivot_longer(!date,names_to = "Region", values_to="R") %>%
 #  ggplot(aes(x=date, y=R, colour=Region)) + geom_line() +
 #  guides(color = FALSE) + facet_wrap(vars(Region))
 
@@ -819,7 +841,7 @@ lines(predict(loess(bylogR ~ x, data=dfR,span=0.3,weight=sqrt(comdat$allCases)))
 lines(predict(loess(bylogR ~ x, data=dfR,span=0.3)),col='red',x=dfR$date)
 
 plot(smoothweightR$y,ylab="R-number",xlab="Day")
-#  Plot R continuous with many splines. 
+#  Plot R continuous with many splines.
 for (ismooth in 4:28){
 #  lines(smooth.spline(dfR$bylogR,df=ismooth,w=sqrt(comdat$allCases)))
   lines(predict(loess(bylogR ~ x, data=dfR,span=(4.0/ismooth))),col='red')
@@ -1346,8 +1368,8 @@ ggplot(CFR) +
   for (i in 12:19){
     geom_line(aes( x=date, y=CFR[5] ))
 }
-CFR %>% filter( "2020/10/1"< date & date < endplot) %>%  
-  pivot_longer(!date,names_to = "agegroup", values_to="DeathRate") %>% 
-  ggplot(aes(x=date, y=DeathRate, colour=agegroup)) + 
-  coord_cartesian(ylim=c(0.0,0.4))+ geom_smooth(span=0.3) +  
+CFR %>% filter( "2020/10/1"< date & date < endplot) %>%
+  pivot_longer(!date,names_to = "agegroup", values_to="DeathRate") %>%
+  ggplot(aes(x=date, y=DeathRate, colour=agegroup)) +
+  coord_cartesian(ylim=c(0.0,0.4))+ geom_smooth(span=0.3) +
   guides(color = FALSE) + facet_wrap(vars(agegroup))
