@@ -1047,6 +1047,8 @@ if(dir.exists("/data/input")){
 }else{
   infile <- "data/sample-inputFile.json"
 }
+
+# Get input data from the web interface or a test file
 dataIn <- getInput(infile)
 
 region <- dataIn$region
@@ -1059,6 +1061,11 @@ t0 <-  min(dfR$date)
 days <- as.integer(dfR$date - t0)
 
 # Labels are optional
+myCritRecov <- rowSums(CRITREC[2:20])
+myCritical <- rowSums(CRIT[2:20])
+myILI <- rowSums(ILI[2:20])
+myMild <- rowSums(MILD[2:20])
+mySARI <-  rowSums(ILI[2:20])
 outputJSON(myt0 = t0,
            mydaysarray = days,
            myregion = "GB",
@@ -1068,12 +1075,12 @@ outputJSON(myt0 = t0,
            mycalibrationDeathCount=NA,   # ADD VALUE, eg single number
            myr0 = NA,
            myinterventionPeriods= NA,
-           myCritRecov = rowSums(CRITREC[2:20]),
-           myCritical = rowSums(CRIT[2:20]),
-           myILI = rowSums(ILI[2:20]),
-           myMild = rowSums(MILD[2:20]),
+           myCritRecov = myCritRecov,
+           myCritical = myCritical,
+           myILI = myILI,
+           myMild = myMild,
            myR = dfR$piecewise,
-           mySARI = rowSums(ILI[2:20]),
+           mySARI = mySARI,
            mycumCritRecov = cumsum(myCritRecov),
            mycumCritical = cumsum(myCritical),
            mycumILI = cumsum(myILI),
@@ -1371,4 +1378,4 @@ CFR %>% filter( "2020/10/1"< date & date < endplot) %>%
   pivot_longer(!date,names_to = "agegroup", values_to="DeathRate") %>%
   ggplot(aes(x=date, y=DeathRate, colour=agegroup)) +
   coord_cartesian(ylim=c(0.0,0.4))+ geom_smooth(span=0.3) +
-  guides(color = FALSE) + facet_wrap(vars(agegroup))
+  guides(color = "none") + facet_wrap(vars(agegroup))
