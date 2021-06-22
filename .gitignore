@@ -9,3 +9,5 @@ forpub.csv
 data/AgeDeathDemographics.csv
 *.pdf
 data/*.json
+*.swp
+
