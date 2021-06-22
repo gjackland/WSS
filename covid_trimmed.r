@@ -465,7 +465,7 @@ comdat$India<-0.0
 Kentdate <- as.integer(as.Date("2021/01/01")-startdate)
 # Approximate Kent by logistic rise around 2021/01/01  Same gen time, R+0.3 vs Wild
 for (i in 1:nrow(comdat)){
-  x= (i-Kentdate)*0.3/genTime
+  x= (i-Kentdate)*0.4/genTime
   comdat$Kent[i]=1.0/(1.0+exp(-x))
 }
 Indiadate <- as.integer(as.Date("2021/05/15")-startdate)
@@ -474,7 +474,9 @@ for (i in 1:nrow(comdat)){
   x= (i-Indiadate)*0.5/genTime
   comdat$India[i]=1.0/(1.0+exp(-x))
 }
+#  Kent is 1.4x worse, india is 1.5*1.4=2.1x worse
 comdat$Kent<-comdat$Kent-comdat$India
+comdat$lethality<-1.0+0.4*comdat$Kent+1.1*comdat$India
 
 #  Fix missing data to constant values
 HospitalData<-na.locf(HospitalData)
@@ -577,7 +579,7 @@ logmean=log(6.0)
 SARIToDeath=dlnorm(1:28, logmean,  logmean/2.0)
 logmean=log(6.0)
 SARIToCritical=dlnorm(1:28, logmean,  logmean/2.0)
-logmean=log(7.6) # Mean time spent on ICU, from Faes
+logmean=log(12.6) # Mean time spent on ICU, 7.5 days from Faes
 CriticalToCritRecov=dlnorm(1:28, logmean,  logmean/2.0)
 CriticalToDeath=dlnorm(1:28, logmean,  logmean/4.0)
 logmean=log(4.0) #  Stay in hospital post ICU - needs evidence
@@ -632,13 +634,6 @@ oldSARI <- SARI
 oldCRIT <- CRIT
 oldCRITREC <- CRITREC
 
-# Inter-compartment probability differs from covidsim's idea of totals ending their illness
-#in that compartment  prior to RECOV/DEATH
-pItoS= (covidsimAge$Prop_Critical_ByAge+covidsimAge$Prop_SARI_ByAge )/
-  (covidsimAge$Prop_Critical_ByAge+covidsimAge$Prop_SARI_ByAge+covidsimAge$Prop_ILI_ByAge )
-
-pStoC=covidsimAge$Prop_Critical_ByAge/(covidsimAge$Prop_Critical_ByAge+covidsimAge$Prop_SARI_ByAge )
-
 #  Set day 1.  This assumes - wrongly - that there were zero cases before,
 #              but should autocorrect as those cases get resolved
 
@@ -655,17 +650,35 @@ CRIT[1,(2:ncol(CRIT))]=casedat[1,(2:ncol(casedat))]*covidsimAge$Prop_Critical_By
 # Bring forward cases from yesterday
 # Current values will typically be negative, as they are sums of people leaving the compartment
 # Nobody changes age band.  Vectorize over distributions
-for (iage in (2:ncol(ILI))){
+Prop_Mild_ByAge = covidsimAge$Prop_Mild_ByAge
+Prop_ILI_ByAge = covidsimAge$Prop_ILI_ByAge
+Prop_SARI_ByAge=covidsimAge$Prop_SARI_ByAge
+CFR_SARI_ByAge = covidsimAge$CFR_SARI_ByAge
+CFR_ILI_ByAge=covidsimAge$CFR_ILI_ByAge
+CFR_Critical_ByAge=covidsimAge$CFR_Critical_ByAge
+
   for (iday in (2:lengthofdata)){
-    xday=iday+length(SARIToCritical)
-    iday=iday+1
-    # Mild and ILI comes in from todays casedat,  ILI=cases Mild add to those from the past
-    newMILD[iday,iage]=as.numeric(casedat[iday,iage]*covidsimAge$Prop_Mild_ByAge[(iage-1)]/covidsimAge$Prop_ILI_ByAge[(iage-1)])+newILI[iday,iage]
+#  Proportions become variant dependent.  ILI is case driven, so extra infectivity is automatic
+# from the data.    CRIT increases at the expense of SARI
+    Prop_Critical_ByAge=covidsimAge$Prop_Critical_ByAge*comdat$lethality[iday]
+    Prop_SARI_ByAge=-Prop_ILI_ByAge-Prop_Mild_ByAge-Prop_Critical_ByAge+1.0
+# Inter-compartment probability differs from covidsim's idea of totals ending their illness
+#in that compartment  prior to RECOV/DEATH
+    pItoS= (Prop_Critical_ByAge+Prop_SARI_ByAge )/
+        (Prop_Critical_ByAge+Prop_SARI_ByAge+Prop_ILI_ByAge )
+    pStoC= Prop_Critical_ByAge / ( Prop_Critical_ByAge + Prop_SARI_ByAge )
+    
+    
+    xday=iday+length(SARIToCritical)-1
+    for (iage in (2:ncol(ILI))){
+    
+        # Mild and ILI comes in from todays casedat,  ILI=cases Mild add to those from the past
+    newMILD[iday,iage]=as.numeric(casedat[iday,iage]*Prop_Mild_ByAge[(iage-1)]/covidsimAge$Prop_ILI_ByAge[(iage-1)])+newILI[iday,iage]
     newILI[iday,iage]=as.numeric(casedat[iday,iage]*(1.0 )+newILI[iday,iage])
-
-#    newSARI[iday,iage]=as.numeric(casedat[iday,iage]*covidsimAge$Prop_SARI_ByAge[(iage-1)])+newSARI[iday,iage]
-#    newCRIT[iday,iage]=as.numeric(casedat[iday,iage]*covidsimAge$Prop_Critical_ByAge[(iage-1)])+newCRIT[iday,iage]
-
+    
+    #    newSARI[iday,iage]=as.numeric(casedat[iday,iage]*covidsimAge$Prop_SARI_ByAge[(iage-1)])+newSARI[iday,iage]
+    #    newCRIT[iday,iage]=as.numeric(casedat[iday,iage]*covidsimAge$Prop_Critical_ByAge[(iage-1)])+newCRIT[iday,iage]
+    
     # All todays new MILDs will all leave to REC across distribution
     MtoR=as.numeric(newMILD[iday,iage])          *      MildToRecovery
     oldMILD[(iday:xday),iage]=oldMILD[(iday:xday),iage]+MtoR
@@ -676,24 +689,24 @@ for (iage in (2:ncol(ILI))){
     oldILI[(iday:xday),iage]=oldILI[(iday:xday),iage]+ItoR+ItoS
     # SARI will go to REC, DEATH, CRIT
     StoC = as.numeric(newSARI[iday,iage] *pStoC[iage-1]) *SARIToCritical
-    StoD = as.numeric(newSARI[iday,iage] *covidsimAge$CFR_SARI_ByAge[iage-1])      *SARIToDeath
-    StoR = as.numeric(newSARI[iday,iage] *(1.0-pStoC[iage-1]-covidsimAge$CFR_SARI_ByAge[iage-1]) )*SARIToRecovery
+    StoD = as.numeric(newSARI[iday,iage] * CFR_SARI_ByAge[iage-1])      *SARIToDeath
+    StoR = as.numeric(newSARI[iday,iage] *(1.0-pStoC[iage-1]-CFR_SARI_ByAge[iage-1]) )*SARIToRecovery
     newCRIT[(iday:xday),iage]=newCRIT[(iday:xday),iage]+StoC
     oldSARI[(iday:xday),iage]=oldSARI[(iday:xday),iage]+StoR+StoC+StoD
-
+    
     # CRIT  goes to CRITREC DEATH
-    CtoD = as.numeric(newCRIT[iday,iage]* covidsimAge$CFR_Critical_ByAge[(iage-1)]) *CriticalToDeath
+    CtoD = as.numeric(newCRIT[iday,iage]*CFR_Critical_ByAge[(iage-1)]) *CriticalToDeath
     CtoCR = as.numeric(newCRIT[iday,iage]*(1.0-covidsimAge$CFR_Critical_ByAge[(iage-1)])) *CriticalToCritRecov
     newCRITREC[(iday:xday),iage]=newCRITREC[(iday:xday),iage]+CtoCR
     oldCRIT[(iday:xday),iage]=oldCRIT[(iday:xday),iage]+CtoD+CtoCR
-
+    
     # CRITREC goes to RECOV 
     CRtoR = as.numeric(newCRITREC[iday,iage]) *CritRecovToRecov
     oldCRITREC[(iday:xday),iage]=oldCRITREC[(iday:xday),iage]+CRtoR
-# DEATH and RECOV are cumulative, again anticipating where "new" will end up.
+    # DEATH and RECOV are cumulative, again anticipating where "new" will end up.
     DEATH[(iday:xday),iage]=DEATH[(iday:xday),iage]+CtoD+StoD
     RECOV[(iday:xday),iage]=RECOV[(iday:xday),iage]+StoR+ItoR+MtoR+CRtoR
-
+    
     # Finally, update todays totals: New cases + transfers from other compartments -
     # transfers to other compartments + leftover from yesterday
     MILD[iday,iage]=MILD[iday,iage]+newMILD[iday,iage]-oldMILD[iday,iage]+MILD[(iday-1),iage]
@@ -701,11 +714,9 @@ for (iage in (2:ncol(ILI))){
     SARI[iday,iage]=SARI[iday,iage]+newSARI[iday,iage]-oldSARI[iday,iage]+SARI[(iday-1),iage]
     CRIT[iday,iage]=CRIT[iday,iage]+newCRIT[iday,iage]-oldCRIT[iday,iage]+CRIT[(iday-1),iage]
     CRITREC[iday,iage]=CRITREC[iday,iage]+newCRITREC[iday,iage]-oldCRITREC[iday,iage]+CRITREC[(iday-1),iage]
-  }
 }
-
+}
 }# End of compartment section
-
 # Create a vector to hold the results for various R-numbers
 ninit <- as.numeric(1:nrow(comdat))/as.numeric(1:nrow(comdat))
 dfR <- data.frame(x=1.0:length(comdat$date),
@@ -1296,10 +1307,10 @@ if(interactive()){
   summary(model)
 
   #Get overall model fits
-  model = lm(comdat$allDeaths ~ gampred$allCasesPred)
+  model = lm(comdat$allDeaths[startdate:enddate] ~ gampred$allCasesPred[startdate:enddate])
   summary(model)
 
-  model = lm(comdat$allDeaths ~ logpred$allCasesPred)
+  model = lm(comdat$allDeaths[startdate:enddate] ~ logpred$allCasesPred[startdate:enddate])
   summary(model)
 
   model = lm(filter(comdat, date %in% WSS$date)$allDeaths ~ WSS$values)

@@ -97,26 +97,32 @@ for(region in names(regions)){
 write_csv(AgeDeathDemograhics,"data/AgeDeathDemographics.csv")
 
 # Get hospital data
-HospitalUrl <- paste0(baseurl,
-                      "areaType=overview&",
-                      "metric=covidOccupiedMVBeds&",
-                      "metric=hospitalCases&",
-                      "metric=newAdmissions&",
-                      "format=csv")
+HospitalURL <- function(reg){
+  u <- paste0(baseurl,
+             "areaType=overview&",
+             "metric=covidOccupiedMVBeds&",
+             "metric=hospitalCases&",
+             "metric=newAdmissions&",
+             "format=csv")
+ return(u)
+}
+
+# Define the URL
+urlh <- HospitalURL()
 
 # Column types
-coltypes <-  cols(
-                  areaCode = col_character(),
-                  areaName = col_character(),
-                  areaType = col_character(),
-                  date = col_date(format = "%Y-%m-%d"),
-                  covidOccupiedMVBeds = col_double(),
-                  hospitalCases = col_double(),
-                  newAdmissions = col_double()
-                 )
+coltypes <- cols(
+  areaCode = col_character(),
+  areaName = col_character(),
+  areaType = col_character(),
+  date = col_date(format = "%Y-%m-%d"),
+  covidOccupiedMVBeds = col_double(),
+  hospitalCases = col_double(),
+  newAdmissions = col_double()
+)
 
 # Get the data
-d <- read_csv(HospitalUrl, col_types = coltypes)
+d <- read_csv(urlh, col_types = coltypes)
 
 # Append data to tibble
 HospitalData <- tibble()
