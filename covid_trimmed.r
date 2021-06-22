@@ -716,7 +716,9 @@ rat[rat==-Inf] <- 1.0
 startplot <- rat$date[200]
 endplot <- rat$date[327]
 
-plot(smooth.spline(rat$Scotland[startplot:endplot],df=6)$y,x=rat$date[startplot:endplot],ylim=c(0.7,1.40),xlab="Date",ylab="R, Scotland")
+plot(smooth.spline(rat$Scotland[startplot <= rat$date & rat$date <= endplot],df=6)$y,
+     x=rat$date[startplot <= rat$date & rat$date <= endplot],
+     ylim=c(0.7,1.40),xlab="Date",ylab="R, Scotland")
 
 
 rat %>% filter(startplot < date & date < endplot) %>%
