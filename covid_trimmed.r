@@ -440,9 +440,9 @@ rm(ukcasedat,scotdailycases,scotdailycasesbyboard,d)
 #comdat %>% ggplot(aes(x=date,y=allCases)) + geom_line() +
 #  xlab("Date") + ylab("All cases")
 
-comdat %>% ggplot(aes(x=date,y=allCases)) + geom_line() +
-  xlab("Date") + ylab("All cases") +
-  coord_cartesian(xlim = c(enddate-30, enddate))
+comdat %>% filter(enddate-30 <= date & date <= enddate) %>%
+  ggplot(aes(x=date,y=allCases)) + geom_line() +
+  xlab("Date") + ylab("All cases")
 
 # Tail correction.  Assumes we read in all but the last row
 if(enddate == (Sys.Date()-1)){
