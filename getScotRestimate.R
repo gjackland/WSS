@@ -42,13 +42,13 @@ file <- gsub("%20","_",file)
 file <- gsub("[()]","",file)
 
 # Create a data subdirectory if it does not exist
-if(!dir.exists("data")){
-  dir.create("data")
+if(!dir.exists("data/Scottish-data")){
+  dir.create("data/Scottish-data", recursive = TRUE)
 }
 
 # Download the file with the data if it does not already exist
-if(!file.exists(paste0("data/",file))){
-  download.file(dataurl,destfile = paste0("data/",file),quiet = TRUE)
+if(!file.exists(paste0("data/Scottish-data",file))){
+  download.file(dataurl,destfile = paste0("data/Scottish-data",file),quiet = TRUE)
 }else{
   message("Data file already exists locally, not downloading again. Terminating ...\n\n")
   stop_quietly()
@@ -57,7 +57,7 @@ if(!file.exists(paste0("data/",file))){
 # Read the contents of the file
 # skip the first 3 rows, suppress warning messages about Notes not being dates.
 options(warn=-1)
-Rest <- suppressMessages(read_excel(paste0("data/",file), sheet = "1.1_R", skip=3,
+Rest <- suppressMessages(read_excel(paste0("data/Scottish-data/",file), sheet = "1.1_R", skip=3,
                    col_types = c("date","text","numeric")))
 options(warn=1)
 
@@ -70,7 +70,6 @@ Rest$Date <- as.Date(Rest$Date,format="%Y-%m-%d")
 # Change into a wide format
 Rest %>%  pivot_wider(names_from=Variable, values_from = Value) %>%
           select(Date,R_LowerBound=`R lower bound`,R_UpperBound=`R upper bound`) -> Rest
-
 
 # Write the data to a CSV file
 outfile <- "data/R_scottish_estimate.csv"

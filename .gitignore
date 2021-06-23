@@ -2,7 +2,7 @@
 .Rhistory
 .RData
 .Ruserdata
-data/*.ods
+data/uk-data/*.ods
 Rplots.pdf
 *.Rproj
 forpub.csv
