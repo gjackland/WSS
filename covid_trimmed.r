@@ -90,27 +90,27 @@ baseurl <- "https://api.coronavirus.data.gov.uk/v2/data?"
 
 # Start and end date - the data to collect data from
 startdate <- as.Date("2020/07/25")
-#  Lose only the last day of data - use tail correction for reporting delay
+# Lose only the last day of data - use tail correction for reporting delay
 enddate <-  Sys.Date()-4
 # Set the generation time
-genTime=5
+genTime <- 5
 #  Dates for the plots
-plotdate=as.Date(c("2020-09-22",as.character(enddate)))
+plotdate <- as.Date(c("2020-09-22",as.character(enddate)))
 # Date of Christmas Eve
-XMas= as.Date("2020/12/24")
-XMstart=as.integer(XMas-startdate)
-XMdays=12
-XMend=XMstart+11
+XMas <- as.Date("2020/12/24")
+XMstart <- as.integer(XMas-startdate)
+XMdays <- 12
+XMend <- XMstart+11
 # Wanted to plot a Smooth spline discontinuous at
 # UK lockdown Oct 31 (day 98) -Dec 2  (day 130) Jan 6 (day 165)  (day 1 = July 25)
-lock1 = as.integer(as.Date("2020/10/31")-startdate)
-unlock1 = as.integer(as.Date("2020/12/02")-startdate)
-lock2 = as.integer(as.Date("2021/01/06")-startdate)
-test_delay=7
-lock1=lock1+test_delay
-unlock1=unlock1+test_delay
-lock2=lock2+test_delay
-sagedelay=16 # Delay in producing R-number, for plots
+lock1 <- as.integer(as.Date("2020/10/31")-startdate)
+unlock1 <- as.integer(as.Date("2020/12/02")-startdate)
+lock2 <- as.integer(as.Date("2021/01/06")-startdate)
+test_delay <- 7
+lock1 <- lock1+test_delay
+unlock1 <- unlock1+test_delay
+lock2 <- lock2+test_delay
+sagedelay <- 16 # Delay in producing R-number, for plots
 
 # Total cases, deaths, tests
 casesurl <- paste0(baseurl,
@@ -436,16 +436,15 @@ HospitalData  <-  HospitalData %>% filter(date >= startdate &
 # Remove the no longer needed input datas
 rm(ukcasedat,scotdailycases,scotdailycasesbyboard,d)
 
-
-
 # Plot all cases against date: Used for the paper, uncomment to recreate
 #comdat %>% ggplot(aes(x=date,y=allCases)) + geom_line() +
 #  xlab("Date") + ylab("All cases")
 
-
-comdat %>% ggplot(aes(x=date,y=allCases)) + geom_line() +
-  xlab("Date") + ylab("All cases") +
-  coord_cartesian(xlim = c(enddate-30, enddate))
+comdat %>% filter(enddate-30 <= date & date <= enddate) %>%
+  mutate(rollmean = zoo::rollmean(allCases, k = 7, fill = NA)) %>%  # 7-day average
+  ggplot(aes(x=date)) + geom_line(aes(y=allCases)) + geom_point(aes(y=allCases)) +
+  geom_line(aes(y=rollmean), colour="pink",na.rm = TRUE, size=2, alpha=0.5) +
+  xlab("Date") + ylab("All cases")
 
 # Tail correction.  Assumes we read in all but the last row
 if(enddate == (Sys.Date()-1)){
@@ -458,32 +457,31 @@ if(enddate == (Sys.Date()-1)){
 }
 
 
-#  Add variant data to comdat
-
-comdat$Kent<-0.0
-comdat$India<-0.0
+# Add variant data to comdat
+comdat$Kent <- 0.0
+comdat$India <- 0.0
 Kentdate <- as.integer(as.Date("2021/01/01")-startdate)
 # Approximate Kent by logistic rise around 2021/01/01  Same gen time, R+0.3 vs Wild
 for (i in 1:nrow(comdat)){
-  x= (i-Kentdate)*0.4/genTime
-  comdat$Kent[i]=1.0/(1.0+exp(-x))
+  x <- (i-Kentdate)*0.4/genTime
+  comdat$Kent[i] <- 1.0/(1.0+exp(-x))
 }
 Indiadate <- as.integer(as.Date("2021/05/15")-startdate)
 # Approximate India by logistic rise around 2021/15/01: see covid19.sanger.  Same genTime R+0.5 vs Kent
 for (i in 1:nrow(comdat)){
-  x= (i-Indiadate)*0.5/genTime
-  comdat$India[i]=1.0/(1.0+exp(-x))
+  x <-  (i-Indiadate)*0.5/genTime
+  comdat$India[i] <- 1.0/(1.0+exp(-x))
 }
 #  Kent is 1.4x worse, india is 1.5*1.4=2.1x worse
-comdat$Kent<-comdat$Kent-comdat$India
-comdat$lethality<-1.0+0.4*comdat$Kent+1.1*comdat$India
+comdat$Kent <- comdat$Kent-comdat$India
+comdat$lethality <- 1.0+0.4*comdat$Kent+1.1*comdat$India
 
 #  Fix missing data to constant values
-HospitalData<-na.locf(HospitalData)
-casedat<- na.locf(casedat)
-comdat<- na.locf(comdat)
-regcases<-na.locf(regcases)
-scotdat<-na.locf(scotdat)
+HospitalData <- na.locf(HospitalData)
+casedat <- na.locf(casedat)
+comdat <- na.locf(comdat)
+regcases <- na.locf(regcases)
+scotdat <- na.locf(scotdat)
 
 # Remove weekend effect,  assuming each weekday has same number of cases over the
 # epidemic, and national averages hold regionally.
@@ -530,9 +528,9 @@ for (area in 2:length(regcases)){
 }
 
 #for (i in 2:ncol(casedat)) {
- range= 2:ncol(casedat)
+  range= 2:ncol(casedat)
   for (j in 1:nrow(casedat)) {
-    indexday=(j-1)%%7+1
+    indexday <- (j-1)%%7+1
     casedat[j,range] <- as.integer(casedat[j,range]/days[indexday])
   }
  rm(j,range)
@@ -669,17 +667,17 @@ CFR_Critical_ByAge=covidsimAge$CFR_Critical_ByAge
     pItoS= (Prop_Critical_ByAge+Prop_SARI_ByAge )/
         (Prop_Critical_ByAge+Prop_SARI_ByAge+Prop_ILI_ByAge )
     pStoC= Prop_Critical_ByAge / ( Prop_Critical_ByAge + Prop_SARI_ByAge )
-    
-    
+
+
     xday=iday+length(SARIToCritical)-1
     agerange=(2:ncol(ILI))
     ageminus=agerange-1
-   
+
         # Mild and ILI comes in from todays casedat,  ILI=cases Mild add to those from the past
     newMILD[iday,agerange]=casedat[iday,agerange]*Prop_Mild_ByAge[(ageminus)]/covidsimAge$Prop_ILI_ByAge[ageminus]+newILI[iday,agerange]
     newILI[iday,agerange]=casedat[iday,agerange]*(1.0 )+newILI[iday,agerange]
 
-    for (iage in agerange){    
+    for (iage in agerange){
     # All todays new MILDs will all leave to REC across distribution
     MtoR=as.numeric(newMILD[iday,iage])          *      MildToRecovery
     oldMILD[(iday:xday),iage]=oldMILD[(iday:xday),iage]+MtoR
@@ -694,20 +692,20 @@ CFR_Critical_ByAge=covidsimAge$CFR_Critical_ByAge
     StoR = as.numeric(newSARI[iday,iage] *(1.0-pStoC[iage-1]-CFR_SARI_ByAge[iage-1]) )*SARIToRecovery
     newCRIT[(iday:xday),iage]=newCRIT[(iday:xday),iage]+StoC
     oldSARI[(iday:xday),iage]=oldSARI[(iday:xday),iage]+StoR+StoC+StoD
-    
+
     # CRIT  goes to CRITREC DEATH
     CtoD = as.numeric(newCRIT[iday,iage]*CFR_Critical_ByAge[(iage-1)]) *CriticalToDeath
     CtoCR = as.numeric(newCRIT[iday,iage]*(1.0-covidsimAge$CFR_Critical_ByAge[(iage-1)])) *CriticalToCritRecov
     newCRITREC[(iday:xday),iage]=newCRITREC[(iday:xday),iage]+CtoCR
     oldCRIT[(iday:xday),iage]=oldCRIT[(iday:xday),iage]+CtoD+CtoCR
-    
-    # CRITREC goes to RECOV 
+
+    # CRITREC goes to RECOV
     CRtoR = as.numeric(newCRITREC[iday,iage]) *CritRecovToRecov
     oldCRITREC[(iday:xday),iage]=oldCRITREC[(iday:xday),iage]+CRtoR
     # DEATH and RECOV are cumulative, again anticipating where "new" will end up.
     DEATH[(iday:xday),iage]=DEATH[(iday:xday),iage]+CtoD+StoD
     RECOV[(iday:xday),iage]=RECOV[(iday:xday),iage]+StoR+ItoR+MtoR+CRtoR
-    }    
+    }
     # Finally, update todays totals: New cases + transfers from other compartments -
     # transfers to other compartments + leftover from yesterday
     MILD[iday,agerange]=MILD[iday,agerange]+newMILD[iday,agerange]-oldMILD[iday,agerange]+MILD[(iday-1),agerange]
