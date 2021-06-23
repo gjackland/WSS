@@ -441,7 +441,9 @@ rm(ukcasedat,scotdailycases,scotdailycasesbyboard,d)
 #  xlab("Date") + ylab("All cases")
 
 comdat %>% filter(enddate-30 <= date & date <= enddate) %>%
-  ggplot(aes(x=date,y=allCases)) + geom_line() + geom_point() +
+  mutate(rollmean = zoo::rollmean(allCases, k = 7, fill = NA)) %>%  # 7-day average
+  ggplot(aes(x=date)) + geom_line(aes(y=allCases)) + geom_point(aes(y=allCases)) +
+  geom_line(aes(y=rollmean), colour="pink",na.rm = TRUE, size=2, alpha=0.5) +
   xlab("Date") + ylab("All cases")
 
 # Tail correction.  Assumes we read in all but the last row
