@@ -40,10 +40,10 @@ covidsimAge<-data.frame(
     0.333122437,  0.333153617,	0.333001453, 0.332654731, 0.33181821, 0.330417289, 0.328732618, 0.326716425, 0.325130732, 0.322392505, 0.316971878, 0.312809664, 0.304540269, 0.300182488, 0.2919304, 0.283276936, 0.282323232, 0.282323232, 0.282323232
   ),
   "Prop_SARI_ByAge"=c(
-    0.000557744, 0.000475283, 0.000877703, 0.001794658, 0.004006955, 0.007711884, 0.012167229, 0.017359248, 0.021140307, 0.027047193, 0.03708932, 0.039871236, 0.040788928, 0.027444452, 0.101605674, 0.142001415, 0.1747, 0.21, 0.25
+    0.000557744, 0.000475283, 0.000877703, 0.001794658, 0.004006955, 0.007711884, 0.012167229, 0.017359248, 0.021140307, 0.027047193, 0.03708932, 0.039871236, 0.020788928, 0.017444452, 0.101605674, 0.142001415, 0.1747, 0.21, 0.25
   ),
   "Prop_Critical_ByAge"=
-    c(7.49444E-05, 6.38641E-05, 0.000117937, 0.000241149, 0.000538417, 0.00103625, 0.001634918, 0.002491477, 0.003467496, 0.005775292, 0.011995047, 0.021699771, 0.045590266, 0.072008084, 0.022603126, 0.008167778, 0.002560606, 0.002560606, 0.002560606
+    c(7.49444E-05, 6.38641E-05, 0.000117937, 0.000241149, 0.000538417, 0.00103625, 0.001634918, 0.002491477, 0.003467496, 0.005775292, 0.011995047, 0.021699771, 0.065590266, 0.082008084, 0.022603126, 0.008167778, 0.002560606, 0.002560606, 0.002560606
     ),
   "CFR_Critical_ByAge"=c(
     0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896
@@ -487,6 +487,8 @@ if(enddate == (Sys.Date()-1)){
 # Add variant data to comdat
 comdat$Kent <- 0.0
 comdat$India <- 0.0
+Kentfac=0.4
+Indiafac=0.7
 Kentdate <- as.integer(as.Date("2021/01/01")-startdate)
 # Approximate Kent by logistic rise around 2021/01/01  Same gen time, R+0.3 vs Wild
 for (i in 1:nrow(comdat)){
@@ -499,9 +501,9 @@ for (i in 1:nrow(comdat)){
   x= (i-Indiadate)*0.4/genTime
   comdat$India[i]=1.0/(1.0+exp(-x))
 }
-#  Kent is 1.3x worse, india is 1.3*1.4x worse
+#  Kent is Kentfac worse, india is Kentfac*Indiafac worse
 comdat$Kent<-comdat$Kent-comdat$India
-comdat$lethality<-1.0+ 0.4*comdat$Kent +(1.3*1.4-1)*comdat$India
+comdat$lethality<-1.0+ Kentfac*comdat$Kent + Indiafac*comdat$India
 
 #  Fix missing data to constant values
 HospitalData <- na.locf(HospitalData)
@@ -601,14 +603,14 @@ ILIToRecovery=dlnorm(1:28, logmean,  logmean/4.0)
 #  lognormal there decays from day 1
 logmean=log(9.0)
 ILIToSARI=dlnorm(1:28, logmean,  logmean/1.3)
-logmean=log(12.6)
+logmean=log(10.6)
 SARIToRecovery=dlnorm(1:28, logmean,  logmean/2.0)
-logmean=log(6.0)
-SARIToDeath=dlnorm(1:28, logmean,  logmean/2.0)
+logmean=log(4.0)
+SARIToDeath=dlnorm(1:28, logmean,  logmean/4.0)
 logmean=log(6.0)
 SARIToCritical=dlnorm(1:28, logmean,  logmean/2.0)
-logmean=log(12.6) # Mean time spent on ICU, 7.5 days from Faes
-CriticalToCritRecov=dlnorm(1:28, logmean,  logmean/2.0)
+logmean=log(12.5) # Mean time spent on ICU, 7.5 days from Faes
+CriticalToCritRecov=dlnorm(1:28, logmean,  logmean/4.0)
 CriticalToDeath=dlnorm(1:28, logmean,  logmean/4.0)
 logmean=log(4.0) #  Stay in hospital post ICU - needs evidence
 CritRecovToRecov=dlnorm(1:28, logmean,  logmean/4.0)
@@ -691,8 +693,9 @@ CFR_Critical_ByAge=covidsimAge$CFR_Critical_ByAge
 # from the data. ILI->SARI increases with variant.  CRIT is an NHS decision, not favoured for very old
 #  Need to increase CFR without exceeding 1.  Note inverse lethality isnt a simple % as CFR cant be >1
 #  Will have negative people  trouble if CFR>1
-
-    
+    Prop_Critical_ByAge=covidsimAge$Prop_Critical_ByAge*comdat$lethality[iday]
+    Prop_SARI_ByAge=covidsimAge$Prop_SARI_ByAge*comdat$lethality[iday]
+    Prop_Mild_ByAge= - Prop_Critical_ByAge - Prop_ILI_ByAge - Prop_SARI_ByAge +1.0
 # Inter-compartment probability differs from covidsim's idea of totals ending their illness
 #in that compartment  prior to RECOV/DEATH
     pItoS= (Prop_Critical_ByAge+Prop_SARI_ByAge )/
@@ -704,16 +707,16 @@ CFR_Critical_ByAge=covidsimAge$CFR_Critical_ByAge
     agerange=(2:ncol(ILI))
     ageminus=agerange-1
 
-        # Mild and ILI comes in from todays casedat,  ILI=cases Mild add to those from the past
+        # Mild and ILI comes in from todays casedat,  ILI=cases en route to Hospital Mild add to those from the past
 
-    newMILD[iday,agerange]=casedat[iday,agerange]*Prop_Mild_ByAge[(ageminus)]/Prop_ILI_ByAge[ageminus]+newMILD[iday,agerange]
+    newMILD[iday,agerange]=casedat[iday,agerange]*(1.0-covidsimAge$Case_Hosp_ByAge[1:19])+newMILD[iday,agerange]
     newILI[iday,agerange]=casedat[iday,agerange]*(covidsimAge$Case_Hosp_ByAge[1:19])+newILI[iday,agerange]
     for (iage in agerange){    
 
     # All todays new MILDs will all leave to REC across distribution
     MtoR=as.numeric(newMILD[iday,iage])          *      MildToRecovery
     oldMILD[(iday:xday),iage]=oldMILD[(iday:xday),iage]+MtoR
-    # ILI will go to SA/RI and REC
+    # ILI will go to SA/RI and REC 
     ItoS = as.numeric(newILI[iday,iage] *  pItoS[iage-1])     *ILIToSARI
     ItoR = as.numeric(newILI[iday,iage] *(1.0-pItoS[iage-1])) *ILIToSARI
     newSARI[(iday:xday),iage]=newSARI[(iday:xday),iage]+ItoS
@@ -748,6 +751,16 @@ CFR_Critical_ByAge=covidsimAge$CFR_Critical_ByAge
 
 }
 }# End of compartment section
+
+#Monitoring plots
+plot(rowSums(deathdat[2:20]))
+lines(rowSums(DEATH[2:20]),col="blue")
+plot(HospitalData$covidOccupiedMVBeds)
+lines(rowSums(CRIT[2:20]),col="blue")
+plot(HospitalData$newAdmissions)
+lines(rowSums(newSARI[2:20]),col="blue")
+
+
 # Create a vector to hold the results for various R-numbers
 ninit <- as.numeric(1:nrow(comdat))/as.numeric(1:nrow(comdat))
 dfR <- data.frame(x=1.0:length(comdat$date),
