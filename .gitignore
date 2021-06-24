@@ -11,3 +11,4 @@ data/AgeDeathDemographics.csv
 data/data.json
 *.swp
 .DS_Store
+*.png
