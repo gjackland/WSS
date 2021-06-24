@@ -42,12 +42,12 @@ file <- gsub("%20","_",file)
 file <- gsub("[()]","",file)
 
 # Create a data subdirectory if it does not exist
-if(!dir.exists("data/Scottish-data")){
-  dir.create("data/Scottish-data", recursive = TRUE)
+if(!dir.exists("data/scot-data/")){
+  dir.create("data/scot-data/", recursive = TRUE)
 }
 
 # Download the file with the data if it does not already exist
-if(!file.exists(paste0("data/Scottish-data",file))){
+if(!file.exists(paste0("data/scot-data/",file))){
   download.file(dataurl,destfile = paste0("data/Scottish-data",file),quiet = TRUE)
 }else{
   message("Data file already exists locally, not downloading again. Terminating ...\n\n")
@@ -57,7 +57,7 @@ if(!file.exists(paste0("data/Scottish-data",file))){
 # Read the contents of the file
 # skip the first 3 rows, suppress warning messages about Notes not being dates.
 options(warn=-1)
-Rest <- suppressMessages(read_excel(paste0("data/Scottish-data/",file), sheet = "1.1_R", skip=3,
+Rest <- suppressMessages(read_excel(paste0("data/scot-data/",file), sheet = "1.1_R", skip=3,
                    col_types = c("date","text","numeric")))
 options(warn=1)
 
@@ -77,3 +77,4 @@ write_csv(Rest,file=outfile)
 
 # Write message saying data has been output
 message("Data has been output to ",outfile,".")
+
