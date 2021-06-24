@@ -36,8 +36,8 @@ if(!dir.exists("data")){
 }
 
 # Download the file with the data if it does not already exist
-if(!file.exists(paste0("data/",file))){
-  download.file(Rurl,destfile = paste0("data/",file),quiet = TRUE)
+if(!file.exists(paste0("data/uk-data",file))){
+  download.file(Rurl,destfile = paste0("data/uk-data",file),quiet = TRUE)
 }else{
   message("Data file already exists locally, not downloading again. Terminating ...\n\n")
   stop_quietly()
@@ -46,7 +46,7 @@ if(!file.exists(paste0("data/",file))){
 # Read the contents of the file
 # skip the first 8 rows, table header and merged cells (read can't handle)
 # read "."s as NAs as the "." is used to mean not applicable
-Rest <- read_ods(paste0("data/",file), sheet = "Table1_-_R", skip=8, na=".")
+Rest <- read_ods(paste0("data/uk-data",file), sheet = "Table1_-_R", skip=8, na=".")
 
 # Rename the columns
 names(Rest) <- c("","Date","UK_LowerBound","UK_UpperBound",

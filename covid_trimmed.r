@@ -8,8 +8,8 @@
 
 #### Header ####
 if(interactive()){
-  # Remove existing variables
-  rm(list = ls())
+# Remove existing variables
+rm(list = ls())
 }
 
 # Read packages used by the script
@@ -32,56 +32,56 @@ options(scipen = 999)
 # Will need to invert this
 
 covidsimAge<-data.frame(
-  "Prop_Mild_ByAge"=c(
-    0.666244874,	0.666307235,	0.666002907,	0.665309462,	0.663636419,	0.660834577,	0.657465236,	0.65343285,	0.650261465,	0.64478501,	0.633943755,	0.625619329,	0.609080537,	0.600364976,	0.5838608,	0.566553872,	0.564646465,	0.564646465,	0.564646465
-  ),
-  "Prop_ILI_ByAge"=c(
-    0.333122437,  0.333153617,	0.333001453, 0.332654731, 0.33181821, 0.330417289, 0.328732618, 0.326716425, 0.325130732, 0.322392505, 0.316971878, 0.312809664, 0.304540269, 0.300182488, 0.2919304, 0.283276936, 0.282323232, 0.282323232, 0.282323232
-  ),
-  "Prop_SARI_ByAge"=c(
-    0.000557744, 0.000475283, 0.000877703, 0.001794658, 0.004006955, 0.007711884, 0.012167229, 0.017359248, 0.021140307, 0.027047193, 0.03708932, 0.039871236, 0.040788928, 0.027444452, 0.101605674, 0.142001415, 0.150469697, 0.150469697, 0.150469697
-  ),
-  "Prop_Critical_ByAge"=
-    c(7.49444E-05, 6.38641E-05, 0.000117937, 0.000241149, 0.000538417, 0.00103625, 0.001634918, 0.002491477, 0.003467496, 0.005775292, 0.011995047, 0.021699771, 0.045590266, 0.072008084, 0.022603126, 0.008167778, 0.002560606, 0.002560606, 0.002560606
-    ),
-  "CFR_Critical_ByAge"=c(
-    0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896
-  ),
-  "CFR_SARI_ByAge"=c(
-    0.125893251, 0.12261338, 0.135672867, 0.152667869, 0.174303077, 0.194187895, 0.209361731, 0.224432564, 0.237013516, 0.257828065, 0.290874602, 0.320763971, 0.362563751, 0.390965457, 0.421151485, 0.447545892, 0.482, 0.482, 0.482
-  ),
-  "CFR_ILI_ByAge"=c(
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  0,  0,  0)
+"Prop_Mild_ByAge"=c(
+0.666244874,	0.666307235,	0.666002907,	0.665309462,	0.663636419,	0.660834577,	0.657465236,	0.65343285,	0.650261465,	0.64478501,	0.633943755,	0.625619329,	0.609080537,	0.600364976,	0.5838608,	0.566553872,	0.564646465,	0.564646465,	0.564646465
+),
+"Prop_ILI_ByAge"=c(
+0.333122437,  0.333153617,	0.333001453, 0.332654731, 0.33181821, 0.330417289, 0.328732618, 0.326716425, 0.325130732, 0.322392505, 0.316971878, 0.312809664, 0.304540269, 0.300182488, 0.2919304, 0.283276936, 0.282323232, 0.282323232, 0.282323232
+),
+"Prop_SARI_ByAge"=c(
+0.000557744, 0.000475283, 0.000877703, 0.001794658, 0.004006955, 0.007711884, 0.012167229, 0.017359248, 0.021140307, 0.027047193, 0.03708932, 0.039871236, 0.040788928, 0.027444452, 0.101605674, 0.142001415, 0.150469697, 0.150469697, 0.150469697
+),
+"Prop_Critical_ByAge"=
+c(7.49444E-05, 6.38641E-05, 0.000117937, 0.000241149, 0.000538417, 0.00103625, 0.001634918, 0.002491477, 0.003467496, 0.005775292, 0.011995047, 0.021699771, 0.045590266, 0.072008084, 0.022603126, 0.008167778, 0.002560606, 0.002560606, 0.002560606
+),
+"CFR_Critical_ByAge"=c(
+0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896
+),
+"CFR_SARI_ByAge"=c(
+0.125893251, 0.12261338, 0.135672867, 0.152667869, 0.174303077, 0.194187895, 0.209361731, 0.224432564, 0.237013516, 0.257828065, 0.290874602, 0.320763971, 0.362563751, 0.390965457, 0.421151485, 0.447545892, 0.482, 0.482, 0.482
+),
+"CFR_ILI_ByAge"=c(
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  0,  0,  0)
 )
 
 covidsimICDF<-data.frame(
-  "MildToRecovery_icdf"=c(
-    0, 0.341579599, 0.436192391, 0.509774887, 0.574196702, 0.633830053, 0.690927761, 0.74691114, 0.802830695, 0.859578883, 0.918015187, 0.97906363, 1.043815683, 1.113669859, 1.190557274, 1.277356871, 1.378761429, 1.50338422, 1.670195767, 1.938414132, 2.511279379
-  ),
-  "ILIToRecovery_icdf"=c(
-    0, 0.341579599, 0.436192391, 0.509774887, 0.574196702, 0.633830053, 0.690927761, 0.74691114, 0.802830695, 0.859578883, 0.918015187, 0.97906363, 1.043815683, 1.113669859, 1.190557274, 1.277356871, 1.378761429, 1.50338422, 1.670195767, 1.938414132, 2.511279379
-  ),
-  "ILIToSARI_icdf"=c(
-    0, 0.341579599, 0.436192391, 0.509774887, 0.574196702, 0.633830053, 0.690927761, 0.74691114, 0.802830695, 0.859578883, 0.918015187, 0.97906363, 1.043815683, 1.113669859, 1.190557274, 1.277356871, 1.378761429, 1.50338422, 1.670195767, 1.938414132, 2.511279379
-  ),
-  "SARIToRecovery_icdf"=c(
-    0, 0.634736097, 1.217461548, 1.805695261, 2.41206761, 3.044551205, 3.71010552, 4.415905623, 5.170067405, 5.982314035, 6.864787504, 7.833196704, 8.908589322, 10.12027655, 11.51100029, 13.14682956, 15.13821107, 17.69183155, 21.27093904, 27.35083955, 41.35442157
-  ),
-  "SARIToDeath_icdf"=c(
-    0, 1.703470233, 2.39742257, 2.970367222, 3.491567676, 3.988046604, 4.474541783, 4.960985883, 5.455292802, 5.964726999, 6.496796075, 7.06004732, 7.665014091, 8.325595834, 9.061367792, 9.901900127, 10.8958347, 12.133068, 13.81280888, 16.56124574, 22.5803431
-  ),
-  "SARIToCritical_icdf"=c(
-    0, 0.108407687, 0.220267228, 0.337653773, 0.46159365, 0.593106462, 0.733343356, 0.88367093, 1.045760001, 1.221701998, 1.414175806, 1.62669998, 1.864032461, 2.132837436, 2.442868902, 2.809242289, 3.257272257, 3.834402667, 4.647120033, 6.035113821, 9.253953212
-  ),
-  "CriticalToCritRecov_icdf"=c(
-    0, 1.308310071, 1.87022015, 2.338694632, 2.76749788, 3.177830401, 3.581381361, 3.986127838, 4.398512135, 4.824525291, 5.270427517, 5.743406075, 6.252370864, 6.809125902, 7.430338867, 8.141231404, 8.983341913, 10.03350866, 11.46214198, 13.80540164, 18.95469153
-  ),
-  "CriticalToDeath_icdf"=c(
-    0, 1.60649128, 2.291051747, 2.860938008, 3.382077741, 3.880425012, 4.37026577, 4.861330415, 5.361460943, 5.877935626, 6.4183471, 6.991401405, 7.607881726, 8.282065409, 9.034104744, 9.894486491, 10.91341144, 12.18372915, 13.9113346, 16.74394356, 22.96541429
-  ),
-  "CritRecovToRecov_icdf"=c(
-    0, 0.133993315, 0.265922775, 0.402188416, 0.544657341, 0.694774487, 0.853984373, 1.023901078, 1.206436504, 1.403942719, 1.619402771, 1.856711876, 2.121118605, 2.419957988, 2.763950408, 3.169692564, 3.664959893, 4.301777536, 5.196849239, 6.7222126, 10.24997697
-  ))
+"MildToRecovery_icdf"=c(
+0, 0.341579599, 0.436192391, 0.509774887, 0.574196702, 0.633830053, 0.690927761, 0.74691114, 0.802830695, 0.859578883, 0.918015187, 0.97906363, 1.043815683, 1.113669859, 1.190557274, 1.277356871, 1.378761429, 1.50338422, 1.670195767, 1.938414132, 2.511279379
+),
+"ILIToRecovery_icdf"=c(
+0, 0.341579599, 0.436192391, 0.509774887, 0.574196702, 0.633830053, 0.690927761, 0.74691114, 0.802830695, 0.859578883, 0.918015187, 0.97906363, 1.043815683, 1.113669859, 1.190557274, 1.277356871, 1.378761429, 1.50338422, 1.670195767, 1.938414132, 2.511279379
+),
+"ILIToSARI_icdf"=c(
+0, 0.341579599, 0.436192391, 0.509774887, 0.574196702, 0.633830053, 0.690927761, 0.74691114, 0.802830695, 0.859578883, 0.918015187, 0.97906363, 1.043815683, 1.113669859, 1.190557274, 1.277356871, 1.378761429, 1.50338422, 1.670195767, 1.938414132, 2.511279379
+),
+"SARIToRecovery_icdf"=c(
+0, 0.634736097, 1.217461548, 1.805695261, 2.41206761, 3.044551205, 3.71010552, 4.415905623, 5.170067405, 5.982314035, 6.864787504, 7.833196704, 8.908589322, 10.12027655, 11.51100029, 13.14682956, 15.13821107, 17.69183155, 21.27093904, 27.35083955, 41.35442157
+),
+"SARIToDeath_icdf"=c(
+0, 1.703470233, 2.39742257, 2.970367222, 3.491567676, 3.988046604, 4.474541783, 4.960985883, 5.455292802, 5.964726999, 6.496796075, 7.06004732, 7.665014091, 8.325595834, 9.061367792, 9.901900127, 10.8958347, 12.133068, 13.81280888, 16.56124574, 22.5803431
+),
+"SARIToCritical_icdf"=c(
+0, 0.108407687, 0.220267228, 0.337653773, 0.46159365, 0.593106462, 0.733343356, 0.88367093, 1.045760001, 1.221701998, 1.414175806, 1.62669998, 1.864032461, 2.132837436, 2.442868902, 2.809242289, 3.257272257, 3.834402667, 4.647120033, 6.035113821, 9.253953212
+),
+"CriticalToCritRecov_icdf"=c(
+0, 1.308310071, 1.87022015, 2.338694632, 2.76749788, 3.177830401, 3.581381361, 3.986127838, 4.398512135, 4.824525291, 5.270427517, 5.743406075, 6.252370864, 6.809125902, 7.430338867, 8.141231404, 8.983341913, 10.03350866, 11.46214198, 13.80540164, 18.95469153
+),
+"CriticalToDeath_icdf"=c(
+0, 1.60649128, 2.291051747, 2.860938008, 3.382077741, 3.880425012, 4.37026577, 4.861330415, 5.361460943, 5.877935626, 6.4183471, 6.991401405, 7.607881726, 8.282065409, 9.034104744, 9.894486491, 10.91341144, 12.18372915, 13.9113346, 16.74394356, 22.96541429
+),
+"CritRecovToRecov_icdf"=c(
+0, 0.133993315, 0.265922775, 0.402188416, 0.544657341, 0.694774487, 0.853984373, 1.023901078, 1.206436504, 1.403942719, 1.619402771, 1.856711876, 2.121118605, 2.419957988, 2.763950408, 3.169692564, 3.664959893, 4.301777536, 5.196849239, 6.7222126, 10.24997697
+))
 ## covidsim has 17 agegroups.  We need 19,  assume same params for 85_89 & 90+ as for 80+
 
 ####, Read data ####
@@ -91,27 +91,27 @@ baseurl <- "https://api.coronavirus.data.gov.uk/v2/data?"
 # Start and end date - the data to collect data from
 startdate <- as.Date("2020/07/25")
 
-#  Lose only the last day of data - use tail correction for reporting delay
+# Lose only the last day of data - use tail correction for reporting delay
 enddate <-  Sys.Date()-4
 # Set the generation time
-genTime=5
+genTime <- 5
 #  Dates for the plots
-plotdate=as.Date(c("2020-09-22",as.character(enddate)))
+plotdate <- as.Date(c("2020-09-22",as.character(enddate)))
 # Date of Christmas Eve
-XMas= as.Date("2020/12/24")
-XMstart=as.integer(XMas-startdate)
-XMdays=12
-XMend=XMstart+11
+XMas <- as.Date("2020/12/24")
+XMstart <- as.integer(XMas-startdate)
+XMdays <- 12
+XMend <- XMstart+11
 # Wanted to plot a Smooth spline discontinuous at
 # UK lockdown Oct 31 (day 98) -Dec 2  (day 130) Jan 6 (day 165)  (day 1 = July 25)
-lock1 = as.integer(as.Date("2020/10/31")-startdate)
-unlock1 = as.integer(as.Date("2020/12/02")-startdate)
-lock2 = as.integer(as.Date("2021/01/06")-startdate)
-test_delay=7
-lock1=lock1+test_delay
-unlock1=unlock1+test_delay
-lock2=lock2+test_delay
-sagedelay=16 # Delay in producing R-number, for plots
+lock1 <- as.integer(as.Date("2020/10/31")-startdate)
+unlock1 <- as.integer(as.Date("2020/12/02")-startdate)
+lock2 <- as.integer(as.Date("2021/01/06")-startdate)
+test_delay <- 7
+lock1 <- lock1+test_delay
+unlock1 <- unlock1+test_delay
+lock2 <- lock2+test_delay
+sagedelay <- 16 # Delay in producing R-number, for plots
 
 # Total cases, deaths, tests
 casesurl <- paste0(baseurl,
@@ -437,16 +437,15 @@ HospitalData  <-  HospitalData %>% filter(date >= startdate &
 # Remove the no longer needed input datas
 rm(ukcasedat,scotdailycases,scotdailycasesbyboard,d)
 
-
-
 # Plot all cases against date: Used for the paper, uncomment to recreate
 #comdat %>% ggplot(aes(x=date,y=allCases)) + geom_line() +
 #  xlab("Date") + ylab("All cases")
 
-
-comdat %>% ggplot(aes(x=date,y=allCases)) + geom_line() +
-  xlab("Date") + ylab("All cases") +
-  coord_cartesian(xlim = c(enddate-30, enddate))
+comdat %>% filter(enddate-30 <= date & date <= enddate) %>%
+  mutate(rollmean = zoo::rollmean(allCases, k = 7, fill = NA)) %>%  # 7-day average
+  ggplot(aes(x=date)) + geom_line(aes(y=allCases)) + geom_point(aes(y=allCases)) +
+  geom_line(aes(y=rollmean), colour="pink",na.rm = TRUE, size=2, alpha=0.5) +
+  xlab("Date") + ylab("All cases")
 
 # Tail correction.  Assumes we read in all but the last row
 if(enddate == (Sys.Date()-1)){
@@ -459,30 +458,31 @@ if(enddate == (Sys.Date()-1)){
 }
 
 
-#  Add variant data to comdat
-
-comdat$Kent<-0.0
-comdat$India<-0.0
+# Add variant data to comdat
+comdat$Kent <- 0.0
+comdat$India <- 0.0
 Kentdate <- as.integer(as.Date("2021/01/01")-startdate)
 # Approximate Kent by logistic rise around 2021/01/01  Same gen time, R+0.3 vs Wild
 for (i in 1:nrow(comdat)){
-  x= (i-Kentdate)*0.3/genTime
-  comdat$Kent[i]=1.0/(1.0+exp(-x))
+  x <- (i-Kentdate)*0.4/genTime
+  comdat$Kent[i] <- 1.0/(1.0+exp(-x))
 }
 Indiadate <- as.integer(as.Date("2021/05/15")-startdate)
 # Approximate India by logistic rise around 2021/15/01: see covid19.sanger.  Same genTime R+0.5 vs Kent
 for (i in 1:nrow(comdat)){
-  x= (i-Indiadate)*0.5/genTime
-  comdat$India[i]=1.0/(1.0+exp(-x))
+  x <-  (i-Indiadate)*0.5/genTime
+  comdat$India[i] <- 1.0/(1.0+exp(-x))
 }
-comdat$Kent<-comdat$Kent-comdat$India
+#  Kent is 1.4x worse, india is 1.5*1.4=2.1x worse
+comdat$Kent <- comdat$Kent-comdat$India
+comdat$lethality <- 1.0+0.4*comdat$Kent+1.1*comdat$India
 
 #  Fix missing data to constant values
-HospitalData<-na.locf(HospitalData)
-casedat<- na.locf(casedat)
-comdat<- na.locf(comdat)
-regcases<-na.locf(regcases)
-scotdat<-na.locf(scotdat)
+HospitalData <- na.locf(HospitalData)
+casedat <- na.locf(casedat)
+comdat <- na.locf(comdat)
+regcases <- na.locf(regcases)
+scotdat <- na.locf(scotdat)
 
 # Remove weekend effect,  assuming each weekday has same number of cases over the
 # epidemic, and national averages hold regionally.
@@ -528,12 +528,14 @@ for (area in 2:length(regcases)){
   }
 }
 
-for (i in 2:ncol(casedat)) {
+#for (i in 2:ncol(casedat)) {
+  range= 2:ncol(casedat)
   for (j in 1:nrow(casedat)) {
-    indexday=(j-1)%%7+1
-    casedat[j,i] <- as.integer(casedat[j,i]/days[indexday])
+    indexday <- (j-1)%%7+1
+    casedat[j,range] <- as.integer(casedat[j,range]/days[indexday])
   }
-}
+ rm(j,range)
+#}
 
 # Fix Xmas and weekend anomaly in age data
 for (iage in 2:ncol(casedat) ){
@@ -578,7 +580,7 @@ logmean=log(6.0)
 SARIToDeath=dlnorm(1:28, logmean,  logmean/2.0)
 logmean=log(6.0)
 SARIToCritical=dlnorm(1:28, logmean,  logmean/2.0)
-logmean=log(7.6) # Mean time spent on ICU, from Faes
+logmean=log(12.6) # Mean time spent on ICU, 7.5 days from Faes
 CriticalToCritRecov=dlnorm(1:28, logmean,  logmean/2.0)
 CriticalToDeath=dlnorm(1:28, logmean,  logmean/4.0)
 logmean=log(4.0) #  Stay in hospital post ICU - needs evidence
@@ -633,13 +635,6 @@ oldSARI <- SARI
 oldCRIT <- CRIT
 oldCRITREC <- CRITREC
 
-# Inter-compartment probability differs from covidsim's idea of totals ending their illness
-#in that compartment  prior to RECOV/DEATH
-pItoS= (covidsimAge$Prop_Critical_ByAge+covidsimAge$Prop_SARI_ByAge )/
-  (covidsimAge$Prop_Critical_ByAge+covidsimAge$Prop_SARI_ByAge+covidsimAge$Prop_ILI_ByAge )
-
-pStoC=covidsimAge$Prop_Critical_ByAge/(covidsimAge$Prop_Critical_ByAge+covidsimAge$Prop_SARI_ByAge )
-
 #  Set day 1.  This assumes - wrongly - that there were zero cases before,
 #              but should autocorrect as those cases get resolved
 
@@ -656,17 +651,34 @@ CRIT[1,(2:ncol(CRIT))]=casedat[1,(2:ncol(casedat))]*covidsimAge$Prop_Critical_By
 # Bring forward cases from yesterday
 # Current values will typically be negative, as they are sums of people leaving the compartment
 # Nobody changes age band.  Vectorize over distributions
-for (iage in (2:ncol(ILI))){
+Prop_Mild_ByAge = covidsimAge$Prop_Mild_ByAge
+Prop_ILI_ByAge = covidsimAge$Prop_ILI_ByAge
+Prop_SARI_ByAge=covidsimAge$Prop_SARI_ByAge
+CFR_SARI_ByAge = covidsimAge$CFR_SARI_ByAge
+CFR_ILI_ByAge=covidsimAge$CFR_ILI_ByAge
+CFR_Critical_ByAge=covidsimAge$CFR_Critical_ByAge
+
   for (iday in (2:lengthofdata)){
-    xday=iday+length(SARIToCritical)
-    iday=iday+1
-    # Mild and ILI comes in from todays casedat,  ILI=cases Mild add to those from the past
-    newMILD[iday,iage]=as.numeric(casedat[iday,iage]*covidsimAge$Prop_Mild_ByAge[(iage-1)]/covidsimAge$Prop_ILI_ByAge[(iage-1)])+newILI[iday,iage]
-    newILI[iday,iage]=as.numeric(casedat[iday,iage]*(1.0 )+newILI[iday,iage])
+#  Proportions become variant dependent.  ILI is case driven, so extra infectivity is automatic
+# from the data.    CRIT increases at the expense of SARI
+    Prop_Critical_ByAge=covidsimAge$Prop_Critical_ByAge*comdat$lethality[iday]
+    Prop_SARI_ByAge=-Prop_ILI_ByAge-Prop_Mild_ByAge-Prop_Critical_ByAge+1.0
+# Inter-compartment probability differs from covidsim's idea of totals ending their illness
+#in that compartment  prior to RECOV/DEATH
+    pItoS= (Prop_Critical_ByAge+Prop_SARI_ByAge )/
+        (Prop_Critical_ByAge+Prop_SARI_ByAge+Prop_ILI_ByAge )
+    pStoC= Prop_Critical_ByAge / ( Prop_Critical_ByAge + Prop_SARI_ByAge )
 
-#    newSARI[iday,iage]=as.numeric(casedat[iday,iage]*covidsimAge$Prop_SARI_ByAge[(iage-1)])+newSARI[iday,iage]
-#    newCRIT[iday,iage]=as.numeric(casedat[iday,iage]*covidsimAge$Prop_Critical_ByAge[(iage-1)])+newCRIT[iday,iage]
 
+    xday=iday+length(SARIToCritical)-1
+    agerange=(2:ncol(ILI))
+    ageminus=agerange-1
+
+        # Mild and ILI comes in from todays casedat,  ILI=cases Mild add to those from the past
+    newMILD[iday,agerange]=casedat[iday,agerange]*Prop_Mild_ByAge[(ageminus)]/covidsimAge$Prop_ILI_ByAge[ageminus]+newILI[iday,agerange]
+    newILI[iday,agerange]=casedat[iday,agerange]*(1.0 )+newILI[iday,agerange]
+
+    for (iage in agerange){
     # All todays new MILDs will all leave to REC across distribution
     MtoR=as.numeric(newMILD[iday,iage])          *      MildToRecovery
     oldMILD[(iday:xday),iage]=oldMILD[(iday:xday),iage]+MtoR
@@ -677,36 +689,34 @@ for (iage in (2:ncol(ILI))){
     oldILI[(iday:xday),iage]=oldILI[(iday:xday),iage]+ItoR+ItoS
     # SARI will go to REC, DEATH, CRIT
     StoC = as.numeric(newSARI[iday,iage] *pStoC[iage-1]) *SARIToCritical
-    StoD = as.numeric(newSARI[iday,iage] *covidsimAge$CFR_SARI_ByAge[iage-1])      *SARIToDeath
-    StoR = as.numeric(newSARI[iday,iage] *(1.0-pStoC[iage-1]-covidsimAge$CFR_SARI_ByAge[iage-1]) )*SARIToRecovery
+    StoD = as.numeric(newSARI[iday,iage] * CFR_SARI_ByAge[iage-1])      *SARIToDeath
+    StoR = as.numeric(newSARI[iday,iage] *(1.0-pStoC[iage-1]-CFR_SARI_ByAge[iage-1]) )*SARIToRecovery
     newCRIT[(iday:xday),iage]=newCRIT[(iday:xday),iage]+StoC
     oldSARI[(iday:xday),iage]=oldSARI[(iday:xday),iage]+StoR+StoC+StoD
 
     # CRIT  goes to CRITREC DEATH
-    CtoD = as.numeric(newCRIT[iday,iage]* covidsimAge$CFR_Critical_ByAge[(iage-1)]) *CriticalToDeath
+    CtoD = as.numeric(newCRIT[iday,iage]*CFR_Critical_ByAge[(iage-1)]) *CriticalToDeath
     CtoCR = as.numeric(newCRIT[iday,iage]*(1.0-covidsimAge$CFR_Critical_ByAge[(iage-1)])) *CriticalToCritRecov
     newCRITREC[(iday:xday),iage]=newCRITREC[(iday:xday),iage]+CtoCR
     oldCRIT[(iday:xday),iage]=oldCRIT[(iday:xday),iage]+CtoD+CtoCR
 
-    # CRITREC goes to RECOV 
+    # CRITREC goes to RECOV
     CRtoR = as.numeric(newCRITREC[iday,iage]) *CritRecovToRecov
     oldCRITREC[(iday:xday),iage]=oldCRITREC[(iday:xday),iage]+CRtoR
-# DEATH and RECOV are cumulative, again anticipating where "new" will end up.
+    # DEATH and RECOV are cumulative, again anticipating where "new" will end up.
     DEATH[(iday:xday),iage]=DEATH[(iday:xday),iage]+CtoD+StoD
     RECOV[(iday:xday),iage]=RECOV[(iday:xday),iage]+StoR+ItoR+MtoR+CRtoR
-
+    }
     # Finally, update todays totals: New cases + transfers from other compartments -
     # transfers to other compartments + leftover from yesterday
-    MILD[iday,iage]=MILD[iday,iage]+newMILD[iday,iage]-oldMILD[iday,iage]+MILD[(iday-1),iage]
-    ILI[iday,iage]=ILI[iday,iage]+newILI[iday,iage]-oldILI[iday,iage]+ILI[(iday-1),iage]
-    SARI[iday,iage]=SARI[iday,iage]+newSARI[iday,iage]-oldSARI[iday,iage]+SARI[(iday-1),iage]
-    CRIT[iday,iage]=CRIT[iday,iage]+newCRIT[iday,iage]-oldCRIT[iday,iage]+CRIT[(iday-1),iage]
-    CRITREC[iday,iage]=CRITREC[iday,iage]+newCRITREC[iday,iage]-oldCRITREC[iday,iage]+CRITREC[(iday-1),iage]
-  }
+    MILD[iday,agerange]=MILD[iday,agerange]+newMILD[iday,agerange]-oldMILD[iday,agerange]+MILD[(iday-1),agerange]
+    ILI[iday,agerange]=ILI[iday,agerange]+newILI[iday,agerange]-oldILI[iday,agerange]+ILI[(iday-1),agerange]
+    SARI[iday,agerange]=SARI[iday,agerange]+newSARI[iday,agerange]-oldSARI[iday,agerange]+SARI[(iday-1),agerange]
+    CRIT[iday,agerange]=CRIT[iday,agerange]+newCRIT[iday,agerange]-oldCRIT[iday,agerange]+CRIT[(iday-1),agerange]
+    CRITREC[iday,agerange]=CRITREC[iday,agerange]+newCRITREC[iday,agerange]-oldCRITREC[iday,agerange]+CRITREC[(iday-1),agerange]
+
 }
-
 }# End of compartment section
-
 # Create a vector to hold the results for various R-numbers
 ninit <- as.numeric(1:nrow(comdat))/as.numeric(1:nrow(comdat))
 dfR <- data.frame(x=1.0:length(comdat$date),
@@ -1294,10 +1304,10 @@ if(interactive()){
   summary(model)
 
   #Get overall model fits
-  model = lm(comdat$allDeaths ~ gampred$allCasesPred)
+  model = lm(comdat$allDeaths[startdate:enddate] ~ gampred$allCasesPred[startdate:enddate])
   summary(model)
 
-  model = lm(comdat$allDeaths ~ logpred$allCasesPred)
+  model = lm(comdat$allDeaths[startdate:enddate] ~ logpred$allCasesPred[startdate:enddate])
   summary(model)
 
   model = lm(filter(comdat, date %in% WSS$date)$allDeaths ~ WSS$values)
