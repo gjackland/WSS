@@ -527,14 +527,12 @@ for (area in 2:length(regcases)){
   }
 }
 
-#for (i in 2:ncol(casedat)) {
-  range= 2:ncol(casedat)
+for (i in 2:ncol(casedat)) {
   for (j in 1:nrow(casedat)) {
     indexday <- (j-1)%%7+1
-    casedat[j,range] <- as.integer(casedat[j,range]/days[indexday])
+    casedat[j,i] <- as.integer(casedat[j,i]/days[indexday])
   }
- rm(j,range)
-#}
+}
 
 # Fix Xmas and weekend anomaly in age data
 for (iage in 2:ncol(casedat) ){
@@ -561,7 +559,6 @@ ggplot(comdat,aes(x=date)) +
   geom_line(aes(y=fpCases),color="red", size=1.5, alpha=0.5) +
   xlab("Dates") + ylab("Cases")
 
-# Calculation of Rnumber, generation time = 4 days
 
 #Make 28 day cdfs.  these are same for all age groups, but fractions Prop/CFR vary
 #  Choose to use lognormal with logsd=logmean/4.0.  Data not available to do better
