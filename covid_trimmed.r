@@ -29,60 +29,88 @@ options(scipen = 999)
 
 # Copy transition rates from covidsim.  There are three different functions for
 # ICDFs, no idea why.  x-axis divided into 20 blocks of 5%.
-# Will need to invert this
+# Will need to invert this.  Recent versions include a "Stepdown" state which seems to entail dying in CRITREC
+#  https://www.imperial.ac.uk/mrc-global-infectious-disease-analysis/covid-19/report-41-rtm/
+# PropSARI taken from Knock et al to increase smoothly with age
+#Over 80 adjusted to fit national death reports
+# CFR_SARI cut c.f covidsim for intermediate ages because more serious cases go via CRIT
 
 covidsimAge<-data.frame(
-"Prop_Mild_ByAge"=c(
-0.666244874,	0.666307235,	0.666002907,	0.665309462,	0.663636419,	0.660834577,	0.657465236,	0.65343285,	0.650261465,	0.64478501,	0.633943755,	0.625619329,	0.609080537,	0.600364976,	0.5838608,	0.566553872,	0.564646465,	0.564646465,	0.564646465
-),
-"Prop_ILI_ByAge"=c(
-0.333122437,  0.333153617,	0.333001453, 0.332654731, 0.33181821, 0.330417289, 0.328732618, 0.326716425, 0.325130732, 0.322392505, 0.316971878, 0.312809664, 0.304540269, 0.300182488, 0.2919304, 0.283276936, 0.282323232, 0.282323232, 0.282323232
-),
-"Prop_SARI_ByAge"=c(
-0.000557744, 0.000475283, 0.000877703, 0.001794658, 0.004006955, 0.007711884, 0.012167229, 0.017359248, 0.021140307, 0.027047193, 0.03708932, 0.039871236, 0.040788928, 0.027444452, 0.101605674, 0.142001415, 0.150469697, 0.150469697, 0.150469697
-),
-"Prop_Critical_ByAge"=
-c(7.49444E-05, 6.38641E-05, 0.000117937, 0.000241149, 0.000538417, 0.00103625, 0.001634918, 0.002491477, 0.003467496, 0.005775292, 0.011995047, 0.021699771, 0.045590266, 0.072008084, 0.022603126, 0.008167778, 0.002560606, 0.002560606, 0.002560606
-),
-"CFR_Critical_ByAge"=c(
-0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896
-),
-"CFR_SARI_ByAge"=c(
-0.125893251, 0.12261338, 0.135672867, 0.152667869, 0.174303077, 0.194187895, 0.209361731, 0.224432564, 0.237013516, 0.257828065, 0.290874602, 0.320763971, 0.362563751, 0.390965457, 0.421151485, 0.447545892, 0.482, 0.482, 0.482
-),
-"CFR_ILI_ByAge"=c(
-0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  0,  0,  0)
+  "Prop_ILI_ByAge"=c(
+    0.333122437,  0.333153617,	0.333001453, 0.332654731, 0.33181821, 0.330417289, 0.328732618, 0.326716425, 0.325130732, 0.322392505, 0.316971878, 0.312809664, 0.304540269, 0.300182488, 0.2919304, 0.283276936, 0.282323232, 0.282323232, 0.282323232
+  ),
+  "Prop_SARI_ByAge"=c(
+    0.000557744, 0.000475283, 0.000877703, 0.001794658, 0.004006955, 0.007711884, 0.012167229, 0.017359248, 0.021140307, 0.027047193, 0.03708932, 0.039871236, 0.020788928, 0.017444452, 0.101605674, 0.142001415, 0.1747, 0.21, 0.25
+  ),
+  "Prop_Critical_ByAge"=
+    c(7.49444E-05, 6.38641E-05, 0.000117937, 0.000241149, 0.000538417, 0.00103625, 0.001634918, 0.002491477, 0.003467496, 0.005775292, 0.011995047, 0.021699771, 0.065590266, 0.082008084, 0.022603126, 0.008167778, 0.002560606, 0.002560606, 0.002560606
+    ),
+  "CFR_Critical_ByAge"=c(
+    0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896
+  ),
+  "CFR_SARI_ByAge"=c(
+    0.125893251, 0.12261338, 0.135672867, 0.152667869, 0.174303077, 0.194187895, 0.209361731, 0.224432564, 0.237013516, 0.125, 0.125, 0.125, 0.125, 0.1257277, 0.37110474,  0.421151485, 0.5782234,  0.6455841,  0.6930401
+  ),
+  "CFR_ILI_ByAge"=c(
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  0,  0,  0),
+  "Case_Hosp_ByAge"=c( 0.039,  0.001,  0.006,  0.009,  0.026 , 0.040,  0.042  ,0.045,  0.050,  0.074,  0.138,  0.198,  0.247,  0.414,  0.638,  1.000,1.00 ,1.00 ,1.00) 
 )
 
+covidsimAge$Prop_Mild_ByAge= 1.0 - (covidsimAge$Prop_Critical_ByAge+covidsimAge$Prop_ILI_ByAge+covidsimAge$Prop_SARI_ByAge)
 covidsimICDF<-data.frame(
-"MildToRecovery_icdf"=c(
-0, 0.341579599, 0.436192391, 0.509774887, 0.574196702, 0.633830053, 0.690927761, 0.74691114, 0.802830695, 0.859578883, 0.918015187, 0.97906363, 1.043815683, 1.113669859, 1.190557274, 1.277356871, 1.378761429, 1.50338422, 1.670195767, 1.938414132, 2.511279379
-),
-"ILIToRecovery_icdf"=c(
-0, 0.341579599, 0.436192391, 0.509774887, 0.574196702, 0.633830053, 0.690927761, 0.74691114, 0.802830695, 0.859578883, 0.918015187, 0.97906363, 1.043815683, 1.113669859, 1.190557274, 1.277356871, 1.378761429, 1.50338422, 1.670195767, 1.938414132, 2.511279379
-),
-"ILIToSARI_icdf"=c(
-0, 0.341579599, 0.436192391, 0.509774887, 0.574196702, 0.633830053, 0.690927761, 0.74691114, 0.802830695, 0.859578883, 0.918015187, 0.97906363, 1.043815683, 1.113669859, 1.190557274, 1.277356871, 1.378761429, 1.50338422, 1.670195767, 1.938414132, 2.511279379
-),
-"SARIToRecovery_icdf"=c(
-0, 0.634736097, 1.217461548, 1.805695261, 2.41206761, 3.044551205, 3.71010552, 4.415905623, 5.170067405, 5.982314035, 6.864787504, 7.833196704, 8.908589322, 10.12027655, 11.51100029, 13.14682956, 15.13821107, 17.69183155, 21.27093904, 27.35083955, 41.35442157
-),
-"SARIToDeath_icdf"=c(
-0, 1.703470233, 2.39742257, 2.970367222, 3.491567676, 3.988046604, 4.474541783, 4.960985883, 5.455292802, 5.964726999, 6.496796075, 7.06004732, 7.665014091, 8.325595834, 9.061367792, 9.901900127, 10.8958347, 12.133068, 13.81280888, 16.56124574, 22.5803431
-),
-"SARIToCritical_icdf"=c(
-0, 0.108407687, 0.220267228, 0.337653773, 0.46159365, 0.593106462, 0.733343356, 0.88367093, 1.045760001, 1.221701998, 1.414175806, 1.62669998, 1.864032461, 2.132837436, 2.442868902, 2.809242289, 3.257272257, 3.834402667, 4.647120033, 6.035113821, 9.253953212
-),
-"CriticalToCritRecov_icdf"=c(
-0, 1.308310071, 1.87022015, 2.338694632, 2.76749788, 3.177830401, 3.581381361, 3.986127838, 4.398512135, 4.824525291, 5.270427517, 5.743406075, 6.252370864, 6.809125902, 7.430338867, 8.141231404, 8.983341913, 10.03350866, 11.46214198, 13.80540164, 18.95469153
-),
-"CriticalToDeath_icdf"=c(
-0, 1.60649128, 2.291051747, 2.860938008, 3.382077741, 3.880425012, 4.37026577, 4.861330415, 5.361460943, 5.877935626, 6.4183471, 6.991401405, 7.607881726, 8.282065409, 9.034104744, 9.894486491, 10.91341144, 12.18372915, 13.9113346, 16.74394356, 22.96541429
-),
-"CritRecovToRecov_icdf"=c(
-0, 0.133993315, 0.265922775, 0.402188416, 0.544657341, 0.694774487, 0.853984373, 1.023901078, 1.206436504, 1.403942719, 1.619402771, 1.856711876, 2.121118605, 2.419957988, 2.763950408, 3.169692564, 3.664959893, 4.301777536, 5.196849239, 6.7222126, 10.24997697
-))
+  "MildToRecovery_icdf"=c(
+    0, 0.341579599, 0.436192391, 0.509774887, 0.574196702, 0.633830053, 0.690927761, 0.74691114, 0.802830695, 0.859578883, 0.918015187, 0.97906363, 1.043815683, 1.113669859, 1.190557274, 1.277356871, 1.378761429, 1.50338422, 1.670195767, 1.938414132, 2.511279379
+  ),
+  "ILIToRecovery_icdf"=c(
+    0, 0.341579599, 0.436192391, 0.509774887, 0.574196702, 0.633830053, 0.690927761, 0.74691114, 0.802830695, 0.859578883, 0.918015187, 0.97906363, 1.043815683, 1.113669859, 1.190557274, 1.277356871, 1.378761429, 1.50338422, 1.670195767, 1.938414132, 2.511279379
+  ),
+  "ILIToSARI_icdf"=c(
+    0, 0.341579599, 0.436192391, 0.509774887, 0.574196702, 0.633830053, 0.690927761, 0.74691114, 0.802830695, 0.859578883, 0.918015187, 0.97906363, 1.043815683, 1.113669859, 1.190557274, 1.277356871, 1.378761429, 1.50338422, 1.670195767, 1.938414132, 2.511279379
+  ),
+  "SARIToRecovery_icdf"=c(
+    0, 0.634736097, 1.217461548, 1.805695261, 2.41206761, 3.044551205, 3.71010552, 4.415905623, 5.170067405, 5.982314035, 6.864787504, 7.833196704, 8.908589322, 10.12027655, 11.51100029, 13.14682956, 15.13821107, 17.69183155, 21.27093904, 27.35083955, 41.35442157
+  ),
+  "SARIToDeath_icdf"=c(
+    0, 1.703470233, 2.39742257, 2.970367222, 3.491567676, 3.988046604, 4.474541783, 4.960985883, 5.455292802, 5.964726999, 6.496796075, 7.06004732, 7.665014091, 8.325595834, 9.061367792, 9.901900127, 10.8958347, 12.133068, 13.81280888, 16.56124574, 22.5803431
+  ),
+  "SARIToCritical_icdf"=c(
+    0, 0.108407687, 0.220267228, 0.337653773, 0.46159365, 0.593106462, 0.733343356, 0.88367093, 1.045760001, 1.221701998, 1.414175806, 1.62669998, 1.864032461, 2.132837436, 2.442868902, 2.809242289, 3.257272257, 3.834402667, 4.647120033, 6.035113821, 9.253953212
+  ),
+  "CriticalToCritRecov_icdf"=c(
+    0, 1.308310071, 1.87022015, 2.338694632, 2.76749788, 3.177830401, 3.581381361, 3.986127838, 4.398512135, 4.824525291, 5.270427517, 5.743406075, 6.252370864, 6.809125902, 7.430338867, 8.141231404, 8.983341913, 10.03350866, 11.46214198, 13.80540164, 18.95469153
+  ),
+  "CriticalToDeath_icdf"=c(
+    0, 1.60649128, 2.291051747, 2.860938008, 3.382077741, 3.880425012, 4.37026577, 4.861330415, 5.361460943, 5.877935626, 6.4183471, 6.991401405, 7.607881726, 8.282065409, 9.034104744, 9.894486491, 10.91341144, 12.18372915, 13.9113346, 16.74394356, 22.96541429
+  ),
+  "CritRecovToRecov_icdf"=c(
+    0, 0.133993315, 0.265922775, 0.402188416, 0.544657341, 0.694774487, 0.853984373, 1.023901078, 1.206436504, 1.403942719, 1.619402771, 1.856711876, 2.121118605, 2.419957988, 2.763950408, 3.169692564, 3.664959893, 4.301777536, 5.196849239, 6.7222126, 10.24997697
+  )
+  )
+
 ## covidsim has 17 agegroups.  We need 19,  assume same params for 85_89 & 90+ as for 80+
+# Data from Knock et al  case-> Hosp Triage -> ICU DEath|Hosp Death |ICU Death in Stepdown
+Knock<-t(data.frame(
+"00_04" = c( 0.039, 0.243, 0.039, 0.282, 0.091, 0),
+"05_09" = c( 0.001, 0.289, 0.037, 0.286, 0.083, 0),
+"10_14" = c( 0.006, 0.338, 0.035, 0.291, 0.077, 0),
+"15_19"= c( 0.009, 0.389, 0.035, 0.299, 0.074, 0),
+"20_24"= c( 0.026, 0.443, 0.036, 0.310, 0.074, 0),
+"25_29" = c(0.040, 0.503, 0.039, 0.328, 0.076, 0),
+"30_34"= c( 0.042, 0.570, 0.045, 0.353, 0.080, 0),
+"35_39" = c(0.045, 0.653, 0.055, 0.390, 0.086, 0),
+"40_44"= c( 0.050, 0.756, 0.074, 0.446, 0.093, 0),
+"45_49" = c(0.074, 0.866, 0.107, 0.520, 0.102, 0),
+"50_54" = c(0.138, 0.954, 0.157, 0.604, 0.117, 0),
+"55_59" = c(0.198, 1.000, 0.238, 0.705, 0.148, 0),
+"60_64" = c(0.247, 0.972, 0.353, 0.806, 0.211, 0),
+"65_69" = c(0.414, 0.854, 0.502, 0.899, 0.332, 0),
+"70_74" = c(0.638, 0.645, 0.675, 0.969, 0.526, 0),
+"75_79" = c(1.000, 0.402, 0.832, 1.000, 0.753, 0),
+"80_84" =c( 0.873, 0.107, 1.000, 0.918, 1.000, 0),
+"85_89" =c( 0.873, 0.107, 1.000, 0.918, 1.000, 0),
+"90+" =c( 0.873, 0.107, 1.000, 0.918, 1.000, 0)
+)
+)
 
 ####, Read data ####
 # Base URL to get the data
@@ -461,21 +489,23 @@ if(enddate == (Sys.Date()-1)){
 # Add variant data to comdat
 comdat$Kent <- 0.0
 comdat$India <- 0.0
+Kentfac=0.4
+Indiafac=0.7
 Kentdate <- as.integer(as.Date("2021/01/01")-startdate)
 # Approximate Kent by logistic rise around 2021/01/01  Same gen time, R+0.3 vs Wild
 for (i in 1:nrow(comdat)){
-  x <- (i-Kentdate)*0.4/genTime
-  comdat$Kent[i] <- 1.0/(1.0+exp(-x))
+  x= (i-Kentdate)*0.3/genTime
+  comdat$Kent[i]=1.0/(1.0+exp(-x))
 }
 Indiadate <- as.integer(as.Date("2021/05/15")-startdate)
-# Approximate India by logistic rise around 2021/15/01: see covid19.sanger.  Same genTime R+0.5 vs Kent
+# Approximate India by logistic rise around 2021/15/01: see covid19.sanger.  Same genTime R+0.4 vs Kent
 for (i in 1:nrow(comdat)){
-  x <-  (i-Indiadate)*0.5/genTime
-  comdat$India[i] <- 1.0/(1.0+exp(-x))
+  x= (i-Indiadate)*0.4/genTime
+  comdat$India[i]=1.0/(1.0+exp(-x))
 }
-#  Kent is 1.4x worse, india is 1.5*1.4=2.1x worse
-comdat$Kent <- comdat$Kent-comdat$India
-comdat$lethality <- 1.0+0.4*comdat$Kent+1.1*comdat$India
+#  Kent is Kentfac worse, india is Kentfac*Indiafac worse
+comdat$Kent<-comdat$Kent-comdat$India
+comdat$lethality<-1.0+ Kentfac*comdat$Kent + Indiafac*comdat$India
 
 #  Fix missing data to constant values
 HospitalData <- na.locf(HospitalData)
@@ -528,14 +558,12 @@ for (area in 2:length(regcases)){
   }
 }
 
-#for (i in 2:ncol(casedat)) {
-  range= 2:ncol(casedat)
+for (i in 2:ncol(casedat)) {
   for (j in 1:nrow(casedat)) {
     indexday <- (j-1)%%7+1
-    casedat[j,range] <- as.integer(casedat[j,range]/days[indexday])
+    casedat[j,i] <- as.integer(casedat[j,i]/days[indexday])
   }
- rm(j,range)
-#}
+}
 
 # Fix Xmas and weekend anomaly in age data
 for (iage in 2:ncol(casedat) ){
@@ -562,8 +590,11 @@ ggplot(comdat,aes(x=date)) +
   geom_line(aes(y=fpCases),color="red", size=1.5, alpha=0.5) +
   xlab("Dates") + ylab("Cases")
 
-# Calculation of Rnumber, generation time = 4 days
+CFR_All_ByAge=colSums(deathdat[2:20])/colSums(casedat[2:20])
 
+
+compartment=TRUE
+if(compartment){
 #Make 28 day cdfs.  these are same for all age groups, but fractions Prop/CFR vary
 #  Choose to use lognormal with logsd=logmean/4.0.  Data not available to do better
 logmean = log(12.6)
@@ -574,14 +605,14 @@ ILIToRecovery=dlnorm(1:28, logmean,  logmean/4.0)
 #  lognormal there decays from day 1
 logmean=log(9.0)
 ILIToSARI=dlnorm(1:28, logmean,  logmean/1.3)
-logmean=log(12.6)
+logmean=log(10.6)
 SARIToRecovery=dlnorm(1:28, logmean,  logmean/2.0)
-logmean=log(6.0)
-SARIToDeath=dlnorm(1:28, logmean,  logmean/2.0)
+logmean=log(4.0)
+SARIToDeath=dlnorm(1:28, logmean,  logmean/4.0)
 logmean=log(6.0)
 SARIToCritical=dlnorm(1:28, logmean,  logmean/2.0)
-logmean=log(12.6) # Mean time spent on ICU, 7.5 days from Faes
-CriticalToCritRecov=dlnorm(1:28, logmean,  logmean/2.0)
+logmean=log(12.5) # Mean time spent on ICU, 7.5 days from Faes
+CriticalToCritRecov=dlnorm(1:28, logmean,  logmean/4.0)
 CriticalToDeath=dlnorm(1:28, logmean,  logmean/4.0)
 logmean=log(4.0) #  Stay in hospital post ICU - needs evidence
 CritRecovToRecov=dlnorm(1:28, logmean,  logmean/4.0)
@@ -599,8 +630,6 @@ CritRecovToRecov=CritRecovToRecov/sum(CritRecovToRecov)
 #  Follow infections through ILI (Case) - SARI (Hospital) - Crit (ICU) - CritRecov (Hospital)- Deaths
 
 
-compartment=TRUE
-if(compartment){
 #  Zero dataframes.
 #  Follow these cases to the end of the CDFs]
 lengthofdata=  length(casedat$date)#
@@ -654,15 +683,21 @@ CRIT[1,(2:ncol(CRIT))]=casedat[1,(2:ncol(casedat))]*covidsimAge$Prop_Critical_By
 Prop_Mild_ByAge = covidsimAge$Prop_Mild_ByAge
 Prop_ILI_ByAge = covidsimAge$Prop_ILI_ByAge
 Prop_SARI_ByAge=covidsimAge$Prop_SARI_ByAge
+Prop_Critical_ByAge=covidsimAge$Prop_Critical_ByAge
 CFR_SARI_ByAge = covidsimAge$CFR_SARI_ByAge
-CFR_ILI_ByAge=covidsimAge$CFR_ILI_ByAge
+CFR_ILI_ByAge=covidsimAge$CFR_ILI_ByAge#  This is zero
 CFR_Critical_ByAge=covidsimAge$CFR_Critical_ByAge
+
+
 
   for (iday in (2:lengthofdata)){
 #  Proportions become variant dependent.  ILI is case driven, so extra infectivity is automatic
-# from the data.    CRIT increases at the expense of SARI
+# from the data. ILI->SARI increases with variant.  CRIT is an NHS decision, not favoured for very old
+#  Need to increase CFR without exceeding 1.  Note inverse lethality isnt a simple % as CFR cant be >1
+#  Will have negative people  trouble if CFR>1
     Prop_Critical_ByAge=covidsimAge$Prop_Critical_ByAge*comdat$lethality[iday]
-    Prop_SARI_ByAge=-Prop_ILI_ByAge-Prop_Mild_ByAge-Prop_Critical_ByAge+1.0
+    Prop_SARI_ByAge=covidsimAge$Prop_SARI_ByAge*comdat$lethality[iday]
+    Prop_Mild_ByAge= - Prop_Critical_ByAge - Prop_ILI_ByAge - Prop_SARI_ByAge +1.0
 # Inter-compartment probability differs from covidsim's idea of totals ending their illness
 #in that compartment  prior to RECOV/DEATH
     pItoS= (Prop_Critical_ByAge+Prop_SARI_ByAge )/
@@ -674,15 +709,16 @@ CFR_Critical_ByAge=covidsimAge$CFR_Critical_ByAge
     agerange=(2:ncol(ILI))
     ageminus=agerange-1
 
-        # Mild and ILI comes in from todays casedat,  ILI=cases Mild add to those from the past
-    newMILD[iday,agerange]=casedat[iday,agerange]*Prop_Mild_ByAge[(ageminus)]/covidsimAge$Prop_ILI_ByAge[ageminus]+newILI[iday,agerange]
-    newILI[iday,agerange]=casedat[iday,agerange]*(1.0 )+newILI[iday,agerange]
+        # Mild and ILI comes in from todays casedat,  ILI=cases en route to Hospital Mild add to those from the past
 
-    for (iage in agerange){
+    newMILD[iday,agerange]=casedat[iday,agerange]*(1.0-covidsimAge$Case_Hosp_ByAge[1:19])+newMILD[iday,agerange]
+    newILI[iday,agerange]=casedat[iday,agerange]*(covidsimAge$Case_Hosp_ByAge[1:19])+newILI[iday,agerange]
+    for (iage in agerange){    
+
     # All todays new MILDs will all leave to REC across distribution
     MtoR=as.numeric(newMILD[iday,iage])          *      MildToRecovery
     oldMILD[(iday:xday),iage]=oldMILD[(iday:xday),iage]+MtoR
-    # ILI will go to SA/RI and REC
+    # ILI will go to SA/RI and REC 
     ItoS = as.numeric(newILI[iday,iage] *  pItoS[iage-1])     *ILIToSARI
     ItoR = as.numeric(newILI[iday,iage] *(1.0-pItoS[iage-1])) *ILIToSARI
     newSARI[(iday:xday),iage]=newSARI[(iday:xday),iage]+ItoS
@@ -696,7 +732,7 @@ CFR_Critical_ByAge=covidsimAge$CFR_Critical_ByAge
 
     # CRIT  goes to CRITREC DEATH
     CtoD = as.numeric(newCRIT[iday,iage]*CFR_Critical_ByAge[(iage-1)]) *CriticalToDeath
-    CtoCR = as.numeric(newCRIT[iday,iage]*(1.0-covidsimAge$CFR_Critical_ByAge[(iage-1)])) *CriticalToCritRecov
+    CtoCR = as.numeric(newCRIT[iday,iage]*(1.0-CFR_Critical_ByAge[(iage-1)])) *CriticalToCritRecov
     newCRITREC[(iday:xday),iage]=newCRITREC[(iday:xday),iage]+CtoCR
     oldCRIT[(iday:xday),iage]=oldCRIT[(iday:xday),iage]+CtoD+CtoCR
 
@@ -717,6 +753,16 @@ CFR_Critical_ByAge=covidsimAge$CFR_Critical_ByAge
 
 }
 }# End of compartment section
+
+#Monitoring plots
+plot(rowSums(deathdat[2:20]))
+lines(rowSums(DEATH[2:20]),col="blue")
+plot(HospitalData$covidOccupiedMVBeds)
+lines(rowSums(CRIT[2:20]),col="blue")
+plot(HospitalData$newAdmissions)
+lines(rowSums(newSARI[2:20]),col="blue")
+
+
 # Create a vector to hold the results for various R-numbers
 ninit <- as.numeric(1:nrow(comdat))/as.numeric(1:nrow(comdat))
 dfR <- data.frame(x=1.0:length(comdat$date),
@@ -1121,8 +1167,8 @@ outputJSON(myt0 = t0,
 )
 
 #####  Figures and analysis for https://www.medrxiv.org/content/10.1101/2021.04.14.21255385v1
-
-
+medrxiv=FALSE
+if(medrxiv){
 ####  From here on we're reproducing figures from https://www.medrxiv.org/content/10.1101/2021.04.14.21255385v1
 ##### Fig 1. - Heatmaps ####
 groups = colnames(casedat[2:20])
@@ -1410,3 +1456,4 @@ CFR %>% filter( "2020/10/1"< date & date < endplot) %>%
   ggplot(aes(x=date, y=DeathRate, colour=agegroup)) +
   coord_cartesian(ylim=c(0.0,0.4))+ geom_smooth(span=0.3) +
   guides(color = "none") + facet_wrap(vars(agegroup))
+}
