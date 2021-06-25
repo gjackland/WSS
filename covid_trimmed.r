@@ -53,11 +53,13 @@ covidsimAge<-data.frame(
   ),
   "CFR_ILI_ByAge"=c(
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  0,  0,  0),
+  "Prop_Hosp_ByAge"=c(0.03, 0.0026 ,  0.00084 , 0.00042 ,0.00080, 0.0026, 0.0040 , 0.0063 , 0.012,  0.019,  0.023,  0.040,  0.096,  0.10,  0.24 ,  0.50, 0.6, 0.7,0.8),
   "Case_Hosp_ByAge"=c( 0.039,  0.001,  0.006,  0.009,  0.026 , 0.040,  0.042  ,0.045,  0.050,  0.074,  0.138,  0.198,  0.247,  0.414,  0.638,  1.000,1.00 ,1.00 ,1.00), 
 "Deatherror"=c(0.32060231, 0.17841065, 0.05670156, 0.02800124, 0.01342003, 0.01179716, 0.01460613, 0.01983603, 0.02779927, 0.08124622, 0.09198597, 
    0.15295026, 0.22286942, 1.13541013, 1.12529118, 1.91515160, 1.97455542, 2.15335157, 2.23153492 )
   )
 # Deatherror from colSums(deathdat[2:20])/colSums(casedat[2:20])/(colSums(DEATH[2:20]/colSums(newMILD[2:20]+newILI[2:20])))
+# IHR from Knock SM S9  CHR from Knock S8
 covidsimAge$Prop_Mild_ByAge= 1.0 - (covidsimAge$Prop_Critical_ByAge+covidsimAge$Prop_ILI_ByAge+covidsimAge$Prop_SARI_ByAge)
 covidsimICDF<-data.frame(
   "MildToRecovery_icdf"=c(
@@ -695,8 +697,8 @@ CRIT[1,(2:ncol(CRIT))]=casedat[1,(2:ncol(casedat))]*covidsimAge$Prop_Critical_By
 #  Lethality reduces mild cases + renormalise    
     Prop_Mild_ByAge = covidsimAge$Prop_Mild_ByAge/comdat$lethality[iday]
     Prop_ILI_ByAge = covidsimAge$Prop_ILI_ByAge
-    Prop_SARI_ByAge=covidsimAge$Prop_SARI_ByAge* covidsimAge$Deatherror
-    Prop_Critical_ByAge=covidsimAge$Prop_Critical_ByAge   /1.5
+    Prop_SARI_ByAge=covidsimAge$Prop_SARI_ByAge*comdat$lethality[iday]
+    Prop_Critical_ByAge=covidsimAge$Prop_Critical_ByAge  
     Psum= Prop_Mild_ByAge+ Prop_ILI_ByAge+ Prop_SARI_ByAge+ Prop_Critical_ByAge
     Prop_Mild_ByAge <- Prop_Mild_ByAge/Psum
     Prop_ILI_ByAge <- Prop_ILI_ByAge/Psum
@@ -705,8 +707,9 @@ CRIT[1,(2:ncol(CRIT))]=casedat[1,(2:ncol(casedat))]*covidsimAge$Prop_Critical_By
 # Inter-compartment probability differs from covidsim's idea of totals ending their illness
 #in that compartment  prior to RECOV/DEATH
 
-    pItoS= (Prop_Critical_ByAge+Prop_SARI_ByAge )*comdat$lethality[iday]  /
-        (  (Prop_Critical_ByAge+Prop_SARI_ByAge )*comdat$lethality[iday] +Prop_ILI_ByAge )
+#    pItoS= (Prop_Critical_ByAge+Prop_SARI_ByAge )*comdat$lethality[iday]  /
+    #        (  (Prop_Critical_ByAge+Prop_SARI_ByAge )*comdat$lethality[iday] +Prop_ILI_ByAge )
+    pItoS=covidsimAge$Prop_Hosp_ByAge/(1.0- Prop_Mild_ByAge)
     pStoC= Prop_Critical_ByAge / ( Prop_Critical_ByAge + Prop_SARI_ByAge )
     pStoD = covidsimAge$CFR_SARI_ByAge
     # directly for ILI->Death is zero
@@ -772,6 +775,7 @@ plot(HospitalData$covidOccupiedMVBeds)
 lines(rowSums(CRIT[2:20]),col="blue")
 plot(HospitalData$newAdmissions)
 lines(rowSums(newSARI[2:20]),col="blue")
+colSums(deathdat[2:20])/colSums(casedat[2:20])/(colSums(DEATH[2:20]/colSums(newMILD[2:20]+newILI[2:20])))
 
 
 # Create a vector to hold the results for various R-numbers

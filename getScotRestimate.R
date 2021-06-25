@@ -43,12 +43,13 @@ file <- gsub("[()]","",file)
 
 # Create a data subdirectory if it does not exist
 if(!dir.exists("data/scot-data/")){
-  dir.create("data/scot-data/", recursive = TRUE)
+
+  dir.create("data/scot-data/")
 }
 
 # Download the file with the data if it does not already exist
-if(!file.exists(paste0("data/scot-data/",file))){
-  download.file(dataurl,destfile = paste0("data/Scottish-data",file),quiet = TRUE)
+if(!file.exists(paste0("data//scot-data/",file))){
+  download.file(dataurl,destfile = paste0("data/scot-data/",file),quiet = TRUE)
 }else{
   message("Data file already exists locally, not downloading again. Terminating ...\n\n")
   stop_quietly()
