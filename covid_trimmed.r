@@ -327,9 +327,7 @@ regcases <- regdat %>%  select(date,areaName,areaCode,
            date <= enddate )%>%
   arrange(date)
 
-regdeaths <- regdat %>%  select(date,areaName,
-                                Deaths = newDeaths28DaysByDeathDate,
-) %>%
+regdeaths <- regdat %>%  select(date,areaName,Deaths = newDeaths28DaysByDeathDate) %>%
   pivot_wider(id_cols = date, names_from = areaName, values_from = Deaths) %>%
   filter(date >= startdate &
            date <= enddate )%>%
@@ -626,11 +624,11 @@ logmean=log(5.0)
 ILIToSARI=dlnorm(1:cdflength, logmean,  logmean/1.3)
 logmean=log(10.6)
 SARIToRecovery=dlnorm(1:cdflength, logmean,  logmean/2.0)
-logmean=log(4.0)
-SARIToDeath=dlnorm(1:cdflength, logmean,  logmean/4.0)
+logmean=log(6.0)
+SARIToDeath=dlnorm(1:cdflength, logmean,  logmean/8.0)
 logmean=log(4.0)
 SARIToCritical=dlnorm(1:cdflength, logmean,  logmean/2.0)
-logmean=log(7.5) # legman time spent on ICU, 7.5 days from Faes, note mean!=logmean
+logmean=log(12.5) # legman time spent on ICU, 7.5 days from Faes, note mean!=logmean
 CriticalToCritRecov=dlnorm(1:cdflength, logmean,  logmean/4.0)
 CriticalToDeath=dlnorm(1:cdflength, logmean,  logmean/4.0)
 logmean=log(10.0) #  Stay in hospital post ICU - needs evidence
@@ -648,7 +646,6 @@ CriticalToDeath=CriticalToDeath/sum(CriticalToDeath)
 CritRecovToRecov=CritRecovToRecov/sum(CritRecovToRecov)
 #  Follow infections through ILI (Case) - SARI (Hospital) - Crit (ICU) - CritRecov (Hospital)- Deaths
 
-
 #  Zero dataframes.
 #  Follow these cases to the end of the CDFs]
 lengthofdata=  length(casedat$date)#
@@ -660,7 +657,6 @@ for (i in lengthofdata:(lengthofdata+lengthofspread) ){
   ILI[i,(2:20)] = 0.0
   ILI[i,1] =ILI$date[1]+i-1
   }
-
 cols <- names(ILI)[2:ncol(ILI)]
 ILI[cols] <-  0.0
 MILD <- ILI
@@ -693,35 +689,34 @@ ILI[1,(2:ncol(ILI))]=casedat[1,(2:ncol(casedat))]*covidsimAge$Prop_ILI_ByAge
 SARI[1,(2:ncol(SARI))]=casedat[1,(2:ncol(casedat))]*covidsimAge$Prop_SARI_ByAge
 CRIT[1,(2:ncol(CRIT))]=casedat[1,(2:ncol(casedat))]*covidsimAge$Prop_Critical_ByAge
 
-
-
 # Add new cases to Mild, ILI, SARI and CRIT people in each  age group.
 # Bring forward cases from yesterday
 # Current values will typically be negative, as they are sums of people leaving the compartment
 # Nobody changes age band.  Vectorize over distributions
 
-#Age dependent transition probabilities
+#Age dependent transition probabilities a->ILI b->SARI c->Death
 apow = 0.1
 bpow = 0.4
 cpow = 1.0-apow-bpow
 afac=1.0
 bfac=1.0
 cfac=1.0
-pTtoI<-afac*RawCFR^apow
-pItoS<-bfac*RawCFR^bpow
+for (iday in (2:lengthofdata)){
+  pTtoI<-afac*RawCFR^apow
+  pItoS<-bfac*RawCFR^bpow*sqrt(comdat$lethality[iday])
+  pStoD<-cfac*RawCFR^cpow*sqrt(comdat$lethality[iday])
 #  Entry to ventilation still from covidsim
-pStoC= covidsimAge$Prop_Critical_ByAge / ( covidsimAge$Prop_Critical_ByAge + covidsimAge$Prop_SARI_ByAge )/2.5
-pStoD<-cfac*RawCFR^cpow
-# directly for ILI->Death is zero
+pStoC= covidsimAge$Prop_Critical_ByAge / 
+  ( covidsimAge$Prop_Critical_ByAge + covidsimAge$Prop_SARI_ByAge )*0.35
+# All routes to death are the same, vary by age
 pCtoD <- pStoD
 pCRtoD <- pStoD 
 #REscale pStoD to allow for CRIT->CRITREC route
 pStoD <- pStoD - pStoC*(pCtoD+(1-pCtoD)*pCRtoD)
 
 #  For loop over time
-for (iday in (2:lengthofdata)){
-  bfac=comdat$lethality[iday]
-  pItoS<-bfac*RawCFR^bpow
+
+
   #  Proportions become variant dependent.  ILI is case driven, so extra infectivity is automatic
   # from the data. ILI->SARI increases with variant.  CRIT is an NHS decision, not favoured for very old
   #  Need to increase CFR without exceeding 1.  Note inverse lethality isnt a simple % as CFR cant be >1
@@ -747,8 +742,7 @@ for (iday in (2:lengthofdata)){
   oldMILD[(iday:xday),agerange]=oldMILD[(iday:xday),agerange]+MtoR
   for (iage in agerange){    
     # All todays new MILDs will all leave to REC across distribution
-    
-    
+
     # ILI will go to SA/RI and REC 
     ItoS = as.numeric(newILI[iday,iage] *  pItoS[iage-1])     *ILIToSARI
     ItoR = as.numeric(newILI[iday,iage] *(1.0-pItoS[iage-1])) *ILIToRecovery
@@ -790,11 +784,11 @@ for (iday in (2:lengthofdata)){
 plot(rowSums(deathdat[2:20]))
 lines(rowSums(DEATH[2:20]),col="blue")
 plot(HospitalData$covidOccupiedMVBeds)
-lines(rowSums(CRIT[2:20]),col="blue")
+lines(rowSums(CRIT[2:20])/1.2,col="blue")
 plot(HospitalData$newAdmissions)
 lines(rowSums(newSARI[2:20]),col="blue")
 plot(HospitalData$hospitalCases)
-lines(rowSums(SARI[2:20]+CRIT[2:20]+CRITREC[2:20]))
+lines(1.2*rowSums(SARI[2:20]+CRIT[2:20]+CRITREC[2:20]))
 
 # Create a vector to hold the results for various R-numbers
 ninit <- as.numeric(1:nrow(comdat))/as.numeric(1:nrow(comdat))
@@ -936,11 +930,10 @@ for (i in (lock2+1):length(dfR$date)){dfR$piecewise[i]=smoothRend$y[i-lock2]}
 
 #  All cases and Regions
 
-plot(smoothweightR$y,ylab="Region R-number",xlab="Date",x=dfR$date)
+plot(smoothweightR$y,ylab="Regional R-number",xlab="Date",x=dfR$date)
 for (i in 8:17){
   lines(smooth.spline(na.omit(dfR[i]),df=spdf)$y,col=i,x=dfR$date[!is.na(dfR[i])])
 }
-
 plot(dfR$piecewise,x=smoothweightR$date,ylab="R-number",xlab="",title("England"),ylim=c(0.6,1.4),xlim=plotdate,cex.lab=1.6, cex.axis=1.6, cex.main=1.6, cex.sub=1.6)
 lines(y=Rest$England_LowerBound,x=Rest$Date-sagedelay)
 lines(y=Rest$England_UpperBound,x=Rest$Date-sagedelay)
@@ -951,6 +944,8 @@ lines(predict(loess(gjaR ~ x, data=dfR,span=0.3,weight=sqrt(comdat$allCases))),c
 lines(predict(loess(gjaR ~ x, data=dfR,span=0.3)),col='green',x=dfR$date)
 lines(predict(loess(bylogR ~ x, data=dfR,span=0.3,weight=sqrt(comdat$allCases))),col='red',x=dfR$date,lwd=2)
 lines(predict(loess(bylogR ~ x, data=dfR,span=0.3)),col='red',x=dfR$date)
+
+
 
 plot(smoothweightR$y,ylab="R-number",xlab="Day")
 #  Plot R continuous with many splines.
@@ -1203,7 +1198,7 @@ outputJSON(myt0 = t0,
 )
 
 #####  Figures and analysis for https://www.medrxiv.org/content/10.1101/2021.04.14.21255385v1
-medrxiv=FALSE
+medrxiv=TRUE
 if(medrxiv){
 ####  From here on we're reproducing figures from https://www.medrxiv.org/content/10.1101/2021.04.14.21255385v1
 ##### Fig 1. - Heatmaps ####
