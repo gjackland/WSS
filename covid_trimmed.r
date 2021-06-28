@@ -495,14 +495,13 @@ if(enddate == (Sys.Date()-1)){
 }
 
 
-
-
 # Add variant data to comdat
 comdat$Kent <- 0.0
 comdat$India <- 0.0
-Kentfac=0.5
-Indiafac=0.9
+Kentfac <- 0.5
+Indiafac <- 0.9
 Kentdate <- as.integer(as.Date("2021/01/01")-startdate)
+
 # Approximate Kent by logistic rise around 2021/01/01  Same gen time, R+0.3 vs Wild  (0.3 is NOT lethality factor)
 for (i in 1:nrow(comdat)){
   x= (i-Kentdate)*0.3/genTime
@@ -780,7 +779,7 @@ pStoD <- pStoD - pStoC*(pCtoD+(1-pCtoD)*pCRtoD)
 }
 }# End of compartment section
 
-#Monitoring plots
+# Monitoring plots
 
 plot(rowSums(deathdat[2:20]))
 lines(rowSums(DEATH[2:20]),col="blue")
