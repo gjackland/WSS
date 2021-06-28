@@ -1551,8 +1551,8 @@ for (iday in ((lengthofdata+1):(lengthofdata+predtime))){
     ipred=ipred+1
 # End of compartment section
 }
-#Monitoring plots
 
+# Monitoring plots
 plot(rowSums(deathdat[2:20]))
 lines(rowSums(DEATH[2:20]),col="blue")
 plot(HospitalData$covidOccupiedMVBeds)
@@ -1562,3 +1562,35 @@ lines(rowSums(newSARI[2:20]),col="blue")
 plot(HospitalData$hospitalCases)
 lines(rowSums(SARI[2:20]+CRIT[2:20]+CRITREC[2:20]))
 
+# ggplot alternatives
+totdeaths <- DEATH
+totdeaths$deaths <- rowSums(DEATH[2:20])
+deathdat %>% mutate(totdeaths=rowSums(across(where(is.numeric)))) %>%
+  ggplot(aes(x=date,y=totdeaths)) + geom_point() +
+  geom_smooth(formula= y ~ x, method = "loess", span=0.125) +
+  geom_line(data=totdeaths, aes(x=date,y=deaths),inherit.aes = FALSE,colour="red") +
+  xlab("Date") + ylab("Total Deaths")
+
+totcrit <-  CRIT
+totcrit$crit <- rowSums(CRIT[2:20])
+HospitalData %>%
+  ggplot(aes(x=date, y=covidOccupiedMVBeds)) + geom_point() +
+  geom_smooth(formula= y ~ x, method = "loess", span=0.125) +
+  geom_line(data = totcrit, aes(x=date, y=crit),inherit.aes = FALSE,colour="red") +
+  xlab("Date") + ylab("Covid Occupied Beds")
+
+hosp <-  newSARI
+hosp$tot <- rowSums(newSARI[2:20])
+HospitalData %>%
+  ggplot(aes(x=date, y=newAdmissions)) + geom_point() +
+  geom_smooth(formula= y ~ x, method = "loess", span=0.125) +
+  geom_line(data = hosp, aes(x=date, y=tot),inherit.aes = FALSE,colour="red") +
+  xlab("Date") + ylab("New Hospital Admissions")
+
+hosp <- SARI
+hosp$tot <-  rowSums(SARI[2:20]+CRIT[2:20]+CRITREC[2:20])
+HospitalData %>%
+  ggplot(aes(x=date, y=hospitalCases)) + geom_point() +
+  geom_smooth(formula= y ~ x, method = "loess", span=0.125) +
+  geom_line(data = hosp, aes(x=date, y=tot),inherit.aes = FALSE, colour="red") +
+  xlab("Date") + ylab("Hospital Cases")
