@@ -1589,8 +1589,11 @@ HospitalData %>%
 
 hosp <- SARI
 hosp$tot <-  rowSums(SARI[2:20]+CRIT[2:20]+CRITREC[2:20])
+d <- data.frame(y=smooth.spline(x=HospitalData$date,y=HospitalData$hospitalCases,df=24)$y)
+d$date <- HospitalData$date
 HospitalData %>%
   ggplot(aes(x=date, y=hospitalCases)) + geom_point() +
   geom_smooth(formula= y ~ x, method = "loess", span=0.125) +
   geom_line(data = hosp, aes(x=date, y=tot),inherit.aes = FALSE, colour="red") +
+  geom_line(data=d,aes(x=date,y=y), colour="green") +
   xlab("Date") + ylab("Hospital Cases")
