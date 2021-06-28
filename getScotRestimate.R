@@ -43,6 +43,7 @@ file <- gsub("[()]","",file)
 
 # Create a data subdirectory if it does not exist
 if(!dir.exists("data/scot-data/")){
+
   dir.create("data/scot-data/")
 }
 
@@ -70,7 +71,6 @@ Rest$Date <- as.Date(Rest$Date,format="%Y-%m-%d")
 # Change into a wide format
 Rest %>%  pivot_wider(names_from=Variable, values_from = Value) %>%
           select(Date,R_LowerBound=`R lower bound`,R_UpperBound=`R upper bound`) -> Rest
-
 
 # Write the data to a CSV file
 outfile <- "data/R_scottish_estimate.csv"

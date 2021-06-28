@@ -1,4 +1,8 @@
 # Routines and arrays used to derive Scottish data
+# Read packages used by the script
+library(readr, warn.conflicts = FALSE, quietly = TRUE)
+library(dplyr, warn.conflicts = FALSE, quietly = TRUE)
+library(tidyr, warn.conflicts = FALSE, quietly = TRUE)
 
 
 # Scottish regions --------------------------------------------------------

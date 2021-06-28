@@ -53,9 +53,13 @@ covidsimAge<-data.frame(
   ),
   "CFR_ILI_ByAge"=c(
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  0,  0,  0),
-  "Case_Hosp_ByAge"=c( 0.039,  0.001,  0.006,  0.009,  0.026 , 0.040,  0.042  ,0.045,  0.050,  0.074,  0.138,  0.198,  0.247,  0.414,  0.638,  1.000,1.00 ,1.00 ,1.00) 
-)
-
+  "Prop_Hosp_ByAge"=c(0.03, 0.0026 ,  0.00084 , 0.00042 ,0.00080, 0.0026, 0.0040 , 0.0063 , 0.012,  0.019,  0.023,  0.040,  0.096,  0.10,  0.24 ,  0.50, 0.6, 0.7,0.8),
+  "Case_Hosp_ByAge"=c( 0.039,  0.001,  0.006,  0.009,  0.026 , 0.040,  0.042  ,0.045,  0.050,  0.074,  0.138,  0.198,  0.247,  0.414,  0.638,  1.000,1.00 ,1.00 ,1.00),
+"Deatherror"=c(0.32060231, 0.17841065, 0.05670156, 0.02800124, 0.01342003, 0.01179716, 0.01460613, 0.01983603, 0.02779927, 0.08124622, 0.09198597,
+   0.15295026, 0.22286942, 1.13541013, 1.12529118, 1.91515160, 1.97455542, 2.15335157, 2.23153492 )
+  )
+# Deatherror from colSums(deathdat[2:20])/colSums(casedat[2:20])/(colSums(DEATH[2:20]/colSums(newMILD[2:20]+newILI[2:20])))
+# IHR from Knock SM S9  CHR from Knock S8
 covidsimAge$Prop_Mild_ByAge= 1.0 - (covidsimAge$Prop_Critical_ByAge+covidsimAge$Prop_ILI_ByAge+covidsimAge$Prop_SARI_ByAge)
 covidsimICDF<-data.frame(
   "MildToRecovery_icdf"=c(
@@ -117,7 +121,7 @@ Knock<-t(data.frame(
 baseurl <- "https://api.coronavirus.data.gov.uk/v2/data?"
 
 # Start and end date - the data to collect data from
-startdate <- as.Date("2020/07/25")
+startdate <- as.Date("2020/07/25") #as.Date("2020/02/25") #
 
 # Lose only the last day of data - use tail correction for reporting delay
 enddate <-  Sys.Date()-4
@@ -148,12 +152,12 @@ casesurl <- paste0(baseurl,
                    "metric=newCasesBySpecimenDate&",
                    "metric=newDeaths28DaysByDeathDate&",
                    "metric=newPCRTestsByPublishDate&",
+                   "metric=newPeopleVaccinatedFirstDoseByVaccinationDate&",
                    "format=csv")
-
 # Explicitly define the types for the columns
 coltypes <- cols(col_character(), col_character(),col_character(),
                  col_date(format="%Y-%m-%d"), col_integer(),
-                 col_integer(), col_integer())
+                 col_integer(),  col_integer(), col_integer())
 
 # Read the data
 comdat <-  read_csv(file = casesurl, col_types = coltypes)
@@ -164,7 +168,8 @@ comdat <- comdat %>%  select(date,
                              allDeaths = newDeaths28DaysByDeathDate,
                              tests = newPCRTestsByPublishDate,
                              inputCases = newCasesBySpecimenDate,
-                             fpCases = newCasesBySpecimenDate) %>%
+                             fpCases = newCasesBySpecimenDate,
+                             vaccines=newPeopleVaccinatedFirstDoseByVaccinationDate)%>%
   filter(date >= startdate &
            date <= enddate ) %>%
   arrange(date)
@@ -203,6 +208,7 @@ coltypes <- cols(col_character(), col_character(),col_character(),
 # read in the data
 casedat <-  read_csv(file = ageurl, col_types = coltypes)
 
+
 # Remap the ages column to be the header rows, remove the unassigned,
 # 60+ and 00_59 columns, filter dates to be between the start and end
 # dates and order the output by date
@@ -213,7 +219,32 @@ casedat <- casedat %>%
   filter(date >= startdate & date <= enddate) %>%
   arrange(date)
 
-# deaths by age
+
+# vaccination by age
+vacurl <- paste0(baseurl,
+                 "areaType=nation&",
+                 "areaCode=E92000001&",
+                 "metric=vaccinationsAgeDemographics&",
+                 "format=csv")
+
+# Explicitly define the types for the columns as same with cases
+# Explicitly define the types for the columns
+# Age is a character as it giving a range, e.g. 00_04, 05_09, ...
+coltypes <- cols(areaCode=col_character(), areaName=col_character(),areaType=col_character(),
+                 date=col_date(format="%Y-%m-%d"), age=col_character())
+
+# Read in the data.
+vacdat <-  read_csv(file = vacurl, col_types = coltypes)
+
+# Transform the data.
+vacdate="2020-12-08"
+vacdat <- vacdat %>%
+  select(date = date, age = age, values = cumVaccinationFirstDoseUptakeByVaccinationDatePercentage) %>%
+  pivot_wider(id_cols = date, names_from = age, values_from = values) %>%
+  filter(date >=vacdate  & date <= enddate) %>%
+  arrange(date)
+
+# Deaths by age
 deathurl <- paste0(baseurl,
                    "areaType=nation&",
                    "areaCode=E92000001&",
@@ -221,9 +252,9 @@ deathurl <- paste0(baseurl,
                    "format=csv")
 
 # Explicitly define the types for the columns
-coltypes <- cols(col_character(), col_character(),col_character(),
-                 col_date(format="%Y-%m-%d"),col_character(),
-                 col_number(), col_number(), col_number())
+coltypes <- cols(areaCode=col_character(), areaName=col_character(),areaType=col_character(),
+                 date=col_date(format="%Y-%m-%d"),age=col_character(),
+                 deaths=col_number(), rollingSum=col_number(), rollingRate=col_number())
 # Read the data
 deathdat <-  read_csv(file = deathurl, col_types = coltypes)
 
@@ -238,24 +269,6 @@ deathdat <- deathdat %>%
   arrange(date) %>%
   select(names(casedat))#deaths by age
 
-#  Read in the Vaccination data
-vacurl <- paste0(baseurl,
-                 "areaType=nation&",
-                 "areaCode=E92000001&",
-                 "metric=cumVaccinationFirstDoseUptakeByPublishDatePercentage&",
-                 "format=csv")
-
-# Explicitly define the types for the columns
-coltypes <- cols(col_character(), col_character(),col_character(),
-                 col_date(format="%Y-%m-%d"), col_number())
-# Read the data
-vacdat <-  read_csv(file = vacurl, col_types = coltypes)
-
-# Map the ages column to become column headings for the different age groups
-# for dates between the start and end date inclusive and then ensure that we
-# end up with the same columns as for the case data above.
-vacdat <- vacdat %>%
-  select(date = date,  values =cumVaccinationFirstDoseUptakeByPublishDatePercentage)
 # Scotland data https://api.coronavirus.data.gov.uk/v2/data?areaType=nation&areaCode=S92000003&metric=newCasesBySpecimenDate&metric=newDeaths28DaysByDeathDate&metric=newDeaths28DaysByPublishDate&format=csv
 # https://www.opendata.nhs.scot/dataset/covid-19-in-scotland/resource/9393bd66-5012-4f01-9bc5-e7a10accacf4
 
@@ -317,9 +330,7 @@ regcases <- regdat %>%  select(date,areaName,areaCode,
            date <= enddate )%>%
   arrange(date)
 
-regdeaths <- regdat %>%  select(date,areaName,
-                                Deaths = newDeaths28DaysByDeathDate,
-) %>%
+regdeaths <- regdat %>%  select(date,areaName,Deaths = newDeaths28DaysByDeathDate) %>%
   pivot_wider(id_cols = date, names_from = areaName, values_from = Deaths) %>%
   filter(date >= startdate &
            date <= enddate )%>%
@@ -427,9 +438,9 @@ scotdailycases %>% select(date=Date,board=HBName, cases=DailyPositive)  %>%
 # Join the scotdailycases with regcases by date
 regcases <- inner_join(regcases,scotdailycasesbyboard, by = c("date"="date"))
 
-#### Get tests for England pre-Sept by taking the post-Sept fraction of all tests that were in England (0.867)
+#### Get tests for England pre-Sept by taking the post-Sept fraction of all tests that were in England (0.867), and set vaccines to zero
 comdat$tests[1:58] = as.integer(ukcasedat$tests[1:58] * 0.867)
-
+comdat$vaccines[is.na(comdat$vaccines)] <- 0.0
 #### Get the UK hospital data & Append data to tibble
 ####  MV beds = CRIT
 ####  hospitalCases = SARI+CRIT+CRITREC
@@ -463,7 +474,7 @@ HospitalData  <-  HospitalData %>% filter(date >= startdate &
 
 
 # Remove the no longer needed input datas
-rm(ukcasedat,scotdailycases,scotdailycasesbyboard,d)
+rm(ukcasedat,scotdailycases,scotdailycasesbyboard,d,HospitalUrl,deathurl,casesurl,scoturl)
 
 # Plot all cases against date: Used for the paper, uncomment to recreate
 #comdat %>% ggplot(aes(x=date,y=allCases)) + geom_line() +
@@ -489,10 +500,11 @@ if(enddate == (Sys.Date()-1)){
 # Add variant data to comdat
 comdat$Kent <- 0.0
 comdat$India <- 0.0
-Kentfac=0.4
-Indiafac=0.7
+Kentfac <- 0.5
+Indiafac <- 0.9
 Kentdate <- as.integer(as.Date("2021/01/01")-startdate)
-# Approximate Kent by logistic rise around 2021/01/01  Same gen time, R+0.3 vs Wild
+
+# Approximate Kent by logistic rise around 2021/01/01  Same gen time, R+0.3 vs Wild  (0.3 is NOT lethality factor)
 for (i in 1:nrow(comdat)){
   x= (i-Kentdate)*0.3/genTime
   comdat$Kent[i]=1.0/(1.0+exp(-x))
@@ -513,6 +525,10 @@ casedat <- na.locf(casedat)
 comdat <- na.locf(comdat)
 regcases <- na.locf(regcases)
 scotdat <- na.locf(scotdat)
+
+#  Get mean age-related CFR across the whole pandemic
+
+RawCFR=colSums(deathdat[2:20])/colSums(casedat[2:20])
 
 # Remove weekend effect,  assuming each weekday has same number of cases over the
 # epidemic, and national averages hold regionally.
@@ -595,29 +611,32 @@ CFR_All_ByAge=colSums(deathdat[2:20])/colSums(casedat[2:20])
 
 compartment=TRUE
 if(compartment){
-#Make 28 day cdfs.  these are same for all age groups, but fractions Prop/CFR vary
+  cdflength =28
+#  Time dependences of transitions - assumed age independent
+#  Make cdflength day cdfs.  these are same for all age groups, but fractions Prop/CFR vary
 #  Choose to use lognormal with logsd=logmean/4.0.  Data not available to do better
+#  Mean stay in Hospital = Sum(Cases)/Sum(admissions) = 10 days
+#  In model  sum(SARI[2:20]+CRIT[2:20]+CRITREC[2:20])/sum(newSARI[2:20])
 logmean = log(12.6)
-MildToRecovery=dlnorm(1:28, logmean,  logmean/4.0) # These "Milds" are never recorded
+MildToRecovery=dlnorm(1:cdflength, logmean,  logmean/4.0) # These "Milds" are never recorded
 logmean=log(12.6)
-ILIToRecovery=dlnorm(1:28, logmean,  logmean/4.0)
-#  Fit  shift & scale from ILI to SARI logmean=log(9) and logsd=9/1.3 give a great fit
-#  lognormal there decays from day 1
-logmean=log(9.0)
-ILIToSARI=dlnorm(1:28, logmean,  logmean/1.3)
+ILIToRecovery=dlnorm(1:cdflength, logmean,  logmean/4.0)
+#  Fit  shift & scale from ILI to SARI
+logmean=log(5.0)
+ILIToSARI=dlnorm(1:cdflength, logmean,  logmean/1.3)
 logmean=log(10.6)
-SARIToRecovery=dlnorm(1:28, logmean,  logmean/2.0)
-logmean=log(4.0)
-SARIToDeath=dlnorm(1:28, logmean,  logmean/4.0)
+SARIToRecovery=dlnorm(1:cdflength, logmean,  logmean/2.0)
 logmean=log(6.0)
-SARIToCritical=dlnorm(1:28, logmean,  logmean/2.0)
-logmean=log(12.5) # Mean time spent on ICU, 7.5 days from Faes
-CriticalToCritRecov=dlnorm(1:28, logmean,  logmean/4.0)
-CriticalToDeath=dlnorm(1:28, logmean,  logmean/4.0)
-logmean=log(4.0) #  Stay in hospital post ICU - needs evidence
-CritRecovToRecov=dlnorm(1:28, logmean,  logmean/4.0)
+SARIToDeath=dlnorm(1:cdflength, logmean,  logmean/8.0)
+logmean=log(4.0)
+SARIToCritical=dlnorm(1:cdflength, logmean,  logmean/2.0)
+logmean=log(12.5) # legman time spent on ICU, 7.5 days from Faes, note mean!=logmean
+CriticalToCritRecov=dlnorm(1:cdflength, logmean,  logmean/4.0)
+CriticalToDeath=dlnorm(1:cdflength, logmean,  logmean/4.0)
+logmean=log(10.0) #  Stay in hospital post ICU - needs evidence
+CritRecovToRecov=dlnorm(1:cdflength, logmean,  logmean/4.0)
 
-#  Normalise these distributions
+#  Normalise these time distributions
 MildToRecovery=MildToRecovery/sum(MildToRecovery)
 ILIToRecovery=ILIToRecovery/sum(ILIToRecovery)
 ILIToSARI=ILIToSARI/sum(ILIToSARI)
@@ -628,7 +647,6 @@ CriticalToCritRecov=CriticalToCritRecov/sum(CriticalToCritRecov)
 CriticalToDeath=CriticalToDeath/sum(CriticalToDeath)
 CritRecovToRecov=CritRecovToRecov/sum(CritRecovToRecov)
 #  Follow infections through ILI (Case) - SARI (Hospital) - Crit (ICU) - CritRecov (Hospital)- Deaths
-
 
 #  Zero dataframes.
 #  Follow these cases to the end of the CDFs]
@@ -641,7 +659,6 @@ for (i in lengthofdata:(lengthofdata+lengthofspread) ){
   ILI[i,(2:20)] = 0.0
   ILI[i,1] =ILI$date[1]+i-1
   }
-
 cols <- names(ILI)[2:ncol(ILI)]
 ILI[cols] <-  0.0
 MILD <- ILI
@@ -674,65 +691,75 @@ ILI[1,(2:ncol(ILI))]=casedat[1,(2:ncol(casedat))]*covidsimAge$Prop_ILI_ByAge
 SARI[1,(2:ncol(SARI))]=casedat[1,(2:ncol(casedat))]*covidsimAge$Prop_SARI_ByAge
 CRIT[1,(2:ncol(CRIT))]=casedat[1,(2:ncol(casedat))]*covidsimAge$Prop_Critical_ByAge
 
-
-
 # Add new cases to Mild, ILI, SARI and CRIT people in each  age group.
 # Bring forward cases from yesterday
 # Current values will typically be negative, as they are sums of people leaving the compartment
 # Nobody changes age band.  Vectorize over distributions
-Prop_Mild_ByAge = covidsimAge$Prop_Mild_ByAge
-Prop_ILI_ByAge = covidsimAge$Prop_ILI_ByAge
-Prop_SARI_ByAge=covidsimAge$Prop_SARI_ByAge
-Prop_Critical_ByAge=covidsimAge$Prop_Critical_ByAge
-CFR_SARI_ByAge = covidsimAge$CFR_SARI_ByAge
-CFR_ILI_ByAge=covidsimAge$CFR_ILI_ByAge#  This is zero
-CFR_Critical_ByAge=covidsimAge$CFR_Critical_ByAge
+
+#Age dependent transition probabilities a->ILI b->SARI c->Death
+apow = 0.1
+bpow = 0.4
+cpow = 1.0-apow-bpow
+afac=1.0
+bfac=1.0
+cfac=1.0
+for (iday in (2:lengthofdata)){
+  pTtoI<-afac*RawCFR^apow
+  pItoS<-bfac*RawCFR^bpow*sqrt(comdat$lethality[iday])
+  pStoD<-cfac*RawCFR^cpow*sqrt(comdat$lethality[iday])
+#  Entry to ventilation still from covidsim
+pStoC= covidsimAge$Prop_Critical_ByAge /
+  ( covidsimAge$Prop_Critical_ByAge + covidsimAge$Prop_SARI_ByAge )*0.35
+# All routes to death are the same, vary by age
+pCtoD <- pStoD
+pCRtoD <- pStoD
+#REscale pStoD to allow for CRIT->CRITREC route
+pStoD <- pStoD - pStoC*(pCtoD+(1-pCtoD)*pCRtoD)
+
+#  For loop over time
 
 
-
-  for (iday in (2:lengthofdata)){
-#  Proportions become variant dependent.  ILI is case driven, so extra infectivity is automatic
-# from the data. ILI->SARI increases with variant.  CRIT is an NHS decision, not favoured for very old
-#  Need to increase CFR without exceeding 1.  Note inverse lethality isnt a simple % as CFR cant be >1
-#  Will have negative people  trouble if CFR>1
-    Prop_Critical_ByAge=covidsimAge$Prop_Critical_ByAge*comdat$lethality[iday]
-    Prop_SARI_ByAge=covidsimAge$Prop_SARI_ByAge*comdat$lethality[iday]
-    Prop_Mild_ByAge= - Prop_Critical_ByAge - Prop_ILI_ByAge - Prop_SARI_ByAge +1.0
-# Inter-compartment probability differs from covidsim's idea of totals ending their illness
-#in that compartment  prior to RECOV/DEATH
-    pItoS= (Prop_Critical_ByAge+Prop_SARI_ByAge )/
-        (Prop_Critical_ByAge+Prop_SARI_ByAge+Prop_ILI_ByAge )
-    pStoC= Prop_Critical_ByAge / ( Prop_Critical_ByAge + Prop_SARI_ByAge )
+  #  Proportions become variant dependent.  ILI is case driven, so extra infectivity is automatic
+  # from the data. ILI->SARI increases with variant.  CRIT is an NHS decision, not favoured for very old
+  #  Need to increase CFR without exceeding 1.  Note inverse lethality isnt a simple % as CFR cant be >1
+  #  Will have negative people  trouble if CFR>1
 
 
-    xday=iday+length(SARIToCritical)-1
-    agerange=(2:ncol(ILI))
-    ageminus=agerange-1
+  # Inter-compartment probability differs from covidsim's idea of totals ending their illness
+  #in that compartment  prior to RECOV/DEATH
 
-        # Mild and ILI comes in from todays casedat,  ILI=cases en route to Hospital Mild add to those from the past
+  #    pItoS= (Prop_Critical_ByAge+Prop_SARI_ByAge )*comdat$lethality[iday]  /
+  #        (  (Prop_Critical_ByAge+Prop_SARI_ByAge )*comdat$lethality[iday] +Prop_ILI_ByAge )
 
-    newMILD[iday,agerange]=casedat[iday,agerange]*(1.0-covidsimAge$Case_Hosp_ByAge[1:19])+newMILD[iday,agerange]
-    newILI[iday,agerange]=casedat[iday,agerange]*(covidsimAge$Case_Hosp_ByAge[1:19])+newILI[iday,agerange]
-    for (iage in agerange){    
+  xday=iday+length(SARIToCritical)-1
+  agerange=(2:ncol(ILI))
+  ageminus=agerange-1
 
+  newMILD[iday,agerange]=casedat[iday,agerange]*(1.0-pTtoI)+newMILD[iday,agerange]
+  newILI[iday,agerange]=casedat[iday,agerange]*  pTtoI    +newILI[iday,agerange]
+
+
+  #  vectorize
+  MtoR=outer(as.numeric(newMILD[iday,agerange]),MildToRecovery,FUN="*")
+  oldMILD[(iday:xday),agerange]=oldMILD[(iday:xday),agerange]+MtoR
+  for (iage in agerange){
     # All todays new MILDs will all leave to REC across distribution
-    MtoR=as.numeric(newMILD[iday,iage])          *      MildToRecovery
-    oldMILD[(iday:xday),iage]=oldMILD[(iday:xday),iage]+MtoR
-    # ILI will go to SA/RI and REC 
+
+    # ILI will go to SA/RI and REC
     ItoS = as.numeric(newILI[iday,iage] *  pItoS[iage-1])     *ILIToSARI
-    ItoR = as.numeric(newILI[iday,iage] *(1.0-pItoS[iage-1])) *ILIToSARI
+    ItoR = as.numeric(newILI[iday,iage] *(1.0-pItoS[iage-1])) *ILIToRecovery
     newSARI[(iday:xday),iage]=newSARI[(iday:xday),iage]+ItoS
     oldILI[(iday:xday),iage]=oldILI[(iday:xday),iage]+ItoR+ItoS
     # SARI will go to REC, DEATH, CRIT
     StoC = as.numeric(newSARI[iday,iage] *pStoC[iage-1]) *SARIToCritical
-    StoD = as.numeric(newSARI[iday,iage] * CFR_SARI_ByAge[iage-1])      *SARIToDeath
-    StoR = as.numeric(newSARI[iday,iage] *(1.0-pStoC[iage-1]-CFR_SARI_ByAge[iage-1]) )*SARIToRecovery
+    StoD = as.numeric(newSARI[iday,iage] *pStoD[iage-1])      *SARIToDeath
+    StoR = as.numeric(newSARI[iday,iage] *(1.0-pStoC[iage-1]-pStoD[iage-1]) )*SARIToRecovery
     newCRIT[(iday:xday),iage]=newCRIT[(iday:xday),iage]+StoC
     oldSARI[(iday:xday),iage]=oldSARI[(iday:xday),iage]+StoR+StoC+StoD
 
     # CRIT  goes to CRITREC DEATH
-    CtoD = as.numeric(newCRIT[iday,iage]*CFR_Critical_ByAge[(iage-1)]) *CriticalToDeath
-    CtoCR = as.numeric(newCRIT[iday,iage]*(1.0-CFR_Critical_ByAge[(iage-1)])) *CriticalToCritRecov
+    CtoD = as.numeric(newCRIT[iday,iage]*pCtoD[(iage-1)]) *CriticalToDeath
+    CtoCR = as.numeric(newCRIT[iday,iage]*(1.0-pCtoD[(iage-1)])) *CriticalToCritRecov
     newCRITREC[(iday:xday),iage]=newCRITREC[(iday:xday),iage]+CtoCR
     oldCRIT[(iday:xday),iage]=oldCRIT[(iday:xday),iage]+CtoD+CtoCR
 
@@ -742,26 +769,28 @@ CFR_Critical_ByAge=covidsimAge$CFR_Critical_ByAge
     # DEATH and RECOV are cumulative, again anticipating where "new" will end up.
     DEATH[(iday:xday),iage]=DEATH[(iday:xday),iage]+CtoD+StoD
     RECOV[(iday:xday),iage]=RECOV[(iday:xday),iage]+StoR+ItoR+MtoR+CRtoR
-    }
-    # Finally, update todays totals: New cases + transfers from other compartments -
-    # transfers to other compartments + leftover from yesterday
-    MILD[iday,agerange]=MILD[iday,agerange]+newMILD[iday,agerange]-oldMILD[iday,agerange]+MILD[(iday-1),agerange]
-    ILI[iday,agerange]=ILI[iday,agerange]+newILI[iday,agerange]-oldILI[iday,agerange]+ILI[(iday-1),agerange]
-    SARI[iday,agerange]=SARI[iday,agerange]+newSARI[iday,agerange]-oldSARI[iday,agerange]+SARI[(iday-1),agerange]
-    CRIT[iday,agerange]=CRIT[iday,agerange]+newCRIT[iday,agerange]-oldCRIT[iday,agerange]+CRIT[(iday-1),agerange]
-    CRITREC[iday,agerange]=CRITREC[iday,agerange]+newCRITREC[iday,agerange]-oldCRITREC[iday,agerange]+CRITREC[(iday-1),agerange]
+  }
+  # Finally, vectorize & update todays totals: New cases + transfers from other compartments -
+  # transfers to other compartments + leftover from yesterday
+  MILD[iday,agerange]=MILD[iday,agerange]+newMILD[iday,agerange]-oldMILD[iday,agerange]+MILD[(iday-1),agerange]
+  ILI[iday,agerange]=ILI[iday,agerange]+newILI[iday,agerange]-oldILI[iday,agerange]+ILI[(iday-1),agerange]
+  SARI[iday,agerange]=SARI[iday,agerange]+newSARI[iday,agerange]-oldSARI[iday,agerange]+SARI[(iday-1),agerange]
+  CRIT[iday,agerange]=CRIT[iday,agerange]+newCRIT[iday,agerange]-oldCRIT[iday,agerange]+CRIT[(iday-1),agerange]
+  CRITREC[iday,agerange]=CRITREC[iday,agerange]+newCRITREC[iday,agerange]-oldCRITREC[iday,agerange]+CRITREC[(iday-1),agerange]
 
 }
 }# End of compartment section
 
-#Monitoring plots
+# Monitoring plots
+
 plot(rowSums(deathdat[2:20]))
 lines(rowSums(DEATH[2:20]),col="blue")
 plot(HospitalData$covidOccupiedMVBeds)
-lines(rowSums(CRIT[2:20]),col="blue")
+lines(rowSums(CRIT[2:20])/1.2,col="blue")
 plot(HospitalData$newAdmissions)
 lines(rowSums(newSARI[2:20]),col="blue")
-
+plot(HospitalData$hospitalCases)
+lines(1.2*rowSums(SARI[2:20]+CRIT[2:20]+CRITREC[2:20]))
 
 # Create a vector to hold the results for various R-numbers
 ninit <- as.numeric(1:nrow(comdat))/as.numeric(1:nrow(comdat))
@@ -900,11 +929,10 @@ for (i in (lock2+1):length(dfR$date)){dfR$piecewise[i]=smoothRend$y[i-lock2]}
 
 #  All cases and Regions
 
-plot(smoothweightR$y,ylab="Region R-number",xlab="Date",x=dfR$date)
+plot(smoothweightR$y,ylab="Regional R-number",xlab="Date",x=dfR$date)
 for (i in 8:17){
   lines(smooth.spline(na.omit(dfR[i]),df=spdf)$y,col=i,x=dfR$date[!is.na(dfR[i])])
 }
-
 plot(dfR$piecewise,x=smoothweightR$date,ylab="R-number",xlab="",title("England"),ylim=c(0.6,1.4),xlim=plotdate,cex.lab=1.6, cex.axis=1.6, cex.main=1.6, cex.sub=1.6)
 lines(y=Rest$England_LowerBound,x=Rest$Date-sagedelay)
 lines(y=Rest$England_UpperBound,x=Rest$Date-sagedelay)
@@ -916,9 +944,11 @@ lines(predict(loess(gjaR ~ x, data=dfR,span=0.3)),col='green',x=dfR$date)
 lines(predict(loess(bylogR ~ x, data=dfR,span=0.3,weight=sqrt(comdat$allCases))),col='red',x=dfR$date,lwd=2)
 lines(predict(loess(bylogR ~ x, data=dfR,span=0.3)),col='red',x=dfR$date)
 
+
+
 plot(smoothweightR$y,ylab="R-number",xlab="Day")
 #  Plot R continuous with many splines.
-for (ismooth in 4:28){
+for (ismooth in 4:30){
 #  lines(smooth.spline(dfR$bylogR,df=ismooth,w=sqrt(comdat$allCases)))
   lines(predict(loess(bylogR ~ x, data=dfR,span=(4.0/ismooth))),col='red')
   }
@@ -1167,7 +1197,7 @@ outputJSON(myt0 = t0,
 )
 
 #####  Figures and analysis for https://www.medrxiv.org/content/10.1101/2021.04.14.21255385v1
-medrxiv=FALSE
+medrxiv=TRUE
 if(medrxiv){
 ####  From here on we're reproducing figures from https://www.medrxiv.org/content/10.1101/2021.04.14.21255385v1
 ##### Fig 1. - Heatmaps ####
@@ -1457,3 +1487,78 @@ CFR %>% filter( "2020/10/1"< date & date < endplot) %>%
   coord_cartesian(ylim=c(0.0,0.4))+ geom_smooth(span=0.3) +
   guides(color = "none") + facet_wrap(vars(agegroup))
 }
+
+###  Finally, Use all this to make predictions
+###Assume that R and lethality are constants
+predtime = 28
+#  For loop over time, predcasedat using R numbers
+predcasedat<-ILI[lengthofdata,(1:20)]
+predcasedat[1,(2:20)]<-casedat[lengthofdata,(2:20)]*1.05 #  Growth rate by age group
+ipred=1
+for (iday in ((lengthofdata+1):(lengthofdata+predtime))){
+  #  Proportions become variant dependent.  ILI is case driven, so extra infectivity is automatic
+  # from the data. ILI->SARI increases with variant.  CRIT is an NHS decision, not favoured for very old
+  #  Need to increase CFR without exceeding 1.  Note inverse lethality isnt a simple % as CFR cant be >1
+  #  Will have negative people  trouble if CFR>1
+
+  newMILD[iday,agerange]=predcasedat[1,agerange]*(1.0-pTtoI)+newMILD[iday,agerange]
+  newILI[iday,agerange]=predcasedat[1,agerange]*  pTtoI    +newILI[iday,agerange]
+
+
+  #  vectorize
+  MtoR=outer(as.numeric(newMILD[iday,agerange]),MildToRecovery,FUN="*")
+  oldMILD[(iday:xday),agerange]=oldMILD[(iday:xday),agerange]+MtoR
+  for (iage in agerange){
+    # All todays new MILDs will all leave to REC across distribution
+
+
+    # ILI will go to SA/RI and REC
+    ItoS = as.numeric(newILI[iday,iage] *  pItoS[iage-1])     *ILIToSARI
+    ItoR = as.numeric(newILI[iday,iage] *(1.0-pItoS[iage-1])) *ILIToRecovery
+    newSARI[(iday:xday),iage]=newSARI[(iday:xday),iage]+ItoS
+    oldILI[(iday:xday),iage]=oldILI[(iday:xday),iage]+ItoR+ItoS
+    # SARI will go to REC, DEATH, CRIT
+    StoC = as.numeric(newSARI[iday,iage] *pStoC[iage-1]) *SARIToCritical
+    StoD = as.numeric(newSARI[iday,iage] *pStoD[iage-1])      *SARIToDeath
+    StoR = as.numeric(newSARI[iday,iage] *(1.0-pStoC[iage-1]-pStoD[iage-1]) )*SARIToRecovery
+    newCRIT[(iday:xday),iage]=newCRIT[(iday:xday),iage]+StoC
+    oldSARI[(iday:xday),iage]=oldSARI[(iday:xday),iage]+StoR+StoC+StoD
+
+    # CRIT  goes to CRITREC DEATH
+    CtoD = as.numeric(newCRIT[iday,iage]*pCtoD[(iage-1)]) *CriticalToDeath
+    CtoCR = as.numeric(newCRIT[iday,iage]*(1.0-pCtoD[(iage-1)])) *CriticalToCritRecov
+    newCRITREC[(iday:xday),iage]=newCRITREC[(iday:xday),iage]+CtoCR
+    oldCRIT[(iday:xday),iage]=oldCRIT[(iday:xday),iage]+CtoD+CtoCR
+
+    # CRITREC goes to RECOV
+    CRtoR = as.numeric(newCRITREC[iday,iage]) *CritRecovToRecov
+    oldCRITREC[(iday:xday),iage]=oldCRITREC[(iday:xday),iage]+CRtoR
+    # DEATH and RECOV are cumulative, again anticipating where "new" will end up.
+    DEATH[(iday:xday),iage]=DEATH[(iday:xday),iage]+CtoD+StoD
+    RECOV[(iday:xday),iage]=RECOV[(iday:xday),iage]+StoR+ItoR+MtoR+CRtoR
+  }
+  # Finally, vectorize & update todays totals: New cases + transfers from other compartments -
+  # transfers to other compartments + leftover from yesterday
+  MILD[iday,agerange]=MILD[iday,agerange]+newMILD[iday,agerange]-oldMILD[iday,agerange]+MILD[(iday-1),agerange]
+  ILI[iday,agerange]=ILI[iday,agerange]+newILI[iday,agerange]-oldILI[iday,agerange]+ILI[(iday-1),agerange]
+  SARI[iday,agerange]=SARI[iday,agerange]+newSARI[iday,agerange]-oldSARI[iday,agerange]+SARI[(iday-1),agerange]
+  CRIT[iday,agerange]=CRIT[iday,agerange]+newCRIT[iday,agerange]-oldCRIT[iday,agerange]+CRIT[(iday-1),agerange]
+  CRITREC[iday,agerange]=CRITREC[iday,agerange]+newCRITREC[iday,agerange]-oldCRITREC[iday,agerange]+CRITREC[(iday-1),agerange]
+#
+##  Finally, estimate cases for tomorrow
+
+    predcasedat[(ipred+1),(2:20)]=predcasedat[ipred,(2:20)]*1.05
+    ipred=ipred+1
+# End of compartment section
+}
+#Monitoring plots
+
+plot(rowSums(deathdat[2:20]))
+lines(rowSums(DEATH[2:20]),col="blue")
+plot(HospitalData$covidOccupiedMVBeds)
+lines(rowSums(CRIT[2:20]),col="blue")
+plot(HospitalData$newAdmissions)
+lines(rowSums(newSARI[2:20]),col="blue")
+plot(HospitalData$hospitalCases)
+lines(rowSums(SARI[2:20]+CRIT[2:20]+CRITREC[2:20]))
+
