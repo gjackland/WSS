@@ -241,6 +241,8 @@ vacdat <- vacdat %>%
   pivot_wider(id_cols = date, names_from = age, values_from = values) %>%
   filter(date >=vacdate  & date <= enddate) %>%
   arrange(date)
+# convert to fraction
+vacdat[2:20]<-vacdat[2:20]/100
 # deaths by age
 deathurl <- paste0(baseurl,
                    "areaType=nation&",
@@ -609,7 +611,7 @@ CFR_All_ByAge=colSums(deathdat[2:20])/colSums(casedat[2:20])
 
 compartment=TRUE
 if(compartment){
-  cdflength =28
+  cdflength =40
 #  Time dependences of transitions - assumed age independent
 #  Make cdflength day cdfs.  these are same for all age groups, but fractions Prop/CFR vary
 #  Choose to use lognormal with logsd=logmean/4.0.  Data not available to do better
@@ -831,7 +833,6 @@ rat %>% filter(startplot < date & date < endplot) %>%
   ggplot(aes(x=date, y=R, colour=Region)) + coord_cartesian(ylim=c(0.8,1.5)) +
   geom_smooth(span=0.8) +  guides(color = "none") + facet_wrap(vars(Region))
 
-
 rat %>% filter(startplot < date & date < endplot) %>%
   pivot_longer(!date,names_to = "Region", values_to="R") %>%
   ggplot(aes(x=date, y=R, colour=Region)) +
@@ -945,8 +946,8 @@ lines(predict(loess(gjaR ~ x, data=dfR,span=0.3)),col='green',x=dfR$date)
 lines(predict(loess(bylogR ~ x, data=dfR,span=0.3,weight=sqrt(comdat$allCases))),col='red',x=dfR$date,lwd=2)
 lines(predict(loess(bylogR ~ x, data=dfR,span=0.3)),col='red',x=dfR$date)
 
-
-
+R_England_BestGuess<- 0.5*mean(tail(predict(loess(gjaR ~ x, data=dfR,span=0.3))+predict(loess(bylogR ~ x, data=dfR,span=0.3))))
+R_Scotland_BestGuess <-mean(tail(predict(loess(Scotland ~ as.numeric(date), data=rat,span=0.3))))
 plot(smoothweightR$y,ylab="R-number",xlab="Day")
 #  Plot R continuous with many splines.
 for (ismooth in 4:30){
@@ -961,9 +962,7 @@ lines(smooth.spline(dfR$bylogR,df=14))
 # the same number of values corresponding to the same time frame - you may
 # also want the range for England rather than the UK. Remove these lines they
 # are for your benefit Graeme. You probably wnat to move this plot until after
-# you have calculated your own Restimate.
-Rest %>% ggplot(aes(x=Date)) + geom_ribbon(aes(Date,min=England_LowerBound,max=England_UpperBound),colour="red",alpha=0.25) +
-  ylab("R Estimate") + xlab("Date")  # + geom_line(comdat,aes(date,R))
+
 
 
 #Plot Regional R data vs Government  spdf is spline smoothing factor, lospan for loess
@@ -1488,7 +1487,12 @@ CFR %>% filter( "2020/10/1"< date & date < endplot) %>%
   coord_cartesian(ylim=c(0.0,0.4))+ geom_smooth(span=0.3) +
   guides(color = "none") + facet_wrap(vars(agegroup))
 }
-
+vacdat %>% filter( "2020/10/1"< date & date < endplot) %>%
+  pivot_longer(!date,names_to = "agegroup", values_to="Vaccinations") %>%
+  ggplot(aes(x=date, y=Vaccinations, colour=agegroup)) +
+  coord_cartesian(ylim=c(0.0,100.0))+ geom_smooth(span=0.2) +
+  guides(color = "none") + facet_wrap(vars(agegroup))
+################################################################
 ###  Finally, Use all this to make predictions
 ###Assume that R and lethality are constants
 predtime = 28
