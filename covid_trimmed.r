@@ -243,7 +243,7 @@ vacdat <- vacdat %>%
   arrange(date)
 
 # convert to fraction
-vacdat[2:20]<-vacdat[2:20]/100
+vacdat[2:length(vacdat)]<-vacdat[2:length(vacdat)]/100
 # deaths by age
 
 deathurl <- paste0(baseurl,
