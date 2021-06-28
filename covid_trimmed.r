@@ -241,7 +241,8 @@ vacdat <- vacdat %>%
   pivot_wider(id_cols = date, names_from = age, values_from = values) %>%
   filter(date >=vacdate  & date <= enddate) %>%
   arrange(date)
-# deaths by age
+
+# Deaths by age
 deathurl <- paste0(baseurl,
                    "areaType=nation&",
                    "areaCode=E92000001&",
@@ -249,9 +250,9 @@ deathurl <- paste0(baseurl,
                    "format=csv")
 
 # Explicitly define the types for the columns
-coltypes <- cols(col_character(), col_character(),col_character(),
-                 col_date(format="%Y-%m-%d"),col_character(),
-                 col_number(), col_number(), col_number(),col_number())
+coltypes <- cols(areaCode=col_character(), areaName=col_character(),areaType=col_character(),
+                 date=col_date(format="%Y-%m-%d"),age=col_character(),
+                 deaths=col_number(), rollingSum=col_number(), rollingRate=col_number())
 # Read the data
 deathdat <-  read_csv(file = deathurl, col_types = coltypes)
 
