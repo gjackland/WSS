@@ -1568,3 +1568,40 @@ lines(rowSums(newSARI[2:20]),col="blue")
 plot(HospitalData$hospitalCases)
 lines(rowSums(SARI[2:20]+CRIT[2:20]+CRITREC[2:20]))
 
+
+# ggplot alternatives
+totdeaths <- DEATH
+totdeaths$deaths <- rowSums(DEATH[2:20])
+deathdat %>% mutate(totdeaths=rowSums(across(where(is.numeric)))) %>%
+  ggplot(aes(x=date,y=totdeaths)) + geom_point() +
+  geom_smooth(formula= y ~ x, method = "loess", span=0.125) +
+  geom_line(data=totdeaths, aes(x=date,y=deaths),inherit.aes = FALSE,colour="red") +
+  xlab("Date") + ylab("Total Deaths")
+
+totcrit <-  CRIT
+totcrit$crit <- rowSums(CRIT[2:20])
+HospitalData %>%
+  ggplot(aes(x=date, y=covidOccupiedMVBeds)) + geom_point() +
+  geom_smooth(formula= y ~ x, method = "loess", span=0.125) +
+  geom_line(data = totcrit, aes(x=date, y=crit),inherit.aes = FALSE,colour="red") +
+  xlab("Date") + ylab("Covid Occupied Beds")
+
+hosp <-  newSARI
+hosp$tot <- rowSums(newSARI[2:20])
+HospitalData %>%
+  ggplot(aes(x=date, y=newAdmissions)) + geom_point() +
+  geom_smooth(formula= y ~ x, method = "loess", span=0.125) +
+  geom_line(data = hosp, aes(x=date, y=tot),inherit.aes = FALSE,colour="red") +
+  xlab("Date") + ylab("New Hospital Admissions")
+
+hosp <- SARI
+hosp$tot <-  rowSums(SARI[2:20]+CRIT[2:20]+CRITREC[2:20])
+d <- data.frame(y=smooth.spline(x=HospitalData$date,y=HospitalData$hospitalCases,df=24)$y)
+d$date <- HospitalData$date
+HospitalData %>%
+  ggplot(aes(x=date, y=hospitalCases)) + geom_point() +
+  geom_smooth(formula= y ~ x, method = "loess", span=0.125) +
+  geom_line(data = hosp, aes(x=date, y=tot),inherit.aes = FALSE, colour="red") +
+  geom_line(data=d,aes(x=date,y=y), colour="green") +
+  xlab("Date") + ylab("Hospital Cases")
+
