@@ -231,8 +231,10 @@ vacurl <- paste0(baseurl,
 coltypes <- cols(areaCode=col_character(), areaName=col_character(),areaType=col_character(),
                  date=col_date(format="%Y-%m-%d"), age=col_character())
 
-# read in the data
+# Read in the data.
 vacdat <-  read_csv(file = vacurl, col_types = coltypes)
+
+# Transform the data.
 vacdate="2020-12-08"
 vacdat <- vacdat %>%
   select(date = date, age = age, values = cumVaccinationFirstDoseUptakeByVaccinationDatePercentage) %>%
