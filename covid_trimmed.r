@@ -834,12 +834,13 @@ plot(smooth.spline(rat$Scotland[startplot <= rat$date & rat$date <= endplot],df=
 rat %>% filter(startplot < date & date < endplot) %>%
   pivot_longer(!date,names_to = "Region", values_to="R") %>%
   ggplot(aes(x=date, y=R, colour=Region)) + coord_cartesian(ylim=c(0.8,1.5)) +
-  geom_smooth(span=0.8) +  guides(color = "none") + facet_wrap(vars(Region))
+  geom_smooth(formula= y ~ x, method = "loess", span=0.8) +  guides(color = "none") +
+  facet_wrap(vars(Region))
 
 rat %>% filter(startplot < date & date < endplot) %>%
   pivot_longer(!date,names_to = "Region", values_to="R") %>%
   ggplot(aes(x=date, y=R, colour=Region)) +
-  coord_cartesian(ylim=c(0.5,1.9))+ geom_smooth(span=0.5) +
+  coord_cartesian(ylim=c(0.5,1.9))+ geom_smooth(formula= y ~ x, method = "loess", span=0.5) +
   guides(color = "none") + facet_wrap(vars(Region))
 
 
@@ -1484,13 +1485,13 @@ ggplot(CFR) +
 CFR %>% filter( "2020/10/1"< date & date < endplot) %>%
   pivot_longer(!date,names_to = "agegroup", values_to="DeathRate") %>%
   ggplot(aes(x=date, y=DeathRate, colour=agegroup)) +
-  coord_cartesian(ylim=c(0.0,0.4))+ geom_smooth(span=0.3) +
+  coord_cartesian(ylim=c(0.0,0.4))+ geom_smooth(formula= y ~ x, method = "loess", span=0.3) +
   guides(color = "none") + facet_wrap(vars(agegroup))
 }
 vacdat %>% filter( "2020/10/1"< date & date < endplot) %>%
   pivot_longer(!date,names_to = "agegroup", values_to="Vaccinations") %>%
   ggplot(aes(x=date, y=Vaccinations, colour=agegroup)) +
-  coord_cartesian(ylim=c(0.0,100.0))+ geom_smooth(span=0.2) +
+  coord_cartesian(ylim=c(0.0,100.0))+ geom_smooth(formula= y ~ x, method = "loess", span=0.2) +
   guides(color = "none") + facet_wrap(vars(agegroup))
 ################################################################
 ###  Finally, Use all this to make predictions
@@ -1571,10 +1572,10 @@ lines(rowSums(SARI[2:20]+CRIT[2:20]+CRITREC[2:20]))
 totdeaths <- DEATH
 totdeaths$deaths <- rowSums(DEATH[2:20])
 deathdat %>% mutate(totdeaths=rowSums(across(where(is.numeric)))) %>%
-  ggplot(aes(x=date,y=totdeaths)) + geom_point() +
+  ggplot(aes(x=date,y=totdeaths)) + geom_point(alpha=0.7) +
   geom_smooth(formula= y ~ x, method = "loess", span=0.125) +
   geom_line(data=totdeaths, aes(x=date,y=deaths),inherit.aes = FALSE,colour="red") +
-  xlab("Date") + ylab("Total Deaths")
+  xlab("Date") + ylab("Total Deaths") + theme_bw()
 
 totcrit <-  CRIT
 totcrit$crit <- rowSums(CRIT[2:20])
@@ -1582,7 +1583,7 @@ HospitalData %>%
   ggplot(aes(x=date, y=covidOccupiedMVBeds)) + geom_point() +
   geom_smooth(formula= y ~ x, method = "loess", span=0.125) +
   geom_line(data = totcrit, aes(x=date, y=crit),inherit.aes = FALSE,colour="red") +
-  xlab("Date") + ylab("Covid Occupied Beds")
+  xlab("Date") + ylab("Covid Occupied Beds") + theme_bw()
 
 hosp <-  newSARI
 hosp$tot <- rowSums(newSARI[2:20])
@@ -1590,7 +1591,7 @@ HospitalData %>%
   ggplot(aes(x=date, y=newAdmissions)) + geom_point() +
   geom_smooth(formula= y ~ x, method = "loess", span=0.125) +
   geom_line(data = hosp, aes(x=date, y=tot),inherit.aes = FALSE,colour="red") +
-  xlab("Date") + ylab("New Hospital Admissions")
+  xlab("Date") + ylab("New Hospital Admissions") + theme_bw()
 
 hosp <- SARI
 hosp$tot <-  rowSums(SARI[2:20]+CRIT[2:20]+CRITREC[2:20])
@@ -1601,5 +1602,5 @@ HospitalData %>%
   geom_smooth(formula= y ~ x, method = "loess", span=0.125) +
   geom_line(data = hosp, aes(x=date, y=tot),inherit.aes = FALSE, colour="red") +
   geom_line(data=d,aes(x=date,y=y), colour="green") +
-  xlab("Date") + ylab("Hospital Cases")
+  xlab("Date") + ylab("Hospital Cases") + theme_bw()
 
