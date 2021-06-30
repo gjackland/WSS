@@ -642,8 +642,8 @@ logmean=log(6.0)
 SARIToDeath=dlnorm(1:cdflength, logmean,  logmean/8.0)
 logmean=log(4.0)
 SARIToCritical=dlnorm(1:cdflength, logmean,  logmean/2.0)
-logmean=log(12.5) # legman time spent on ICU, 7.5 days from Faes, note mean!=logmean
-CriticalToCritRecov=dlnorm(1:cdflength, logmean,  logmean/4.0)
+logmean=log(12.0) # legman time spent on ICU, 7.5 days from Faes, note mean!=logmean
+CriticalToCritRecov=dlnorm(1:cdflength, logmean,  logmean/2.0)
 CriticalToDeath=dlnorm(1:cdflength, logmean,  logmean/4.0)
 logmean=log(8.0) #  Stay in hospital post ICU - needs evidence
 CritRecovToRecov=dlnorm(1:cdflength, logmean,  logmean/4.0)
@@ -710,7 +710,7 @@ CRIT[1,(2:ncol(CRIT))]=casedat[1,(2:ncol(casedat))]*covidsimAge$Prop_Critical_By
 
 #Age dependent transition probabilities a->ILI b->SARI c->Death
 apow = 0.1
-bpow = 0.4
+bpow = 0.35
 cpow = 1.0-apow-bpow
 afac=1.0
 bfac=1.0
@@ -721,7 +721,7 @@ for (iday in (2:lengthofdata)){
   pStoD<-cfac*RawCFR^cpow*sqrt(comdat$lethality[iday])
 #  Entry to ventilation still from covidsim
 pStoC= covidsimAge$Prop_Critical_ByAge /
-  ( covidsimAge$Prop_Critical_ByAge + covidsimAge$Prop_SARI_ByAge )*0.35
+  ( covidsimAge$Prop_Critical_ByAge + covidsimAge$Prop_SARI_ByAge )*0.35*comdat$lethality[iday]
 # All routes to death are the same, vary by age
 pCtoD <- pStoD
 pCRtoD <- pStoD
@@ -758,9 +758,9 @@ pStoD <- pStoD - pStoC*(pCtoD+(1-pCtoD)*pCRtoD)
     # All todays new MILDs will all leave to REC across distribution
     # multiple by vaccination and it CFR reduction
     # ILI will go to SA/RI and REC
-#    ItoS = as.numeric(newILI[iday,iage] * pItoS[iage-1] * (1.0-vacdat[iage,iday]*0.5) ) *ILIToSARI 
+    ItoS = as.numeric(newILI[iday,iage] * pItoS[iage-1] * (1.0-vacdat[iday,iage]*0.5) ) *ILIToSARI 
 # Replace with vaccine effect    
-    ItoS = as.numeric(newILI[iday,iage] * pItoS[iage-1])  *ILIToSARI 
+#    ItoS = as.numeric(newILI[iday,iage] * pItoS[iage-1])  *ILIToSARI 
     ItoR = as.numeric(newILI[iday,iage] *(1.0-pItoS[iage-1])) *ILIToRecovery
     newSARI[(iday:xday),iage]=newSARI[(iday:xday),iage]+ItoS
     oldILI[(iday:xday),iage]=oldILI[(iday:xday),iage]+ItoR+ItoS
@@ -845,13 +845,12 @@ plot(smooth.spline(rat$Scotland[startplot <= rat$date & rat$date <= endplot],df=
 rat %>% filter(startplot < date & date < endplot) %>%
   pivot_longer(!date,names_to = "Region", values_to="R") %>%
   ggplot(aes(x=date, y=R, colour=Region)) + coord_cartesian(ylim=c(0.8,1.5)) +
-  geom_smooth(formula= y ~ x, method = "loess", span=0.8) +  guides(color = "none") +
-  facet_wrap(vars(Region))
+  geom_smooth(span=0.8) +  guides(color = "none") + facet_wrap(vars(Region))
 
 rat %>% filter(startplot < date & date < endplot) %>%
   pivot_longer(!date,names_to = "Region", values_to="R") %>%
   ggplot(aes(x=date, y=R, colour=Region)) +
-  coord_cartesian(ylim=c(0.5,1.9))+ geom_smooth(formula= y ~ x, method = "loess", span=0.5) +
+  coord_cartesian(ylim=c(0.5,1.9))+ geom_smooth(span=0.5) +
   guides(color = "none") + facet_wrap(vars(Region))
 
 
@@ -983,7 +982,7 @@ lines(smooth.spline(dfR$bylogR,df=14))
 #Plot Regional R data vs Government  spdf is spline smoothing factor, lospan for loess
 
 #  various options to silence pdf writing
-pdfpo=FALSE
+pdfpo=TRUE
 
 if(pdfpo){
 
@@ -1212,7 +1211,7 @@ outputJSON(myt0 = t0,
 )
 
 #####  Figures and analysis for https://www.medrxiv.org/content/10.1101/2021.04.14.21255385v1
-medrxiv=TRUE
+medrxiv=FALSE
 if(medrxiv){
 ####  From here on we're reproducing figures from https://www.medrxiv.org/content/10.1101/2021.04.14.21255385v1
 ##### Fig 1. - Heatmaps ####
@@ -1303,11 +1302,17 @@ plot(regdeaths$`North East`*55,x=regdeaths$date)
 lines(reglnpredict$`North East`,x=reglnpredict$date)
 plot(regdeaths$`North West`*55,x=regdeaths$date)
 lines(y=reglnpredict$`North West`,x=reglnpredict$date)
+plot(regdeaths$`South West`*55,x=regdeaths$date)
 lines(reglnpredict$`South West`,x=reglnpredict$date)
+plot(regdeaths$`South East`*55,x=regdeaths$date)
 lines(reglnpredict$`South East`,x=reglnpredict$date)
+plot(regdeaths$`East Midlands`*55,x=regdeaths$date)
 lines(reglnpredict$`East Midlands` ,x=reglnpredict$date)
+plot(regdeaths$`East of England`*55,x=regdeaths$date)
 lines(reglnpredict$`East of England`,x=reglnpredict$date)
+plot(regdeaths$`West Midlands`*55,x=regdeaths$date)
 lines(reglnpredict$`West Midlands`,x=reglnpredict$date)
+plot(regdeaths$`Yorkshire and The Humber`*55,x=regdeaths$date)
 lines(reglnpredict$`Yorkshire and The Humber`,x=reglnpredict$date)
 
 for (area in 2:length(regcases)){
@@ -1499,13 +1504,13 @@ ggplot(CFR) +
 CFR %>% filter( "2020/10/1"< date & date < endplot) %>%
   pivot_longer(!date,names_to = "agegroup", values_to="DeathRate") %>%
   ggplot(aes(x=date, y=DeathRate, colour=agegroup)) +
-  coord_cartesian(ylim=c(0.0,0.4))+ geom_smooth(formula= y ~ x, method = "loess", span=0.3) +
+  coord_cartesian(ylim=c(0.0,0.4))+ geom_smooth(span=0.3) +
   guides(color = "none") + facet_wrap(vars(agegroup))
 }
 vacdat %>% filter( "2020/10/1"< date & date < endplot) %>%
   pivot_longer(!date,names_to = "agegroup", values_to="Vaccinations") %>%
   ggplot(aes(x=date, y=Vaccinations, colour=agegroup)) +
-  coord_cartesian(ylim=c(0.0,100.0))+ geom_smooth(formula= y ~ x, method = "loess", span=0.2) +
+  coord_cartesian(ylim=c(0.0,1.0))+ geom_smooth(span=0.2) +
   guides(color = "none") + facet_wrap(vars(agegroup))
 ################################################################
 ###  Finally, Use all this to make predictions
@@ -1513,7 +1518,8 @@ vacdat %>% filter( "2020/10/1"< date & date < endplot) %>%
 predtime = 28
 #  For loop over time, predcasedat using R numbers
 predcasedat<-ILI[lengthofdata,(1:20)]
-predcasedat[1,(2:20)]<-casedat[lengthofdata,(2:20)]*1.05 #  Growth rate by age group
+predcasedat[1,(2:20)]<-casedat[lengthofdata,(2:20)]*1.05 #  Growth rate by age group 
+predcasedat[1,1]=enddate
 ipred=1
 for (iday in ((lengthofdata+1):(lengthofdata+predtime))){
   #  Proportions become variant dependent.  ILI is case driven, so extra infectivity is automatic
@@ -1521,8 +1527,8 @@ for (iday in ((lengthofdata+1):(lengthofdata+predtime))){
   #  Need to increase CFR without exceeding 1.  Note inverse lethality isnt a simple % as CFR cant be >1
   #  Will have negative people  trouble if CFR>1
 
-  newMILD[iday,agerange]=predcasedat[1,agerange]*(1.0-pTtoI)+newMILD[iday,agerange]
-  newILI[iday,agerange]=predcasedat[1,agerange]*  pTtoI    +newILI[iday,agerange]
+  newMILD[iday,agerange]=predcasedat[ipred,agerange]*(1.0-pTtoI)+newMILD[iday,agerange]
+  newILI[iday,agerange]=predcasedat[ipred,agerange]*  pTtoI    +newILI[iday,agerange]
 
 
   #  vectorize
@@ -1532,8 +1538,9 @@ for (iday in ((lengthofdata+1):(lengthofdata+predtime))){
     # All todays new MILDs will all leave to REC across distribution
 
 
-    # ILI will go to SA/RI and REC
-    ItoS = as.numeric(newILI[iday,iage] *  pItoS[iage-1])     *ILIToSARI
+    # ILI will go to SA/RI and REC   Vaccination frozen on last day, not predicted
+    ItoS = as.numeric(newILI[iday,iage] * pItoS[iage-1] * (1.0-vacdat[length(vacdat),iage]*0.7) ) *ILIToSARI 
+  #  ItoS = as.numeric(newILI[iday,iage] *  pItoS[iage-1])     *ILIToSARI
     ItoR = as.numeric(newILI[iday,iage] *(1.0-pItoS[iage-1])) *ILIToRecovery
     newSARI[(iday:xday),iage]=newSARI[(iday:xday),iage]+ItoS
     oldILI[(iday:xday),iage]=oldILI[(iday:xday),iage]+ItoR+ItoS
@@ -1567,7 +1574,8 @@ for (iday in ((lengthofdata+1):(lengthofdata+predtime))){
 #
 ##  Finally, estimate cases for tomorrow
 
-    predcasedat[(ipred+1),(2:20)]=predcasedat[ipred,(2:20)]*1.05
+    predcasedat[(ipred+1),(2:20)]<-predcasedat[ipred,(2:20)]*exp((R_England_BestGuess-1.0)/genTime)
+    predcasedat[ipred+1,1]<-startdate+iday
     ipred=ipred+1
 # End of compartment section
 }
