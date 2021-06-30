@@ -796,15 +796,16 @@ pStoD <- pStoD - pStoC*(pCtoD+(1-pCtoD)*pCRtoD)
 }# End of compartment section
 
 # Monitoring plots
-
-plot(rowSums(deathdat[2:20]))
-lines(rowSums(DEATH[2:20]),col="blue")
-plot(HospitalData$covidOccupiedMVBeds)
-lines(rowSums(CRIT[2:20]),col="blue")
-plot(HospitalData$newAdmissions)
-lines(rowSums(newSARI[2:20]),col="blue")
-plot(HospitalData$hospitalCases)
-lines(rowSums(SARI[2:20]+CRIT[2:20]+CRITREC[2:20]))
+if(interactive()){
+  plot(rowSums(deathdat[2:20]))
+  lines(rowSums(DEATH[2:20]),col="blue")
+  plot(HospitalData$covidOccupiedMVBeds)
+  lines(rowSums(CRIT[2:20]),col="blue")
+  plot(HospitalData$newAdmissions)
+  lines(rowSums(newSARI[2:20]),col="blue")
+  plot(HospitalData$hospitalCases)
+  lines(rowSums(SARI[2:20]+CRIT[2:20]+CRITREC[2:20]))
+}
 
 # Create a vector to hold the results for various R-numbers
 ninit <- as.numeric(1:nrow(comdat))/as.numeric(1:nrow(comdat))
@@ -837,22 +838,26 @@ rat[rat==-Inf] <- 1.0
 startplot <- rat$date[200]
 endplot <- rat$date[327]
 
-plot(smooth.spline(rat$Scotland[startplot <= rat$date & rat$date <= endplot],df=6)$y,
-     x=rat$date[startplot <= rat$date & rat$date <= endplot],
-     ylim=c(0.7,1.40),xlab="Date",ylab="R, Scotland")
+
+if(interactive()){
+  plot(smooth.spline(rat$Scotland[startplot <= rat$date & rat$date <= endplot],df=6)$y,
+       x=rat$date[startplot <= rat$date & rat$date <= endplot],
+       ylim=c(0.7,1.40),xlab="Date",ylab="R, Scotland")
+
+  rat %>% filter(startplot < date & date < endplot) %>%
+    pivot_longer(!date,names_to = "Region", values_to="R") %>%
+    ggplot(aes(x=date, y=R, colour=Region)) + coord_cartesian(ylim=c(0.8,1.5)) +
+    geom_smooth(formula= y ~ x, method = "loess", span=0.8) +  guides(color = "none") +
+    facet_wrap(vars(Region))
+
+  rat %>% filter(startplot < date & date < endplot) %>%
+    pivot_longer(!date,names_to = "Region", values_to="R") %>%
+    ggplot(aes(x=date, y=R, colour=Region)) +
+    coord_cartesian(ylim=c(0.5,1.9))+ geom_smooth(formula= y ~ x, method = "loess", span=0.5) +
+    guides(color = "none") + facet_wrap(vars(Region))
 
 
-rat %>% filter(startplot < date & date < endplot) %>%
-  pivot_longer(!date,names_to = "Region", values_to="R") %>%
-  ggplot(aes(x=date, y=R, colour=Region)) + coord_cartesian(ylim=c(0.8,1.5)) +
-  geom_smooth(span=0.8) +  guides(color = "none") + facet_wrap(vars(Region))
-
-rat %>% filter(startplot < date & date < endplot) %>%
-  pivot_longer(!date,names_to = "Region", values_to="R") %>%
-  ggplot(aes(x=date, y=R, colour=Region)) +
-  coord_cartesian(ylim=c(0.5,1.9))+ geom_smooth(span=0.5) +
-  guides(color = "none") + facet_wrap(vars(Region))
-
+}
 
 #  Unsmoothed version
 #rat %>% filter(startplot < date & date < endplot) %>%
@@ -905,7 +910,7 @@ dfR$weeklyR[length(dfR$weeklyR)]=1.0
 dfR$weeklyR[length(dfR$weeklyR)-1]=1.0
 dfR$weeklyR[length(dfR$weeklyR)-2]=1.0
 
-#Plot various types of smoothing on the R data
+# Plot various types of smoothing on the R data
 
 # Making the time windows agree
 Govdat <- Rest[Rest$Date >= min(comdat$date) & Rest$Date <= max(comdat$date),]
@@ -940,7 +945,7 @@ for (i in (lock1+1):unlock1){dfR$piecewise[i]=smoothR130$y[i-lock1]}
 for (i in (unlock1+1):lock2){dfR$piecewise[i]=smoothR164$y[i-unlock1]}
 for (i in (lock2+1):length(dfR$date)){dfR$piecewise[i]=smoothRend$y[i-lock2]}
 
-#Plot R estimate vs data and fits discontinuous at lockdown
+# Plot R estimate vs data and fits discontinuous at lockdown
 #  Have to move the Official R data back by 16 days !
 
 #  All cases and Regions
