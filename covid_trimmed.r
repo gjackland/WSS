@@ -219,7 +219,7 @@ casedat <- casedat %>%
   filter(date >= startdate & date <= enddate) %>%
   arrange(date)
 
-
+vacdate="2020-12-08"
 # vaccination by age
 vacurl <- paste0(baseurl,
                  "areaType=nation&",
@@ -236,13 +236,24 @@ coltypes <- cols(areaCode=col_character(), areaName=col_character(),areaType=col
 # Read in the data.
 vacdat <-  read_csv(file = vacurl, col_types = coltypes)
 
-# Transform the data.
-vacdate="2020-12-08"
+# Transform the data to get vacdat compatible with casedat (must be a better way!).
 vacdat <- vacdat %>%
-  select(date = date, age = age, values = cumVaccinationFirstDoseUptakeByVaccinationDatePercentage) %>%
-  pivot_wider(id_cols = date, names_from = age, values_from = values) %>%
-  filter(date >=vacdate  & date <= enddate) %>%
-  arrange(date)
+  select(datetmp = date, age = age, values = cumVaccinationFirstDoseUptakeByVaccinationDatePercentage) %>%
+  pivot_wider(id_cols = datetmp, names_from = age, values_from = values) %>%
+  filter(datetmp >=vacdate  & datetmp <= enddate) %>%
+  arrange(datetmp)
+vacdat$`18_24`<-NULL
+vacdat<-cbind('20_24'=0.0,vacdat)
+vacdat<-cbind('15_19'=0.0,vacdat)
+vacdat<-cbind('10_14'=0.0,vacdat)
+vacdat<-cbind('05_09'=0.0,vacdat)
+vacdat<-cbind('00_04'=0.0,vacdat)
+vacdat<-cbind(date=vacdat$datetmp,vacdat)
+vacdat$datetmp<-NULL
+tmp<-casedat %>% filter(date < vacdate)
+tmp[2:20]=0.0
+vacdat <- bind_rows(tmp,vacdat)
+rm(tmp)
 
 # convert to fraction
 vacdat[2:length(vacdat)]<-vacdat[2:length(vacdat)]/100
@@ -614,7 +625,7 @@ CFR_All_ByAge=colSums(deathdat[2:20])/colSums(casedat[2:20])
 
 compartment=TRUE
 if(compartment){
-  cdflength =40
+  cdflength =30
 #  Time dependences of transitions - assumed age independent
 #  Make cdflength day cdfs.  these are same for all age groups, but fractions Prop/CFR vary
 #  Choose to use lognormal with logsd=logmean/4.0.  Data not available to do better
@@ -627,7 +638,7 @@ ILIToRecovery=dlnorm(1:cdflength, logmean,  logmean/4.0)
 #  Fit  shift & scale from ILI to SARI
 logmean=log(5.0)
 ILIToSARI=dlnorm(1:cdflength, logmean,  logmean/1.3)
-logmean=log(10.6)
+logmean=log(12.0)
 SARIToRecovery=dlnorm(1:cdflength, logmean,  logmean/2.0)
 logmean=log(6.0)
 SARIToDeath=dlnorm(1:cdflength, logmean,  logmean/8.0)
@@ -636,7 +647,7 @@ SARIToCritical=dlnorm(1:cdflength, logmean,  logmean/2.0)
 logmean=log(12.5) # legman time spent on ICU, 7.5 days from Faes, note mean!=logmean
 CriticalToCritRecov=dlnorm(1:cdflength, logmean,  logmean/4.0)
 CriticalToDeath=dlnorm(1:cdflength, logmean,  logmean/4.0)
-logmean=log(10.0) #  Stay in hospital post ICU - needs evidence
+logmean=log(8.0) #  Stay in hospital post ICU - needs evidence
 CritRecovToRecov=dlnorm(1:cdflength, logmean,  logmean/4.0)
 
 #  Normalise these time distributions
@@ -747,9 +758,11 @@ pStoD <- pStoD - pStoC*(pCtoD+(1-pCtoD)*pCRtoD)
   oldMILD[(iday:xday),agerange]=oldMILD[(iday:xday),agerange]+MtoR
   for (iage in agerange){
     # All todays new MILDs will all leave to REC across distribution
-
+    # multiple by vaccination and it CFR reduction
     # ILI will go to SA/RI and REC
-    ItoS = as.numeric(newILI[iday,iage] *  pItoS[iage-1])     *ILIToSARI
+#    ItoS = as.numeric(newILI[iday,iage] * pItoS[iage-1] * (1.0-vacdat[iage,iday]*0.5) ) *ILIToSARI 
+# Replace with vaccine effect    
+    ItoS = as.numeric(newILI[iday,iage] * pItoS[iage-1])  *ILIToSARI 
     ItoR = as.numeric(newILI[iday,iage] *(1.0-pItoS[iage-1])) *ILIToRecovery
     newSARI[(iday:xday),iage]=newSARI[(iday:xday),iage]+ItoS
     oldILI[(iday:xday),iage]=oldILI[(iday:xday),iage]+ItoR+ItoS
@@ -789,11 +802,11 @@ pStoD <- pStoD - pStoC*(pCtoD+(1-pCtoD)*pCRtoD)
 plot(rowSums(deathdat[2:20]))
 lines(rowSums(DEATH[2:20]),col="blue")
 plot(HospitalData$covidOccupiedMVBeds)
-lines(rowSums(CRIT[2:20])/1.2,col="blue")
+lines(rowSums(CRIT[2:20]),col="blue")
 plot(HospitalData$newAdmissions)
 lines(rowSums(newSARI[2:20]),col="blue")
 plot(HospitalData$hospitalCases)
-lines(1.2*rowSums(SARI[2:20]+CRIT[2:20]+CRITREC[2:20]))
+lines(rowSums(SARI[2:20]+CRIT[2:20]+CRITREC[2:20]))
 
 # Create a vector to hold the results for various R-numbers
 ninit <- as.numeric(1:nrow(comdat))/as.numeric(1:nrow(comdat))
@@ -1567,40 +1580,4 @@ plot(HospitalData$newAdmissions)
 lines(rowSums(newSARI[2:20]),col="blue")
 plot(HospitalData$hospitalCases)
 lines(rowSums(SARI[2:20]+CRIT[2:20]+CRITREC[2:20]))
-
-# ggplot alternatives
-totdeaths <- DEATH
-totdeaths$deaths <- rowSums(DEATH[2:20])
-deathdat %>% mutate(totdeaths=rowSums(across(where(is.numeric)))) %>%
-  ggplot(aes(x=date,y=totdeaths)) + geom_point(alpha=0.7) +
-  geom_smooth(formula= y ~ x, method = "loess", span=0.125) +
-  geom_line(data=totdeaths, aes(x=date,y=deaths),inherit.aes = FALSE,colour="red") +
-  xlab("Date") + ylab("Total Deaths") + theme_bw()
-
-totcrit <-  CRIT
-totcrit$crit <- rowSums(CRIT[2:20])
-HospitalData %>%
-  ggplot(aes(x=date, y=covidOccupiedMVBeds)) + geom_point() +
-  geom_smooth(formula= y ~ x, method = "loess", span=0.125) +
-  geom_line(data = totcrit, aes(x=date, y=crit),inherit.aes = FALSE,colour="red") +
-  xlab("Date") + ylab("Covid Occupied Beds") + theme_bw()
-
-hosp <-  newSARI
-hosp$tot <- rowSums(newSARI[2:20])
-HospitalData %>%
-  ggplot(aes(x=date, y=newAdmissions)) + geom_point() +
-  geom_smooth(formula= y ~ x, method = "loess", span=0.125) +
-  geom_line(data = hosp, aes(x=date, y=tot),inherit.aes = FALSE,colour="red") +
-  xlab("Date") + ylab("New Hospital Admissions") + theme_bw()
-
-hosp <- SARI
-hosp$tot <-  rowSums(SARI[2:20]+CRIT[2:20]+CRITREC[2:20])
-d <- data.frame(y=smooth.spline(x=HospitalData$date,y=HospitalData$hospitalCases,df=24)$y)
-d$date <- HospitalData$date
-HospitalData %>%
-  ggplot(aes(x=date, y=hospitalCases)) + geom_point() +
-  geom_smooth(formula= y ~ x, method = "loess", span=0.125) +
-  geom_line(data = hosp, aes(x=date, y=tot),inherit.aes = FALSE, colour="red") +
-  geom_line(data=d,aes(x=date,y=y), colour="green") +
-  xlab("Date") + ylab("Hospital Cases") + theme_bw()
 
