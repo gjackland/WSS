@@ -244,3 +244,19 @@ outputJSON <- function(myt0,
     }
 
 }
+
+# Need to let the web interface know that the simulation has completed successfully.
+# 0 - for success, any other number for a fail.
+
+# Default is success
+Status <- 0
+
+# Function to set the status - assume it sets it to fail
+setStatus <- function(stat=1){
+    Status <<- stat
+}
+
+# Return the status
+returnStatus <- function(){
+    return(Status)
+}
