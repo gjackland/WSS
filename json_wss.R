@@ -47,7 +47,7 @@ library(jsonlite)
 getInput <- function(filename)
 {
     if(file.exists(filename)){
-        jsonin <- read_json(filename, simplifyVector = TRUE)
+        jsonin <- read_json(filename)
         return(jsonin)
     }else{
         warning("File: ",filename," not found.")

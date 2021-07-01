@@ -1183,6 +1183,7 @@ subregion <- dataIn$subregion
 calibrationDate <- dataIn$parameters$calibrationDate
 calibrationCaseCount <- dataIn$parameters$calibrationCaseCount
 calibrationDeathCount <- dataIn$parameters$calibrationDeathCount
+interventionPeriods <- dataIn$parameters$interventionPeriods
 
 # Beginning of time series
 t0 <-  min(dfR$date)
@@ -1204,7 +1205,7 @@ outputJSON(myt0 = t0,
            mycalibrationDate = calibrationDate,
            mycalibrationDeathCount = calibrationDeathCount,
            myr0 = NA,
-           myinterventionPeriods= NA,
+           myinterventionPeriods= interventionPeriods,
            myCritRecov = myCritRecov,
            myCritical = myCritical,
            myILI = myILI,
