@@ -1178,7 +1178,12 @@ dataIn <- getInput(infile)
 region <- dataIn$region
 subregion <- dataIn$subregion
 
-# # Beginning of time series
+# Read these parameters to output again
+calibrationDate <- dataIn$parameters$calibrationDate
+calibrationCaseCount <- dataIn$parameters$calibrationCaseCount
+calibrationDeathCount <- dataIn$parameters$calibrationDeathCount
+
+# Beginning of time series
 t0 <-  min(dfR$date)
 
 # Get the days for which data will be output
@@ -1194,9 +1199,9 @@ outputJSON(myt0 = t0,
            mydaysarray = days,
            myregion = "GB",
            mysubregion = "ENG", # see https://en.wikipedia.org/wiki/ISO_3166-2:GB
-           mycalibrationCaseCount = NA,  # ADD VALUE, eg single number
-           mycalibrationDate = NA,       # ADD VALUE, eg "2021-05-12"
-           mycalibrationDeathCount=NA,   # ADD VALUE, eg single number
+           mycalibrationCaseCount = calibrationCaseCount,
+           mycalibrationDate = calibrationDate,
+           mycalibrationDeathCount = calibrationDeathCount,
            myr0 = NA,
            myinterventionPeriods= NA,
            myCritRecov = myCritRecov,
