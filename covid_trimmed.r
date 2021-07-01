@@ -6,9 +6,8 @@
 #                James A Ackland, The University of Cambridge
 #                David J Wallace.
 
-#### Header ####
+# Remove existing variables
 if(interactive()){
-  # Remove existing variables
   rm(list = ls())
 }
 
