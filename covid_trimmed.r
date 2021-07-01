@@ -1102,7 +1102,7 @@ if(interactive()){
 }
 }
 
-#Reverse Engineer cases from R-number - requires stratonovich calculus to get reversibility
+# Reverse Engineer cases from R-number - requires stratonovich calculus to get reversibility
 # Initializations
 #rm(PredictCases,PredictCasesSmoothR)
 
@@ -1175,6 +1175,8 @@ if(dir.exists("/data/input")){
 # Get input data from the web interface or a test file
 dataIn <- getInput(infile)
 
+# NOTE: These are the regions and subregions being asked for - data should be produced
+# that corresponds to these.
 region <- dataIn$region
 subregion <- dataIn$subregion
 
@@ -1197,8 +1199,8 @@ myMild <- rowSums(MILD[2:20])
 mySARI <-  rowSums(ILI[2:20])
 outputJSON(myt0 = t0,
            mydaysarray = days,
-           myregion = "GB",
-           mysubregion = "ENG", # see https://en.wikipedia.org/wiki/ISO_3166-2:GB
+           myregion = region,
+           mysubregion = subregion, # see https://en.wikipedia.org/wiki/ISO_3166-2:GB
            mycalibrationCaseCount = calibrationCaseCount,
            mycalibrationDate = calibrationDate,
            mycalibrationDeathCount = calibrationDeathCount,
