@@ -1103,7 +1103,7 @@ if(interactive()){
 }
 }
 
-#Reverse Engineer cases from R-number - requires stratonovich calculus to get reversibility
+# Reverse Engineer cases from R-number - requires stratonovich calculus to get reversibility
 # Initializations
 #rm(PredictCases,PredictCasesSmoothR)
 
@@ -1176,10 +1176,18 @@ if(dir.exists("/data/input")){
 # Get input data from the web interface or a test file
 dataIn <- getInput(infile)
 
+# NOTE: These are the regions and subregions being asked for - data should be produced
+# that corresponds to these.
 region <- dataIn$region
 subregion <- dataIn$subregion
 
-# # Beginning of time series
+# Read these parameters to output again
+calibrationDate <- dataIn$parameters$calibrationDate
+calibrationCaseCount <- dataIn$parameters$calibrationCaseCount
+calibrationDeathCount <- dataIn$parameters$calibrationDeathCount
+interventionPeriods <- dataIn$parameters$interventionPeriods
+
+# Beginning of time series
 t0 <-  min(dfR$date)
 
 # Get the days for which data will be output
@@ -1193,13 +1201,13 @@ myMild <- rowSums(MILD[2:20])
 mySARI <-  rowSums(ILI[2:20])
 outputJSON(myt0 = t0,
            mydaysarray = days,
-           myregion = "GB",
-           mysubregion = "ENG", # see https://en.wikipedia.org/wiki/ISO_3166-2:GB
-           mycalibrationCaseCount = NA,  # ADD VALUE, eg single number
-           mycalibrationDate = NA,       # ADD VALUE, eg "2021-05-12"
-           mycalibrationDeathCount=NA,   # ADD VALUE, eg single number
+           myregion = region,
+           mysubregion = subregion, # see https://en.wikipedia.org/wiki/ISO_3166-2:GB
+           mycalibrationCaseCount = calibrationCaseCount,
+           mycalibrationDate = calibrationDate,
+           mycalibrationDeathCount = calibrationDeathCount,
            myr0 = NA,
-           myinterventionPeriods= NA,
+           myinterventionPeriods= interventionPeriods,
            myCritRecov = myCritRecov,
            myCritical = myCritical,
            myILI = myILI,
@@ -1594,3 +1602,9 @@ lines(rowSums(newSARI[2:20]),col="blue")
 plot(HospitalData$hospitalCases)
 lines(rowSums(SARI[2:20]+CRIT[2:20]+CRITREC[2:20]))
 
+
+# This needs to be the last routine called for the UI, by default it returns
+# success (0), if there is no success setStatus() should be called. By default
+# it will return -1 but you can set a value setStatus(1). Any non-zero value
+# will indicate a problem.
+returnStatus()
