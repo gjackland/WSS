@@ -7,3 +7,7 @@ Rplots.pdf
 *.Rproj
 forpub.csv
 data/AgeDeathDemographics.csv
+data/data.json
+data/uk-data/
+input-schema.json
+output-schema.json
