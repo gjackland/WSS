@@ -760,9 +760,9 @@ pStoD <- pStoD - pStoC*(pCtoD+(1-pCtoD)*pCRtoD)
     # All todays new MILDs will all leave to REC across distribution
     # multiple by vaccination and it CFR reduction
     # ILI will go to SA/RI and REC
-#    ItoS = as.numeric(newILI[iday,iage] * pItoS[iage-1] * (1.0-vacdat[iage,iday]*0.5) ) *ILIToSARI 
-# Replace with vaccine effect    
-    ItoS = as.numeric(newILI[iday,iage] * pItoS[iage-1])  *ILIToSARI 
+#    ItoS = as.numeric(newILI[iday,iage] * pItoS[iage-1] * (1.0-vacdat[iage,iday]*0.5) ) *ILIToSARI
+# Replace with vaccine effect
+    ItoS = as.numeric(newILI[iday,iage] * pItoS[iage-1])  *ILIToSARI
     ItoR = as.numeric(newILI[iday,iage] *(1.0-pItoS[iage-1])) *ILIToRecovery
     newSARI[(iday:xday),iage]=newSARI[(iday:xday),iage]+ItoS
     oldILI[(iday:xday),iage]=oldILI[(iday:xday),iage]+ItoR+ItoS
@@ -798,15 +798,16 @@ pStoD <- pStoD - pStoC*(pCtoD+(1-pCtoD)*pCRtoD)
 }# End of compartment section
 
 # Monitoring plots
-
-plot(rowSums(deathdat[2:20]))
-lines(rowSums(DEATH[2:20]),col="blue")
-plot(HospitalData$covidOccupiedMVBeds)
-lines(rowSums(CRIT[2:20]),col="blue")
-plot(HospitalData$newAdmissions)
-lines(rowSums(newSARI[2:20]),col="blue")
-plot(HospitalData$hospitalCases)
-lines(rowSums(SARI[2:20]+CRIT[2:20]+CRITREC[2:20]))
+if(interactive()){
+  plot(rowSums(deathdat[2:20]))
+  lines(rowSums(DEATH[2:20]),col="blue")
+  plot(HospitalData$covidOccupiedMVBeds)
+  lines(rowSums(CRIT[2:20]),col="blue")
+  plot(HospitalData$newAdmissions)
+  lines(rowSums(newSARI[2:20]),col="blue")
+  plot(HospitalData$hospitalCases)
+  lines(rowSums(SARI[2:20]+CRIT[2:20]+CRITREC[2:20]))
+}
 
 # Create a vector to hold the results for various R-numbers
 ninit <- as.numeric(1:nrow(comdat))/as.numeric(1:nrow(comdat))
@@ -839,23 +840,24 @@ rat[rat==-Inf] <- 1.0
 startplot <- rat$date[200]
 endplot <- rat$date[327]
 
-plot(smooth.spline(rat$Scotland[startplot <= rat$date & rat$date <= endplot],df=6)$y,
-     x=rat$date[startplot <= rat$date & rat$date <= endplot],
-     ylim=c(0.7,1.40),xlab="Date",ylab="R, Scotland")
+if(interactive()){
+  plot(smooth.spline(rat$Scotland[startplot <= rat$date & rat$date <= endplot],df=6)$y,
+       x=rat$date[startplot <= rat$date & rat$date <= endplot],
+       ylim=c(0.7,1.40),xlab="Date",ylab="R, Scotland")
 
+  rat %>% filter(startplot < date & date < endplot) %>%
+    pivot_longer(!date,names_to = "Region", values_to="R") %>%
+    ggplot(aes(x=date, y=R, colour=Region)) + coord_cartesian(ylim=c(0.8,1.5)) +
+    geom_smooth(formula= y ~ x, method = "loess", span=0.8) +  guides(color = "none") +
+    facet_wrap(vars(Region))
 
-rat %>% filter(startplot < date & date < endplot) %>%
-  pivot_longer(!date,names_to = "Region", values_to="R") %>%
-  ggplot(aes(x=date, y=R, colour=Region)) + coord_cartesian(ylim=c(0.8,1.5)) +
-  geom_smooth(formula= y ~ x, method = "loess", span=0.8) +  guides(color = "none") +
-  facet_wrap(vars(Region))
+  rat %>% filter(startplot < date & date < endplot) %>%
+    pivot_longer(!date,names_to = "Region", values_to="R") %>%
+    ggplot(aes(x=date, y=R, colour=Region)) +
+    coord_cartesian(ylim=c(0.5,1.9))+ geom_smooth(formula= y ~ x, method = "loess", span=0.5) +
+    guides(color = "none") + facet_wrap(vars(Region))
 
-rat %>% filter(startplot < date & date < endplot) %>%
-  pivot_longer(!date,names_to = "Region", values_to="R") %>%
-  ggplot(aes(x=date, y=R, colour=Region)) +
-  coord_cartesian(ylim=c(0.5,1.9))+ geom_smooth(formula= y ~ x, method = "loess", span=0.5) +
-  guides(color = "none") + facet_wrap(vars(Region))
-
+}
 
 #  Unsmoothed version
 #rat %>% filter(startplot < date & date < endplot) %>%
@@ -908,7 +910,7 @@ dfR$weeklyR[length(dfR$weeklyR)]=1.0
 dfR$weeklyR[length(dfR$weeklyR)-1]=1.0
 dfR$weeklyR[length(dfR$weeklyR)-2]=1.0
 
-#Plot various types of smoothing on the R data
+# Plot various types of smoothing on the R data
 
 # Making the time windows agree
 Govdat <- Rest[Rest$Date >= min(comdat$date) & Rest$Date <= max(comdat$date),]
@@ -940,7 +942,7 @@ for (i in (lock1+1):unlock1){dfR$piecewise[i]=smoothR130$y[i-lock1]}
 for (i in (unlock1+1):lock2){dfR$piecewise[i]=smoothR164$y[i-unlock1]}
 for (i in (lock2+1):length(dfR$date)){dfR$piecewise[i]=smoothRend$y[i-lock2]}
 
-#Plot R estimate vs data and fits discontinuous at lockdown
+# Plot R estimate vs data and fits discontinuous at lockdown
 #  Have to move the Official R data back by 16 days !
 
 #  All cases and Regions
@@ -1172,10 +1174,17 @@ if(dir.exists("/data/input")){
 # Get input data from the web interface or a test file
 dataIn <- getInput(infile)
 
+# NOTE: These are the regions and subregions being asked for - data should be produced
+# that corresponds to these.
 region <- dataIn$region
 subregion <- dataIn$subregion
 
-# # Beginning of time series
+# Read these parameters to output again
+calibrationDate <- dataIn$parameters$calibrationDate
+calibrationCaseCount <- dataIn$parameters$calibrationCaseCount
+calibrationDeathCount <- dataIn$parameters$calibrationDeathCount
+
+# Beginning of time series
 t0 <-  min(dfR$date)
 
 # Get the days for which data will be output
@@ -1189,11 +1198,11 @@ myMild <- rowSums(MILD[2:20])
 mySARI <-  rowSums(ILI[2:20])
 outputJSON(myt0 = t0,
            mydaysarray = days,
-           myregion = "GB",
-           mysubregion = "ENG", # see https://en.wikipedia.org/wiki/ISO_3166-2:GB
-           mycalibrationCaseCount = NA,  # ADD VALUE, eg single number
-           mycalibrationDate = NA,       # ADD VALUE, eg "2021-05-12"
-           mycalibrationDeathCount=NA,   # ADD VALUE, eg single number
+           myregion = region,
+           mysubregion = subregion, # see https://en.wikipedia.org/wiki/ISO_3166-2:GB
+           mycalibrationCaseCount = calibrationCaseCount,
+           mycalibrationDate = calibrationDate,
+           mycalibrationDeathCount = calibrationDeathCount,
            myr0 = NA,
            myinterventionPeriods= NA,
            myCritRecov = myCritRecov,
