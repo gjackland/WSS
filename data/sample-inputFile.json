@@ -1,0 +1,39 @@
+{
+   "region": "GB",
+   "subregion":"GB-ENG",
+   "parameters":{
+        "calibrationDate": "2021-06-17",
+        "calibrationCaseCount": 1400,
+        "calibrationDeathCount": 200,
+        "interventionPeriods": [      {
+            "startDate": "2020-03-15",
+            "reductionPopulationContact": 15,
+            "socialDistancing": "moderate"
+          },
+          {
+            "startDate": "2020-03-21",
+            "reductionPopulationContact": 65,
+            "socialDistancing": "moderate",
+            "schoolClosure": "aggressive"
+          },
+          {
+            "startDate": "2020-03-25",
+            "reductionPopulationContact": 90,
+            "socialDistancing": "aggressive",
+            "schoolClosure": "aggressive"
+          },
+          {
+            "startDate": "2020-05-01",
+            "reductionPopulationContact": 50,
+            "socialDistancing": "moderate",
+            "schoolClosure": "mild"
+          },
+          {
+            "startDate": "2020-06-01",
+            "reductionPopulationContact": 0
+          }
+        ],
+        "r0": 0
+  }
+ 
+}
