@@ -57,6 +57,10 @@ covidsimAge<-data.frame(
 "Deatherror"=c(0.32060231, 0.17841065, 0.05670156, 0.02800124, 0.01342003, 0.01179716, 0.01460613, 0.01983603, 0.02779927, 0.08124622, 0.09198597,
    0.15295026, 0.22286942, 1.13541013, 1.12529118, 1.91515160, 1.97455542, 2.15335157, 2.23153492 )
   )
+#Admissions to April 30 0-5 839 6-17 831 18-65 42019 65-84 42640 85+ 20063
+# https://www.england.nhs.uk/statistics/statistical-work-areas/covid-19-hospital-activity/
+
+
 # Deatherror from colSums(deathdat[2:20])/colSums(casedat[2:20])/(colSums(DEATH[2:20]/colSums(newMILD[2:20]+newILI[2:20])))
 # IHR from Knock SM S9  CHR from Knock S8
 covidsimAge$Prop_Mild_ByAge= 1.0 - (covidsimAge$Prop_Critical_ByAge+covidsimAge$Prop_ILI_ByAge+covidsimAge$Prop_SARI_ByAge)
@@ -605,7 +609,6 @@ rm(Xmasav,Xmasgrad,weeks,i,j,indexday)
 # Set false positive adjustment at 0.004, extrapolate tests if the last few days are missing
 comdat$fpCases <- comdat$allCases-0.004*as.integer(comdat$tests)
 
-
 plot(comdat$inputCases,x=comdat$date,xlab="Date",ylab="Cases")
 lines(comdat$allCases,x=comdat$date, col="green",lwd=2)
 lines(comdat$fpCases, x=comdat$date,col="red",lwd=2)
@@ -708,12 +711,15 @@ CRIT[1,(2:ncol(CRIT))]=casedat[1,(2:ncol(casedat))]*covidsimAge$Prop_Critical_By
 # Nobody changes age band.  Vectorize over distributions
 
 #Age dependent transition probabilities a->ILI b->SARI c->Death
+# apow+bpow+cpow=1 gives a fit to death data, not accounting for variant & vaccination effect
+# bpow/bfac conditions the hospital admissions by age Distribution is Approx U65=65-85=2 * 85+
 apow = 0.1
-bpow = 0.35
+bpow = 0.45
 cpow = 1.0-apow-bpow
 afac=1.0
-bfac=1.0
-cfac=1.0
+bfac=1.4
+
+cfac=1.0/afac/bfac
 for (iday in (2:lengthofdata)){
   pTtoI<-afac*RawCFR^apow
   pItoS<-bfac*RawCFR^bpow*sqrt(comdat$lethality[iday])
@@ -1551,7 +1557,7 @@ for (iday in ((lengthofdata+1):(lengthofdata+predtime))){
 
 
     # ILI will go to SA/RI and REC   Vaccination frozen on last day, not predicted
-    ItoS = as.numeric(newILI[iday,iage] * pItoS[iage-1] * (1.0-vacdat[length(vacdat),iage]*0.7) ) *ILIToSARI 
+    ItoS = as.numeric(newILI[iday,iage] * pItoS[iage-1] * (1.0-vacdat[length(vacdat),iage]*0.8) ) *ILIToSARI 
   #  ItoS = as.numeric(newILI[iday,iage] *  pItoS[iage-1])     *ILIToSARI
     ItoR = as.numeric(newILI[iday,iage] *(1.0-pItoS[iage-1])) *ILIToRecovery
     newSARI[(iday:xday),iage]=newSARI[(iday:xday),iage]+ItoS
@@ -1584,8 +1590,8 @@ for (iday in ((lengthofdata+1):(lengthofdata+predtime))){
   CRIT[iday,agerange]=CRIT[iday,agerange]+newCRIT[iday,agerange]-oldCRIT[iday,agerange]+CRIT[(iday-1),agerange]
   CRITREC[iday,agerange]=CRITREC[iday,agerange]+newCRITREC[iday,agerange]-oldCRITREC[iday,agerange]+CRITREC[(iday-1),agerange]
 #
-##  Finally, estimate cases for tomorrow
-
+##  Finally, estimate cases for tomorrow.  This uses an R value calculated above, but for CrystalCast purposes from 
+##  we can use MLP Rx.x as an input here
     predcasedat[(ipred+1),(2:20)]<-predcasedat[ipred,(2:20)]*exp((R_England_BestGuess-1.0)/genTime)
     predcasedat[ipred+1,1]<-startdate+iday
     ipred=ipred+1
@@ -1601,10 +1607,14 @@ plot(HospitalData$newAdmissions)
 lines(rowSums(newSARI[2:20]),col="blue")
 plot(HospitalData$hospitalCases)
 lines(rowSums(SARI[2:20]+CRIT[2:20]+CRITREC[2:20]))
-
+plot(rowSums(casedat[2:20]))
+lines(rowSums(newILI[2:20]))
+lines(rowSums(newMILD[2:20]))
+lines(rowSums(newMILD[2:20]+newILI[2:20]),col="red")
 
 # This needs to be the last routine called for the UI, by default it returns
 # success (0), if there is no success setStatus() should be called. By default
 # it will return -1 but you can set a value setStatus(1). Any non-zero value
 # will indicate a problem.
 returnStatus()
+
