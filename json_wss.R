@@ -257,6 +257,16 @@ setStatus <- function(stat=1){
 }
 
 # Return the status
+# A the end of the R code where this is used add the line:
+#
+# quit(status=returnStatus())
+#
+# If you call just returnStatus() the program will exit with:
+#
+# [1] 0
+#
+# which is not what you want.
+
 returnStatus <- function(){
     return(Status)
 }
