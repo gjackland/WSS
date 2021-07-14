@@ -1609,5 +1609,5 @@ lines(rowSums(newMILD[2:20]+newILI[2:20]),col="red")
 # success (0), if there is no success setStatus() should be called. By default
 # it will return -1 but you can set a value setStatus(1). Any non-zero value
 # will indicate a problem.
-returnStatus()
+quit(status=returnStatus())
 
