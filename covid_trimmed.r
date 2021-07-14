@@ -763,9 +763,9 @@ pStoD <- pStoD - pStoC*(pCtoD+(1-pCtoD)*pCRtoD)
     # All todays new MILDs will all leave to REC across distribution
     # multiple by vaccination and it CFR reduction
     # ILI will go to SA/RI and REC
-    ItoS = as.numeric(newILI[iday,iage] * pItoS[iage-1] * (1.0-vacdat[iday,iage]*0.5) ) *ILIToSARI 
-# Replace with vaccine effect    
-#    ItoS = as.numeric(newILI[iday,iage] * pItoS[iage-1])  *ILIToSARI 
+    ItoS = as.numeric(newILI[iday,iage] * pItoS[iage-1] * (1.0-vacdat[iday,iage]*0.5) ) *ILIToSARI
+# Replace with vaccine effect
+#    ItoS = as.numeric(newILI[iday,iage] * pItoS[iage-1])  *ILIToSARI
     ItoR = as.numeric(newILI[iday,iage] *(1.0-pItoS[iage-1])) *ILIToRecovery
     newSARI[(iday:xday),iage]=newSARI[(iday:xday),iage]+ItoS
     oldILI[(iday:xday),iage]=oldILI[(iday:xday),iage]+ItoR+ItoS
@@ -980,16 +980,9 @@ for (ismooth in 4:30){
   }
 points(dfR$bylogR, col = "red")
 lines(smooth.spline(dfR$bylogR,df=14))
-# Plot the UB and LB for the UK R estimates, have added a line commented out
-# where you can plot your estimate for the R value - add your own data frame
-# change date and R to what you called the columns - you probably have to have
-# the same number of values corresponding to the same time frame - you may
-# also want the range for England rather than the UK. Remove these lines they
-# are for your benefit Graeme. You probably wnat to move this plot until after
 
 
-
-#Plot Regional R data vs Government  spdf is spline smoothing factor, lospan for loess
+# Plot Regional R data vs Government  spdf is spline smoothing factor, lospan for loess
 
 #  various options to silence pdf writing
 pdfpo=TRUE
@@ -1536,7 +1529,7 @@ vacdat %>% filter( "2020/10/1"< date & date < endplot) %>%
 predtime = 28
 #  For loop over time, predcasedat using R numbers
 predcasedat<-ILI[lengthofdata,(1:20)]
-predcasedat[1,(2:20)]<-casedat[lengthofdata,(2:20)]*1.05 #  Growth rate by age group 
+predcasedat[1,(2:20)]<-casedat[lengthofdata,(2:20)]*1.05 #  Growth rate by age group
 predcasedat[1,1]=enddate
 ipred=1
 for (iday in ((lengthofdata+1):(lengthofdata+predtime))){
@@ -1557,7 +1550,7 @@ for (iday in ((lengthofdata+1):(lengthofdata+predtime))){
 
 
     # ILI will go to SA/RI and REC   Vaccination frozen on last day, not predicted
-    ItoS = as.numeric(newILI[iday,iage] * pItoS[iage-1] * (1.0-vacdat[length(vacdat),iage]*0.8) ) *ILIToSARI 
+    ItoS = as.numeric(newILI[iday,iage] * pItoS[iage-1] * (1.0-vacdat[length(vacdat),iage]*0.8) ) *ILIToSARI
   #  ItoS = as.numeric(newILI[iday,iage] *  pItoS[iage-1])     *ILIToSARI
     ItoR = as.numeric(newILI[iday,iage] *(1.0-pItoS[iage-1])) *ILIToRecovery
     newSARI[(iday:xday),iage]=newSARI[(iday:xday),iage]+ItoS
@@ -1590,7 +1583,7 @@ for (iday in ((lengthofdata+1):(lengthofdata+predtime))){
   CRIT[iday,agerange]=CRIT[iday,agerange]+newCRIT[iday,agerange]-oldCRIT[iday,agerange]+CRIT[(iday-1),agerange]
   CRITREC[iday,agerange]=CRITREC[iday,agerange]+newCRITREC[iday,agerange]-oldCRITREC[iday,agerange]+CRITREC[(iday-1),agerange]
 #
-##  Finally, estimate cases for tomorrow.  This uses an R value calculated above, but for CrystalCast purposes from 
+##  Finally, estimate cases for tomorrow.  This uses an R value calculated above, but for CrystalCast purposes from
 ##  we can use MLP Rx.x as an input here
     predcasedat[(ipred+1),(2:20)]<-predcasedat[ipred,(2:20)]*exp((R_England_BestGuess-1.0)/genTime)
     predcasedat[ipred+1,1]<-startdate+iday
