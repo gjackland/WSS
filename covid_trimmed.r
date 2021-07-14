@@ -1515,13 +1515,13 @@ ggplot(CFR) +
 CFR %>% filter( "2020/10/1"< date & date < endplot) %>%
   pivot_longer(!date,names_to = "agegroup", values_to="DeathRate") %>%
   ggplot(aes(x=date, y=DeathRate, colour=agegroup)) +
-  coord_cartesian(ylim=c(0.0,0.4))+ geom_smooth(span=0.3) +
+  coord_cartesian(ylim=c(0.0,0.4))+ geom_smooth(formula= y ~ x, method = "loess", span=0.3) +
   guides(color = "none") + facet_wrap(vars(agegroup))
 }
 vacdat %>% filter( "2020/10/1"< date & date < endplot) %>%
   pivot_longer(!date,names_to = "agegroup", values_to="Vaccinations") %>%
   ggplot(aes(x=date, y=Vaccinations, colour=agegroup)) +
-  coord_cartesian(ylim=c(0.0,1.0))+ geom_smooth(span=0.2) +
+  coord_cartesian(ylim=c(0.0,1.0))+ geom_smooth(formula= y ~ x, method = "loess", span=0.2) +
   guides(color = "none") + facet_wrap(vars(agegroup))
 ################################################################
 ###  Finally, Use all this to make predictions
