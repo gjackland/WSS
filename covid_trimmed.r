@@ -6,10 +6,9 @@
 #                James A Ackland, The University of Cambridge
 #                David J Wallace.
 
-#### Header ####
-if(interactive()){
 # Remove existing variables
-rm(list = ls())
+if(interactive()){
+  rm(list = ls())
 }
 
 # Read packages used by the script
@@ -58,6 +57,10 @@ covidsimAge<-data.frame(
 "Deatherror"=c(0.32060231, 0.17841065, 0.05670156, 0.02800124, 0.01342003, 0.01179716, 0.01460613, 0.01983603, 0.02779927, 0.08124622, 0.09198597,
    0.15295026, 0.22286942, 1.13541013, 1.12529118, 1.91515160, 1.97455542, 2.15335157, 2.23153492 )
   )
+#Admissions to April 30 0-5 839 6-17 831 18-65 42019 65-84 42640 85+ 20063
+# https://www.england.nhs.uk/statistics/statistical-work-areas/covid-19-hospital-activity/
+
+
 # Deatherror from colSums(deathdat[2:20])/colSums(casedat[2:20])/(colSums(DEATH[2:20]/colSums(newMILD[2:20]+newILI[2:20])))
 # IHR from Knock SM S9  CHR from Knock S8
 covidsimAge$Prop_Mild_ByAge= 1.0 - (covidsimAge$Prop_Critical_ByAge+covidsimAge$Prop_ILI_ByAge+covidsimAge$Prop_SARI_ByAge)
@@ -608,7 +611,6 @@ rm(Xmasav,Xmasgrad,weeks,i,j,indexday)
 # Set false positive adjustment at 0.004, extrapolate tests if the last few days are missing
 comdat$fpCases <- comdat$allCases-0.004*as.integer(comdat$tests)
 
-
 plot(comdat$inputCases,x=comdat$date,xlab="Date",ylab="Cases")
 lines(comdat$allCases,x=comdat$date, col="green",lwd=2)
 lines(comdat$fpCases, x=comdat$date,col="red",lwd=2)
@@ -644,8 +646,8 @@ logmean=log(6.0)
 SARIToDeath=dlnorm(1:cdflength, logmean,  logmean/8.0)
 logmean=log(4.0)
 SARIToCritical=dlnorm(1:cdflength, logmean,  logmean/2.0)
-logmean=log(12.5) # legman time spent on ICU, 7.5 days from Faes, note mean!=logmean
-CriticalToCritRecov=dlnorm(1:cdflength, logmean,  logmean/4.0)
+logmean=log(12.0) # legman time spent on ICU, 7.5 days from Faes, note mean!=logmean
+CriticalToCritRecov=dlnorm(1:cdflength, logmean,  logmean/2.0)
 CriticalToDeath=dlnorm(1:cdflength, logmean,  logmean/4.0)
 logmean=log(8.0) #  Stay in hospital post ICU - needs evidence
 CritRecovToRecov=dlnorm(1:cdflength, logmean,  logmean/4.0)
@@ -711,19 +713,22 @@ CRIT[1,(2:ncol(CRIT))]=casedat[1,(2:ncol(casedat))]*covidsimAge$Prop_Critical_By
 # Nobody changes age band.  Vectorize over distributions
 
 #Age dependent transition probabilities a->ILI b->SARI c->Death
+# apow+bpow+cpow=1 gives a fit to death data, not accounting for variant & vaccination effect
+# bpow/bfac conditions the hospital admissions by age Distribution is Approx U65=65-85=2 * 85+
 apow = 0.1
-bpow = 0.4
+bpow = 0.45
 cpow = 1.0-apow-bpow
 afac=1.0
-bfac=1.0
-cfac=1.0
+bfac=1.4
+
+cfac=1.0/afac/bfac
 for (iday in (2:lengthofdata)){
   pTtoI<-afac*RawCFR^apow
   pItoS<-bfac*RawCFR^bpow*sqrt(comdat$lethality[iday])
   pStoD<-cfac*RawCFR^cpow*sqrt(comdat$lethality[iday])
 #  Entry to ventilation still from covidsim
 pStoC= covidsimAge$Prop_Critical_ByAge /
-  ( covidsimAge$Prop_Critical_ByAge + covidsimAge$Prop_SARI_ByAge )*0.35
+  ( covidsimAge$Prop_Critical_ByAge + covidsimAge$Prop_SARI_ByAge )*0.35*comdat$lethality[iday]
 # All routes to death are the same, vary by age
 pCtoD <- pStoD
 pCRtoD <- pStoD
@@ -760,9 +765,9 @@ pStoD <- pStoD - pStoC*(pCtoD+(1-pCtoD)*pCRtoD)
     # All todays new MILDs will all leave to REC across distribution
     # multiple by vaccination and it CFR reduction
     # ILI will go to SA/RI and REC
-#    ItoS = as.numeric(newILI[iday,iage] * pItoS[iage-1] * (1.0-vacdat[iage,iday]*0.5) ) *ILIToSARI
+    ItoS = as.numeric(newILI[iday,iage] * pItoS[iage-1] * (1.0-vacdat[iday,iage]*0.5) ) *ILIToSARI
 # Replace with vaccine effect
-    ItoS = as.numeric(newILI[iday,iage] * pItoS[iage-1])  *ILIToSARI
+#    ItoS = as.numeric(newILI[iday,iage] * pItoS[iage-1])  *ILIToSARI
     ItoR = as.numeric(newILI[iday,iage] *(1.0-pItoS[iage-1])) *ILIToRecovery
     newSARI[(iday:xday),iage]=newSARI[(iday:xday),iage]+ItoS
     oldILI[(iday:xday),iage]=oldILI[(iday:xday),iage]+ItoR+ItoS
@@ -840,6 +845,7 @@ rat[rat==-Inf] <- 1.0
 startplot <- rat$date[200]
 endplot <- rat$date[327]
 
+
 if(interactive()){
   plot(smooth.spline(rat$Scotland[startplot <= rat$date & rat$date <= endplot],df=6)$y,
        x=rat$date[startplot <= rat$date & rat$date <= endplot],
@@ -856,6 +862,7 @@ if(interactive()){
     ggplot(aes(x=date, y=R, colour=Region)) +
     coord_cartesian(ylim=c(0.5,1.9))+ geom_smooth(formula= y ~ x, method = "loess", span=0.5) +
     guides(color = "none") + facet_wrap(vars(Region))
+
 
 }
 
@@ -972,19 +979,12 @@ for (ismooth in 4:30){
   }
 points(dfR$bylogR, col = "red")
 lines(smooth.spline(dfR$bylogR,df=14))
-# Plot the UB and LB for the UK R estimates, have added a line commented out
-# where you can plot your estimate for the R value - add your own data frame
-# change date and R to what you called the columns - you probably have to have
-# the same number of values corresponding to the same time frame - you may
-# also want the range for England rather than the UK. Remove these lines they
-# are for your benefit Graeme. You probably wnat to move this plot until after
 
 
-
-#Plot Regional R data vs Government  spdf is spline smoothing factor, lospan for loess
+# Plot Regional R data vs Government  spdf is spline smoothing factor, lospan for loess
 
 #  various options to silence pdf writing
-pdfpo=FALSE
+pdfpo=TRUE
 
 if(pdfpo){
 
@@ -1221,7 +1221,7 @@ outputJSON(myt0 = t0,
 )
 
 #####  Figures and analysis for https://www.medrxiv.org/content/10.1101/2021.04.14.21255385v1
-medrxiv=TRUE
+medrxiv=FALSE
 if(medrxiv){
 ####  From here on we're reproducing figures from https://www.medrxiv.org/content/10.1101/2021.04.14.21255385v1
 ##### Fig 1. - Heatmaps ####
@@ -1312,11 +1312,17 @@ plot(regdeaths$`North East`*55,x=regdeaths$date)
 lines(reglnpredict$`North East`,x=reglnpredict$date)
 plot(regdeaths$`North West`*55,x=regdeaths$date)
 lines(y=reglnpredict$`North West`,x=reglnpredict$date)
+plot(regdeaths$`South West`*55,x=regdeaths$date)
 lines(reglnpredict$`South West`,x=reglnpredict$date)
+plot(regdeaths$`South East`*55,x=regdeaths$date)
 lines(reglnpredict$`South East`,x=reglnpredict$date)
+plot(regdeaths$`East Midlands`*55,x=regdeaths$date)
 lines(reglnpredict$`East Midlands` ,x=reglnpredict$date)
+plot(regdeaths$`East of England`*55,x=regdeaths$date)
 lines(reglnpredict$`East of England`,x=reglnpredict$date)
+plot(regdeaths$`West Midlands`*55,x=regdeaths$date)
 lines(reglnpredict$`West Midlands`,x=reglnpredict$date)
+plot(regdeaths$`Yorkshire and The Humber`*55,x=regdeaths$date)
 lines(reglnpredict$`Yorkshire and The Humber`,x=reglnpredict$date)
 
 for (area in 2:length(regcases)){
@@ -1514,7 +1520,7 @@ CFR %>% filter( "2020/10/1"< date & date < endplot) %>%
 vacdat %>% filter( "2020/10/1"< date & date < endplot) %>%
   pivot_longer(!date,names_to = "agegroup", values_to="Vaccinations") %>%
   ggplot(aes(x=date, y=Vaccinations, colour=agegroup)) +
-  coord_cartesian(ylim=c(0.0,100.0))+ geom_smooth(formula= y ~ x, method = "loess", span=0.2) +
+  coord_cartesian(ylim=c(0.0,1.0))+ geom_smooth(formula= y ~ x, method = "loess", span=0.2) +
   guides(color = "none") + facet_wrap(vars(agegroup))
 ################################################################
 ###  Finally, Use all this to make predictions
@@ -1523,6 +1529,7 @@ predtime = 28
 #  For loop over time, predcasedat using R numbers
 predcasedat<-ILI[lengthofdata,(1:20)]
 predcasedat[1,(2:20)]<-casedat[lengthofdata,(2:20)]*1.05 #  Growth rate by age group
+predcasedat[1,1]=enddate
 ipred=1
 for (iday in ((lengthofdata+1):(lengthofdata+predtime))){
   #  Proportions become variant dependent.  ILI is case driven, so extra infectivity is automatic
@@ -1530,8 +1537,8 @@ for (iday in ((lengthofdata+1):(lengthofdata+predtime))){
   #  Need to increase CFR without exceeding 1.  Note inverse lethality isnt a simple % as CFR cant be >1
   #  Will have negative people  trouble if CFR>1
 
-  newMILD[iday,agerange]=predcasedat[1,agerange]*(1.0-pTtoI)+newMILD[iday,agerange]
-  newILI[iday,agerange]=predcasedat[1,agerange]*  pTtoI    +newILI[iday,agerange]
+  newMILD[iday,agerange]=predcasedat[ipred,agerange]*(1.0-pTtoI)+newMILD[iday,agerange]
+  newILI[iday,agerange]=predcasedat[ipred,agerange]*  pTtoI    +newILI[iday,agerange]
 
 
   #  vectorize
@@ -1541,8 +1548,9 @@ for (iday in ((lengthofdata+1):(lengthofdata+predtime))){
     # All todays new MILDs will all leave to REC across distribution
 
 
-    # ILI will go to SA/RI and REC
-    ItoS = as.numeric(newILI[iday,iage] *  pItoS[iage-1])     *ILIToSARI
+    # ILI will go to SA/RI and REC   Vaccination frozen on last day, not predicted
+    ItoS = as.numeric(newILI[iday,iage] * pItoS[iage-1] * (1.0-vacdat[length(vacdat),iage]*0.8) ) *ILIToSARI
+  #  ItoS = as.numeric(newILI[iday,iage] *  pItoS[iage-1])     *ILIToSARI
     ItoR = as.numeric(newILI[iday,iage] *(1.0-pItoS[iage-1])) *ILIToRecovery
     newSARI[(iday:xday),iage]=newSARI[(iday:xday),iage]+ItoS
     oldILI[(iday:xday),iage]=oldILI[(iday:xday),iage]+ItoR+ItoS
@@ -1574,9 +1582,10 @@ for (iday in ((lengthofdata+1):(lengthofdata+predtime))){
   CRIT[iday,agerange]=CRIT[iday,agerange]+newCRIT[iday,agerange]-oldCRIT[iday,agerange]+CRIT[(iday-1),agerange]
   CRITREC[iday,agerange]=CRITREC[iday,agerange]+newCRITREC[iday,agerange]-oldCRITREC[iday,agerange]+CRITREC[(iday-1),agerange]
 #
-##  Finally, estimate cases for tomorrow
-
-    predcasedat[(ipred+1),(2:20)]=predcasedat[ipred,(2:20)]*1.05
+##  Finally, estimate cases for tomorrow.  This uses an R value calculated above, but for CrystalCast purposes from
+##  we can use MLP Rx.x as an input here
+    predcasedat[(ipred+1),(2:20)]<-predcasedat[ipred,(2:20)]*exp((R_England_BestGuess-1.0)/genTime)
+    predcasedat[ipred+1,1]<-startdate+iday
     ipred=ipred+1
 # End of compartment section
 }
@@ -1590,10 +1599,14 @@ plot(HospitalData$newAdmissions)
 lines(rowSums(newSARI[2:20]),col="blue")
 plot(HospitalData$hospitalCases)
 lines(rowSums(SARI[2:20]+CRIT[2:20]+CRITREC[2:20]))
-
+plot(rowSums(casedat[2:20]))
+lines(rowSums(newILI[2:20]))
+lines(rowSums(newMILD[2:20]))
+lines(rowSums(newMILD[2:20]+newILI[2:20]),col="red")
 
 # This needs to be the last routine called for the UI, by default it returns
 # success (0), if there is no success setStatus() should be called. By default
 # it will return -1 but you can set a value setStatus(1). Any non-zero value
 # will indicate a problem.
-returnStatus()
+quit(status=returnStatus())
+
