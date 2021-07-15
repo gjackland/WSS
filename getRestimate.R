@@ -1,6 +1,10 @@
 #!/usr/bin/env Rscript
 #
 # Code to get the UK reproductive number (R) estimate.
+# Data is made available under an Open Government Licence.
+# For more details see:
+#
+# http://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/
 #
 library(tibble, warn.conflicts = FALSE, quietly = TRUE)
 library(readr, warn.conflicts = FALSE, quietly = TRUE)
