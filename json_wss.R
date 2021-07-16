@@ -47,7 +47,7 @@ library(jsonlite)
 getInput <- function(filename)
 {
     if(file.exists(filename)){
-        jsonin <- read_json(filename) 
+        jsonin <- read_json(filename)
         return(jsonin)
     }else{
         warning("File: ",filename," not found.")
@@ -243,4 +243,30 @@ outputJSON <- function(myt0,
          toJSON(myobject,pretty = TRUE,auto_unbox = TRUE, na ="null")
     }
 
+}
+
+# Need to let the web interface know that the simulation has completed successfully.
+# 0 - for success, any other number for a fail.
+
+# Default is success
+Status <- 0
+
+# Function to set the status - assume it sets it to fail
+setStatus <- function(stat=1){
+    Status <<- stat
+}
+
+# Return the status
+# A the end of the R code where this is used add the line:
+#
+# quit(status=returnStatus())
+#
+# If you call just returnStatus() the program will exit with:
+#
+# [1] 0
+#
+# which is not what you want.
+
+returnStatus <- function(){
+    return(Status)
 }
