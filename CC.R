@@ -63,5 +63,8 @@ newrow <- list(group, model, scenario, modeltype, version, day(today),
                NA, NA, NA, NA, NA, NA, NA, NA
                )
 
+# Add the new row
+CC <- rbind(CC, newrow)
+
 # Write to excel
 write.xlsx(CC, file = "Data/WSS_CC.xlsx", sheetName = "WSS", row.names = FALSE)
