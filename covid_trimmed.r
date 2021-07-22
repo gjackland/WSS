@@ -126,7 +126,7 @@ baseurl <- "https://api.coronavirus.data.gov.uk/v2/data?"
 # Start and end date - the data to collect data from
 startdate <- as.Date("2020/07/25") #as.Date("2020/02/25") #
 # Lose only the last day of data - use tail correction for reporting delay
-enddate <-  Sys.Date()-3
+enddate <-  Sys.Date()-5
 # Set the generation time
 genTime <- 5
 #  Dates for the plots
@@ -141,10 +141,15 @@ XMend <- XMstart+11
 lock1 <- as.integer(as.Date("2020/10/31")-startdate)
 unlock1 <- as.integer(as.Date("2020/12/02")-startdate)
 lock2 <- as.integer(as.Date("2021/01/06")-startdate)
-test_delay <- 7
+unlock2 <- as.integer(as.Date("2021/03/08")-startdate)
+unlock3 <- as.integer(as.Date("2021/04/12")-startdate)
+test_delay <- 12
 lock1 <- lock1+test_delay
 unlock1 <- unlock1+test_delay
 lock2 <- lock2+test_delay
+unlock2 <- unlock2+test_delay
+unlock3 <- unlock3+test_delay
+
 sagedelay <- 16 # Delay in producing R-number, for plots
 
 # Total cases, deaths, tests
@@ -924,7 +929,7 @@ dfR$weeklyR[length(dfR$weeklyR)-2]=1.0
 Govdat <- Rest[Rest$Date >= min(comdat$date) & Rest$Date <= max(comdat$date),]
 
 # Parameters for fitting splines and Loess
-nospl=4
+nospl=8
 spdf=12
 lospan=0.3
 
@@ -937,21 +942,26 @@ smoothweightRfp<-smooth.spline(dfR$fpR,df=spdf,w=sqrt(comdat$fpCases))
 smoothweightR$date<-comdat$date
 smoothweightRfp$date<-dfR$date
 smoothR<-smooth.spline(dfR$bylogR,df=14)
-smoothR98<-smooth.spline(dfR$bylogR[1:lock1],df=nospl)
-smoothR98$date<-dfR$date[1:lock1]
-smoothR130<-smooth.spline(dfR$bylogR[lock1:unlock1],df=nospl)
-smoothR130$date<-dfR$date[lock1:unlock1]
-smoothR164<-smooth.spline(dfR$bylogR[unlock1:lock2],df=nospl)
-smoothR164$x=smoothR164$x+unlock1
-smoothR164$date<-dfR$date[unlock1:lock2]
-smoothRend<-smooth.spline(dfR$bylogR[lock2:length(dfR$date)],df=nospl)
-smoothRend$x=smoothRend$x+lock2
-smoothRend$date<-dfR$date[lock2:length(dfR$gjaR)]
+smoothR1<-smooth.spline(dfR$bylogR[1:(lock1-1)],df=nospl)
+smoothR1$date<-dfR$date[1:lock1-1]
+smoothR2<-smooth.spline(dfR$bylogR[lock1:(unlock1-1)],df=nospl)
+smoothR2$x=smoothR2$x+lock1
+smoothR2$date<-dfR$date[lock1:unlock1-1]
+smoothR3<-smooth.spline(dfR$bylogR[unlock1:(lock2-1)],df=nospl)
+smoothR3$x=smoothR3$x+unlock1
+smoothR3$date<-dfR$date[unlock1:(lock2-1)]
+smoothR4<-smooth.spline(dfR$bylogR[lock2:(unlock2-1)],df=nospl)
+smoothR4$x=smoothR4$x+unlock2
+smoothR4$date<-dfR$date[lock2:(unlock2-1)]
+smoothRend<-smooth.spline(dfR$bylogR[unlock2:length(dfR$date)],df=nospl)
+smoothRend$x=smoothRend$x+unlock2
+smoothRend$date<-dfR$date[unlock2:length(dfR$gjaR)]
 dfR$piecewise<-dfR$gjaR
-for (i in 1:lock1){dfR$piecewise[i]=smoothR98$y[i]}
-for (i in (lock1+1):unlock1){dfR$piecewise[i]=smoothR130$y[i-lock1]}
-for (i in (unlock1+1):lock2){dfR$piecewise[i]=smoothR164$y[i-unlock1]}
-for (i in (lock2+1):length(dfR$date)){dfR$piecewise[i]=smoothRend$y[i-lock2]}
+dfR$piecewise[1:(lock1-1)]=smoothR1$y
+dfR$piecewise[lock1:(unlock1-1)]=smoothR2$y
+dfR$piecewise[unlock1:(lock2-1)]=smoothR3$y
+dfR$piecewise[lock2:(unlock2-1)]=smoothR4$y
+dfR$piecewise[unlock2:length(dfR$gjaR)]=smoothRend$y
 
 # Plot R estimate vs data and fits discontinuous at lockdown
 #  Have to move the Official R data back by 16 days !
@@ -981,8 +991,6 @@ for (ismooth in 4:30){
 #  lines(smooth.spline(dfR$bylogR,df=ismooth,w=sqrt(comdat$allCases)))
   lines(predict(loess(bylogR ~ x, data=dfR,span=(4.0/ismooth))),col='red')
   }
-points(dfR$bylogR, col = "red")
-lines(smooth.spline(dfR$bylogR,df=14))
 
 
 # Plot Regional R data vs Government  spdf is spline smoothing factor, lospan for loess
@@ -1223,9 +1231,17 @@ outputJSON(myt0 = t0,
            mycumSARI = cumsum(mySARI),
            myincDeath = rowSums(DEATH[2:20])
 )
+CrystalCast=TRUE
+if(CrystalCast){
+  "Edinburgh,WSS,Nowcast,Cases,v1" 
+  date() 
+  date() 
+  "All,Scotland,R" 
+  R_Scotland_BestGuess
+}
 
 #####  Figures and analysis for https://www.medrxiv.org/content/10.1101/2021.04.14.21255385v1
-medrxiv=FALSE
+medrxiv=TRUE
 if(medrxiv){
 ####  From here on we're reproducing figures from https://www.medrxiv.org/content/10.1101/2021.04.14.21255385v1
 ##### Fig 1. - Heatmaps ####
@@ -1529,6 +1545,7 @@ vacdat %>% filter( "2020/10/1"< date & date < endplot) %>%
 ################################################################
 ###  Finally, Use all this to make predictions
 ###Assume that R and lethality are constants
+if(compartment){
 predtime = 28
 
 #  For loop over time, predCASE using R numbers
@@ -1595,8 +1612,8 @@ for (iday in ((lengthofdata+1):(lengthofdata+predtime))){
     ipred=ipred+1
 # End of compartment section
 }
+}
 #Monitoring plots
-
 plot(HospitalData$newAdmissions)
 lines(rowSums(newSARI[2:20]),col="blue")
 plot(HospitalData$hospitalCases)
