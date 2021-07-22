@@ -19,6 +19,8 @@ ageband <-  "All"
 region <- "Scotland"
 valuetype <- "R"
 
+# If you need multiple repeated values you can use the rep command so
+# rep(value, number of repetitions), e.g. rep(group, length(SomeVector)).
 CC <- data.frame(
   Group = group,
   Model = model,
