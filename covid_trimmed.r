@@ -5,6 +5,12 @@
 # Copyright 2021 Graeme J Ackland, Mario Antonioletti, The University of Edinburgh,
 #                James A Ackland, The University of Cambridge
 #                David J Wallace.
+#
+# Data used in making calculations is made available under an Open Government
+# Licence. For more details see:
+#
+# http://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/
+#
 
 # Remove existing variables
 if(interactive()){
@@ -631,7 +637,7 @@ CFR_All_ByAge=colSums(deathdat[2:20])/colSums(casedat[2:20])
 
 compartment=TRUE
 if(compartment){
-#  CASE is the input cases which get WSS'ed.  CASE=casedat produces estimates for UK.  
+#  CASE is the input cases which get WSS'ed.  CASE=casedat produces estimates for UK.
   CASE=casedat
   cdflength =50
 #  Time dependences of transitions - assumed age independent
@@ -777,7 +783,7 @@ pStoD <- pStoD - pStoC*(pCtoD+(1-pCtoD)*pCRtoD)
     newSARI[(iday:xday),iage]=newSARI[(iday:xday),iage]+ItoS
     oldILI[(iday:xday),iage]=oldILI[(iday:xday),iage]+ItoR+ItoS
     # SARI will go to REC, DEATH, CRIT
-    #  Assume vaccination reduced StoD/StoC death rate by 50% 
+    #  Assume vaccination reduced StoD/StoC death rate by 50%
     StoC = as.numeric(newSARI[iday,iage] *pStoC[iage-1] * (1.0-vacdat[iday,iage]*0.0) )*SARIToCritical
     StoD = as.numeric(newSARI[iday,iage] *pStoD[iage-1] * (1.0-vacdat[iday,iage]*0.0) )*SARIToDeath
     StoR = as.numeric(newSARI[iday,iage] *(1.0-pStoC[iage-1]-pStoD[iage-1]) )*SARIToRecovery
@@ -1233,10 +1239,10 @@ outputJSON(myt0 = t0,
 )
 CrystalCast=TRUE
 if(CrystalCast){
-  "Edinburgh,WSS,Nowcast,Cases,v1" 
-  date() 
-  date() 
-  "All,Scotland,R" 
+  "Edinburgh,WSS,Nowcast,Cases,v1"
+  date()
+  date()
+  "All,Scotland,R"
   R_Scotland_BestGuess
 }
 
@@ -1550,7 +1556,7 @@ predtime = 28
 
 #  For loop over time, predCASE using R numbers
 predCASE<-ILI[lengthofdata,(1:20)]
-predCASE[1,(2:20)]<-CASE[lengthofdata,(2:20)] #  Growth rate by age group 
+predCASE[1,(2:20)]<-CASE[lengthofdata,(2:20)] #  Growth rate by age group
 predCASE[1,1]=enddate
 
 ipred=1
