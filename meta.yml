@@ -1,0 +1,16 @@
+demo: # Replace with a *short* name that can identify your model in code/URLs
+  name: WSS # Name of your model, to be displayed in the UI
+  origin: University of Edinburgh / University of Cambridge # Name of the organisation responsible for the model, to be displayed in the UI
+  isProductionReady: false
+  imageURL: docker.pkg.github.com/gjackland/wss/wss-connector:publish-image # URL of your published Docker container
+  metaURLs: # (Optional) URLs with more data about the model, to be displayed in the UI
+    code: https://github.com/gjackland/WSS
+    paper: https://www.medrxiv.org/content/10.1101/2021.04.14.21255385v1
+    website: 
+  description: |
+    Weight scale and shift code for covid epidemic modelling
+  supportedParameters: # Delete parameters (as supplied in the input schema) that your model conenctor does not support
+  supportedRegions: # List regions and subregions (as described in the input schema) that your model connector supports
+    GB:
+      - GB-ENG
+      - GB-SCT
