@@ -258,6 +258,7 @@ vacdat <- vacdat %>%
   filter(datetmp >=vacdate  & datetmp <= enddate) %>%
   arrange(datetmp)
 
+# Add vaccination data for the under 24s.
 vacdat$`18_24`<-NULL
 vacdat<-cbind('20_24'=0.0,vacdat)
 vacdat<-cbind('15_19'=0.0,vacdat)
@@ -456,7 +457,7 @@ coltypes <- cols(
   PositivePillar2 = col_double()
 )
 
-# Get the data
+# Get the Scottish daily cases by health board data
 scotdailycases = read_csv(dailycasesurl, col_types = coltypes)
 
 # Make the NHS boards the columns - DailyPositives are the values
@@ -492,7 +493,7 @@ coltypes <-  cols(
   newAdmissions = col_double()
 )
 
-# Get the data
+# Get the hospital data
 d <- read_csv(HospitalUrl, col_types = coltypes)
 
 HospitalData <- tibble()
@@ -509,12 +510,14 @@ rm(ukcasedat,scotdailycases,scotdailycasesbyboard,d,HospitalUrl,deathurl,casesur
 # Plot all cases against date: Used for the paper, uncomment to recreate
 #comdat %>% ggplot(aes(x=date,y=allCases)) + geom_line() +
 #  xlab("Date") + ylab("All cases")
-
-comdat %>% filter(enddate-30 <= date & date <= enddate) %>%
+if(interactive()){
+  comdat %>%
+  filter(enddate-30 <= date & date <= enddate) %>%
   mutate(rollmean = zoo::rollmean(allCases, k = 7, fill = NA)) %>%  # 7-day average
   ggplot(aes(x=date)) + geom_line(aes(y=allCases)) + geom_point(aes(y=allCases)) +
   geom_line(aes(y=rollmean), colour="pink",na.rm = TRUE, size=2, alpha=0.5) +
   xlab("Date") + ylab("All cases")
+}
 
 # Tail correction.  Assumes we read in all but the last row
 if(enddate == (Sys.Date()-1)){
