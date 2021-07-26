@@ -11,3 +11,5 @@ data/data.json
 data/uk-data/
 input-schema.json
 output-schema.json
+.DS_Store
+data/WSS_CC.xlsx
