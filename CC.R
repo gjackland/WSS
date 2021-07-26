@@ -19,6 +19,9 @@ ageband <-  "All"
 region <- "Scotland"
 valuetype <- "R"
 
+# If you need multiple repeated values you can use the rep command so
+# rep(value, number of repetitions), e.g. rep(group, length(SomeVector)).
+
 CC <- data.frame(
   Group = group,
   Model = model,
@@ -57,7 +60,15 @@ CC <- data.frame(
 )
 
 # Need to create a list to add more rows to the CrystalCast df
-newrow <- list()
+newrow <- list(group, model, scenario, modeltype, version, day(today),
+               month(today), year(today), NA, NA, NA, ageband, region,
+               valuetype, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
+               NA, NA, NA, NA, NA, NA, NA, NA
+               )
+
+# Add the new row
+CC <- rbind(CC, newrow)
+
 
 # Write to excel
 write.xlsx(CC, file = "Data/WSS_CC.xlsx", sheetName = "WSS", row.names = FALSE)
