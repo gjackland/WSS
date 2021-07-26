@@ -1628,6 +1628,8 @@ lines(rowSums(DEATH[2:20]),col="blue")
 # This needs to be the last routine called for the UI, by default it returns
 # success (0), if there is no success setStatus() should be called. By default
 # it will return -1 but you can set a value setStatus(1). Any non-zero value
-# will indicate a problem.
+# will indicate a problem.  For interactive work "quit" can end Rstudio session altogether
+if(! interactive()){
 quit(status=returnStatus())
+}
 
