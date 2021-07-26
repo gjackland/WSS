@@ -37,7 +37,7 @@ options(scipen = 999)
 # Will need to invert this.  Recent versions include a "Stepdown" state which seems to entail dying in CRITREC
 #  https://www.imperial.ac.uk/mrc-global-infectious-disease-analysis/covid-19/report-41-rtm/
 # PropSARI taken from Knock et al to increase smoothly with age
-#Over 80 adjusted to fit national death reports
+# Over 80 adjusted to fit national death reports
 # CFR_SARI cut c.f covidsim for intermediate ages because more serious cases go via CRIT
 # UK population by age https://www.ons.gov.uk/peoplepopulationandcommunity/populationandmigration/populationestimates/datasets/populationestimatesforukenglandandwalesscotlandandnorthernireland
 popdat<-c(3782330,4147413,4045114,3683680,4133158,4476630,4521975,4404100,4091543,4303967,4616017,4510851,3855818,3355381,3363906,2403759,1726223,1049866,609503)
@@ -64,7 +64,7 @@ covidsimAge<-data.frame(
 "Deatherror"=c(0.32060231, 0.17841065, 0.05670156, 0.02800124, 0.01342003, 0.01179716, 0.01460613, 0.01983603, 0.02779927, 0.08124622, 0.09198597,
    0.15295026, 0.22286942, 1.13541013, 1.12529118, 1.91515160, 1.97455542, 2.15335157, 2.23153492 )
   )
-#Admissions to April 30 0-5 839 6-17 831 18-65 42019 65-84 42640 85+ 20063
+# Admissions to April 30 0-5 839 6-17 831 18-65 42019 65-84 42640 85+ 20063
 # https://www.england.nhs.uk/statistics/statistical-work-areas/covid-19-hospital-activity/
 
 
@@ -126,11 +126,11 @@ Knock<-t(data.frame(
 )
 
 ####, Read data ####
-# Base URL to get the data
+# Base URL to get the UK government data
 baseurl <- "https://api.coronavirus.data.gov.uk/v2/data?"
 
 # Start and end date - the data to collect data from
-startdate <- as.Date("2020/07/25") #as.Date("2020/02/25") #
+startdate <- as.Date("2020/07/25") #as.Date("2020/02/25")
 # Lose only the last day of data - use tail correction for reporting delay
 enddate <-  Sys.Date()-5
 # Set the generation time
@@ -167,12 +167,13 @@ casesurl <- paste0(baseurl,
                    "metric=newPCRTestsByPublishDate&",
                    "metric=newPeopleVaccinatedFirstDoseByVaccinationDate&",
                    "format=csv")
+
 # Explicitly define the types for the columns
 coltypes <- cols(col_character(), col_character(),col_character(),
                  col_date(format="%Y-%m-%d"), col_integer(),
                  col_integer(),  col_integer(), col_integer())
 
-# Read the data
+# Read the cases, deaths and tests data
 comdat <-  read_csv(file = casesurl, col_types = coltypes)
 
 # Transform the data
@@ -196,10 +197,11 @@ ukcaseurl <- paste0(baseurl,
 # Explicitly define the types for the columns
 coltypes <- cols(col_character(), col_character(),col_character(),
                  col_date(format="%Y-%m-%d"), col_integer())
-# Read the data
+
+# Read the case data
 ukcasedat <-  read_csv(file = ukcaseurl, col_types = coltypes)
 
-# Transform the data
+# Transform the case data
 ukcasedat <- ukcasedat %>%  select(date = date, tests = newPCRTestsByPublishDate) %>%
   filter(date >= startdate &
            date <= enddate ) %>%
@@ -218,7 +220,7 @@ coltypes <- cols(col_character(), col_character(),col_character(),
                  col_date(format="%Y-%m-%d"), col_character(),
                  col_integer(), col_integer(), col_number())
 
-# read in the data
+# read in the cases by age data
 casedat <-  read_csv(file = ageurl, col_types = coltypes)
 
 
@@ -246,7 +248,7 @@ vacurl <- paste0(baseurl,
 coltypes <- cols(areaCode=col_character(), areaName=col_character(),areaType=col_character(),
                  date=col_date(format="%Y-%m-%d"), age=col_character())
 
-# Read in the data.
+# Read in the vaccination data.
 vacdat <-  read_csv(file = vacurl, col_types = coltypes)
 
 # Transform the data to get vacdat compatible with casedat (must be a better way!).
@@ -255,6 +257,7 @@ vacdat <- vacdat %>%
   pivot_wider(id_cols = datetmp, names_from = age, values_from = values) %>%
   filter(datetmp >=vacdate  & datetmp <= enddate) %>%
   arrange(datetmp)
+
 vacdat$`18_24`<-NULL
 vacdat<-cbind('20_24'=0.0,vacdat)
 vacdat<-cbind('15_19'=0.0,vacdat)
@@ -270,8 +273,8 @@ rm(tmp)
 
 # convert to fraction
 vacdat[2:length(vacdat)]<-vacdat[2:length(vacdat)]/100
-# deaths by age
 
+# deaths by age
 deathurl <- paste0(baseurl,
                    "areaType=nation&",
                    "areaCode=E92000001&",
@@ -282,7 +285,8 @@ deathurl <- paste0(baseurl,
 coltypes <- cols(areaCode=col_character(), areaName=col_character(),areaType=col_character(),
                  date=col_date(format="%Y-%m-%d"),age=col_character(),
                  deaths=col_number(), rollingSum=col_number(), rollingRate=col_number())
-# Read the data
+
+# Read the deaths by age data
 deathdat <-  read_csv(file = deathurl, col_types = coltypes)
 
 # Map the ages column to become column headings for the different age groups
@@ -314,7 +318,8 @@ coltypes <-  cols(
 )
 #  Trying and failing to get data from PHS
 #scotdeaths<- read.csv(file="https://www.opendata.nhs.scot/api/3/action/datastore_search?resource_id=9393bd66-5012-4f01-9bc5-e7a10accacf4")
-# Read in the data
+
+# Read in the Scottish deaths and case data
 scotdat <-  read_csv(file = scoturl, col_types = coltypes)
 
 # Transform the data
@@ -328,7 +333,7 @@ scotdat <- scotdat %>%  select(date,
   arrange(date)
 
 
-# Regional data
+# Regional data for deaths and cases by specimen date
 regurl <- paste0(baseurl,
                  "areaType=region&",
                  "metric=newDeaths28DaysByDeathDate&",
@@ -345,7 +350,7 @@ coltypes <-  cols(
   newDeaths28DaysByDeathDate = col_number()
 )
 
-# Read in the data
+# Read in the regional case and death data
 regdat <-  read_csv(file = regurl, col_types = coltypes)
 
 # Transform the data
@@ -382,7 +387,7 @@ coltypes <- cols(
   rollingRate = col_number()
 )
 
-# Read in the data
+# Read in the regiona case and death data by age
 regagedat <-  read_csv(file = regurl2, col_types = coltypes)
 
 # Transform the data
@@ -390,8 +395,6 @@ regagedat <- regagedat %>%  select(date, areaName, age, cases) %>%
   filter(date >= startdate &
            date <= enddate ) %>%
   arrange(date)
-
-
 
 # Read in the UK government R estimate data from a csv file
 coltypes <- cols(
