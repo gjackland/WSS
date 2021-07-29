@@ -456,6 +456,9 @@ coltypes <- cols(
   PositivePillar1 = col_double(),
   PositivePillar2 = col_double()
 )
+#  Combination required to go from 9 to 7 English regions
+regcases$'NE and Yorks'<-regcases$`North East`+regcases$`Yorkshire and The Humber`
+regcases$Midlands<-regcases$`East Midlands`+regcases$`West Midlands`
 
 # Get the Scottish daily cases by health board data
 scotdailycases = read_csv(dailycasesurl, col_types = coltypes)
@@ -464,9 +467,7 @@ scotdailycases = read_csv(dailycasesurl, col_types = coltypes)
 scotdailycases %>% select(date=Date,board=HBName, cases=DailyPositive)  %>%
   pivot_wider(names_from = board, values_from = cases) %>%
   filter(date >= startdate & date <= enddate )         %>%
-  arrange(date) -> scotdailycasesbyboard
-
-# Join the scotdailycases with regcases by date
+  arrange(date) -> scotdailycasesbyboard # Join the scotdailycases with regcases by date
 regcases <- inner_join(regcases,scotdailycasesbyboard, by = c("date"="date"))
 
 #### Get tests for England pre-Sept by taking the post-Sept fraction of all tests that were in England (0.867), and set vaccines to zero
@@ -982,7 +983,7 @@ dfR$piecewise[unlock2:length(dfR$gjaR)]=smoothRend$y
 
 plot(smoothweightR$y,ylab="Regional R-number",xlab="Date",x=dfR$date)
 for (i in 8:17){
-  lines(smooth.spline(na.omit(dfR[i]),df=spdf)$y,col=i,x=dfR$date[!is.na(dfR[i])])
+  lines(smooth.spline(na.omit(dfR[i]),df=12)$y,col=i,x=dfR$date[!is.na(dfR[i])])
 }
 plot(dfR$piecewise,x=smoothweightR$date,ylab="R-number",xlab="",title("England"),ylim=c(0.6,1.4),xlim=plotdate,cex.lab=1.6, cex.axis=1.6, cex.main=1.6, cex.sub=1.6)
 lines(y=Rest$England_LowerBound,x=Rest$Date-sagedelay)
@@ -996,7 +997,7 @@ lines(predict(loess(bylogR ~ x, data=dfR,span=0.3,weight=sqrt(comdat$allCases)))
 lines(predict(loess(bylogR ~ x, data=dfR,span=0.3)),col='red',x=dfR$date)
 
 R_England_BestGuess<- 0.5*mean(tail(predict(loess(gjaR ~ x, data=dfR,span=0.3))+predict(loess(bylogR ~ x, data=dfR,span=0.2))))
-R_Scotland_BestGuess <-mean(tail(predict(loess(Scotland ~ as.numeric(date), data=rat,span=0.3))))
+R_Scotland_BestGuess <-mean(tail(predict(loess(Scotland ~ as.numeric(date), data=rat,span=0.3)))+tail(predict(loess(Scotland ~ as.numeric(date), data=rat,span=0.1))) )
 plot(smoothweightR$y,ylab="R-number",xlab="Day",ylim=c(0.5,1.6))
 #  Plot R continuous with many splines.
 for (ismooth in 4:30){
