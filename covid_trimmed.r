@@ -132,7 +132,7 @@ baseurl <- "https://api.coronavirus.data.gov.uk/v2/data?"
 # Start and end date - the data to collect data from
 startdate <- as.Date("2020/07/25") #as.Date("2020/02/25")
 # Lose only the last day of data - use tail correction for reporting delay
-enddate <-  Sys.Date()-5
+enddate <-  Sys.Date()-3
 # Set the generation time
 genTime <- 5
 #  Dates for the plots
@@ -456,9 +456,6 @@ coltypes <- cols(
   PositivePillar1 = col_double(),
   PositivePillar2 = col_double()
 )
-#  Combination required to go from 9 to 7 English regions
-regcases$'NE and Yorks'<-regcases$`North East`+regcases$`Yorkshire and The Humber`
-regcases$Midlands<-regcases$`East Midlands`+regcases$`West Midlands`
 
 # Get the Scottish daily cases by health board data
 scotdailycases = read_csv(dailycasesurl, col_types = coltypes)
@@ -624,6 +621,18 @@ for (iage in 2:ncol(casedat) ){
   }
 }
 rm(Xmasav,Xmasgrad,weeks,i,j,indexday)
+# Build CrystalCast agegroups
+xcastage <-casedat %>% select(`00_04`)
+xcastage$'05_14' <-casedat$`05_09`+casedat$`10_14`
+xcastage$'15_24' <-casedat$`15_19`+casedat$`20_24`
+xcastage$'25_44' <-casedat$`25_29`+casedat$`30_34`+casedat$`35_39`+casedat$`40_44`
+xcastage$'45_64' <-casedat$`45_49`+casedat$`50_54`+casedat$`55_59`+casedat$`60_64`
+xcastage$'65_74' <-casedat$`65_69`+casedat$`70_74`
+xcastage$'75+' <-casedat$`75_79`+casedat$`80_84`+casedat$`85_89`+casedat$`90+`
+
+#  Combination required to go from 9 to 7 English regions
+regcases$'NE and Yorks'<-regcases$`North East`+regcases$`Yorkshire and The Humber`
+regcases$Midlands<-regcases$`East Midlands`+regcases$`West Midlands`
 
 # Set false positive adjustment at 0.004, extrapolate tests if the last few days are missing
 comdat$fpCases <- comdat$allCases-0.004*as.integer(comdat$tests)
@@ -839,7 +848,8 @@ dfR <- data.frame(x=1.0:length(comdat$date),
   date=comdat$date, gjaR=ninit, rawR=ninit,  fpR=ninit,  weeklyR=ninit,  bylogR=ninit,
   p00=ninit,  p05=ninit,  p10=ninit,  p15=ninit,  p20=ninit,  p25=ninit,  p30=ninit,
   p35=ninit,  p40=ninit,  p45=ninit,  p50=ninit,  p55=ninit,  p60=ninit,  p65=ninit,
-  p70=ninit,  p75=ninit,  p80=ninit,  p85=ninit,  p90=ninit  )
+  p70=ninit,  p75=ninit,  p80=ninit,  p85=ninit,  p90=ninit, x05=ninit, x15=ninit,
+  x25=ninit, x45=ninit, x65=ninit, x75=ninit)
 # df#Ito: gjaR[i]<-(1+(comdat$allCases[i]-comdat$allCases[i-1])*2*genTime/(comdat$allCases[i]+comdat$allCases[i-1]))
 #  #Stratanovitch calculus
 # rawR averages cases over previous genTime days - assumes genTime is the same as infectious period
@@ -915,8 +925,15 @@ for(i in ((genTime+1):length(dfR$gjaR))    ){
   dfR$p75[i]=1+log(casedat$'75_79'[i]/casedat$'75_79'[i-1])*genTime
     dfR$p80[i]=1+log(casedat$'80_84'[i]/casedat$'80_84'[i-1])*genTime
    dfR$p85[i]=1+log(casedat$'85_89'[i]/casedat$'85_89'[i-1])*genTime
-    dfR$p90[i]=1+log(casedat$'90+'[i]/casedat$'90+'[i-1])*genTime
-}
+   dfR$p90[i]=1+log(casedat$'90+'[i]/casedat$'90+'[i-1])*genTime
+#   Same from CrystalCast age groupings   
+   dfR$x05[i]=1+log(xcastage$`05_14`[i]/xcastage$`05_14`[i-1])*genTime
+   dfR$x15[i]=1+log(xcastage$`15_24`[i]/xcastage$`15_24`[i-1])*genTime
+   dfR$x25[i]=1+log(xcastage$`25_44`[i]/xcastage$`25_44`[i-1])*genTime
+   dfR$x45[i]=1+log(xcastage$`45_64`[i]/xcastage$`45_64`[i-1])*genTime
+   dfR$x65[i]=1+log(xcastage$`65_74`[i]/xcastage$`65_74`[i-1])*genTime
+   dfR$x75[i]=1+log(xcastage$'75+'[i]/xcastage$'75+'[i-1])*genTime
+    }
 
 dfR[is.na(dfR)]=1.0
 dfR[dfR==Inf]=1.0
@@ -996,8 +1013,34 @@ lines(predict(loess(gjaR ~ x, data=dfR,span=0.3)),col='green',x=dfR$date)
 lines(predict(loess(bylogR ~ x, data=dfR,span=0.3,weight=sqrt(comdat$allCases))),col='red',x=dfR$date,lwd=2)
 lines(predict(loess(bylogR ~ x, data=dfR,span=0.3)),col='red',x=dfR$date)
 
-R_England_BestGuess<- 0.5*mean(tail(predict(loess(gjaR ~ x, data=dfR,span=0.3))+predict(loess(bylogR ~ x, data=dfR,span=0.2))))
-R_Scotland_BestGuess <-mean(tail(predict(loess(Scotland ~ as.numeric(date), data=rat,span=0.3)))+tail(predict(loess(Scotland ~ as.numeric(date), data=rat,span=0.1))) )
+filteredR <-append(
+  append(tail(predict(loess(bylogR ~ x, data=dfR,span=0.3))),
+         tail(predict(loess(bylogR ~ x, data=dfR,span=0.1))) ) , 
+  append(tail(predict(loess(bylogR ~ x, data=dfR,span=0.05))), 
+         tail(predict(loess(bylogR ~ x, data=dfR,span=0.5))))
+)
+R_England_BestGuess<- mean(filteredR)
+R_England_Quant <-unname(quantile(filteredR, probs=c(0.05,0.25,0.5,0.75,0.95)))
+
+filteredR <-append(
+  append(tail(predict(loess(Scotland ~ as.numeric(date), data=rat,span=0.3))),
+         tail(predict(loess(Scotland ~ as.numeric(date), data=rat,span=0.1))) ) , 
+  append(tail(predict(loess(Scotland ~ as.numeric(date), data=rat,span=0.05))), 
+         tail(predict(loess(Scotland ~ as.numeric(date), data=rat,span=0.5))))
+)
+R_Scotland_BestGuess <-mean(filteredR)
+R_Scotland_Quant <-unname(quantile(filteredR, probs=c(0.05,0.25,0.5,0.75,0.95)))
+
+filteredR <-append(
+  append(tail(predict(loess(x05 ~ as.numeric(date), data=dfR,span=0.3))),
+         tail(predict(loess(x05 ~ as.numeric(date), data=dfR,span=0.1))) ) , 
+  append(tail(predict(loess(x05 ~ as.numeric(date), data=dfR,span=0.05))), 
+         tail(predict(loess(x05 ~ as.numeric(date), data=dfR,span=0.5))))
+)
+Growth_05_BestGuess <- mean(filteredR)
+
+
+rm(filteredR)
 plot(smoothweightR$y,ylab="R-number",xlab="Day",ylim=c(0.5,1.6))
 #  Plot R continuous with many splines.
 for (ismooth in 4:30){
@@ -1009,7 +1052,7 @@ for (ismooth in 4:30){
 # Plot Regional R data vs Government  spdf is spline smoothing factor, lospan for loess
 
 #  various options to silence pdf writing
-pdfpo=TRUE
+pdfpo=FALSE
 
 if(pdfpo){
 
@@ -1626,6 +1669,9 @@ for (iday in ((lengthofdata+1):(lengthofdata+predtime))){
 # End of compartment section
 }
 }
+
+#CrystalCast output - use CC.R
+
 #Monitoring plots
 plot(HospitalData$newAdmissions)
 lines(rowSums(newSARI[2:20]),col="blue")
