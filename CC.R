@@ -37,7 +37,7 @@ CC <- data.frame(
   AgeBand = ageband,
   Geography = region,
   ValueType = valuetype,
-  Value = NA,
+  Value = R_Scotland_BestGuess,
   "Quantile 0.05" = NA,
   "Quantile 0.1" = NA,
   "Quantile 0.15" = NA,
@@ -72,3 +72,4 @@ CC <- rbind(CC, newrow)
 
 # Write to excel
 write.xlsx(CC, file = "Data/WSS_CC.xlsx", sheetName = "WSS", row.names = FALSE)
+
