@@ -6,6 +6,7 @@
 #
 # http://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/
 #
+
 library(tibble, warn.conflicts = FALSE, quietly = TRUE)
 library(readr, warn.conflicts = FALSE, quietly = TRUE)
 library(dplyr, warn.conflicts = FALSE, quietly = TRUE)
@@ -56,7 +57,7 @@ if (!file.exists(paste0("data/uk-data", file))) {
 
 r_est <- read_ods(paste0("data/uk-data/", file), sheet = "Table1_-_R",
                  skip = 8, na = ".")
-  
+
 # Rename the columns
 names(r_est) <- c("", "Date", "UK_LowerBound", "UK_UpperBound",
                  "England_LowerBound", "England_UpperBound",
