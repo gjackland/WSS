@@ -67,10 +67,10 @@ getInput <- function(filename)
 # http://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/
 #
 code2region <- data.frame(
-    W92000004 = 'GB-WLS',
-    S92000003 = 'GB-SCT',
-    E92000001 = 'GB-ENG',
-    N92000002 = 'GB-NIR',
+    W92000004 = "GB-WLS",
+    S92000003 = "GB-SCT",
+    E92000001 = "GB-ENG",
+    N92000002 = "GB-NIR",
     E40000003 = "London",
     E40000005 = "South East",
     E40000006 = "South West",
