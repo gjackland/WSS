@@ -55,5 +55,21 @@ region2code  <- data.frame(
   "East of England" = "E40000007",
   "Midlands" = "E40000008",
   "North East and Yorkshire" = "E40000009",
-  "North West" = "E40000010"
+  "North West" = "E40000010",
+  check.names = FALSE
 )
+
+# Download data -----------------------------------------------------------
+
+# Region to get data for
+subregion <- "GB-ENG"
+
+# Get the code for the subregion
+code <- region2code[subregion]
+
+# Check if an English subregion - start with E4
+isEngSubregion <-  grepl("^E4",code)
+
+# Base URL to get the UK government data
+baseurl <- "https://api.coronavirus.data.gov.uk/v2/data?"
+
