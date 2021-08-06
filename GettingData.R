@@ -35,13 +35,15 @@ code2region <- data.frame(
   S92000003 = "GB-SCT",
   E92000001 = "GB-ENG",
   N92000002 = "GB-NIR",
-  E40000003 = "London",
-  E40000005 = "South East",
-  E40000006 = "South West",
-  E40000007 = "East of England",
-  E40000008 = "Midlands",
-  E40000009 = "North East and Yorkshire",
-  E40000010 = "North West"
+  E12000007 = "London",
+  E12000008 = "South East",
+  E12000009 = "South West",
+  E12000006 = "East of England",
+  E12000002 = "East Midlands",
+  E12000005 = "West Midlands",
+  E12000003 = "Yorkshire and The Humber",
+  E12000001 = "North East",
+  E12000002 = "North West"
 )
 
 region2code  <- data.frame(
@@ -49,27 +51,59 @@ region2code  <- data.frame(
   "GB-SCT" = "S92000003",
   "GB-ENG" = "E92000001",
   "GB-NIR" = "N92000002",
-  "London" = "E40000003",
-  "South East" = "E40000005",
-  "South West" = "E40000006",
-  "East of England" = "E40000007",
-  "Midlands" = "E40000008",
-  "North East and Yorkshire" = "E40000009",
-  "North West" = "E40000010",
+  "London" = "E12000007",
+  "South East" = "E12000008",
+  "South West" = "E12000002",
+  "East of England" = "E12000006",
+  "East Midlands" = "E12000002",
+  "West Midlands" = "E12000005",
+  "North East" = "E12000001",
+  "North West" = "E12000002",
+  "Yorkshire and The Humber" = "E12000003",
   check.names = FALSE
 )
 
 # Download data -----------------------------------------------------------
 
 # Region to get data for
-subregion <- "GB-ENG"
+subregion <- "East of England"
 
 # Get the code for the subregion
 code <- region2code[subregion]
 
 # Check if an English subregion - start with E4
-isEngSubregion <-  grepl("^E4",code)
+isEngSubregion <-  grepl("^E12",code)
 
 # Base URL to get the UK government data
 baseurl <- "https://api.coronavirus.data.gov.uk/v2/data?"
 
+# Start and end date for the data
+# for the enddate lose only the last day of data -
+# use a tail correction for reporting delay
+startdate <- as.Date("2020/07/25")
+enddate <-  Sys.Date()-5
+
+if (!isEngSubregion) { # Dealing with a GB country state
+   header <- paste0("areaType=nation&","areaCode=",code,"&")
+} else { # Dealing with an English region
+   header <- paste0("areaType=region&","areaCode=",code,"&") # no data
+   # header <- paste0("areaCode=",code,"&") - error
+   #header <- paste0("areaType=region&")
+}
+
+# Create URL for total cases, deaths, tests and vaccinations
+casesurl <- paste0(baseurl,
+                   header,
+                   "metric=newCasesBySpecimenDate&",
+                   "metric=newDeaths28DaysByDeathDate&",
+                   "metric=newPCRTestsByPublishDate&",
+                   "metric=newPeopleVaccinatedFirstDoseByVaccinationDate&",
+                   "format=csv")
+
+# Explicitly define the types for the columns
+coltypes <- cols(col_character(), col_character(),col_character(),
+                 col_date(format="%Y-%m-%d"), #col_integer(),
+                 col_integer(),  col_integer(), col_integer())
+
+# Read the cases, deaths and tests data
+comdat <-  read_csv(file = casesurl, col_types = coltypes)
