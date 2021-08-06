@@ -22,15 +22,26 @@ library(tidyr, warn.conflicts = FALSE, quietly = TRUE)
 #
 # https://geoportal.statistics.gov.uk/datasets/countries-december-2018-names-and-codes-in-the-united-kingdom/explore
 #
-# Look-up table mapping ONS codes to 7 English regions.
+# Nine English regions ONS codes as used to specify the data at the UK Gov
+# Corona web site:
+#
+# https://coronavirus.data.gov.uk/
+#
+# 9 Englis region ONS codes:
+#
+# https://geoportal.statistics.gov.uk/datasets/ons::regions-december-2017-names-and-codes-in-england/explore
+#
+# There is also 7 English regions ONS codes.
 #
 # https://geoportal.statistics.gov.uk/datasets/nhs-england-region-april-2020-names-and-codes-in-england/explore?showTable=true
 #
-# These codes are also made available under an Open Government Licence:
+# All these codes and the data are made available under an Open Government Licence:
 #
 # http://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/
 #
-code2region <- data.frame(
+
+# 9 English regions +  UK home nations
+codeTo9region <- data.frame(
   W92000004 = "GB-WLS",
   S92000003 = "GB-SCT",
   E92000001 = "GB-ENG",
@@ -46,7 +57,7 @@ code2region <- data.frame(
   E12000002 = "North West"
 )
 
-region2code  <- data.frame(
+region9Tocode  <- data.frame(
   "GB-WLS" = "W92000004",
   "GB-SCT" = "S92000003",
   "GB-ENG" = "E92000001",
@@ -63,13 +74,41 @@ region2code  <- data.frame(
   check.names = FALSE
 )
 
+# 7 English regions + 4 UK nations
+codeTo7region <- data.frame(
+  W92000004 = "GB-WLS",
+  S92000003 = "GB-SCT",
+  E92000001 = "GB-ENG",
+  N92000002 = "GB-NIR",
+  E40000003 = "London",
+  E40000005 = "South East",
+  E40000006 = "South West",
+  E40000007 = "East of England",
+  E40000008 = "Midlands",
+  E40000009 = "North East and Yorkshire",
+  E40000010 = "North West"
+)
+
+region7Tocode  <- data.frame(
+  "GB-WLS" = "W92000004",
+  "GB-SCT" = "S92000003",
+  "GB-ENG" = "E92000001",
+  "GB-NIR" = "N92000002",
+  "London" = "E40000003",
+  "South East" = "E40000005",
+  "South West" = "E40000006",
+  "East of England" = "E40000007",
+  "Midlands" = "E40000008",
+  "North East and Yorkshire" = "E40000009",
+  "North West" = "E40000010"
+)
 # Download data -----------------------------------------------------------
 
 # Region to get data for
 subregion <- "East of England"
 
 # Get the code for the subregion
-code <- region2code[subregion]
+code <- region9Tocode[subregion]
 
 # Check if an English subregion - start with E4
 isEngSubregion <-  grepl("^E12",code)
@@ -87,8 +126,6 @@ if (!isEngSubregion) { # Dealing with a GB country state
    header <- paste0("areaType=nation&","areaCode=",code,"&")
 } else { # Dealing with an English region
    header <- paste0("areaType=region&","areaCode=",code,"&") # no data
-   # header <- paste0("areaCode=",code,"&") - error
-   #header <- paste0("areaType=region&")
 }
 
 # Create URL for total cases, deaths, tests and vaccinations
