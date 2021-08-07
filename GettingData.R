@@ -129,7 +129,7 @@ if (subregion == "Midlands"){
   code <- region9Tocode[subregion]
 }
 
-# Function to return one or more URLs to return the requested data.
+# Function to return one or more URLs to query the requested data.
 getURL <- function(code, query){
 
   # Set the url
@@ -158,6 +158,25 @@ getURL <- function(code, query){
   return(url)
 }
 
+# Get data
+getData <-  function(urls) {
+
+  dat <- ""
+  first_time <-  TRUE
+
+  for(url in urls){
+    d <- read_csv(url, show_col_types = FALSE)
+    if (first_time) {
+      dat <- d
+      first_time <- FALSE
+    } else {
+      dat <- dat + d
+    }
+  }
+
+  return(dat)
+}
+
 # Are we dealing with an English subregion - start with E12
 isEngSubregion <-  grepl("^E12",code)
 
@@ -175,6 +194,15 @@ if (!isEngSubregion) { # Dealing with a GB country state
 } else { # Dealing with an English region
    header <- paste0("areaType=region&","areaCode=",code,"&")
 }
+
+path <- paste0("metric=newCasesBySpecimenDate&",
+               "metric=newDeaths28DaysByDeathDate&",
+               "metric=newPCRTestsByPublishDate&",
+               "metric=newPeopleVaccinatedFirstDoseByVaccinationDate&",
+               "format=csv")
+
+urls <- getURL(code, path)
+dat <- getData(urls)
 
 # Create URL for total cases, deaths, tests and vaccinations
 casesurl <- paste0(baseurl,
