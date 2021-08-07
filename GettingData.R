@@ -117,10 +117,12 @@ region7Tocode  <- data.frame(
 
 # Download data -----------------------------------------------------------
 
-# Region to get data for
+# Region to get data for - eventually get this from the web-ui as a code.
+# Translate the 7 region code to the 9 region one if necessary.
 subregion <- "East of England"
 
-# Get the 9 region codes to deal with the special cases
+# Get the 9 region codes to deal with the special cases of two regions that
+# need to be amalgamated.
 if (subregion == "Midlands"){
   code <-  c("E12000002", "E12000005")
 } else if (subregion == "North East"){
@@ -129,7 +131,8 @@ if (subregion == "Midlands"){
   code <- region9Tocode[subregion]
 }
 
-# Function to return one or more URLs to query the requested data.
+# Function to return one or more URLs to query for the requested data based
+# on the region codes.
 getURL <- function(code, query){
 
   # Set the url
@@ -158,18 +161,23 @@ getURL <- function(code, query){
   return(url)
 }
 
-# Get data
+# Get data from the URLs.
 getData <-  function(urls) {
 
+  # Data to be returned
   dat <- ""
+  # Flag to indicate if this is the first time over the loop
   first_time <-  TRUE
 
+  # Loop over the URLs
   for(url in urls){
     d <- read_csv(url, show_col_types = FALSE)
     if (first_time) {
       dat <- d
       first_time <- FALSE
     } else {
+
+      # This needs more work as is - semantics need to be much more involved.
       dat <- dat + d
     }
   }
@@ -177,11 +185,6 @@ getData <-  function(urls) {
   return(dat)
 }
 
-# Are we dealing with an English subregion - start with E12
-isEngSubregion <-  grepl("^E12",code)
-
-# Base URL to get the UK government data
-baseurl <- "https://api.coronavirus.data.gov.uk/v2/data?"
 
 # Start and end date for the data
 # for the end date lose only the last day of data -
@@ -189,34 +192,19 @@ baseurl <- "https://api.coronavirus.data.gov.uk/v2/data?"
 startdate <- as.Date("2020/07/25")
 enddate <-  Sys.Date()-5
 
-if (!isEngSubregion) { # Dealing with a GB country state
-   header <- paste0("areaType=nation&","areaCode=",code,"&")
-} else { # Dealing with an English region
-   header <- paste0("areaType=region&","areaCode=",code,"&")
-}
 
-path <- paste0("metric=newCasesBySpecimenDate&",
+# Construct the query part of the URL not including the baseurl, the areaType
+# and the areaRegion as that is generated from the codes in the getURL function.
+query <- paste0("metric=newCasesBySpecimenDate&",
                "metric=newDeaths28DaysByDeathDate&",
                "metric=newPCRTestsByPublishDate&",
                "metric=newPeopleVaccinatedFirstDoseByVaccinationDate&",
                "format=csv")
 
-urls <- getURL(code, path)
+# Get the URL(s)
+urls <- getURL(code, query)
+
+# Get the data.
 dat <- getData(urls)
 
-# Create URL for total cases, deaths, tests and vaccinations
-casesurl <- paste0(baseurl,
-                   header,
-                   "metric=newCasesBySpecimenDate&",
-                   "metric=newDeaths28DaysByDeathDate&",
-                   "metric=newPCRTestsByPublishDate&",
-                   "metric=newPeopleVaccinatedFirstDoseByVaccinationDate&",
-                   "format=csv")
 
-# Explicitly define the types for the columns
-coltypes <- cols(col_character(), col_character(),col_character(),
-                 col_date(format="%Y-%m-%d"), #col_integer(),
-                 col_integer(),  col_integer(), col_integer())
-
-# Read the cases, deaths and tests data
-comdat <-  read_csv(file = casesurl, col_types = coltypes)
