@@ -188,9 +188,43 @@ getData <-  function(urls) {
       if(nrow(d1) != nrow(d2)){
         stop("Data frames are not the of the same size.")
       }
+      # North East = North East and Yorkshire = North East + Yorkshire and The Humber
+      #              E40000009                = E12000001 + E12000003
+      if ((d1$areaCode == "E12000003" & d2$areaCode == "E12000001") |
+          (d1$areaCode == "E12000001" & d2$areaCode == "E12000003")) {
+         areaCode <- "E40000009"
+         areaName <- "North East"
+      }
+      # Midlands  = East Midlands + West Midlands
+      # E40000008 =  E12000002 + E12000005
+      if ((d1$areaCode == "E12000002" & d2$areaCode == "E12000005") |
+          (d1$areaCode == "E12000005" & d2$areaCode == "E12000002")) {
+        areaCode <- "E40000008"
+        areaName <- "Midlands"
+      }
+      # Loop round the columns
+      # NOTE will not work for character based columns!
+      for (name in names(d1)) {
+        if(name == "areaCode" | name == "areaName"){
+          next # set these up later
+        } else if (name == "date") {
+          # Check dates match up
+          if(all(d1$date == d2$date)){
+            dat$date <- d1$date
+          } else {
+            stop("Not all dates match for ",d1$areaName," and ",d2$areaName,".")
+          }
+        } else if (name == "areaType") {
+          dat$areaType <- d1$areaType
+        } else {
+          # Add columns together
+          dat[name] <- d1[name] + d2[name]
+        }
+      } # End for loop
 
-      # This needs more work as is - semantics need to be much more involved.
-      dat <- dat + d
+      # set values
+      dat$areaCode <-  areaCode
+      data$areaName <- areaName
     }
   }
 
