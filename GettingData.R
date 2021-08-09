@@ -131,6 +131,9 @@ if (subregion == "Midlands"){
   code <- region9Tocode[subregion]
 }
 
+
+# getURL function ---------------------------------------------------------
+
 # Function to return one or more URLs to query for the requested data based
 # on the region codes.
 getURL <- function(code, query){
@@ -161,17 +164,26 @@ getURL <- function(code, query){
   return(url)
 }
 
+
+# getData function --------------------------------------------------------
+
 # Get data from the URLs.
 getData <-  function(urls) {
 
   # Data to be returned
   dat <- ""
+
   # Flag to indicate if this is the first time over the loop
   first_time <-  TRUE
 
   # Loop over the URLs
   for(url in urls){
-    d <- read_csv(url, show_col_types = FALSE)
+
+    # Get the data
+    d <- read_csv(url,
+                  progress = FALSE,
+                  show_col_types = FALSE)
+
     if (first_time) {
       dat <- d
       first_time <- FALSE
@@ -185,20 +197,27 @@ getData <-  function(urls) {
       d1 <- d[start <= d$date & d$date <= end,]
       d2 <- dat[start <= dat$date & dat$date <= end,]
 
+      # Area codes
+      d1areaCode <- unique(d1$areaCode)
+      d2areaCode <- unique(d2$areaCode)
+
+      # Check we have the smae number of rows
       if(nrow(d1) != nrow(d2)){
         stop("Data frames are not the of the same size.")
       }
+
       # North East = North East and Yorkshire = North East + Yorkshire and The Humber
       #              E40000009                = E12000001 + E12000003
-      if ((d1$areaCode == "E12000003" & d2$areaCode == "E12000001") |
-          (d1$areaCode == "E12000001" & d2$areaCode == "E12000003")) {
+      if ((d1areaCode == "E12000003" & d2areaCode == "E12000001") |
+          (d1areaCode == "E12000001" & d2areaCode == "E12000003")) {
          areaCode <- "E40000009"
          areaName <- "North East"
       }
+
       # Midlands  = East Midlands + West Midlands
       # E40000008 =  E12000002 + E12000005
-      if ((d1$areaCode == "E12000002" & d2$areaCode == "E12000005") |
-          (d1$areaCode == "E12000005" & d2$areaCode == "E12000002")) {
+      if ((d1areaCode == "E12000002" & d2areaCode == "E12000005") |
+          (d1areaCode == "E12000005" & d2areaCode == "E12000002")) {
         areaCode <- "E40000008"
         areaName <- "Midlands"
       }
@@ -216,21 +235,34 @@ getData <-  function(urls) {
           }
         } else if (name == "areaType") {
           dat$areaType <- d1$areaType
-        } else {
+        } else if (is.numeric(d1[[name]]) & is.numeric(d2[[name]])) {
           # Add columns together
           dat[name] <- d1[name] + d2[name]
+        } else if (all(is.na(d1[[name]])) & all(is.na(d2[[name]]))){
+          dat[name] <- d1[name]
+          message("All values for ", name, " are NAs.")
+        } else if (is.character(d1[[name]]) & is.character(d2[[name]])) {
+          if(all(d1[[name]] == d2[[name]])){
+            dat[name] <- d1[name]
+          } else {
+            warning("The column ", name, " is a chacter vector but not all values are equal.")
+          }
+        } else {
+          warning("Do not know how to handle ", name, ".")
         }
       } # End for loop
 
       # set values
       dat$areaCode <-  areaCode
-      data$areaName <- areaName
+      dat$areaName <- areaName
     }
   }
 
   return(dat)
 }
 
+
+# Get the data ------------------------------------------------------------
 
 # Start and end date for the data
 # for the end date lose only the last day of data -
