@@ -155,7 +155,17 @@ CCage$Value = Growth_75_BestGuess
 # Add the new row
 CC <- rbind(CC, CCage)
 
-
+CCmid <-CCEng
+CCmid$Geography="Midlands"
+CCmid$Value = mean(tail(rat$Midlands))
+Quant = unname(quantile(tail(rat$Midlands), probs=c(0.05,0.25,0.5,0.75,0.95)))
+CCmid$Quantile.0.05=Quant[1]
+CCmid$Quantile.0.25=Quant[2]
+CCmid$Quantile.0.5=Quant[3]
+CCmid$Quantile.0.75=Quant[4]
+CCmid$Quantile.0.95=Quant[5]
+# Add the new row
+CC <- rbind(CC, CCmid)
 
 # Write to excel
 write.xlsx(CC, file = "Data/WSS_CC.xlsx", sheetName = "WSS", row.names = FALSE)

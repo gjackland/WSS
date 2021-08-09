@@ -631,7 +631,7 @@ xcastage$'65_74' <-casedat$`65_69`+casedat$`70_74`
 xcastage$'75+' <-casedat$`75_79`+casedat$`80_84`+casedat$`85_89`+casedat$`90+`
 
 #  Combination required to go from 9 to 7 English regions
-regcases$'NE and Yorks'<-regcases$`North East`+regcases$`Yorkshire and The Humber`
+regcases$NE_Yorks<-regcases$`North East`+regcases$`Yorkshire and The Humber`
 regcases$Midlands<-regcases$`East Midlands`+regcases$`West Midlands`
 
 # Set false positive adjustment at 0.004, extrapolate tests if the last few days are missing
@@ -788,18 +788,19 @@ pStoD <- pStoD - pStoC*(pCtoD+(1-pCtoD)*pCRtoD)
   #  vectorize
   MtoR=outer(as.numeric(newMILD[iday,agerange]),MildToRecovery,FUN="*")
   oldMILD[(iday:xday),agerange]=oldMILD[(iday:xday),agerange]+MtoR
+  vacCFR=0.75 #Vaccine reduction in ILI-> SARI
   for (iage in agerange){
     # All todays new MILDs will all leave to REC across distribution
-    # multiple by vaccination and it CFR reduction
+    # multiple by vaccination and its CFR reduction
     # ILI will go to SA/RI and REC
-    ItoS = as.numeric(newILI[iday,iage] * pItoS[iage-1] * (1.0-vacdat[iday,iage]*0.5) ) *ILIToSARI
+    ItoS = as.numeric(newILI[iday,iage] * pItoS[iage-1] * (1.0-vacdat[iday,iage]*vacCFR)) *ILIToSARI
 # Replace with vaccine effect
 #    ItoS = as.numeric(newILI[iday,iage] * pItoS[iage-1])  *ILIToSARI
     ItoR = as.numeric(newILI[iday,iage] *(1.0-pItoS[iage-1])) *ILIToRecovery
     newSARI[(iday:xday),iage]=newSARI[(iday:xday),iage]+ItoS
     oldILI[(iday:xday),iage]=oldILI[(iday:xday),iage]+ItoR+ItoS
     # SARI will go to REC, DEATH, CRIT
-    #  Assume vaccination reduced StoD/StoC death rate by 50%
+    #  Assume vaccination only reduces ILI-> SARI  CFR is th StoD/StoC death rate by 0%
     StoC = as.numeric(newSARI[iday,iage] *pStoC[iage-1] * (1.0-vacdat[iday,iage]*0.0) )*SARIToCritical
     StoD = as.numeric(newSARI[iday,iage] *pStoD[iage-1] * (1.0-vacdat[iday,iage]*0.0) )*SARIToDeath
     StoR = as.numeric(newSARI[iday,iage] *(1.0-pStoC[iage-1]-pStoD[iage-1]) )*SARIToRecovery
@@ -891,15 +892,9 @@ if(interactive()){
     ggplot(aes(x=date, y=R, colour=Region)) +
     coord_cartesian(ylim=c(0.5,1.9))+ geom_smooth(formula= y ~ x, method = "loess", span=0.5) +
     guides(color = "none") + facet_wrap(vars(Region))
-
-
+  
 }
 
-#  Unsmoothed version
-#rat %>% filter(startplot < date & date < endplot) %>%
-#  pivot_longer(!date,names_to = "Region", values_to="R") %>%
-#  ggplot(aes(x=date, y=R, colour=Region)) + geom_line() +
-#  guides(color = FALSE) + facet_wrap(vars(Region))
 
 #  Generate R over all ages, with some options for the calculus  gjaR is Ito, rawR is stratonovich, bylogR is harmonic Ito fpR includes false positive correction
 for(i in ((genTime+1):length(dfR$gjaR))    ){
@@ -1032,15 +1027,95 @@ R_Scotland_BestGuess <-mean(filteredR)
 R_Scotland_Quant <-unname(quantile(filteredR, probs=c(0.05,0.25,0.5,0.75,0.95)))
 
 filteredR <-append(
-  append(tail(predict(loess(x05 ~ as.numeric(date), data=dfR,span=0.3))),
-         tail(predict(loess(x05 ~ as.numeric(date), data=dfR,span=0.1))) ) , 
-  append(tail(predict(loess(x05 ~ as.numeric(date), data=dfR,span=0.05))), 
-         tail(predict(loess(x05 ~ as.numeric(date), data=dfR,span=0.5))))
+  append(tail(predict(loess(p00 ~ as.numeric(date), data=dfR,span=0.3))),
+         tail(predict(loess(p00 ~ as.numeric(date), data=dfR,span=0.1))) ) , 
+  append(tail(predict(loess(p00 ~ as.numeric(date), data=dfR,span=0.05))), 
+         tail(predict(loess(p00 ~ as.numeric(date), data=dfR,span=0.5))))
+)
+Growth_00_BestGuess <- mean(filteredR)
+Growth_00_Quant <-unname(quantile(filteredR, probs=c(0.05,0.25,0.5,0.75,0.95)))
+
+
+filteredR <-append(
+  append(tail(predict(loess(p05 ~ as.numeric(date), data=dfR,span=0.3))),
+         tail(predict(loess(p05 ~ as.numeric(date), data=dfR,span=0.1))) ) , 
+  append(tail(predict(loess(p05 ~ as.numeric(date), data=dfR,span=0.05))), 
+         tail(predict(loess(p05 ~ as.numeric(date), data=dfR,span=0.5))))
 )
 Growth_05_BestGuess <- mean(filteredR)
+Growth_05_Quant <-unname(quantile(filteredR, probs=c(0.05,0.25,0.5,0.75,0.95)))
 
+
+filteredR <-append(
+  append(tail(predict(loess(p15 ~ as.numeric(date), data=dfR,span=0.3))),
+         tail(predict(loess(p15 ~ as.numeric(date), data=dfR,span=0.1))) ) , 
+  append(tail(predict(loess(p15 ~ as.numeric(date), data=dfR,span=0.05))), 
+         tail(predict(loess(p15 ~ as.numeric(date), data=dfR,span=0.5))))
+)
+Growth_15_BestGuess <- mean(filteredR)
+Growth_15_Quant <-unname(quantile(filteredR, probs=c(0.05,0.25,0.5,0.75,0.95)))
+
+
+filteredR <-append(
+  append(tail(predict(loess(x25 ~ as.numeric(date), data=dfR,span=0.3))),
+         tail(predict(loess(x25 ~ as.numeric(date), data=dfR,span=0.1))) ) , 
+  append(tail(predict(loess(x25 ~ as.numeric(date), data=dfR,span=0.05))), 
+         tail(predict(loess(x25 ~ as.numeric(date), data=dfR,span=0.5))))
+)
+Growth_25_BestGuess <- mean(filteredR)
+Growth_25_Quant <-unname(quantile(filteredR, probs=c(0.05,0.25,0.5,0.75,0.95)))
+
+filteredR <-append(
+  append(tail(predict(loess(x45 ~ as.numeric(date), data=dfR,span=0.3))),
+         tail(predict(loess(x45 ~ as.numeric(date), data=dfR,span=0.1))) ) , 
+  append(tail(predict(loess(x45 ~ as.numeric(date), data=dfR,span=0.05))), 
+         tail(predict(loess(x45 ~ as.numeric(date), data=dfR,span=0.5))))
+)
+Growth_45_BestGuess <- mean(filteredR)
+Growth_45_Quant <-unname(quantile(filteredR, probs=c(0.05,0.25,0.5,0.75,0.95)))
+
+
+filteredR <-append(
+  append(tail(predict(loess(x65 ~ as.numeric(date), data=dfR,span=0.3))),
+         tail(predict(loess(x65 ~ as.numeric(date), data=dfR,span=0.1))) ) , 
+  append(tail(predict(loess(x65 ~ as.numeric(date), data=dfR,span=0.05))), 
+         tail(predict(loess(x65 ~ as.numeric(date), data=dfR,span=0.5))))
+)
+Growth_65_BestGuess <- mean(filteredR)
+Growth_65_Quant <-unname(quantile(filteredR, probs=c(0.05,0.25,0.5,0.75,0.95)))
+
+
+
+filteredR <-append(
+  append(tail(predict(loess(x75 ~ as.numeric(date), data=dfR,span=0.3))),
+         tail(predict(loess(x75 ~ as.numeric(date), data=dfR,span=0.1))) ) , 
+  append(tail(predict(loess(x75 ~ as.numeric(date), data=dfR,span=0.05))), 
+         tail(predict(loess(x75 ~ as.numeric(date), data=dfR,span=0.5))))
+)
+Growth_75_BestGuess <- mean(filteredR)
+Growth_75_Quant <-unname(quantile(filteredR, probs=c(0.05,0.25,0.5,0.75,0.95)))
 
 rm(filteredR)
+
+# Regional Smoothed R
+
+rat$London <-  (predict(loess(London ~ as.numeric(date),data=rat,span=0.3))+
+                    predict(loess(London ~ as.numeric(date),data=rat,span=0.1))+
+                    predict(loess(London ~ as.numeric(date),data=rat,span=0.5))+
+                    predict(loess(London ~ as.numeric(date),data=rat,span=1)))/4
+
+rat$Midlands <-  (predict(loess(Midlands ~ as.numeric(date),data=rat,span=0.3))+
+                    predict(loess(Midlands ~ as.numeric(date),data=rat,span=0.1))+
+                    predict(loess(Midlands ~ as.numeric(date),data=rat,span=0.5))+
+                    predict(loess(Midlands ~ as.numeric(date),data=rat,span=1)))/4
+
+rat$NE_Yorks <-  (predict(loess(NE_Yorks ~ as.numeric(date),data=rat,span=0.3))+
+                    predict(loess(NE_Yorks ~ as.numeric(date),data=rat,span=0.1))+
+                    predict(loess(NE_Yorks ~ as.numeric(date),data=rat,span=0.5))+
+                    predict(loess(NE_Yorks ~ as.numeric(date),data=rat,span=1)))/4
+plot(loess.smooth(rat$date, rat$`North East`,span=0.05)$y+loess.smooth(rat$date, rat$`North East`,span=0.2)$y
+)
+
 plot(smoothweightR$y,ylab="R-number",xlab="Day",ylim=c(0.5,1.6))
 #  Plot R continuous with many splines.
 for (ismooth in 4:30){
@@ -1297,7 +1372,7 @@ if(CrystalCast){
 }
 
 #####  Figures and analysis for https://www.medrxiv.org/content/10.1101/2021.04.14.21255385v1
-medrxiv=TRUE
+medrxiv=FALSE
 if(medrxiv){
 ####  From here on we're reproducing figures from https://www.medrxiv.org/content/10.1101/2021.04.14.21255385v1
 ##### Fig 1. - Heatmaps ####
@@ -1628,8 +1703,7 @@ for (iday in ((lengthofdata+1):(lengthofdata+predtime))){
 
 
     # ILI will go to SA/RI and REC   Vaccination frozen on last day, not predicted
-    ItoS = as.numeric(newILI[iday,iage] * pItoS[iage-1] * (1.0-vacdat[length(vacdat),iage]*0.8) ) *ILIToSARI
-  #  ItoS = as.numeric(newILI[iday,iage] *  pItoS[iage-1])     *ILIToSARI
+    ItoS = as.numeric(newILI[iday,iage] * pItoS[iage-1] * (1.0-vacdat[iday,iage]*vacCFR)) *ILIToSARI  #  ItoS = as.numeric(newILI[iday,iage] *  pItoS[iage-1])     *ILIToSARI
     ItoR = as.numeric(newILI[iday,iage] *(1.0-pItoS[iage-1])) *ILIToRecovery
     newSARI[(iday:xday),iage]=newSARI[(iday:xday),iage]+ItoS
     oldILI[(iday:xday),iage]=oldILI[(iday:xday),iage]+ItoR+ItoS
@@ -1679,16 +1753,14 @@ plot(HospitalData$hospitalCases)
 lines(rowSums(SARI[2:20]+CRIT[2:20]+CRITREC[2:20]))
 plot(rowSums(CASE[2:20]))
 lines(rowSums(newMILD[2:17]+newILI[2:17]),col="red")
+
 plot(HospitalData$covidOccupiedMVBeds)
 lines(rowSums(CRIT[2:20])/2,col="blue")
-plot(rowSums(deathdat[2:20]))
+plot(rowSums(deathdat[2:20]),xlim=c(300,400),ylim=c(0,120))
 lines(rowSums(DEATH[2:20]),col="blue")
 
 # This needs to be the last routine called for the UI, by default it returns
 # success (0), if there is no success setStatus() should be called. By default
 # it will return -1 but you can set a value setStatus(1). Any non-zero value
 # will indicate a problem.  For interactive work "quit" can end Rstudio session altogether
-if(! interactive()){
-quit(status=returnStatus())
-}
-
+if(! interactive()){quit(status=returnStatus())}
