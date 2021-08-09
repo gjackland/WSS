@@ -119,7 +119,7 @@ region7Tocode  <- data.frame(
 
 # Region to get data for - eventually get this from the web-ui as a code.
 # Translate the 7 region code to the 9 region one if necessary.
-subregion <- "North East"
+subregion <- "Midlands"
 
 # Get the 9 region codes to deal with the special cases of two regions that
 # need to be amalgamated.
@@ -171,7 +171,7 @@ getURL <- function(code, query){
 getData <-  function(urls) {
 
   # Data to be returned
-  dat <- ""
+  dat <- NULL
 
   # Flag to indicate if this is the first time over the loop
   first_time <-  TRUE
@@ -206,6 +206,9 @@ getData <-  function(urls) {
         stop("Data frames are not the of the same size.")
       }
 
+      # Reset the output variable
+      dat <- NULL
+
       # North East = North East and Yorkshire = North East + Yorkshire and The Humber
       #              E40000009                = E12000001 + E12000003
       if ((d1areaCode == "E12000003" & d2areaCode == "E12000001") |
@@ -221,6 +224,7 @@ getData <-  function(urls) {
         areaCode <- "E40000008"
         areaName <- "Midlands"
       }
+
       # Loop round the columns
       # NOTE will not work for character based columns!
       for (name in names(d1)) {
