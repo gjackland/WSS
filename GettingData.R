@@ -15,7 +15,7 @@ library(dplyr, warn.conflicts = FALSE, quietly = TRUE)
 library(tidyr, warn.conflicts = FALSE, quietly = TRUE)
 
 
-# Region lookup -----------------------------------------------------------
+# Region look-up -----------------------------------------------------------
 
 #
 # UK country codes available from:
@@ -119,7 +119,7 @@ region7Tocode  <- data.frame(
 
 # Region to get data for - eventually get this from the web-ui as a code.
 # Translate the 7 region code to the 9 region one if necessary.
-subregion <- "East of England"
+subregion <- "North East"
 
 # Get the 9 region codes to deal with the special cases of two regions that
 # need to be amalgamated.
@@ -177,6 +177,14 @@ getData <-  function(urls) {
       first_time <- FALSE
     } else {
 
+      # Intersection of dates
+      start <- max(min(d$date), min(dat$date))
+      end   <- min(max(d$date), max(dat$date))
+
+      # Filter data by date
+      d1 <- d[start <= d$date & d$date <= end,]
+      d2 <- dat[start <= dat$date & dat$date <= end,]
+
       # This needs more work as is - semantics need to be much more involved.
       dat <- dat + d
     }
@@ -192,14 +200,13 @@ getData <-  function(urls) {
 startdate <- as.Date("2020/07/25")
 enddate <-  Sys.Date()-5
 
-
 # Construct the query part of the URL not including the baseurl, the areaType
 # and the areaRegion as that is generated from the codes in the getURL function.
 query <- paste0("metric=newCasesBySpecimenDate&",
-               "metric=newDeaths28DaysByDeathDate&",
-               "metric=newPCRTestsByPublishDate&",
-               "metric=newPeopleVaccinatedFirstDoseByVaccinationDate&",
-               "format=csv")
+                "metric=newDeaths28DaysByDeathDate&",
+                "metric=newPCRTestsByPublishDate&",
+                "metric=newPeopleVaccinatedFirstDoseByVaccinationDate&",
+                "format=csv")
 
 # Get the URL(s)
 urls <- getURL(code, query)
