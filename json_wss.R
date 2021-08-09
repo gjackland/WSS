@@ -53,7 +53,32 @@ getInput <- function(filename)
         warning("File: ",filename," not found.")
     }
 }
-
+#
+# UK country codes available from:
+#
+# https://geoportal.statistics.gov.uk/datasets/countries-december-2018-names-and-codes-in-the-united-kingdom/explore
+#
+# Look-up table mapping ONS codes to 7 English regions.
+#
+# https://geoportal.statistics.gov.uk/datasets/nhs-england-region-april-2020-names-and-codes-in-england/explore?showTable=true
+#
+# These codes are also made available under an Open Government Licence:
+#
+# http://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/
+#
+code2region <- data.frame(
+    W92000004 = "GB-WLS",
+    S92000003 = "GB-SCT",
+    E92000001 = "GB-ENG",
+    N92000002 = "GB-NIR",
+    E40000003 = "London",
+    E40000005 = "South East",
+    E40000006 = "South West",
+    E40000007 = "East of England",
+    E40000008 = "Midlands",
+    E40000009 = "North East and Yorkshire",
+    E40000010 = "North West"
+)
 ## Output Usage example
 #
 # # Build a list of interventions:
