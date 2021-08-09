@@ -14,7 +14,6 @@ library(readr, warn.conflicts = FALSE, quietly = TRUE)
 library(dplyr, warn.conflicts = FALSE, quietly = TRUE)
 library(tidyr, warn.conflicts = FALSE, quietly = TRUE)
 
-
 # Region look-up -----------------------------------------------------------
 
 #
@@ -201,7 +200,7 @@ getData <-  function(urls) {
       d1areaCode <- unique(d1$areaCode)
       d2areaCode <- unique(d2$areaCode)
 
-      # Check we have the smae number of rows
+      # Check we have the same number of rows
       if(nrow(d1) != nrow(d2)){
         stop("Data frames are not the of the same size.")
       }
@@ -256,17 +255,20 @@ getData <-  function(urls) {
         }
       } # End for loop
 
-      # set values
-      dat$areaCode <-  areaCode
-      dat$areaName <- areaName
+      # Set values
+      dat$areaCode <- rep(areaCode, nrow(d1))
+      dat$areaName <- rep(areaName, nrow(d1))
     }
+
+    # make sure we return a tibble
+    dat <- as_tibble(dat)
   }
 
   return(dat)
 }
 
 
-# Get the data ------------------------------------------------------------
+# Parameters ------------------------------------------------------------
 
 # Start and end date for the data
 # for the end date lose only the last day of data -
@@ -274,7 +276,10 @@ getData <-  function(urls) {
 startdate <- as.Date("2020/07/25")
 enddate <-  Sys.Date()-5
 
-# Construct the query part of the URL not including the baseurl, the areaType
+
+# Data: total cases, deaths, tests ----------------------------------------------
+
+# Construct the query part of the URL NOT including the baseurl, the areaType
 # and the areaRegion as that is generated from the codes in the getURL function.
 query <- paste0("metric=newCasesBySpecimenDate&",
                 "metric=newDeaths28DaysByDeathDate&",
@@ -286,6 +291,20 @@ query <- paste0("metric=newCasesBySpecimenDate&",
 urls <- getURL(code, query)
 
 # Get the data.
-dat <- getData(urls)
+comdat <- getData(urls)
+
+# Transform the data
+#
+# newPCRTestsByPublishDate are all NULL for English regions.
+#
+comdat <- comdat %>%  select(date,
+                             allCases = newCasesBySpecimenDate,
+                             allDeaths = newDeaths28DaysByDeathDate,
+                             tests = newPCRTestsByPublishDate,
+                             inputCases = newCasesBySpecimenDate,
+                             fpCases = newCasesBySpecimenDate,
+                             vaccines=newPeopleVaccinatedFirstDoseByVaccinationDate) %>%
+                      filter(date >= startdate & date <= enddate ) %>%
+                      arrange(date)
 
 
