@@ -6,6 +6,26 @@
 # http://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/
 #
 
+#  ISSUES #####################################################################
+#
+# * newPCRTestsByPublishDate are all NULL for English regions for the total
+#   cases, deaths and tests.
+# * Data for all UK cases is not regional.
+# * For the vaccination data what does "Transform the data to get vacdat
+#   compatible with casedat (must be a better way!)." mean?
+# * vacdat$`18_24`<-NULL, there is non-zero data there. Do you really just
+#   want to remove it?
+# * Have not included the scotdat data as this should (?) be avilable via
+#   the UK data?
+# * Not read in the scotdailycases - is this different from using the GB-SCT
+#   case?
+# * There appears to be no hospital data for the English regions.
+# * No cases by age for GB_SCT, GB-WLS, GB-NIR
+# * No vaccination data for GB-WLS, GB-NIR.
+# * No death by age for GB-NIR.
+# * No regional cases by age data for GB-WLS.
+
+
 # Load packages -----------------------------------------------------------
 
 # Read packages used by the script
@@ -116,7 +136,7 @@ region7Tocode  <- data.frame(
 
 # Region to get data for - eventually get this from the web-ui as a code.
 # Translate the 7 region code to the 9 region one if necessary.
-subregion <- "Midlands"
+subregion <- "GB-SCT"
 
 # Get the 9 region codes to deal with the special cases of two regions that
 # need to be amalgamated.
@@ -186,6 +206,10 @@ getData <-  function(urls) {
                   progress = FALSE,
                   show_col_types = FALSE)
 
+    if(nrow(d) == 0){
+      warning("No data returned for ", url,".\n\n")
+      next
+    }
     if (first_time) {
       dat <- d
       first_time <- FALSE
@@ -285,7 +309,7 @@ startdate <- as.Date("2020/07/25")
 enddate <-  Sys.Date()-5
 
 
-# Data: total cases, deaths, tests -------------------------------------------
+# Data: total cases, deaths and tests -----------------------------------------
 
 # Construct the query part of the URL NOT including the baseurl, the areaType
 # and the areaRegion as that is generated from the codes in the getURL function.
@@ -301,19 +325,30 @@ urls <- getURL(code, query)
 # Get the data.
 comdat <- getData(urls)
 
-# Transform the data
-#
-# newPCRTestsByPublishDate are all NULL for English regions.
-#
-comdat <- comdat %>%  select(date,
-                             allCases = newCasesBySpecimenDate,
-                             allDeaths = newDeaths28DaysByDeathDate,
-                             tests = newPCRTestsByPublishDate,
-                             inputCases = newCasesBySpecimenDate,
-                             fpCases = newCasesBySpecimenDate,
-                             vaccines=newPeopleVaccinatedFirstDoseByVaccinationDate) %>%
-                      filter(date >= startdate & date <= enddate ) %>%
-                      arrange(date)
+# Check that we have data
+if (is.null(comdat)){
+  warning("No case data for ",subregion,".")
+
+} else {
+
+  # Transform the data
+  #
+  # newPCRTestsByPublishDate are all NULL for English regions.
+  #
+
+  comdat <- comdat %>%  select(date,
+                               allCases = newCasesBySpecimenDate,
+                               allDeaths = newDeaths28DaysByDeathDate,
+                               tests = newPCRTestsByPublishDate,
+                               inputCases = newCasesBySpecimenDate,
+                               fpCases = newCasesBySpecimenDate,
+                               vaccines=newPeopleVaccinatedFirstDoseByVaccinationDate) %>%
+    filter(date >= startdate & date <= enddate ) %>%
+    arrange(date)
+
+
+}
+
 
 # Data for all UK cases -------------------------------------------------------
 
@@ -338,3 +373,225 @@ ukcasedat <-  read_csv(file = ukcaseurl, col_types = coltypes)
 ukcasedat <- ukcasedat %>%  select(date = date, tests = newPCRTestsByPublishDate) %>%
                             filter(date >= startdate &  date <= enddate ) %>%
                             arrange(date)
+
+# Cases by age ------------------------------------------------------------
+
+# Construct the query
+agequery <- paste0("metric=newCasesBySpecimenDateAgeDemographics&",
+                   "format=csv")
+
+# Get the URL(s)
+urls <- getURL(code, agequery)
+
+# Get the data.
+casedat <- getData(urls)
+
+# Check that we have data
+if(is.null(casedat)){
+
+  warning("No cases by age data for ",subregion,".")
+
+} else {
+
+  # Remap the ages column to be the header rows, remove the unassigned,
+  # 60+ and 00_59 columns, filter dates to be between the start and end
+  # dates and order the output by date
+  casedat <- casedat %>%
+    select(date = date, age = age, values = cases) %>%
+    pivot_wider(id_cols = date, names_from = age, values_from = values) %>%
+    select(-unassigned, -"60+", -"00_59") %>%
+    filter(date >= startdate & date <= enddate) %>%
+    arrange(date)
+}
+
+# Vaccination by age ------------------------------------------------------
+
+# Vaccination start date
+vacdate="2020-12-08"
+
+# Query
+vacquery <- paste0("metric=vaccinationsAgeDemographics&",
+                   "format=csv")
+
+# Get the URL(s)
+urls <- getURL(code, vacquery)
+
+# Get the data.
+vacdat <- getData(urls)
+
+# Check that we have data
+if (is.null(vacdat)){
+
+  warning("No vaccination data for ",subregion,".")
+
+} else {
+
+  # Transform the data to get vacdat compatible with casedat (must be a better way!).
+  vacdat <- vacdat %>%
+    select(datetmp = date, age = age,
+           values = cumVaccinationFirstDoseUptakeByVaccinationDatePercentage) %>%
+    pivot_wider(id_cols = datetmp, names_from = age, values_from = values) %>%
+    filter(datetmp >=vacdate  & datetmp <= enddate) %>%
+    arrange(datetmp)
+
+  # Add vaccination data for the under 24s.
+  vacdat$`18_24`<-NULL
+  vacdat<-cbind('20_24'=0.0,vacdat)
+  vacdat<-cbind('15_19'=0.0,vacdat)
+  vacdat<-cbind('10_14'=0.0,vacdat)
+  vacdat<-cbind('05_09'=0.0,vacdat)
+  vacdat<-cbind('00_04'=0.0,vacdat)
+  vacdat<-cbind(date=vacdat$datetmp,vacdat)
+  vacdat$datetmp<-NULL
+  tmp<-casedat %>% filter(date < vacdate)
+  tmp[2:20]=0.0
+  vacdat <- bind_rows(tmp,vacdat)
+  rm(tmp)
+
+  # convert to fraction
+  vacdat[2:length(vacdat)]<-vacdat[2:length(vacdat)]/100
+
+}
+
+
+# Deaths by age -----------------------------------------------------------
+
+deathquery <- paste0("metric=newDeaths28DaysByDeathDateAgeDemographics&",
+                     "format=csv")
+
+# Get the URL(s)
+urls <- getURL(code, deathquery)
+
+# Get the data.
+deathdat <- getData(urls)
+
+# Check that we have data
+if (is.null(deathdat)) {
+
+  warning("No death by age data for ",subregion,".")
+
+} else {
+
+  # Map the ages column to become column headings for the different age groups
+  # for dates between the start and end date inclusive and then ensure that we
+  # end up with the same columns as for the case data above.
+  deathdat <- deathdat %>%
+    select(date = date, age = age, values = deaths) %>%
+    pivot_wider(id_cols = date, names_from = age, values_from = values) %>%
+    select(-"60+", -"00_59") %>%
+    filter(date >= startdate & date <= enddate) %>%
+    arrange(date) %>%
+    select(names(casedat)) #deaths by age
+
+}
+
+
+# Regional data for deaths and cases by specimen date ---------------------
+
+regquery <- paste0("metric=newDeaths28DaysByDeathDate&",
+                   "metric=newCasesBySpecimenDate&",
+                   "format=csv")
+
+# Get the URL(s)
+urls <- getURL(code, regquery)
+
+# Get the data.
+regdat <- getData(urls)
+
+# Check that we have data
+if (is.null(regdat)){
+
+  warning("No regional data for ",subregion,".")
+
+} else {
+
+  # Transform the data
+  regcases <- regdat %>%  select(date,areaName,areaCode,
+                                 Cases = newCasesBySpecimenDate) %>%
+    pivot_wider(id_cols = date, names_from = areaName, values_from = Cases) %>%
+    filter(date >= startdate & date <= enddate ) %>%
+    arrange(date)
+
+  regdeaths <- regdat %>%  select(date,areaName,Deaths = newDeaths28DaysByDeathDate) %>%
+    pivot_wider(id_cols = date, names_from = areaName, values_from = Deaths) %>%
+    filter(date >= startdate & date <= enddate )%>%
+    arrange(date)
+
+}
+
+
+# Get age data for regions because can't download simultaneously
+regquery2 <- paste0("metric=newCasesBySpecimenDateAgeDemographics&",
+                    "metric=newDeathsBySpecimenDateAgeDemographics&",
+                    "format=csv")
+# Get the URL(s)
+urls <- getURL(code, regquery2)
+
+# Get the data.
+regagedat <- getData(urls)
+
+# Check that we have data
+if (is.null(regagedat)) {
+
+  warning("No regional cases by age data for ",subregion,".")
+
+} else {
+
+  # Transform the data
+  regagedat <- regagedat %>%  select(date, areaName, age, cases) %>%
+    filter(date >= startdate & date <= enddate ) %>%
+    arrange(date)
+}
+
+
+# R estimate --------------------------------------------------------------
+
+# Read in the UK government R estimate data from a csv file
+coltypes <- cols(
+  Date = col_date(format = "%Y-%m-%d"), UK_LowerBound = col_number(),
+  UK_UpperBound = col_number(), England_LowerBound = col_number(),
+  England_UpperBound = col_number(), EEng_LowerBound = col_number(),
+  EEng_UpperBound = col_number(), Lon_LowerBound = col_number(),
+  Lon_UpperBound = col_number(), Mid_LowerBound = col_number(),
+  Mid_UpperBound = col_number(), NEY_LowerBound = col_number(),
+  NEY_UpperBound = col_number(), NW_LowerBound = col_number(),
+  NW_UpperBound = col_number(), SE_LowerBound = col_number(),
+  SE_UpperBound = col_number(), SW_LowerBound = col_number(),
+  SW_UpperBound = col_number()
+)
+
+# Read the data from a csv file.
+Rest <- read_csv(file="data/R_estimate.csv", col_types = coltypes)
+
+# Hospital data -----------------------------------------------------------
+
+#### Get the UK hospital data & Append data to tibble
+####  MV beds = CRIT
+####  hospitalCases = SARI+CRIT+CRITREC
+hospquery <- paste0("metric=covidOccupiedMVBeds&",
+                    "metric=hospitalCases&",
+                    "metric=newAdmissions&",
+                    "format=csv")
+
+# Get the URL(s)
+urls <- getURL(code, hospquery)
+
+# Get the data.
+d <- getData(urls)
+
+# Check that we have data
+if(is.null(d) > 0){
+
+  warning("No hospital data for ",subregion,".")
+
+} else {
+
+  HospitalData <- tibble()
+  HospitalData <- rev( bind_rows(HospitalData,d) )
+
+  HospitalData  <-  HospitalData %>%
+    filter(date >= startdate & date <= enddate ) %>%
+    arrange(date)
+
+}
+
