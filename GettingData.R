@@ -6,7 +6,6 @@
 # http://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/
 #
 
-
 # Load packages -----------------------------------------------------------
 
 # Read packages used by the script
@@ -14,7 +13,7 @@ library(readr, warn.conflicts = FALSE, quietly = TRUE)
 library(dplyr, warn.conflicts = FALSE, quietly = TRUE)
 library(tidyr, warn.conflicts = FALSE, quietly = TRUE)
 
-# Region look-up -----------------------------------------------------------
+# Region look-up tables ---------------------------------------------------
 
 #
 # UK country codes available from:
@@ -113,8 +112,7 @@ region7Tocode  <- data.frame(
 # This means that when the Midlands come up then we have to pull data twice and
 # add them up.
 
-
-# Download data -----------------------------------------------------------
+# Set region  -----------------------------------------------------------
 
 # Region to get data for - eventually get this from the web-ui as a code.
 # Translate the 7 region code to the 9 region one if necessary.
@@ -129,7 +127,6 @@ if (subregion == "Midlands"){
 } else {
   code <- region9Tocode[subregion]
 }
-
 
 # getURL function ---------------------------------------------------------
 
@@ -166,8 +163,14 @@ getURL <- function(code, query){
 
 # getData function --------------------------------------------------------
 
-# Get data from the URLs.
+# Get data from the URLs - if more than one URL is specified it will do
+# up to two fetches and add the two data frames.
 getData <-  function(urls) {
+
+  # Can only deal with up to two URLs.
+  if(length(urls) > 2){
+    stop("Can only deal with up to 2 URLs.")
+  }
 
   # Data to be returned
   dat <- NULL
@@ -234,7 +237,8 @@ getData <-  function(urls) {
           if(all(d1$date == d2$date)){
             dat$date <- d1$date
           } else {
-            stop("Not all dates match for ",d1$areaName," and ",d2$areaName,".")
+            stop("Not all dates match for ",d1$areaName," and ",
+                 d2$areaName,".")
           }
         } else if (name == "areaType") {
           dat$areaType <- d1$areaType
@@ -248,7 +252,8 @@ getData <-  function(urls) {
           if(all(d1[[name]] == d2[[name]])){
             dat[name] <- d1[name]
           } else {
-            warning("The column ", name, " is a chacter vector but not all values are equal.")
+            warning("The column ", name, " is a chacter vector but not all ",
+                    "values are equal.")
           }
         } else {
           warning("Do not know how to handle ", name, ".")
@@ -268,7 +273,10 @@ getData <-  function(urls) {
 }
 
 
-# Parameters ------------------------------------------------------------
+# Set parameters ------------------------------------------------------------
+
+# Base URL to get the UK government data
+baseurl <- "https://api.coronavirus.data.gov.uk/v2/data?"
 
 # Start and end date for the data
 # for the end date lose only the last day of data -
@@ -277,7 +285,7 @@ startdate <- as.Date("2020/07/25")
 enddate <-  Sys.Date()-5
 
 
-# Data: total cases, deaths, tests ----------------------------------------------
+# Data: total cases, deaths, tests -------------------------------------------
 
 # Construct the query part of the URL NOT including the baseurl, the areaType
 # and the areaRegion as that is generated from the codes in the getURL function.
@@ -307,4 +315,26 @@ comdat <- comdat %>%  select(date,
                       filter(date >= startdate & date <= enddate ) %>%
                       arrange(date)
 
+# Data for all UK cases -------------------------------------------------------
 
+# This is not regionally based. Not sure if it has to be generalised for the
+# other regions/nations. Leave as is for now but needs reviewing. If needed
+# will need to refactor the URL function.
+
+# All UK cases (to estimate pre-Sept England Cases)
+ukcaseurl <- paste0(baseurl,
+                    "areaType=overview&",
+                    "metric=newPCRTestsByPublishDate&",
+                    "format=csv")
+
+# Explicitly define the types for the columns
+coltypes <- cols(col_character(), col_character(),col_character(),
+                 col_date(format="%Y-%m-%d"), col_integer())
+
+# Read the case data
+ukcasedat <-  read_csv(file = ukcaseurl, col_types = coltypes)
+
+# Transform the case data
+ukcasedat <- ukcasedat %>%  select(date = date, tests = newPCRTestsByPublishDate) %>%
+                            filter(date >= startdate &  date <= enddate ) %>%
+                            arrange(date)
