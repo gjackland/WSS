@@ -4,7 +4,7 @@
 #
 
 # Load packages
-library(xlsx)
+library(openxlsx)
 library(lubridate)
 
 
@@ -157,9 +157,80 @@ CCage$Value = Growth_75_BestGuess
 CC <- rbind(CC, CCage)
 
 CCmid <-CCEng
+CCmid$Geography="North East"
+CCmid$Value = R_NEY_BestGuess
+Quant = R_NEY_Quant
+CCmid$"Quantile 0.05"=Quant[1]
+CCmid$"Quantile 0.25"=Quant[2]
+CCmid$"Quantile 0.5"=Quant[3]
+CCmid$"Quantile 0.75"=Quant[4]
+CCmid$"Quantile 0.5"=Quant[5]
+CC <- rbind(CC, CCmid)
+
+CCmid <-CCEng
+CCmid$Geography="North West"
+CCmid$Value = R_NW_BestGuess
+Quant = R_NW_Quant
+CCmid$"Quantile 0.05"=Quant[1]
+CCmid$"Quantile 0.25"=Quant[2]
+CCmid$"Quantile 0.5"=Quant[3]
+CCmid$"Quantile 0.75"=Quant[4]
+CCmid$"Quantile 0.5"=Quant[5]
+CC <- rbind(CC, CCmid)
+
+
+CCmid <-CCEng
+CCmid$Geography="East of England"
+CCmid$Value = R_EE_BestGuess
+Quant = R_EE_Quant
+CCmid$"Quantile 0.05"=Quant[1]
+CCmid$"Quantile 0.25"=Quant[2]
+CCmid$"Quantile 0.5"=Quant[3]
+CCmid$"Quantile 0.75"=Quant[4]
+CCmid$"Quantile 0.5"=Quant[5]
+CC <- rbind(CC, CCmid)
+
+
+CCmid <-CCEng
+CCmid$Geography="London"
+CCmid$Value = R_London_BestGuess
+Quant = unname(quantile(tail(rat$London), probs=c(0.05,0.25,0.5,0.75,0.95)))
+CCmid$"Quantile 0.05"=R_London_Quant[1]
+CCmid$"Quantile 0.25"=R_London_Quant[2]
+CCmid$"Quantile 0.5"=R_London_Quant[3]
+CCmid$"Quantile 0.75"=R_London_Quant[4]
+CCmid$"Quantile 0.5"=R_London_Quant[5]
+# Add the new row
+CC <- rbind(CC, CCmid)
+
+CCmid <-CCEng
+CCmid$Geography="South East"
+CCmid$Value = R_SE_BestGuess
+Quant = R_SE_Quant
+CCmid$"Quantile 0.05"=Quant[1]
+CCmid$"Quantile 0.25"=Quant[2]
+CCmid$"Quantile 0.5"=Quant[3]
+CCmid$"Quantile 0.75"=Quant[4]
+CCmid$"Quantile 0.5"=Quant[5]
+CC <- rbind(CC, CCmid)
+
+
+CCmid <-CCEng
+CCmid$Geography="South West"
+CCmid$Value = R_SW_BestGuess
+Quant = R_SW_Quant
+CCmid$"Quantile 0.05"=Quant[1]
+CCmid$"Quantile 0.25"=Quant[2]
+CCmid$"Quantile 0.5"=Quant[3]
+CCmid$"Quantile 0.75"=Quant[4]
+CCmid$"Quantile 0.5"=Quant[5]
+CC <- rbind(CC, CCmid)
+
+
+CCmid <-CCEng
 CCmid$Geography="Midlands"
-CCmid$Value = mean(tail(rat$Midlands))
-Quant = unname(quantile(tail(rat$Midlands), probs=c(0.05,0.25,0.5,0.75,0.95)))
+CCmid$Value = R_Midlands_BestGuess
+Quant = R_Midlands_Quant
 CCmid$"Quantile 0.05"=Quant[1]
 CCmid$"Quantile 0.25"=Quant[2]
 CCmid$"Quantile 0.5"=Quant[3]
@@ -168,6 +239,7 @@ CCmid$"Quantile 0.5"=Quant[5]
 # Add the new row
 CC <- rbind(CC, CCmid)
 
+
 # Write to excel
-write.xlsx(CC, file = "Data/WSS_CC.xlsx", sheetName = "WSS", row.names = FALSE)
+write.xlsx(CC, file = "Data/WSS_CC.xlsx", sheetName = "WSS", row.names = FALSE, overwrite = TRUE)
 
