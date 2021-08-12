@@ -228,9 +228,12 @@ outputJSON <- function(myt0,
                          incDeath = myincDeath
     )
 
+    modelVersion = Sys.getenv("WSS_VERSION")
+    mymodel = list(name="WSS", modelVersion=modelVersion, connectorVersion=modelVersion)
     ## Build up the object to be output to JSON
     myobject <- list(time = mytime,
                      metadata = mymetadata,
+                     model = mymodel,
                      aggregate = list(metrics=myaggregates))
 
     ## Output to JSON
