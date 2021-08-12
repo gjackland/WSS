@@ -131,10 +131,10 @@ Knock<-t(data.frame(
 baseurl <- "https://api.coronavirus.data.gov.uk/v2/data?"
 
 # Start and end date - the data to collect data from
-startdate <- as.Date("2020/07/25") #as.Date("2020/02/25")
+startdate <- as.Date("2020/09/22") #as.Date("2020/02/25")
 
 # Lose only the last day of data - use tail correction for reporting delay
-enddate <-  Sys.Date()-3
+enddate <-  Sys.Date()-5
 # Set the generation time
 genTime <- 5
 #  Dates for the plots
@@ -867,15 +867,16 @@ if(any(CASE==0)){
   }
 }
 rat <- regcases
-for(i in ((genTime+1):nrow(regcases))    ){
+for(i in (2:nrow(regcases))    ){
   rat[i,2:ncol(regcases)] <- 1+log(regcases[i,2:ncol(regcases)]/regcases[(i-1),2:ncol(regcases)])*genTime
 }
+rat[1,2:ncol(regcases)]<-1.0
 rat[is.na(rat)] <- 1.0
 rat[rat==Inf] <- 1.0
 rat[rat==-Inf] <- 1.0
 
 startplot <- rat$date[200]
-endplot <- rat$date[352]
+endplot <- enddate
 
 
 if(interactive()){
@@ -957,7 +958,7 @@ Govdat <- Rest[Rest$Date >= min(comdat$date) & Rest$Date <= max(comdat$date),]
 
 # Parameters for fitting splines and Loess
 nospl=8
-spdf=12
+spdf=18
 lospan=0.3
 
 smoothweightR<-smooth.spline(dfR$bylogR,df=spdf,w=sqrt(comdat$allCases))
@@ -967,18 +968,18 @@ smoothweightRfp<-smooth.spline(dfR$fpR,df=spdf,w=sqrt(comdat$fpCases))
 smoothweightR$date<-comdat$date
 smoothweightRfp$date<-dfR$date
 smoothR<-smooth.spline(dfR$bylogR,df=14)
-smoothR1<-smooth.spline(dfR$bylogR[1:(lock1-1)],df=nospl)
+smoothR1<-smooth.spline(dfR$bylogR[1:(lock1-1)],df=lock1/14)
 smoothR1$date<-dfR$date[1:lock1-1]
-smoothR2<-smooth.spline(dfR$bylogR[lock1:(unlock1-1)],df=nospl)
+smoothR2<-smooth.spline(dfR$bylogR[lock1:(unlock1-1)],df=(unlock1-lock1)/14)
 smoothR2$x=smoothR2$x+lock1
 smoothR2$date<-dfR$date[lock1:unlock1-1]
-smoothR3<-smooth.spline(dfR$bylogR[unlock1:(lock2-1)],df=nospl)
+smoothR3<-smooth.spline(dfR$bylogR[unlock1:(lock2-1)],df=(lock2-unlock1)/14)
 smoothR3$x=smoothR3$x+unlock1
 smoothR3$date<-dfR$date[unlock1:(lock2-1)]
-smoothR4<-smooth.spline(dfR$bylogR[lock2:(unlock2-1)],df=nospl)
+smoothR4<-smooth.spline(dfR$bylogR[lock2:(unlock2-1)],df=(unlock2-lock2)/14)
 smoothR4$x=smoothR4$x+unlock2
 smoothR4$date<-dfR$date[lock2:(unlock2-1)]
-smoothRend<-smooth.spline(dfR$bylogR[unlock2:length(dfR$date)],df=nospl)
+smoothRend<-smooth.spline(dfR$bylogR[unlock2:length(dfR$date)],df=(length(dfR$date)-unlock2)/14)
 smoothRend$x=smoothRend$x+unlock2
 smoothRend$date<-dfR$date[unlock2:length(dfR$gjaR)]
 dfR$piecewise<-dfR$gjaR
@@ -1007,79 +1008,176 @@ lines(predict(loess(gjaR ~ x, data=dfR,span=0.3,weight=sqrt(comdat$allCases))),c
 lines(predict(loess(gjaR ~ x, data=dfR,span=0.3)),col='green',x=dfR$date)
 lines(predict(loess(bylogR ~ x, data=dfR,span=0.3,weight=sqrt(comdat$allCases))),col='red',x=dfR$date,lwd=2)
 lines(predict(loess(bylogR ~ x, data=dfR,span=0.3)),col='red',x=dfR$date)
-
+###  Filters
+s1=0.05
+s2=0.1
+s3=0.3
+s4=0.5
 filteredR <-append(
-  append(tail(predict(loess(bylogR ~ x, data=dfR,span=0.3))),
-         tail(predict(loess(bylogR ~ x, data=dfR,span=0.1))) ) , 
-  append(tail(predict(loess(bylogR ~ x, data=dfR,span=0.05))), 
-         tail(predict(loess(bylogR ~ x, data=dfR,span=0.5))))
+  append((predict(loess(gjaR ~ x, data=dfR,span=s1))),
+         tail(predict(loess(gjaR ~ x, data=dfR,span=s2))) ) , 
+  append(tail(predict(loess(gjaR ~ x, data=dfR,span=s3))), 
+         tail(predict(loess(gjaR ~ x, data=dfR,span=s4))))
 )
 R_England_BestGuess<- mean(filteredR)
 R_England_Quant <-unname(quantile(filteredR, probs=c(0.05,0.25,0.5,0.75,0.95)))
 
 filteredR <-append(
-  append(tail(predict(loess(Scotland ~ as.numeric(date), data=rat,span=0.3))),
-         tail(predict(loess(Scotland ~ as.numeric(date), data=rat,span=0.1))) ) , 
-  append(tail(predict(loess(Scotland ~ as.numeric(date), data=rat,span=0.05))), 
-         tail(predict(loess(Scotland ~ as.numeric(date), data=rat,span=0.5))))
+  append(tail(predict(loess(Scotland ~ as.numeric(date), data=rat,span=s1))),
+         tail(predict(loess(Scotland ~ as.numeric(date), data=rat,span=s2))) ) , 
+  append(tail(predict(loess(Scotland ~ as.numeric(date), data=rat,span=s3))), 
+         tail(predict(loess(Scotland ~ as.numeric(date), data=rat,span=s4))))
 )
 R_Scotland_BestGuess <-mean(filteredR)
 R_Scotland_Quant <-unname(quantile(filteredR, probs=c(0.05,0.25,0.5,0.75,0.95)))
 
+rat$tmp=rat$London
+
 filteredR <-append(
-  append(tail(predict(loess(p00 ~ as.numeric(date), data=dfR,span=0.3))),
-         tail(predict(loess(p00 ~ as.numeric(date), data=dfR,span=0.1))) ) , 
-  append(tail(predict(loess(p00 ~ as.numeric(date), data=dfR,span=0.05))), 
-         tail(predict(loess(p00 ~ as.numeric(date), data=dfR,span=0.5))))
+  append(tail(predict(loess(tmp ~ as.numeric(date), data=rat,span=s1))),
+         tail(predict(loess(tmp ~ as.numeric(date), data=rat,span=s2))) ) , 
+  append(tail(predict(loess(tmp ~ as.numeric(date), data=rat,span=s3))), 
+         tail(predict(loess(tmp ~ as.numeric(date), data=rat,span=s4))))
 )
+R_London_BestGuess <-mean(filteredR)
+R_London_Quant <-unname(quantile(filteredR, probs=c(0.05,0.25,0.5,0.75,0.95)))
+
+rat$tmp=rat$Midlands
+
+filteredR <-append(
+  append(tail(predict(loess(tmp ~ as.numeric(date), data=rat,span=s1))),
+         tail(predict(loess(tmp ~ as.numeric(date), data=rat,span=s2))) ) , 
+  append(tail(predict(loess(tmp ~ as.numeric(date), data=rat,span=s3))), 
+         tail(predict(loess(tmp ~ as.numeric(date), data=rat,span=s4))))
+)
+R_Midlands_BestGuess <-mean(filteredR)
+R_Midlands_Quant <-unname(quantile(filteredR, probs=c(0.05,0.25,0.5,0.75,0.95)))
+
+rat$tmp = rat$`North West`
+
+filteredR <-append(
+  append(tail(predict(loess(tmp ~ as.numeric(date), data=rat,span=s1))),
+         tail(predict(loess(tmp ~ as.numeric(date), data=rat,span=s2))) ) , 
+  append(tail(predict(loess(tmp ~ as.numeric(date), data=rat,span=s3))), 
+         tail(predict(loess(tmp ~ as.numeric(date), data=rat,span=s4))))
+)
+
+R_NW_BestGuess <-mean(filteredR)
+R_NW_Quant <-unname(quantile(filteredR, probs=c(0.05,0.25,0.5,0.75,0.95)))
+
+rat$tmp = rat$NE_Yorks
+ 
+filteredR <-append(
+  append(tail(predict(loess(tmp ~ as.numeric(date), data=rat,span=s1))),
+         tail(predict(loess(tmp ~ as.numeric(date), data=rat,span=s2))) ) , 
+  append(tail(predict(loess(tmp ~ as.numeric(date), data=rat,span=s3))), 
+         tail(predict(loess(tmp ~ as.numeric(date), data=rat,span=s4))))
+)
+
+R_NEY_BestGuess <-mean(filteredR)
+R_NEY_Quant <-unname(quantile(filteredR, probs=c(0.05,0.25,0.5,0.75,0.95)))
+
+
+rat$tmp = rat$`East of England`
+
+filteredR <-append(
+  append(tail(predict(loess(tmp ~ as.numeric(date), data=rat,span=s1))),
+         tail(predict(loess(tmp ~ as.numeric(date), data=rat,span=s2))) ) , 
+  append(tail(predict(loess(tmp ~ as.numeric(date), data=rat,span=s3))), 
+         tail(predict(loess(tmp ~ as.numeric(date), data=rat,span=s4))))
+)
+
+R_EE_BestGuess <-mean(filteredR)
+R_EE_Quant <-unname(quantile(filteredR, probs=c(0.05,0.25,0.5,0.75,0.95)))
+
+
+
+rat$tmp <- rat$`South East`
+
+filteredR <-append(
+  append(tail(predict(loess(tmp ~ as.numeric(date), data=rat,span=s1))),
+         tail(predict(loess(tmp ~ as.numeric(date), data=rat,span=s2))) ) , 
+  append(tail(predict(loess(tmp ~ as.numeric(date), data=rat,span=s3))), 
+         tail(predict(loess(tmp ~ as.numeric(date), data=rat,span=s4))))
+)
+
+R_SE_BestGuess <-mean(filteredR)
+R_SE_Quant <-unname(quantile(filteredR, probs=c(0.05,0.25,0.5,0.75,0.95)))
+
+
+
+rat$tmp <- rat$`South West`
+
+filteredR <-append(
+  append(tail(predict(loess(tmp ~ as.numeric(date), data=rat,span=s1))),
+         tail(predict(loess(tmp ~ as.numeric(date), data=rat,span=s2))) ) , 
+  append(tail(predict(loess(tmp ~ as.numeric(date), data=rat,span=s3))), 
+         tail(predict(loess(tmp ~ as.numeric(date), data=rat,span=s4))))
+)
+
+R_SW_BestGuess <-mean(filteredR)
+R_SW_Quant <-unname(quantile(filteredR, probs=c(0.05,0.25,0.5,0.75,0.95)))
+
+
+
+
+##########   Age groups  ########
+
+filteredR <-append(
+  append(tail(predict(loess(p00 ~ as.numeric(date), data=dfR,span=s1))),
+         tail(predict(loess(p00 ~ as.numeric(date), data=dfR,span=s2))) ) , 
+  append(tail(predict(loess(p00 ~ as.numeric(date), data=dfR,span=s3))), 
+         tail(predict(loess(p00 ~ as.numeric(date), data=dfR,span=s4))))
+)
+
 Growth_00_BestGuess <- mean(filteredR)
 Growth_00_Quant <-unname(quantile(filteredR, probs=c(0.05,0.25,0.5,0.75,0.95)))
 
 
 filteredR <-append(
-  append(tail(predict(loess(p05 ~ as.numeric(date), data=dfR,span=0.3))),
-         tail(predict(loess(p05 ~ as.numeric(date), data=dfR,span=0.1))) ) , 
-  append(tail(predict(loess(p05 ~ as.numeric(date), data=dfR,span=0.05))), 
-         tail(predict(loess(p05 ~ as.numeric(date), data=dfR,span=0.5))))
+  append(tail(predict(loess(p05 ~ as.numeric(date), data=dfR,span=s1))),
+         tail(predict(loess(p05 ~ as.numeric(date), data=dfR,span=s2))) ) , 
+  append(tail(predict(loess(p05 ~ as.numeric(date), data=dfR,span=s3))), 
+         tail(predict(loess(p05 ~ as.numeric(date), data=dfR,span=s4))))
 )
 Growth_05_BestGuess <- mean(filteredR)
 Growth_05_Quant <-unname(quantile(filteredR, probs=c(0.05,0.25,0.5,0.75,0.95)))
 
 
 filteredR <-append(
-  append(tail(predict(loess(p15 ~ as.numeric(date), data=dfR,span=0.3))),
-         tail(predict(loess(p15 ~ as.numeric(date), data=dfR,span=0.1))) ) , 
-  append(tail(predict(loess(p15 ~ as.numeric(date), data=dfR,span=0.05))), 
-         tail(predict(loess(p15 ~ as.numeric(date), data=dfR,span=0.5))))
+  append(tail(predict(loess(p15 ~ as.numeric(date), data=dfR,span=s1))),
+         tail(predict(loess(p15 ~ as.numeric(date), data=dfR,span=s2))) ) , 
+  append(tail(predict(loess(p15 ~ as.numeric(date), data=dfR,span=s3))), 
+         tail(predict(loess(p15 ~ as.numeric(date), data=dfR,span=s4))))
 )
 Growth_15_BestGuess <- mean(filteredR)
 Growth_15_Quant <-unname(quantile(filteredR, probs=c(0.05,0.25,0.5,0.75,0.95)))
 
 
 filteredR <-append(
-  append(tail(predict(loess(x25 ~ as.numeric(date), data=dfR,span=0.3))),
-         tail(predict(loess(x25 ~ as.numeric(date), data=dfR,span=0.1))) ) , 
-  append(tail(predict(loess(x25 ~ as.numeric(date), data=dfR,span=0.05))), 
-         tail(predict(loess(x25 ~ as.numeric(date), data=dfR,span=0.5))))
+  append(tail(predict(loess(x25 ~ as.numeric(date), data=dfR,span=s1))),
+         tail(predict(loess(x25 ~ as.numeric(date), data=dfR,span=s2))) ) , 
+  append(tail(predict(loess(x25 ~ as.numeric(date), data=dfR,span=s3))), 
+         tail(predict(loess(x25 ~ as.numeric(date), data=dfR,span=s4))))
 )
 Growth_25_BestGuess <- mean(filteredR)
 Growth_25_Quant <-unname(quantile(filteredR, probs=c(0.05,0.25,0.5,0.75,0.95)))
 
 filteredR <-append(
-  append(tail(predict(loess(x45 ~ as.numeric(date), data=dfR,span=0.3))),
-         tail(predict(loess(x45 ~ as.numeric(date), data=dfR,span=0.1))) ) , 
-  append(tail(predict(loess(x45 ~ as.numeric(date), data=dfR,span=0.05))), 
-         tail(predict(loess(x45 ~ as.numeric(date), data=dfR,span=0.5))))
+  append(tail(predict(loess(x45 ~ as.numeric(date), data=dfR,span=s1))),
+         tail(predict(loess(x45 ~ as.numeric(date), data=dfR,span=s2))) ) , 
+  append(tail(predict(loess(x45 ~ as.numeric(date), data=dfR,span=s3))), 
+         tail(predict(loess(x45 ~ as.numeric(date), data=dfR,span=s4))))
 )
 Growth_45_BestGuess <- mean(filteredR)
 Growth_45_Quant <-unname(quantile(filteredR, probs=c(0.05,0.25,0.5,0.75,0.95)))
 
 
 filteredR <-append(
-  append(tail(predict(loess(x65 ~ as.numeric(date), data=dfR,span=0.3))),
-         tail(predict(loess(x65 ~ as.numeric(date), data=dfR,span=0.1))) ) , 
-  append(tail(predict(loess(x65 ~ as.numeric(date), data=dfR,span=0.05))), 
-         tail(predict(loess(x65 ~ as.numeric(date), data=dfR,span=0.5))))
+  append(tail(predict(loess(x65 ~ as.numeric(date), data=dfR,span=s1))),
+         tail(predict(loess(x65 ~ as.numeric(date), data=dfR,span=s2))) ) , 
+  append(tail(predict(loess(x65 ~ as.numeric(date), data=dfR,span=s3))), 
+         tail(predict(loess(x65 ~ as.numeric(date), data=dfR,span=s4))))
 )
 Growth_65_BestGuess <- mean(filteredR)
 Growth_65_Quant <-unname(quantile(filteredR, probs=c(0.05,0.25,0.5,0.75,0.95)))
@@ -1087,34 +1185,15 @@ Growth_65_Quant <-unname(quantile(filteredR, probs=c(0.05,0.25,0.5,0.75,0.95)))
 
 
 filteredR <-append(
-  append(tail(predict(loess(x75 ~ as.numeric(date), data=dfR,span=0.3))),
-         tail(predict(loess(x75 ~ as.numeric(date), data=dfR,span=0.1))) ) , 
-  append(tail(predict(loess(x75 ~ as.numeric(date), data=dfR,span=0.05))), 
-         tail(predict(loess(x75 ~ as.numeric(date), data=dfR,span=0.5))))
+  append(tail(predict(loess(x75 ~ as.numeric(date), data=dfR,span=s1))),
+         tail(predict(loess(x75 ~ as.numeric(date), data=dfR,span=s2))) ) , 
+  append(tail(predict(loess(x75 ~ as.numeric(date), data=dfR,span=s3))), 
+         tail(predict(loess(x75 ~ as.numeric(date), data=dfR,span=s4))))
 )
 Growth_75_BestGuess <- mean(filteredR)
 Growth_75_Quant <-unname(quantile(filteredR, probs=c(0.05,0.25,0.5,0.75,0.95)))
 
 rm(filteredR)
-
-# Regional Smoothed R
-
-rat$London <-  (predict(loess(London ~ as.numeric(date),data=rat,span=0.3))+
-                    predict(loess(London ~ as.numeric(date),data=rat,span=0.1))+
-                    predict(loess(London ~ as.numeric(date),data=rat,span=0.5))+
-                    predict(loess(London ~ as.numeric(date),data=rat,span=1)))/4
-
-rat$Midlands <-  (predict(loess(Midlands ~ as.numeric(date),data=rat,span=0.3))+
-                    predict(loess(Midlands ~ as.numeric(date),data=rat,span=0.1))+
-                    predict(loess(Midlands ~ as.numeric(date),data=rat,span=0.5))+
-                    predict(loess(Midlands ~ as.numeric(date),data=rat,span=1)))/4
-
-rat$NE_Yorks <-  (predict(loess(NE_Yorks ~ as.numeric(date),data=rat,span=0.3))+
-                    predict(loess(NE_Yorks ~ as.numeric(date),data=rat,span=0.1))+
-                    predict(loess(NE_Yorks ~ as.numeric(date),data=rat,span=0.5))+
-                    predict(loess(NE_Yorks ~ as.numeric(date),data=rat,span=1)))/4
-plot(loess.smooth(rat$date, rat$`North East`,span=0.05)$y+loess.smooth(rat$date, rat$`North East`,span=0.2)$y
-)
 
 plot(smoothweightR$y,ylab="R-number",xlab="Day",ylim=c(0.5,1.6))
 #  Plot R continuous with many splines.
@@ -1372,7 +1451,7 @@ if(CrystalCast){
 }
 
 #####  Figures and analysis for https://www.medrxiv.org/content/10.1101/2021.04.14.21255385v1
-medrxiv=FALSE
+medrxiv=TRUE
 if(medrxiv){
 ####  From here on we're reproducing figures from https://www.medrxiv.org/content/10.1101/2021.04.14.21255385v1
 ##### Fig 1. - Heatmaps ####
@@ -1454,27 +1533,27 @@ for (day in 28:nrow(comdat)){
 rm(day,area)
 
 
-#  Regional plots, with CFR input by hand
-plot(regdeaths$London*55,x=regdeaths$date)
-lines(reglnpredict$London,x=reglnpredict$date)
-lines(reggampredict$London,x=reglnpredict$date)
+#  Regional plots, with CFR input by hand  - obsolete.  Serves only to show how bad it is to exclude age and vaccine data
+#plot(regdeaths$London*55,x=regdeaths$date)
+#lines(reglnpredict$London,x=reglnpredict$date)
+#lines(reggampredict$London,x=reglnpredict$date)
 
-plot(regdeaths$`North East`*55,x=regdeaths$date)
-lines(reglnpredict$`North East`,x=reglnpredict$date)
-plot(regdeaths$`North West`*55,x=regdeaths$date)
-lines(y=reglnpredict$`North West`,x=reglnpredict$date)
-plot(regdeaths$`South West`*55,x=regdeaths$date)
-lines(reglnpredict$`South West`,x=reglnpredict$date)
-plot(regdeaths$`South East`*55,x=regdeaths$date)
-lines(reglnpredict$`South East`,x=reglnpredict$date)
-plot(regdeaths$`East Midlands`*55,x=regdeaths$date)
-lines(reglnpredict$`East Midlands` ,x=reglnpredict$date)
-plot(regdeaths$`East of England`*55,x=regdeaths$date)
-lines(reglnpredict$`East of England`,x=reglnpredict$date)
-plot(regdeaths$`West Midlands`*55,x=regdeaths$date)
-lines(reglnpredict$`West Midlands`,x=reglnpredict$date)
-plot(regdeaths$`Yorkshire and The Humber`*55,x=regdeaths$date)
-lines(reglnpredict$`Yorkshire and The Humber`,x=reglnpredict$date)
+#plot(regdeaths$`North East`*55,x=regdeaths$date)
+#lines(reglnpredict$`North East`,x=reglnpredict$date)
+#plot(regdeaths$`North West`*55,x=regdeaths$date)
+#lines(y=reglnpredict$`North West`,x=reglnpredict$date)
+#plot(regdeaths$`South West`*55,x=regdeaths$date)
+#lines(reglnpredict$`South West`,x=reglnpredict$date)
+#plot(regdeaths$`South East`*55,x=regdeaths$date)
+#lines(reglnpredict$`South East`,x=reglnpredict$date)
+#plot(regdeaths$`East Midlands`*55,x=regdeaths$date)
+#lines(reglnpredict$`East Midlands` ,x=reglnpredict$date)
+#plot(regdeaths$`East of England`*55,x=regdeaths$date)
+#lines(reglnpredict$`East of England`,x=reglnpredict$date)
+#plot(regdeaths$`West Midlands`*55,x=regdeaths$date)
+#lines(reglnpredict$`West Midlands`,x=reglnpredict$date)
+#plot(regdeaths$`Yorkshire and The Humber`*55,x=regdeaths$date)
+#lines(reglnpredict$`Yorkshire and The Humber`,x=reglnpredict$date)
 
 for (area in 2:length(regcases)){
   lines(reglnpredict[2:279,area])}
@@ -1620,12 +1699,12 @@ ggplot() +
 
 
 #### Same thing with smoothing lognormal-derived CFRs ####
-rollframe = as.data.frame(apply(logcases[,2:20], 2, rollmean, 7, na.pad = T))
+rollframe = as.data.frame(apply(logcases[,2:20], 2, rollmean, 14, na.pad = T))
 rollframe$date = logcases$date
 rollframe = pivot_longer(rollframe, cols = colnames(logcases[11:20]),
                          names_to = "agegroup", names_prefix = "X", values_to = "Cases")
 
-deathroll = as.data.frame(apply(deathdat[,2:20], 2, rollmean, 7, na.pad = T))
+deathroll = as.data.frame(apply(deathdat[,2:20], 2, rollmean, 14, na.pad = T))
 deathroll$date = deathdat$date
 deathframe = pivot_longer(deathroll, cols = colnames(deathdat[11:20]),
                           names_to = "agegroup", names_prefix = "X", values_to = "Deaths")
@@ -1640,39 +1719,24 @@ rm(deathframe)
 rollframe = rollframe[301:(nrow(rollframe)-30),]
 
 ggplot() +
-  geom_line(data = rollframe, aes(x = date, y = CFR, color = agegroup), size = 1.1, na.rm = TRUE) +
-  scale_colour_manual(values = rev(brewer.pal(10,"Set3"))) +
+  geom_smooth(method = NULL, span=0.3, data = rollframe, aes(x = date, y = CFR, color = agegroup), size = 1.1, na.rm = TRUE) +
+  scale_colour_manual(values = rev(brewer.pal(10,"Set3"))) + ylim(0.0,0.5)
   labs(title = paste("Case Fatality Ratios by age group -  7-day rolling averages"),
        subtitle = "Lognormal model",
        x = "Date", y = "CFR") +
   scale_x_date(date_breaks = "1 month", date_labels = "%b") +
   theme_bw() +
-  geom_rect(aes(xmin=as.Date("2020/12/01"), xmax=as.Date("2021/01/16"), ymin=0, ymax=Inf), fill = "red", alpha = 0.1) +
-  geom_rect(aes(xmin=as.Date("2021/01/17"), xmax=Sys.Date(), ymin=0, ymax=Inf), fill = "green", alpha = 0.1)
+  geom_rect(aes(xmin=as.Date("2020/12/01"), xmax=as.Date("2021/01/16"), ymin=0, ymax=1.0), fill = "red", alpha = 0.1) +
+  geom_rect(aes(xmin=as.Date("2021/01/17"), xmax=Sys.Date(), ymin=0, ymax=1.0), fill = "green", alpha = 0.1)
 
 
-# Another try to Generate smoothed CFRs
-CFR<-logcases[(30:nrow(logcases)),(1:20)]
-CFR[is.na(CFR)]=0
-dd=deathdat[(30:nrow(logcases)),(1:20)]
-CFR[2:20]=dd[2:20]/CFR[2:20]
-CFR[is.na(CFR)]=0
-
-ggplot(CFR) +
-  for (i in 12:19){
-    geom_line(aes( x=date, y=CFR[5] ))
-}
-CFR %>% filter( "2020/10/1"< date & date < endplot) %>%
-  pivot_longer(!date,names_to = "agegroup", values_to="DeathRate") %>%
-  ggplot(aes(x=date, y=DeathRate, colour=agegroup)) +
-  coord_cartesian(ylim=c(0.0,0.4))+ geom_smooth(formula= y ~ x, method = "loess", span=0.3) +
-  guides(color = "none") + facet_wrap(vars(agegroup))
-}
 vacdat %>% filter( "2020/10/1"< date & date < endplot) %>%
   pivot_longer(!date,names_to = "agegroup", values_to="Vaccinations") %>%
   ggplot(aes(x=date, y=Vaccinations, colour=agegroup)) +
   coord_cartesian(ylim=c(0.0,1.0))+ geom_smooth(formula= y ~ x, method = "loess", span=0.2) +
   guides(color = "none") + facet_wrap(vars(agegroup))
+}
+
 ################################################################
 ###  Finally, Use all this to make predictions
 ###Assume that R and lethality are constants
@@ -1756,8 +1820,8 @@ lines(rowSums(newMILD[2:17]+newILI[2:17]),col="red")
 
 plot(HospitalData$covidOccupiedMVBeds)
 lines(rowSums(CRIT[2:20])/2,col="blue")
-plot(rowSums(deathdat[2:20]),xlim=c(300,400),ylim=c(0,120))
-lines(rowSums(DEATH[2:20]),col="blue")
+plot(rowSums(deathdat[2:20]),x=deathdat$date)
+lines(rowSums(DEATH[2:20]),col="blue",x=DEATH$date)
 
 # This needs to be the last routine called for the UI, by default it returns
 # success (0), if there is no success setStatus() should be called. By default
