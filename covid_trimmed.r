@@ -16,6 +16,7 @@
 if(interactive()){
   rm(list = ls())
 }
+
 # Read packages used by the script
 library(readr, warn.conflicts = FALSE, quietly = TRUE)
 library(dplyr, warn.conflicts = FALSE, quietly = TRUE)
@@ -1065,7 +1066,7 @@ R_NW_BestGuess <-mean(filteredR)
 R_NW_Quant <-unname(quantile(filteredR, probs=c(0.05,0.25,0.5,0.75,0.95)))
 
 rat$tmp = rat$NE_Yorks
-
+ 
 filteredR <-append(
   append(tail(predict(loess(tmp ~ as.numeric(date), data=rat,span=s1))),
          tail(predict(loess(tmp ~ as.numeric(date), data=rat,span=s2))) ) , 
@@ -1716,7 +1717,7 @@ rollframe[rollframe==Inf]=1.0
 rollframe[rollframe==-Inf]=1.0
 rm(deathframe)
 rollframe = rollframe[301:(nrow(rollframe)-30),]
- 
+
 ggplot() +
   geom_smooth(method = NULL, span=0.3, data = rollframe, aes(x = date, y = CFR, color = agegroup), size = 1.1, na.rm = TRUE) +
   scale_colour_manual(values = rev(brewer.pal(10,"Set3"))) + ylim(0.0,0.5)

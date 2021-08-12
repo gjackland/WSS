@@ -157,6 +157,7 @@ CCage$Value = Growth_75_BestGuess
 CC <- rbind(CC, CCage)
 
 CCmid <-CCEng
+
 CCmid$Geography="North East"
 CCmid$Value = R_NEY_BestGuess
 Quant = R_NEY_Quant
@@ -257,7 +258,6 @@ CCdate$"Year of Value" = year(smoothweightR$date[d])
 # Add the new row
 CC <- rbind(CC, CCdate)
 }
-
 
 # Write to excel
 write.xlsx(CC, file = "Data/WSS_CC.xlsx", sheetName = "WSS", row.names = FALSE)
