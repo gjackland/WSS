@@ -6,6 +6,14 @@
 # http://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/
 #
 
+
+# Load packages -----------------------------------------------------------
+
+# Read packages used by the script
+library(readr, warn.conflicts = FALSE, quietly = TRUE)
+library(dplyr, warn.conflicts = FALSE, quietly = TRUE)
+library(tidyr, warn.conflicts = FALSE, quietly = TRUE)
+
 #  ISSUES #####################################################################
 #
 # * newPCRTestsByPublishDate are all NULL for English regions for the total
@@ -24,14 +32,6 @@
 # * No vaccination data for GB-WLS, GB-NIR.
 # * No death by age for GB-NIR.
 # * No regional cases by age data for GB-WLS.
-
-
-# Load packages -----------------------------------------------------------
-
-# Read packages used by the script
-library(readr, warn.conflicts = FALSE, quietly = TRUE)
-library(dplyr, warn.conflicts = FALSE, quietly = TRUE)
-library(tidyr, warn.conflicts = FALSE, quietly = TRUE)
 
 # Region look-up tables ---------------------------------------------------
 
@@ -148,6 +148,7 @@ if (subregion == "Midlands"){
   code <- region9Tocode[subregion]
 }
 
+
 # getURL function ---------------------------------------------------------
 
 # Function to return one or more URLs to query for the requested data based
@@ -210,31 +211,36 @@ getData <-  function(urls) {
       warning("No data returned for ", url,".\n\n")
       next
     }
+
+    # Only do once unless we need to get 2 data sets and merge the data
     if (first_time) {
+
       dat <- d
       first_time <- FALSE
+
     } else {
 
-      # Intersection of dates
+      # Intersection of data frame by start and end dates
       start <- max(min(d$date), min(dat$date))
       end   <- min(max(d$date), max(dat$date))
 
-      # Filter data by date
+      # Filter data by the start and end date
       d1 <- d[start <= d$date & d$date <= end,]
       d2 <- dat[start <= dat$date & dat$date <= end,]
+
+      # Check we have the same number of rows (no in between dates)
+      if(nrow(d1) != nrow(d2)){
+        stop("Data frames are not the of the same size.")
+      }
 
       # Area codes
       d1areaCode <- unique(d1$areaCode)
       d2areaCode <- unique(d2$areaCode)
 
-      # Check we have the same number of rows
-      if(nrow(d1) != nrow(d2)){
-        stop("Data frames are not the of the same size.")
-      }
-
-      # Reset the output variable
+      # Reset the output data frame
       dat <- NULL
 
+      # Set the areaCode and areaName for data frames that need to be merged
       # North East = North East and Yorkshire = North East + Yorkshire and The Humber
       #              E40000009                = E12000001 + E12000003
       if ((d1areaCode == "E12000003" & d2areaCode == "E12000001") |
@@ -251,42 +257,70 @@ getData <-  function(urls) {
         areaName <- "Midlands"
       }
 
-      # Loop round the columns
+      # Loop round the columns to add the two data frames
       # NOTE will not work for character based columns!
       for (name in names(d1)) {
+
         if(name == "areaCode" | name == "areaName"){
-          next # set these up later
+
+          dat$areaCode <- rep(areaCode, nrow(d1))
+          dat$areaName <- rep(areaName, nrow(d1))
+
         } else if (name == "date") {
+
           # Check dates match up
           if(all(d1$date == d2$date)){
+
             dat$date <- d1$date
+
           } else {
+
             stop("Not all dates match for ",d1$areaName," and ",
                  d2$areaName,".")
           }
+
         } else if (name == "areaType") {
+
+          # Set the areaType to the same type it was before
           dat$areaType <- d1$areaType
+
         } else if (is.numeric(d1[[name]]) & is.numeric(d2[[name]])) {
-          # Add columns together
+
+          # Add columns together if both are numeric
           dat[name] <- d1[name] + d2[name]
+
         } else if (all(is.na(d1[[name]])) & all(is.na(d2[[name]]))){
+
+          # If column is all NA set column to the same
           dat[name] <- d1[name]
+
+          # Issue a warning message
           message("All values for ", name, " are NAs.")
+
         } else if (is.character(d1[[name]]) & is.character(d2[[name]])) {
+
+          # if columns all characters check the values are the same and set
+          # accordingly
           if(all(d1[[name]] == d2[[name]])){
+
             dat[name] <- d1[name]
+
           } else {
+
+            # Otherwise issue a warning
             warning("The column ", name, " is a chacter vector but not all ",
                     "values are equal.")
           }
-        } else {
-          warning("Do not know how to handle ", name, ".")
-        }
-      } # End for loop
 
-      # Set values
-      dat$areaCode <- rep(areaCode, nrow(d1))
-      dat$areaName <- rep(areaName, nrow(d1))
+        } else {
+
+          # Otherwise do not know how to handle this column and some additional
+          # bit of code will be required.
+          warning("Do not know how to handle ", name, ".")
+
+        }
+      } # End for loop round columns
+
     }
 
     # make sure we return a tibble
@@ -296,11 +330,11 @@ getData <-  function(urls) {
   return(dat)
 }
 
-
 # Set parameters ------------------------------------------------------------
 
 # Base URL to get the UK government data
 baseurl <- "https://api.coronavirus.data.gov.uk/v2/data?"
+
 
 # Start and end date for the data
 # for the end date lose only the last day of data -
@@ -308,8 +342,10 @@ baseurl <- "https://api.coronavirus.data.gov.uk/v2/data?"
 startdate <- as.Date("2020/07/25")
 enddate <-  Sys.Date()-5
 
+# Cases, deaths and tests -----------------------------------------
 
-# Data: total cases, deaths and tests -----------------------------------------
+# Status
+message("Getting cases, deaths and test data for ", subregion)
 
 # Construct the query part of the URL NOT including the baseurl, the areaType
 # and the areaRegion as that is generated from the codes in the getURL function.
@@ -327,7 +363,8 @@ comdat <- getData(urls)
 
 # Check that we have data
 if (is.null(comdat)){
-  warning("No case data for ",subregion,".")
+
+  warning("No cases, deaths and test data for ",subregion,".")
 
 } else {
 
@@ -350,7 +387,7 @@ if (is.null(comdat)){
 }
 
 
-# Data for all UK cases -------------------------------------------------------
+# All UK cases -------------------------------------------------------
 
 # This is not regionally based. Not sure if it has to be generalised for the
 # other regions/nations. Leave as is for now but needs reviewing. If needed
@@ -375,6 +412,9 @@ ukcasedat <- ukcasedat %>%  select(date = date, tests = newPCRTestsByPublishDate
                             arrange(date)
 
 # Cases by age ------------------------------------------------------------
+
+# Cases by age
+message("Getting cases by age data for ", subregion)
 
 # Construct the query
 agequery <- paste0("metric=newCasesBySpecimenDateAgeDemographics&",
@@ -405,6 +445,9 @@ if(is.null(casedat)){
 }
 
 # Vaccination by age ------------------------------------------------------
+
+# Status
+message("Getting vaccination by age data for ", subregion)
 
 # Vaccination start date
 vacdate="2020-12-08"
@@ -443,10 +486,15 @@ if (is.null(vacdat)){
   vacdat<-cbind('00_04'=0.0,vacdat)
   vacdat<-cbind(date=vacdat$datetmp,vacdat)
   vacdat$datetmp<-NULL
-  tmp<-casedat %>% filter(date < vacdate)
-  tmp[2:20]=0.0
-  vacdat <- bind_rows(tmp,vacdat)
-  rm(tmp)
+  if (!is.null(casedat)) {
+
+    tmp <-casedat %>% filter(date < vacdate)
+    tmp[2:20]=0.0
+    vacdat <- bind_rows(tmp,vacdat)
+    rm(tmp)
+
+  }
+
 
   # convert to fraction
   vacdat[2:length(vacdat)]<-vacdat[2:length(vacdat)]/100
@@ -456,6 +504,10 @@ if (is.null(vacdat)){
 
 # Deaths by age -----------------------------------------------------------
 
+# Status
+message("Getting deaths by age data for ", subregion)
+
+# Query
 deathquery <- paste0("metric=newDeaths28DaysByDeathDateAgeDemographics&",
                      "format=csv")
 
@@ -487,6 +539,9 @@ if (is.null(deathdat)) {
 
 
 # Regional data for deaths and cases by specimen date ---------------------
+
+# Status
+message("Getting regional data for ", subregion)
 
 regquery <- paste0("metric=newDeaths28DaysByDeathDate&",
                    "metric=newCasesBySpecimenDate&",
@@ -564,6 +619,9 @@ coltypes <- cols(
 Rest <- read_csv(file="data/R_estimate.csv", col_types = coltypes)
 
 # Hospital data -----------------------------------------------------------
+
+# Status
+message("Getting hospital data for ", subregion)
 
 #### Get the UK hospital data & Append data to tibble
 ####  MV beds = CRIT
