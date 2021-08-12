@@ -19,7 +19,7 @@ jobs:
           # Do not attempt to obtain the version number from vx.y.z tags:
           # this is handled by the publish_version workflow.
           VERSION=$(echo "${{ github.ref }}" | sed -e 's,refs/\(heads\|tags\)/\(.*\),\2,' | tr '/' '-')
-          echo "::set-env name=VERSION::$VERSION"
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
 
       - name: Build image
         # Name it `image` for now. The push step below will set a meaningful name.
