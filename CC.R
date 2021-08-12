@@ -4,7 +4,7 @@
 #
 
 # Load packages
-library(openxlsx)
+library(xlsx)
 library(lubridate)
 
 
@@ -228,6 +228,8 @@ CC <- rbind(CC, CCmid)
 
 
 CCmid <-CCEng
+
+
 CCmid$Geography="Midlands"
 CCmid$Value = R_Midlands_BestGuess
 Quant = R_Midlands_Quant
@@ -238,6 +240,7 @@ CCmid$"Quantile 0.75"=Quant[4]
 CCmid$"Quantile 0.95"=Quant[5]
 # Add the new row
 CC <- rbind(CC, CCmid)
+
 
 for (d in 4:(length(smoothweightR$date)-3)){
 CCdate <-CCEng
@@ -257,5 +260,5 @@ CC <- rbind(CC, CCdate)
 
 
 # Write to excel
-write.xlsx(CC, file = "Data/WSS_CC.xlsx", sheetName = "WSS", row.names = FALSE, overwrite = TRUE)
+write.xlsx(CC, file = "Data/WSS_CC.xlsx", sheetName = "WSS", row.names = FALSE)
 
