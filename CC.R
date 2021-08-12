@@ -30,9 +30,9 @@ CC <- data.frame(
   "Creation Day" = day(today),
   "Creation Month" = month(today),
   "Creation Year" = year(today),
-  "Day of Value" = day(enddate-3),
-  "Month of Value" = month(enddate-3),
-  "Year of Value" = year(enddate-3),
+  "Day of Value" = day(enddate-2),
+  "Month of Value" = month(enddate-2),
+  "Year of Value" = year(enddate-2),
   AgeBand = ageband,
   Geography = region,
   ValueType = valuetype,
@@ -65,7 +65,7 @@ CCEng$"Quantile 0.05"=R_England_Quant[1]
 CCEng$"Quantile 0.25"=R_England_Quant[2]
 CCEng$"Quantile 0.5"=R_England_Quant[3]
 CCEng$"Quantile 0.75"=R_England_Quant[4]
-CCEng$"Quantile 0.5"=R_England_Quant[5]
+CCEng$"Quantile 0.95"=R_England_Quant[5]
 CCEng$Value = R_England_BestGuess
 # Add the new row
 CC <- rbind(CC, CCEng)
@@ -77,7 +77,7 @@ CCage$"Quantile 0.05"=Growth_00_Quant[1]
 CCage$"Quantile 0.25"=Growth_00_Quant[2]
 CCage$"Quantile 0.5"=Growth_00_Quant[3]
 CCage$"Quantile 0.75"=Growth_00_Quant[4]
-CCage$"Quantile 0.5"=Growth_00_Quant[5]
+CCage$"Quantile 0.95"=Growth_00_Quant[5]
 CCage$Value = Growth_00_BestGuess
 # Add the new row
 CC <- rbind(CC, CCage)
@@ -88,7 +88,7 @@ CCage$"Quantile 0.05"=Growth_05_Quant[1]
 CCage$"Quantile 0.25"=Growth_05_Quant[2]
 CCage$"Quantile 0.5"=Growth_05_Quant[3]
 CCage$"Quantile 0.75"=Growth_05_Quant[4]
-CCage$"Quantile 0.5"=Growth_05_Quant[5]
+CCage$"Quantile 0.95"=Growth_05_Quant[5]
 CCage$Value = Growth_05_BestGuess
 # Add the new row
 CC <- rbind(CC, CCage)
@@ -100,7 +100,7 @@ CCage$"Quantile 0.05"=Growth_15_Quant[1]
 CCage$"Quantile 0.25"=Growth_15_Quant[2]
 CCage$"Quantile 0.5"=Growth_15_Quant[3]
 CCage$"Quantile 0.75"=Growth_15_Quant[4]
-CCage$"Quantile 0.5"=Growth_15_Quant[5]
+CCage$"Quantile 0.95"=Growth_15_Quant[5]
 CCage$Value = Growth_15_BestGuess
 # Add the new row
 CC <- rbind(CC, CCage)
@@ -113,7 +113,7 @@ CCage$"Quantile 0.05"=Growth_25_Quant[1]
 CCage$"Quantile 0.25"=Growth_25_Quant[2]
 CCage$"Quantile 0.5"=Growth_25_Quant[3]
 CCage$"Quantile 0.75"=Growth_25_Quant[4]
-CCage$"Quantile 0.5"=Growth_25_Quant[5]
+CCage$"Quantile 0.95"=Growth_25_Quant[5]
 CCage$Value = Growth_25_BestGuess
 # Add the new row
 CC <- rbind(CC, CCage)
@@ -126,7 +126,7 @@ CCage$"Quantile 0.05"=Growth_45_Quant[1]
 CCage$"Quantile 0.25"=Growth_45_Quant[2]
 CCage$"Quantile 0.5"=Growth_45_Quant[3]
 CCage$"Quantile 0.75"=Growth_45_Quant[4]
-CCage$"Quantile 0.5"=Growth_45_Quant[5]
+CCage$"Quantile 0.95"=Growth_45_Quant[5]
 CCage$Value = Growth_45_BestGuess
 # Add the new row
 CC <- rbind(CC, CCage)
@@ -138,7 +138,7 @@ CCage$"Quantile 0.05"=Growth_65_Quant[1]
 CCage$"Quantile 0.25"=Growth_65_Quant[2]
 CCage$"Quantile 0.5"=Growth_65_Quant[3]
 CCage$"Quantile 0.75"=Growth_65_Quant[4]
-CCage$"Quantile 0.5"=Growth_65_Quant[5]
+CCage$"Quantile 0.95"=Growth_65_Quant[5]
 CCage$Value = Growth_65_BestGuess
 # Add the new row
 CC <- rbind(CC, CCage)
@@ -151,7 +151,7 @@ CCage$"Quantile 0.05"=Growth_75_Quant[1]
 CCage$"Quantile 0.25"=Growth_75_Quant[2]
 CCage$"Quantile 0.5"=Growth_75_Quant[3]
 CCage$"Quantile 0.75"=Growth_75_Quant[4]
-CCage$"Quantile 0.5"=Growth_75_Quant[5]
+CCage$"Quantile 0.95"=Growth_75_Quant[5]
 CCage$Value = Growth_75_BestGuess
 # Add the new row
 CC <- rbind(CC, CCage)
@@ -164,7 +164,7 @@ CCmid$"Quantile 0.05"=Quant[1]
 CCmid$"Quantile 0.25"=Quant[2]
 CCmid$"Quantile 0.5"=Quant[3]
 CCmid$"Quantile 0.75"=Quant[4]
-CCmid$"Quantile 0.5"=Quant[5]
+CCmid$"Quantile 0.95"=Quant[5]
 CC <- rbind(CC, CCmid)
 
 CCmid <-CCEng
@@ -175,7 +175,7 @@ CCmid$"Quantile 0.05"=Quant[1]
 CCmid$"Quantile 0.25"=Quant[2]
 CCmid$"Quantile 0.5"=Quant[3]
 CCmid$"Quantile 0.75"=Quant[4]
-CCmid$"Quantile 0.5"=Quant[5]
+CCmid$"Quantile 0.95"=Quant[5]
 CC <- rbind(CC, CCmid)
 
 
@@ -187,7 +187,7 @@ CCmid$"Quantile 0.05"=Quant[1]
 CCmid$"Quantile 0.25"=Quant[2]
 CCmid$"Quantile 0.5"=Quant[3]
 CCmid$"Quantile 0.75"=Quant[4]
-CCmid$"Quantile 0.5"=Quant[5]
+CCmid$"Quantile 0.95"=Quant[5]
 CC <- rbind(CC, CCmid)
 
 
@@ -199,7 +199,7 @@ CCmid$"Quantile 0.05"=R_London_Quant[1]
 CCmid$"Quantile 0.25"=R_London_Quant[2]
 CCmid$"Quantile 0.5"=R_London_Quant[3]
 CCmid$"Quantile 0.75"=R_London_Quant[4]
-CCmid$"Quantile 0.5"=R_London_Quant[5]
+CCmid$"Quantile 0.95"=R_London_Quant[5]
 # Add the new row
 CC <- rbind(CC, CCmid)
 
@@ -211,7 +211,7 @@ CCmid$"Quantile 0.05"=Quant[1]
 CCmid$"Quantile 0.25"=Quant[2]
 CCmid$"Quantile 0.5"=Quant[3]
 CCmid$"Quantile 0.75"=Quant[4]
-CCmid$"Quantile 0.5"=Quant[5]
+CCmid$"Quantile 0.95"=Quant[5]
 CC <- rbind(CC, CCmid)
 
 
@@ -223,7 +223,7 @@ CCmid$"Quantile 0.05"=Quant[1]
 CCmid$"Quantile 0.25"=Quant[2]
 CCmid$"Quantile 0.5"=Quant[3]
 CCmid$"Quantile 0.75"=Quant[4]
-CCmid$"Quantile 0.5"=Quant[5]
+CCmid$"Quantile 0.95"=Quant[5]
 CC <- rbind(CC, CCmid)
 
 
@@ -235,9 +235,25 @@ CCmid$"Quantile 0.05"=Quant[1]
 CCmid$"Quantile 0.25"=Quant[2]
 CCmid$"Quantile 0.5"=Quant[3]
 CCmid$"Quantile 0.75"=Quant[4]
-CCmid$"Quantile 0.5"=Quant[5]
+CCmid$"Quantile 0.95"=Quant[5]
 # Add the new row
 CC <- rbind(CC, CCmid)
+
+for (d in 4:(length(smoothweightR$date)-3)){
+CCdate <-CCEng
+CCdate$Geography="England"
+CCdate$Value = smoothweightR$y[d]
+CCdate$"Quantile 0.05"=min(smoothweightR$y[(d-3):(d+3)])-0.2
+CCdate$"Quantile 0.25"=min(smoothweightR$y[(d-3):(d+3)])-0.1
+CCdate$"Quantile 0.5"=smoothweightR$y[d]
+CCdate$"Quantile 0.75"=max(smoothweightR$y[(d-3):(d+3)])+0.1
+CCdate$"Quantile 0.95"=max(smoothweightR$y[(d-3):(d+3)])+0.2
+CCdate$"Day of Value" = day(smoothweightR$date[d])
+CCdate$"Month of Value" = month(smoothweightR$date[d])
+CCdate$"Year of Value" = year(smoothweightR$date[d])
+# Add the new row
+CC <- rbind(CC, CCdate)
+}
 
 
 # Write to excel

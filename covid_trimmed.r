@@ -131,7 +131,7 @@ baseurl <- "https://api.coronavirus.data.gov.uk/v2/data?"
 # Start and end date - the data to collect data from
 startdate <- as.Date("2020/09/22") #as.Date("2020/02/25")
 # Lose only the last day of data - use tail correction for reporting delay
-enddate <-  Sys.Date()-3
+enddate <-  Sys.Date()-5
 # Set the generation time
 genTime <- 5
 #  Dates for the plots
@@ -873,7 +873,7 @@ rat[rat==Inf] <- 1.0
 rat[rat==-Inf] <- 1.0
 
 startplot <- rat$date[200]
-endplot <- rat$date[321]
+endplot <- enddate
 
 
 if(interactive()){
@@ -955,7 +955,7 @@ Govdat <- Rest[Rest$Date >= min(comdat$date) & Rest$Date <= max(comdat$date),]
 
 # Parameters for fitting splines and Loess
 nospl=8
-spdf=12
+spdf=18
 lospan=0.3
 
 smoothweightR<-smooth.spline(dfR$bylogR,df=spdf,w=sqrt(comdat$allCases))
@@ -967,18 +967,18 @@ smoothweightRfp<-smooth.spline(dfR$fpR,df=spdf,w=sqrt(comdat$fpCases))
 smoothweightR$date<-comdat$date
 smoothweightRfp$date<-dfR$date
 smoothR<-smooth.spline(dfR$bylogR,df=14)
-smoothR1<-smooth.spline(dfR$bylogR[1:(lock1-1)],df=nospl)
+smoothR1<-smooth.spline(dfR$bylogR[1:(lock1-1)],df=lock1/14)
 smoothR1$date<-dfR$date[1:lock1-1]
-smoothR2<-smooth.spline(dfR$bylogR[lock1:(unlock1-1)],df=nospl)
+smoothR2<-smooth.spline(dfR$bylogR[lock1:(unlock1-1)],df=(unlock1-lock1)/14)
 smoothR2$x=smoothR2$x+lock1
 smoothR2$date<-dfR$date[lock1:unlock1-1]
-smoothR3<-smooth.spline(dfR$bylogR[unlock1:(lock2-1)],df=nospl)
+smoothR3<-smooth.spline(dfR$bylogR[unlock1:(lock2-1)],df=(lock2-unlock1)/14)
 smoothR3$x=smoothR3$x+unlock1
 smoothR3$date<-dfR$date[unlock1:(lock2-1)]
-smoothR4<-smooth.spline(dfR$bylogR[lock2:(unlock2-1)],df=nospl)
+smoothR4<-smooth.spline(dfR$bylogR[lock2:(unlock2-1)],df=(unlock2-lock2)/14)
 smoothR4$x=smoothR4$x+unlock2
 smoothR4$date<-dfR$date[lock2:(unlock2-1)]
-smoothRend<-smooth.spline(dfR$bylogR[unlock2:length(dfR$date)],df=nospl)
+smoothRend<-smooth.spline(dfR$bylogR[unlock2:length(dfR$date)],df=(length(dfR$date)-unlock2)/14)
 smoothRend$x=smoothRend$x+unlock2
 smoothRend$date<-dfR$date[unlock2:length(dfR$gjaR)]
 dfR$piecewise<-dfR$gjaR
@@ -1013,10 +1013,10 @@ s2=0.1
 s3=0.3
 s4=0.5
 filteredR <-append(
-  append(tail(predict(loess(bylogR ~ x, data=dfR,span=s1))),
-         tail(predict(loess(bylogR ~ x, data=dfR,span=s2))) ) , 
-  append(tail(predict(loess(bylogR ~ x, data=dfR,span=s3))), 
-         tail(predict(loess(bylogR ~ x, data=dfR,span=s4))))
+  append((predict(loess(gjaR ~ x, data=dfR,span=s1))),
+         tail(predict(loess(gjaR ~ x, data=dfR,span=s2))) ) , 
+  append(tail(predict(loess(gjaR ~ x, data=dfR,span=s3))), 
+         tail(predict(loess(gjaR ~ x, data=dfR,span=s4))))
 )
 R_England_BestGuess<- mean(filteredR)
 R_England_Quant <-unname(quantile(filteredR, probs=c(0.05,0.25,0.5,0.75,0.95)))
