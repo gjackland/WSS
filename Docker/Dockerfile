@@ -22,5 +22,8 @@ COPY ./covid_trimmed.r .
 COPY ./json_wss.R .
 ADD ./data /data
 
+ARG WSS_VERSION=latest
+ENV WSS_VERSION=${WSS_VERSION}
+
 # Run the code when the docker instance is activated
 CMD ["Rscript", "covid_trimmed.r"]
