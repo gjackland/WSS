@@ -132,7 +132,7 @@ baseurl <- "https://api.coronavirus.data.gov.uk/v2/data?"
 # Start and end date - the data to collect data from
 startdate <- as.Date("2020/07/25") #as.Date("2020/02/25")
 # Lose only the last day of data - use tail correction for reporting delay
-enddate <-  Sys.Date()-3
+enddate <-  Sys.Date()-5
 # Set the generation time
 genTime <- 5
 #  Dates for the plots
@@ -1235,15 +1235,14 @@ if(interactive()){
   lines(predict(loess(p85 ~ x, data=dfR,span=lospan)),col='red',x=dfR$date)
   invisible(dev.off())
   pdf(file = 'p90.pdf')
-#  plot(smooth.spline(na.omit(dfR$p90),df=spdf,w=sqrt(comdat$allCases[!is.na(dfR$p90)]))$y,ylab="R-number, 90+",xlab="Date",
-#       x=dfR$date[!is.na(dfR$p90)],ylim=c(0.6,1.4),xlim=plotdate,cex.lab=1.6, cex.axis=1.6, cex.main=1.6, cex.sub=1.6)
-#  lines(y=Rest$England_LowerBound[!is.na(dfR$p90)],x=Rest$Date[!is.na(dfR$p90)]-sagedelay)
-#  lines(y=Rest$England_UpperBound[!is.na(dfR$p90)],x=Rest$Date[!is.na(dfR$p90)]-sagedelay)
-#  lines(predict(loess(p90 ~ x, data=dfR[!is.na(dfR$p90),],span=lospan)),col='red',x=dfR$date[!is.na(dfR$p90)])
+  plot(smooth.spline(na.omit(dfR$p90),df=spdf,w=sqrt(comdat$allCases[!is.na(dfR$p90)]))$y,ylab="R-number, 90+",xlab="Date",
+       x=dfR$date[!is.na(dfR$p90)],ylim=c(0.6,1.4),xlim=plotdate,cex.lab=1.6, cex.axis=1.6, cex.main=1.6, cex.sub=1.6)
+  lines(y=Rest$England_LowerBound[!is.na(dfR$p90)],x=Rest$Date[!is.na(dfR$p90)]-sagedelay)
+  lines(y=Rest$England_UpperBound[!is.na(dfR$p90)],x=Rest$Date[!is.na(dfR$p90)]-sagedelay)
+  lines(predict(loess(p90 ~ x, data=dfR[!is.na(dfR$p90),],span=lospan)),col='red',x=dfR$date[!is.na(dfR$p90)])
   invisible(dev.off())
 }
 }
-
 # Reverse Engineer cases from R-number - requires stratonovich calculus to get reversibility
 # Initializations
 #rm(PredictCases,PredictCasesSmoothR)
@@ -1756,7 +1755,7 @@ lines(rowSums(newMILD[2:17]+newILI[2:17]),col="red")
 
 plot(HospitalData$covidOccupiedMVBeds)
 lines(rowSums(CRIT[2:20])/2,col="blue")
-plot(rowSums(deathdat[2:20]),xlim=c(300,400),ylim=c(0,120))
+plot(rowSums(deathdat[2:20]),xlim=c(100,400),ylim=c(0,1200))
 lines(rowSums(DEATH[2:20]),col="blue")
 
 # This needs to be the last routine called for the UI, by default it returns
