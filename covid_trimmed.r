@@ -963,10 +963,18 @@ smoothweightR<-smooth.spline(dfR$bylogR,df=spdf,w=sqrt(comdat$allCases))
 smoothweightRraw<-smooth.spline(dfR$rawR,df=spdf,w=sqrt(comdat$allCases))
 smoothweightRgja<-smooth.spline(dfR$gjaR,df=spdf,w=sqrt(comdat$allCases))
 smoothweightRfp<-smooth.spline(dfR$fpR,df=spdf,w=sqrt(comdat$fpCases))
-
-
+rat$smoothScotland <-smooth.spline(rat$Scotland,df=spdf,w=sqrt(regcases$Scotland))$y
+rat$smoothNW <-smooth.spline(rat$`North West`,df=spdf,w=sqrt(regcases$`North West`))$y
+rat$smoothNEY <-smooth.spline(rat$NE_Yorks,df=spdf,w=sqrt(regcases$NE_Yorks))$y
+rat$smoothLondon <-smooth.spline(rat$London,df=spdf,w=sqrt(regcases$London))$y
+rat$smoothEE <-smooth.spline(rat$`East of England`,df=spdf,w=sqrt(regcases$`East of England`))$y
+rat$smoothMid <-smooth.spline(rat$Midlands,df=spdf,w=sqrt(regcases$Midlands))$y
+rat$smoothSE <-smooth.spline(rat$`South East`,df=spdf,w=sqrt(regcases$`South East`))$y
+rat$smoothSW <-smooth.spline(rat$`South West`,df=spdf,w=sqrt(regcases$`South West`))$y
 smoothweightR$date<-comdat$date
 smoothweightRfp$date<-dfR$date
+smoothR$date <-rat$date
+
 smoothR<-smooth.spline(dfR$bylogR,df=14)
 smoothR1<-smooth.spline(dfR$bylogR[1:(lock1-1)],df=lock1/14)
 smoothR1$date<-dfR$date[1:lock1-1]

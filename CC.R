@@ -170,8 +170,19 @@ CC <- rbind(CC, CCmid)
 
 CCmid <-CCEng
 CCmid$Geography="North West"
-CCmid$Value = R_NW_BestGuess
-Quant = R_NW_Quant
+CCmid$Value = R_London_BestGuess
+Quant = R_London_Quant
+CCmid$"Quantile 0.05"=Quant[1]
+CCmid$"Quantile 0.25"=Quant[2]
+CCmid$"Quantile 0.5"=Quant[3]
+CCmid$"Quantile 0.75"=Quant[4]
+CCmid$"Quantile 0.95"=Quant[5]
+CC <- rbind(CC, CCmid)
+
+CCmid <-CCEng
+CCmid$Geography="London"
+CCmid$Value = R_London_BestGuess
+Quant = R_London_Quant
 CCmid$"Quantile 0.05"=Quant[1]
 CCmid$"Quantile 0.25"=Quant[2]
 CCmid$"Quantile 0.5"=Quant[3]
@@ -244,20 +255,121 @@ CC <- rbind(CC, CCmid)
 
 
 for (d in 4:(length(smoothweightR$date)-3)){
-CCdate <-CCEng
-CCdate$Geography="England"
-CCdate$Value = smoothweightR$y[d]
-CCdate$"Quantile 0.05"=min(smoothweightR$y[(d-3):(d+3)])-0.2
-CCdate$"Quantile 0.25"=min(smoothweightR$y[(d-3):(d+3)])-0.1
-CCdate$"Quantile 0.5"=smoothweightR$y[d]
-CCdate$"Quantile 0.75"=max(smoothweightR$y[(d-3):(d+3)])+0.1
-CCdate$"Quantile 0.95"=max(smoothweightR$y[(d-3):(d+3)])+0.2
-CCdate$"Day of Value" = day(smoothweightR$date[d])
-CCdate$"Month of Value" = month(smoothweightR$date[d])
-CCdate$"Year of Value" = year(smoothweightR$date[d])
-# Add the new row
-CC <- rbind(CC, CCdate)
+  CCdate <-CCEng
+  CCdate$Geography="England"
+  CCdate$Value = smoothweightR$y[d]
+  CCdate$"Quantile 0.05"=min(smoothweightR$y[(d-3):(d+3)])-0.2
+  CCdate$"Quantile 0.25"=min(smoothweightR$y[(d-3):(d+3)])-0.1
+  CCdate$"Quantile 0.5"=smoothweightR$y[d]
+  CCdate$"Quantile 0.75"=max(smoothweightR$y[(d-3):(d+3)])+0.1
+  CCdate$"Quantile 0.95"=max(smoothweightR$y[(d-3):(d+3)])+0.2
+  CCdate$"Day of Value" = day(smoothweightR$date[d])
+  CCdate$"Month of Value" = month(smoothweightR$date[d])
+  CCdate$"Year of Value" = year(smoothweightR$date[d])
+  # Add the new row
+  CC <- rbind(CC, CCdate)
 }
+
+for (d in 4:(length(rat$date)-3)){
+  CCdate$Geography="Scotland"
+  CCdate$Value = rat$smoothScotland[d]
+  CCdate$"Quantile 0.05"=min(rat$smoothScotland[(d-3):(d+3)])-0.2
+  CCdate$"Quantile 0.25"=min(rat$smoothScotland[(d-3):(d+3)])-0.1
+  CCdate$"Quantile 0.5"=rat$smoothScotland[d]
+  CCdate$"Quantile 0.75"=max(rat$smoothScotland[(d-3):(d+3)])+0.1
+  CCdate$"Quantile 0.95"=max(rat$smoothScotland[(d-3):(d+3)])+0.2
+  CCdate$"Day of Value" = day(rat$date[d])
+  CCdate$"Month of Value" = month(rat$date[d])
+  CCdate$"Year of Value" = year(rat$date[d])
+  # Add the new row
+  CC <- rbind(CC, CCdate)
+}
+for (d in 4:(length(rat$date)-3)){
+  CCdate$Geography="Morth East"
+  CCdate$Value = rat$smoothNEY[d]
+  CCdate$"Quantile 0.05"=min(rat$smoothNEY[(d-3):(d+3)])-0.2
+  CCdate$"Quantile 0.25"=min(rat$smoothNEY[(d-3):(d+3)])-0.1
+  CCdate$"Quantile 0.5"=rat$smoothNEY[d]
+  CCdate$"Quantile 0.75"=max(rat$smoothNEY[(d-3):(d+3)])+0.1
+  CCdate$"Quantile 0.95"=max(rat$smoothNEY[(d-3):(d+3)])+0.2
+  CCdate$"Day of Value" = day(rat$date[d])
+  CCdate$"Month of Value" = month(rat$date[d])
+  CCdate$"Year of Value" = year(rat$date[d])
+  # Add the new row
+  CC <- rbind(CC, CCdate)
+}
+for (d in 4:(length(rat$date)-3)){
+  CCdate$Geography="North West"
+  CCdate$Value = rat$smoothNW[d]
+  CCdate$"Quantile 0.05"=min(rat$smoothNW[(d-3):(d+3)])-0.2
+  CCdate$"Quantile 0.25"=min(rat$smoothNW[(d-3):(d+3)])-0.1
+  CCdate$"Quantile 0.5"=rat$smoothNW[d]
+  CCdate$"Quantile 0.75"=max(rat$smoothNW[(d-3):(d+3)])+0.1
+  CCdate$"Quantile 0.95"=max(rat$smoothNW[(d-3):(d+3)])+0.2
+  CCdate$"Day of Value" = day(rat$date[d])
+  CCdate$"Month of Value" = month(rat$date[d])
+  CCdate$"Year of Value" = year(rat$date[d])
+  # Add the new row
+  CC <- rbind(CC, CCdate)
+}
+for (d in 4:(length(rat$date)-3)){
+  CCdate$Geography="East of England"
+  CCdate$Value = rat$smoothEE[d]
+  CCdate$"Quantile 0.05"=min(rat$smoothEE[(d-3):(d+3)])-0.2
+  CCdate$"Quantile 0.25"=min(rat$smoothEE[(d-3):(d+3)])-0.1
+  CCdate$"Quantile 0.5"=rat$smoothEE[d]
+  CCdate$"Quantile 0.75"=max(rat$smoothEE[(d-3):(d+3)])+0.1
+  CCdate$"Quantile 0.95"=max(rat$smoothEE[(d-3):(d+3)])+0.2
+  CCdate$"Day of Value" = day(rat$date[d])
+  CCdate$"Month of Value" = month(rat$date[d])
+  CCdate$"Year of Value" = year(rat$date[d])
+  # Add the new row
+  CC <- rbind(CC, CCdate)
+}
+for (d in 4:(length(rat$date)-3)){
+  CCdate$Geography="South West"
+  CCdate$Value = rat$smoothSW[d]
+  CCdate$"Quantile 0.05"=min(rat$smoothSW[(d-3):(d+3)])-0.2
+  CCdate$"Quantile 0.25"=min(rat$smoothSW[(d-3):(d+3)])-0.1
+  CCdate$"Quantile 0.5"=rat$smoothSW[d]
+  CCdate$"Quantile 0.75"=max(rat$smoothSW[(d-3):(d+3)])+0.1
+  CCdate$"Quantile 0.95"=max(rat$smoothSW[(d-3):(d+3)])+0.2
+  CCdate$"Day of Value" = day(rat$date[d])
+  CCdate$"Month of Value" = month(rat$date[d])
+  CCdate$"Year of Value" = year(rat$date[d])
+  # Add the new row
+  CC <- rbind(CC, CCdate)
+}
+
+for (d in 4:(length(rat$date)-3)){
+  CCdate$Geography="South East"
+  CCdate$Value = rat$smoothSE[d]
+  CCdate$"Quantile 0.05"=min(rat$smoothSE[(d-3):(d+3)])-0.2
+  CCdate$"Quantile 0.25"=min(rat$smoothSE[(d-3):(d+3)])-0.1
+  CCdate$"Quantile 0.5"=rat$smoothSE[d]
+  CCdate$"Quantile 0.75"=max(rat$smoothSE[(d-3):(d+3)])+0.1
+  CCdate$"Quantile 0.95"=max(rat$smoothSE[(d-3):(d+3)])+0.2
+  CCdate$"Day of Value" = day(rat$date[d])
+  CCdate$"Month of Value" = month(rat$date[d])
+  CCdate$"Year of Value" = year(rat$date[d])
+  # Add the new row
+  CC <- rbind(CC, CCdate)
+}
+for (d in 4:(length(rat$date)-3)){
+  CCdate$Geography="London"
+  CCdate$Value = rat$smoothLondon[d]
+  CCdate$"Quantile 0.05"=min(rat$smoothLondon[(d-3):(d+3)])-0.2
+  CCdate$"Quantile 0.25"=min(rat$smoothLondon[(d-3):(d+3)])-0.1
+  CCdate$"Quantile 0.5"=rat$smoothLondon[d]
+  CCdate$"Quantile 0.75"=max(rat$smoothLondon[(d-3):(d+3)])+0.1
+  CCdate$"Quantile 0.95"=max(rat$smoothLondon[(d-3):(d+3)])+0.2
+  CCdate$"Day of Value" = day(rat$date[d])
+  CCdate$"Month of Value" = month(rat$date[d])
+  CCdate$"Year of Value" = year(rat$date[d])
+  # Add the new row
+  CC <- rbind(CC, CCdate)
+}
+
 
 # Write to excel
 write.xlsx(CC, file = "Data/WSS_CC.xlsx", sheetName = "WSS", row.names = FALSE)
