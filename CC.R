@@ -70,6 +70,117 @@ CCEng$Value = R_England_BestGuess
 # Add the new row
 CC <- rbind(CC, CCEng)
 
+# Growth rate
+CCEng$ValueType <- "growth_rate"
+CCEng$Geography="England"
+CCEng$"Quantile 0.05"=exp((R_England_Quant[1]-1.0)/genTime)-1.0
+CCEng$"Quantile 0.25"=exp((R_England_Quant[2]-1.0)/genTime)-1.0
+CCEng$"Quantile 0.5"=exp((R_England_Quant[3]-1.0)/genTime)-1.0
+CCEng$"Quantile 0.75"=exp((R_England_Quant[4]-1.0)/genTime)-1.0
+CCEng$"Quantile 0.95"=exp((R_England_Quant[5]-1.0)/genTime)-1.0
+CCEng$Value = exp((R_England_BestGuess-1.0)/genTime)-1.0
+# Add the new row
+CC <- rbind(CC, CCEng)
+CCEng$ValueType <- "growth_rate"
+CCEng$Geography="Scotland"
+CCEng$"Quantile 0.05"=exp((R_Scotland_Quant[1]-1.0)/genTime)-1.0
+CCEng$"Quantile 0.25"=exp((R_Scotland_Quant[2]-1.0)/genTime)-1.0
+CCEng$"Quantile 0.5"=exp((R_Scotland_Quant[3]-1.0)/genTime)-1.0
+CCEng$"Quantile 0.75"=exp((R_Scotland_Quant[4]-1.0)/genTime)-1.0
+CCEng$"Quantile 0.95"=exp((R_Scotland_Quant[5]-1.0)/genTime)-1.0
+CCEng$Value = exp((R_Scotland_BestGuess-1.0)/genTime)-1.0
+# Add the new row
+CC <- rbind(CC, CCEng)
+
+CCage <- CCEng
+CCage$Geography="England"
+CCage$AgeBand="0-4"
+CCage$"Quantile 0.05"=exp((Growth_00_Quant[1]-1.0)/genTime)-1.0
+CCage$"Quantile 0.25"=exp((Growth_00_Quant[2]-1.0)/genTime)-1.0
+CCage$"Quantile 0.5"=exp((Growth_00_Quant[3]-1.0)/genTime)-1.0
+CCage$"Quantile 0.75"=exp((Growth_00_Quant[4]-1.0)/genTime)-1.0
+CCage$"Quantile 0.95"=exp((Growth_00_Quant[5]-1.0)/genTime)-1.0
+CCage$Value = exp((Growth_00_BestGuess-1.0)/genTime)-1.0
+# Add the new row
+CC <- rbind(CC, CCage)
+
+CCage$Geography="England"
+CCage$AgeBand="5-14"
+CCage$"Quantile 0.05"=exp((Growth_05_Quant[1]-1.0)/genTime)-1.0
+CCage$"Quantile 0.25"=exp((Growth_05_Quant[2]-1.0)/genTime)-1.0
+CCage$"Quantile 0.5"=exp((Growth_05_Quant[3]-1.0)/genTime)-1.0
+CCage$"Quantile 0.75"=exp((Growth_05_Quant[4]-1.0)/genTime)-1.0
+CCage$"Quantile 0.95"=exp((Growth_05_Quant[5]-1.0)/genTime)-1.0
+CCage$Value = exp((Growth_05_BestGuess-1.0)/genTime)-1.0
+# Add the new row
+CC <- rbind(CC, CCage)
+
+CCage <- CCEng
+CCage$Geography="England"
+CCage$AgeBand="15-24"
+CCage$"Quantile 0.05"=exp((Growth_15_Quant[1]-1.0)/genTime)-1.0
+CCage$"Quantile 0.25"=exp((Growth_15_Quant[2]-1.0)/genTime)-1.0
+CCage$"Quantile 0.5"=exp((Growth_15_Quant[3]-1.0)/genTime)-1.0
+CCage$"Quantile 0.75"=exp((Growth_15_Quant[4]-1.0)/genTime)-1.0
+CCage$"Quantile 0.95"=exp((Growth_15_Quant[5]-1.0)/genTime)-1.0
+CCage$Value = exp((Growth_15_BestGuess-1.0)/genTime)-1.0
+# Add the new row
+CC <- rbind(CC, CCage)
+
+
+CCage <- CCEng
+CCage$Geography="England"
+CCage$AgeBand="25-44"
+CCage$"Quantile 0.05"=exp((Growth_25_Quant[1]-1.0)/genTime)-1.0
+CCage$"Quantile 0.25"=exp((Growth_25_Quant[2]-1.0)/genTime)-1.0
+CCage$"Quantile 0.5"=exp((Growth_25_Quant[3]-1.0)/genTime)-1.0
+CCage$"Quantile 0.75"=exp((Growth_25_Quant[4]-1.0)/genTime)-1.0
+CCage$"Quantile 0.95"=exp((Growth_25_Quant[5]-1.0)/genTime)-1.0
+CCage$Value = exp((Growth_25_BestGuess-1.0)/genTime)-1.0
+# Add the new row
+CC <- rbind(CC, CCage)
+
+
+CCage <- CCEng
+CCage$Geography="England"
+CCage$AgeBand="45-64"
+CCage$"Quantile 0.05"=exp((Growth_45_Quant[1]-1.0)/genTime)-1.0
+CCage$"Quantile 0.25"=exp((Growth_45_Quant[2]-1.0)/genTime)-1.0
+CCage$"Quantile 0.5"=exp((Growth_45_Quant[3]-1.0)/genTime)-1.0
+CCage$"Quantile 0.75"=exp((Growth_45_Quant[4]-1.0)/genTime)-1.0
+CCage$"Quantile 0.95"=exp((Growth_45_Quant[5]-1.0)/genTime)-1.0
+CCage$Value = exp((Growth_45_BestGuess-1.0)/genTime)-1.0
+# Add the new row
+CC <- rbind(CC, CCage)
+
+CCage <- CCEng
+CCage$Geography="England"
+CCage$AgeBand="65-74"
+CCage$"Quantile 0.05"=exp((Growth_65_Quant[1]-1.0)/genTime)-1.0
+CCage$"Quantile 0.25"=exp((Growth_65_Quant[2]-1.0)/genTime)-1.0
+CCage$"Quantile 0.5"=exp((Growth_65_Quant[3]-1.0)/genTime)-1.0
+CCage$"Quantile 0.75"=exp((Growth_65_Quant[4]-1.0)/genTime)-1.0
+CCage$"Quantile 0.95"=exp((Growth_65_Quant[5]-1.0)/genTime)-1.0
+CCage$Value = exp((Growth_65_BestGuess-1.0)/genTime)-1.0
+# Add the new row
+CC <- rbind(CC, CCage)
+
+
+CCage <- CCEng
+CCage$Geography="England"
+CCage$AgeBand="75+"
+CCage$"Quantile 0.05"=exp((Growth_75_Quant[1]-1.0)/genTime)-1.0
+CCage$"Quantile 0.25"=exp((Growth_75_Quant[2]-1.0)/genTime)-1.0
+CCage$"Quantile 0.5"=exp((Growth_75_Quant[3]-1.0)/genTime)-1.0
+CCage$"Quantile 0.75"=exp((Growth_75_Quant[4]-1.0)/genTime)-1.0
+CCage$"Quantile 0.95"=exp((Growth_75_Quant[5]-1.0)/genTime)-1.0
+CCage$Value = exp((Growth_75_BestGuess-1.0)/genTime)-1.0
+# Add the new row
+CC <- rbind(CC, CCage)
+
+CCmid <-CCEng
+
+CCEng$ValueType <-"R"
 CCage <- CCEng
 CCage$Geography="England"
 CCage$AgeBand="0-4"
@@ -285,7 +396,7 @@ for (d in 4:(length(rat$date)-3)){
   CC <- rbind(CC, CCdate)
 }
 for (d in 4:(length(rat$date)-3)){
-  CCdate$Geography="Morth East"
+  CCdate$Geography="North East"
   CCdate$Value = rat$smoothNEY[d]
   CCdate$"Quantile 0.05"=min(rat$smoothNEY[(d-3):(d+3)])-0.2
   CCdate$"Quantile 0.25"=min(rat$smoothNEY[(d-3):(d+3)])-0.1

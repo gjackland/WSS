@@ -973,7 +973,8 @@ rat$smoothSE <-smooth.spline(rat$`South East`,df=spdf,w=sqrt(regcases$`South Eas
 rat$smoothSW <-smooth.spline(rat$`South West`,df=spdf,w=sqrt(regcases$`South West`))$y
 smoothweightR$date<-comdat$date
 smoothweightRfp$date<-dfR$date
-smoothR$date <-rat$date
+
+
 
 smoothR<-smooth.spline(dfR$bylogR,df=14)
 smoothR1<-smooth.spline(dfR$bylogR[1:(lock1-1)],df=lock1/14)
@@ -1003,6 +1004,7 @@ dfR$piecewise[unlock2:length(dfR$gjaR)]=smoothRend$y
 #  All cases and Regions
 
 plot(smoothweightR$y,ylab="Regional R-number",xlab="Date",x=dfR$date)
+
 for (i in 8:17){
   lines(smooth.spline(na.omit(dfR[i]),df=12)$y,col=i,x=dfR$date[!is.na(dfR[i])])
 }
@@ -1019,8 +1021,8 @@ lines(predict(loess(bylogR ~ x, data=dfR,span=0.3)),col='red',x=dfR$date)
 ###  Filters
 s1=0.05
 s2=0.1
-s3=0.3
-s4=0.5
+s3=0.2
+s4=0.3
 filteredR <-append(
   append((predict(loess(gjaR ~ x, data=dfR,span=s1))),
          tail(predict(loess(gjaR ~ x, data=dfR,span=s2))) ) , 
@@ -1459,7 +1461,7 @@ if(CrystalCast){
 }
 
 #####  Figures and analysis for https://www.medrxiv.org/content/10.1101/2021.04.14.21255385v1
-medrxiv=TRUE
+medrxiv=FALSE
 if(medrxiv){
 ####  From here on we're reproducing figures from https://www.medrxiv.org/content/10.1101/2021.04.14.21255385v1
 ##### Fig 1. - Heatmaps ####
@@ -1824,14 +1826,14 @@ lines(rowSums(newSARI[2:20]),col="blue")
 plot(HospitalData$hospitalCases)
 lines(rowSums(SARI[2:20]+CRIT[2:20]+CRITREC[2:20]))
 plot(rowSums(CASE[2:20]))
-lines(rowSums(newMILD[2:17]+newILI[2:17]),col="red")
+lines(rowSums(newMILD[2:20]+newILI[2:20]),col="red")
 
 plot(HospitalData$covidOccupiedMVBeds)
 lines(rowSums(CRIT[2:20])/2,col="blue")
 plot(rowSums(deathdat[2:20]),x=deathdat$date)
 lines(rowSums(DEATH[2:20]),col="blue",x=DEATH$date)
 
-# This needs to be the last routine called for the UI, by default it returns
+len# This needs to be the last routine called for the UI, by default it returns
 # success (0), if there is no success setStatus() should be called. By default
 # it will return -1 but you can set a value setStatus(1). Any non-zero value
 # will indicate a problem.  For interactive work "quit" can end Rstudio session altogether
