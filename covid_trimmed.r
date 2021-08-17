@@ -333,6 +333,33 @@ scotdat <- scotdat %>%  select(date,
            date <= enddate ) %>%
   arrange(date)
 
+# Wales data https://api.coronavirus.data.gov.uk/v2/data?areaType=nation&areaCode=W92000004&metric=newCasesBySpecimenDate&metric=newDeaths28DaysByDeathDate&format=csv
+
+walesurl <-  paste0(baseurl,
+                   "areaType=nation&",
+                   "areaCode=W92000004&",
+                   "metric=newCasesBySpecimenDate&",
+                   "metric=newDeaths28DaysByDeathDate&",
+                   "format=csv")
+coltypes <-  cols(
+  date = col_date(format = "%Y-%m-%d"),
+  newCasesBySpecimenDate = col_number(),
+  newDeaths28DaysByDeathDate = col_number()
+)
+
+# Read in the Welsh deaths and case data
+walesdat <-  read_csv(file = walesurl, col_types = coltypes)
+
+# Transform the data
+walesdat <- walesdat %>%  select(date,
+                               allCases = newCasesBySpecimenDate,
+                               allDeaths = newDeaths28DaysByDeathDate,
+                               inputCases = newCasesBySpecimenDate,
+                               fpCases = newCasesBySpecimenDate) %>%
+  filter(date >= startdate &
+           date <= enddate ) %>%
+  arrange(date)
+rm(walesurl,scoturl)
 
 # Regional data for deaths and cases by specimen date
 regurl <- paste0(baseurl,
@@ -517,6 +544,7 @@ if(interactive()){
   xlab("Date") + ylab("All cases")
 }
 
+regcases$Wales <- walesdat$allCases
 # Tail correction.  Assumes we read in all but the last row
 if(enddate == (Sys.Date()-1)){
   scotdat$allCases[nrow(scotdat)]=scotdat$allCases[nrow(scotdat)]*1.05
@@ -604,6 +632,7 @@ for (area in 2:length(regcases)){
     regcases[i,area]<-Xmasav-Xmasgrad*(((XMend+XMstart)/2)-i)/XMdays
   }
 }
+
 
 for (i in 2:ncol(casedat)) {
   for (j in 1:nrow(casedat)) {
@@ -971,6 +1000,7 @@ rat$smoothEE <-smooth.spline(rat$`East of England`,df=spdf,w=sqrt(regcases$`East
 rat$smoothMid <-smooth.spline(rat$Midlands,df=spdf,w=sqrt(regcases$Midlands))$y
 rat$smoothSE <-smooth.spline(rat$`South East`,df=spdf,w=sqrt(regcases$`South East`))$y
 rat$smoothSW <-smooth.spline(rat$`South West`,df=spdf,w=sqrt(regcases$`South West`))$y
+rat$smoothWales <-smooth.spline(rat$Wales,df=spdf,w=sqrt(regcases$Wales))$y
 smoothweightR$date<-comdat$date
 smoothweightRfp$date<-dfR$date
 
@@ -1127,6 +1157,19 @@ filteredR <-append(
 
 R_SW_BestGuess <-mean(filteredR)
 R_SW_Quant <-unname(quantile(filteredR, probs=c(0.05,0.25,0.5,0.75,0.95)))
+
+
+rat$tmp <- rat$Wales
+
+filteredR <-append(
+  append(tail(predict(loess(tmp ~ as.numeric(date), data=rat,span=s1))),
+         tail(predict(loess(tmp ~ as.numeric(date), data=rat,span=s2))) ) , 
+  append(tail(predict(loess(tmp ~ as.numeric(date), data=rat,span=s3))), 
+         tail(predict(loess(tmp ~ as.numeric(date), data=rat,span=s4))))
+)
+
+R_Wales_BestGuess <-mean(filteredR)
+R_Wales_Quant <-unname(quantile(filteredR, probs=c(0.05,0.25,0.5,0.75,0.95)))
 
 
 
