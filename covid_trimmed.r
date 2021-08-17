@@ -336,11 +336,11 @@ scotdat <- scotdat %>%  select(date,
 # Wales data https://api.coronavirus.data.gov.uk/v2/data?areaType=nation&areaCode=W92000004&metric=newCasesBySpecimenDate&metric=newDeaths28DaysByDeathDate&format=csv
 
 walesurl <-  paste0(baseurl,
-                   "areaType=nation&",
-                   "areaCode=W92000004&",
-                   "metric=newCasesBySpecimenDate&",
-                   "metric=newDeaths28DaysByDeathDate&",
-                   "format=csv")
+                    "areaType=nation&",
+                    "areaCode=W92000004&",
+                    "metric=newCasesBySpecimenDate&",
+                    "metric=newDeaths28DaysByDeathDate&",
+                    "format=csv")
 coltypes <-  cols(
   date = col_date(format = "%Y-%m-%d"),
   newCasesBySpecimenDate = col_number(),
@@ -352,14 +352,34 @@ walesdat <-  read_csv(file = walesurl, col_types = coltypes)
 
 # Transform the data
 walesdat <- walesdat %>%  select(date,
-                               allCases = newCasesBySpecimenDate,
-                               allDeaths = newDeaths28DaysByDeathDate,
-                               inputCases = newCasesBySpecimenDate,
-                               fpCases = newCasesBySpecimenDate) %>%
+                                 allCases = newCasesBySpecimenDate,
+                                 allDeaths = newDeaths28DaysByDeathDate,
+                                 inputCases = newCasesBySpecimenDate) %>%
   filter(date >= startdate &
            date <= enddate ) %>%
   arrange(date)
-rm(walesurl,scoturl)
+
+NIurl <-  paste0(baseurl,
+                    "areaType=nation&",
+                    "areaCode=N92000002&",
+                    "metric=newCasesBySpecimenDate&",
+                    "metric=newDeaths28DaysByDeathDate&",
+                    "format=csv")
+
+
+# Read in the Welsh deaths and case data
+NIdat <-  read_csv(file = NIurl, col_types = coltypes)
+
+# Transform the data
+NIdat <- NIdat %>%  select(date,
+                                 allCases = newCasesBySpecimenDate,
+                                 allDeaths = newDeaths28DaysByDeathDate,
+                                 inputCases = newCasesBySpecimenDate) %>%
+  filter(date >= startdate &
+           date <= enddate ) %>%
+  arrange(date)
+
+rm(walesurl,scoturl,NIurl)
 
 # Regional data for deaths and cases by specimen date
 regurl <- paste0(baseurl,
@@ -545,6 +565,7 @@ if(interactive()){
 }
 
 regcases$Wales <- walesdat$allCases
+regcases$NI <- NIdat$allCases
 # Tail correction.  Assumes we read in all but the last row
 if(enddate == (Sys.Date()-1)){
   scotdat$allCases[nrow(scotdat)]=scotdat$allCases[nrow(scotdat)]*1.05
@@ -1001,6 +1022,7 @@ rat$smoothMid <-smooth.spline(rat$Midlands,df=spdf,w=sqrt(regcases$Midlands))$y
 rat$smoothSE <-smooth.spline(rat$`South East`,df=spdf,w=sqrt(regcases$`South East`))$y
 rat$smoothSW <-smooth.spline(rat$`South West`,df=spdf,w=sqrt(regcases$`South West`))$y
 rat$smoothWales <-smooth.spline(rat$Wales,df=spdf,w=sqrt(regcases$Wales))$y
+rat$smoothNI<-smooth.spline(rat$Wales,df=spdf,w=sqrt(regcases$NI))$y
 smoothweightR$date<-comdat$date
 smoothweightRfp$date<-dfR$date
 
@@ -1170,6 +1192,19 @@ filteredR <-append(
 
 R_Wales_BestGuess <-mean(filteredR)
 R_Wales_Quant <-unname(quantile(filteredR, probs=c(0.05,0.25,0.5,0.75,0.95)))
+
+
+
+
+filteredR <-append(
+  append(tail(predict(loess(NI ~ as.numeric(date), data=rat,span=s1))),
+         tail(predict(loess(NI ~ as.numeric(date), data=rat,span=s2))) ) , 
+  append(tail(predict(loess(NI ~ as.numeric(date), data=rat,span=s3))), 
+         tail(predict(loess(NI ~ as.numeric(date), data=rat,span=s4))))
+)
+
+R_NI_BestGuess <-mean(filteredR)
+R_NI_Quant <-unname(quantile(filteredR, probs=c(0.05,0.25,0.5,0.75,0.95)))
 
 
 

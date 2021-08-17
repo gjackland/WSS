@@ -81,6 +81,17 @@ CCtmp$Value = R_Wales_BestGuess
 # Add the new row
 CC <- rbind(CC, CCtmp)
 
+
+CCtmp$Geography="Northern Ireland"
+CCtmp$"Quantile 0.05"=R_NI_Quant[1]
+CCtmp$"Quantile 0.25"=R_NI_Quant[2]
+CCtmp$"Quantile 0.5"=R_NI_Quant[3]
+CCtmp$"Quantile 0.75"=R_NI_Quant[4]
+CCtmp$"Quantile 0.95"=R_NI_Quant[5]
+CCtmp$Value = R_NI_BestGuess
+# Add the new row
+CC <- rbind(CC, CCtmp)
+
 # Growth rate
 CCtmp$ValueType <- "growth_rate"
 CCtmp$Geography="England"
