@@ -333,6 +333,53 @@ scotdat <- scotdat %>%  select(date,
            date <= enddate ) %>%
   arrange(date)
 
+# Wales data https://api.coronavirus.data.gov.uk/v2/data?areaType=nation&areaCode=W92000004&metric=newCasesBySpecimenDate&metric=newDeaths28DaysByDeathDate&format=csv
+
+walesurl <-  paste0(baseurl,
+                    "areaType=nation&",
+                    "areaCode=W92000004&",
+                    "metric=newCasesBySpecimenDate&",
+                    "metric=newDeaths28DaysByDeathDate&",
+                    "format=csv")
+coltypes <-  cols(
+  date = col_date(format = "%Y-%m-%d"),
+  newCasesBySpecimenDate = col_number(),
+  newDeaths28DaysByDeathDate = col_number()
+)
+
+# Read in the Welsh deaths and case data
+walesdat <-  read_csv(file = walesurl, col_types = coltypes)
+
+# Transform the data
+walesdat <- walesdat %>%  select(date,
+                                 allCases = newCasesBySpecimenDate,
+                                 allDeaths = newDeaths28DaysByDeathDate,
+                                 inputCases = newCasesBySpecimenDate) %>%
+  filter(date >= startdate &
+           date <= enddate ) %>%
+  arrange(date)
+
+NIurl <-  paste0(baseurl,
+                    "areaType=nation&",
+                    "areaCode=N92000002&",
+                    "metric=newCasesBySpecimenDate&",
+                    "metric=newDeaths28DaysByDeathDate&",
+                    "format=csv")
+
+
+# Read in the Welsh deaths and case data
+NIdat <-  read_csv(file = NIurl, col_types = coltypes)
+
+# Transform the data
+NIdat <- NIdat %>%  select(date,
+                                 allCases = newCasesBySpecimenDate,
+                                 allDeaths = newDeaths28DaysByDeathDate,
+                                 inputCases = newCasesBySpecimenDate) %>%
+  filter(date >= startdate &
+           date <= enddate ) %>%
+  arrange(date)
+
+rm(walesurl,scoturl,NIurl)
 
 # Regional data for deaths and cases by specimen date
 regurl <- paste0(baseurl,
@@ -517,6 +564,8 @@ if(interactive()){
   xlab("Date") + ylab("All cases")
 }
 
+regcases$Wales <- walesdat$allCases
+regcases$NI <- NIdat$allCases
 # Tail correction.  Assumes we read in all but the last row
 if(enddate == (Sys.Date()-1)){
   scotdat$allCases[nrow(scotdat)]=scotdat$allCases[nrow(scotdat)]*1.05
@@ -604,6 +653,7 @@ for (area in 2:length(regcases)){
     regcases[i,area]<-Xmasav-Xmasgrad*(((XMend+XMstart)/2)-i)/XMdays
   }
 }
+
 
 for (i in 2:ncol(casedat)) {
   for (j in 1:nrow(casedat)) {
@@ -963,10 +1013,21 @@ smoothweightR<-smooth.spline(dfR$bylogR,df=spdf,w=sqrt(comdat$allCases))
 smoothweightRraw<-smooth.spline(dfR$rawR,df=spdf,w=sqrt(comdat$allCases))
 smoothweightRgja<-smooth.spline(dfR$gjaR,df=spdf,w=sqrt(comdat$allCases))
 smoothweightRfp<-smooth.spline(dfR$fpR,df=spdf,w=sqrt(comdat$fpCases))
-
-
+rat$smoothScotland <-smooth.spline(rat$Scotland,df=spdf,w=sqrt(regcases$Scotland))$y
+rat$smoothNW <-smooth.spline(rat$`North West`,df=spdf,w=sqrt(regcases$`North West`))$y
+rat$smoothNEY <-smooth.spline(rat$NE_Yorks,df=spdf,w=sqrt(regcases$NE_Yorks))$y
+rat$smoothLondon <-smooth.spline(rat$London,df=spdf,w=sqrt(regcases$London))$y
+rat$smoothEE <-smooth.spline(rat$`East of England`,df=spdf,w=sqrt(regcases$`East of England`))$y
+rat$smoothMid <-smooth.spline(rat$Midlands,df=spdf,w=sqrt(regcases$Midlands))$y
+rat$smoothSE <-smooth.spline(rat$`South East`,df=spdf,w=sqrt(regcases$`South East`))$y
+rat$smoothSW <-smooth.spline(rat$`South West`,df=spdf,w=sqrt(regcases$`South West`))$y
+rat$smoothWales <-smooth.spline(rat$Wales,df=spdf,w=sqrt(regcases$Wales))$y
+rat$smoothNI<-smooth.spline(rat$Wales,df=spdf,w=sqrt(regcases$NI))$y
 smoothweightR$date<-comdat$date
 smoothweightRfp$date<-dfR$date
+
+
+
 smoothR<-smooth.spline(dfR$bylogR,df=14)
 smoothR1<-smooth.spline(dfR$bylogR[1:(lock1-1)],df=lock1/14)
 smoothR1$date<-dfR$date[1:lock1-1]
@@ -995,6 +1056,7 @@ dfR$piecewise[unlock2:length(dfR$gjaR)]=smoothRend$y
 #  All cases and Regions
 
 plot(smoothweightR$y,ylab="Regional R-number",xlab="Date",x=dfR$date)
+
 for (i in 8:17){
   lines(smooth.spline(na.omit(dfR[i]),df=12)$y,col=i,x=dfR$date[!is.na(dfR[i])])
 }
@@ -1011,8 +1073,8 @@ lines(predict(loess(bylogR ~ x, data=dfR,span=0.3)),col='red',x=dfR$date)
 ###  Filters
 s1=0.05
 s2=0.1
-s3=0.3
-s4=0.5
+s3=0.2
+s4=0.3
 filteredR <-append(
   append((predict(loess(gjaR ~ x, data=dfR,span=s1))),
          tail(predict(loess(gjaR ~ x, data=dfR,span=s2))) ) , 
@@ -1117,6 +1179,32 @@ filteredR <-append(
 
 R_SW_BestGuess <-mean(filteredR)
 R_SW_Quant <-unname(quantile(filteredR, probs=c(0.05,0.25,0.5,0.75,0.95)))
+
+
+rat$tmp <- rat$Wales
+
+filteredR <-append(
+  append(tail(predict(loess(tmp ~ as.numeric(date), data=rat,span=s1))),
+         tail(predict(loess(tmp ~ as.numeric(date), data=rat,span=s2))) ) , 
+  append(tail(predict(loess(tmp ~ as.numeric(date), data=rat,span=s3))), 
+         tail(predict(loess(tmp ~ as.numeric(date), data=rat,span=s4))))
+)
+
+R_Wales_BestGuess <-mean(filteredR)
+R_Wales_Quant <-unname(quantile(filteredR, probs=c(0.05,0.25,0.5,0.75,0.95)))
+
+
+
+
+filteredR <-append(
+  append(tail(predict(loess(NI ~ as.numeric(date), data=rat,span=s1))),
+         tail(predict(loess(NI ~ as.numeric(date), data=rat,span=s2))) ) , 
+  append(tail(predict(loess(NI ~ as.numeric(date), data=rat,span=s3))), 
+         tail(predict(loess(NI ~ as.numeric(date), data=rat,span=s4))))
+)
+
+R_NI_BestGuess <-mean(filteredR)
+R_NI_Quant <-unname(quantile(filteredR, probs=c(0.05,0.25,0.5,0.75,0.95)))
 
 
 
@@ -1816,14 +1904,14 @@ lines(rowSums(newSARI[2:20]),col="blue")
 plot(HospitalData$hospitalCases)
 lines(rowSums(SARI[2:20]+CRIT[2:20]+CRITREC[2:20]))
 plot(rowSums(CASE[2:20]))
-lines(rowSums(newMILD[2:17]+newILI[2:17]),col="red")
+lines(rowSums(newMILD[2:20]+newILI[2:20]),col="red")
 
 plot(HospitalData$covidOccupiedMVBeds)
 lines(rowSums(CRIT[2:20]),col="blue")
 plot(rowSums(deathdat[16:20]),x=deathdat$date)
 lines(rowSums(DEATH[16:20]),col="blue",x=DEATH$date)
 
-# This needs to be the last routine called for the UI, by default it returns
+len# This needs to be the last routine called for the UI, by default it returns
 # success (0), if there is no success setStatus() should be called. By default
 # it will return -1 but you can set a value setStatus(1). Any non-zero value
 # will indicate a problem.  For interactive work "quit" can end Rstudio session altogether
