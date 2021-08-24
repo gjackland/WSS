@@ -130,7 +130,7 @@ Knock<-t(data.frame(
 baseurl <- "https://api.coronavirus.data.gov.uk/v2/data?"
 
 # Start and end date - the data to collect data from
-startdate <- as.Date("2020/09/22") #as.Date("2020/02/25")
+startdate <- as.Date("2020/09/22") #as.Date("2020/08/25")
 # Lose only the last day of data - use tail correction for reporting delay
 enddate <-  Sys.Date()-5
 # Set the generation time
@@ -1540,6 +1540,7 @@ if(CrystalCast){
 
 #####  Figures and analysis for https://www.medrxiv.org/content/10.1101/2021.04.14.21255385v1
 medrxiv=FALSE
+if(as.Date("2020/08/25")!=startdate){medrxiv=FALSE} #  Broken because of hardcoded dates
 if(medrxiv){
   ####  From here on we're reproducing figures from https://www.medrxiv.org/content/10.1101/2021.04.14.21255385v1
   ##### Fig 1. - Heatmaps ####
@@ -1908,10 +1909,10 @@ lines(rowSums(newMILD[2:20]+newILI[2:20]),col="red")
 
 plot(HospitalData$covidOccupiedMVBeds)
 lines(rowSums(CRIT[2:20]),col="blue")
-plot(rowSums(deathdat[16:20]),x=deathdat$date)
+plot(rowSums(deathdat[16:20]),x=deathdat$date,ylab="Deaths",xlab="date")
 lines(rowSums(DEATH[16:20]),col="blue",x=DEATH$date)
 
-len# This needs to be the last routine called for the UI, by default it returns
+# This needs to be the last routine called for the UI, by default it returns
 # success (0), if there is no success setStatus() should be called. By default
 # it will return -1 but you can set a value setStatus(1). Any non-zero value
 # will indicate a problem.  For interactive work "quit" can end Rstudio session altogether
