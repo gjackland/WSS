@@ -1,4 +1,4 @@
-##### Cut and pasted from main ocde, so CFR work can run independently of R and container
+##### Cut and pasted from main code, so CFR work can run independently of R and container
 #####  Figures and analysis for https://www.medrxiv.org/content/10.1101/2021.04.14.21255385v1
   ####  From here on we're reproducing figures from https://www.medrxiv.org/content/10.1101/2021.04.14.21255385v1
   ##### Fig 1. - Heatmaps ####
@@ -39,7 +39,7 @@
   title(main = "Deaths heatmap")
   rm(deathmap, groups)
 
-  # Atlternative ggplot version of the dath plot
+  # Alternative ggplot version of the dath plot
   mycols <- names(deathdat)[2:ncol(deathdat)]
   mindate <- format(min(deathdat$date),"%d/%m/%y")
   maxdate <- format(max(deathdat$date),"%d/%m/%y")
