@@ -78,11 +78,14 @@
     ylab("Proportion of day zero cases")
   rm(alpha, beta)
 
-  #Spread each age group's cases by the distribution
+  # Spread each age group's cases by the distribution
   logcases <- deathdat
   gamcases <- logcases
 
   for (agegroup in 2:20) {
+    # convert columns to doubles otherwise get probblems
+    logcases[[agegroup]] <- as.double(logcases[[agegroup]])
+    gamcases[[agegroup]] <- as.double(gamcases[[agegroup]])
     for (day in 28:nrow(logcases)) {
       logcases[day,agegroup] = sum(casedat[(day-27):day,agegroup] * rev(lndist))
       gamcases[day,agegroup] = sum(casedat[(day-27):day,agegroup] * rev(gamdist))
@@ -140,7 +143,8 @@ rm(agegroup, day)
   #Plots
   ggplot(logcases, aes(x = date)) +
     geom_line(aes(y = rowSums(logcases[,2:20])), na.rm = TRUE) +
-    ggtitle("All age groups separately lognormal distributed")
+    ggtitle("All age groups separately lognormal distributed") +
+    xlab("Date") + ylab("Log of cases")
 
   #### Fig 2. Distributions ####
   distdat = data.frame(days = 1:29, ln = c(lndist, 0), gam = c(gamdist, 0), exp = c(dexp(1:28, rate = 0.1), 0),
@@ -233,11 +237,12 @@ rm(agegroup, day)
 
   #### Model plots ####
   #Plot prediction against reality
+  WSS$date <-  as.Date(WSS$date, format="%d/%m/%Y")
   ggplot(data = comdat, aes(x = date)) +
     geom_line(mapping = aes(y = allDeaths, color = "Deaths (Government Figures)"), size = 1, na.rm = TRUE) +
     geom_line(data = gampred, aes(y = allCasesPred, color = "Gamma Model Predicted Deaths"), size = 1, na.rm = TRUE) +
     geom_line(data = logpred, aes(y = allCasesPred, color = "Lognormal Model Predicted Deaths"), size = 1, na.rm = TRUE) +
-    geom_line(data = WSS, aes(y = values, color = "WSS Original"), size = 1, na.rm = TRUE) +
+    geom_line(data = WSS, aes(x = date, y = values, color = "WSS Original"), size = 1, na.rm = TRUE) +
     labs(title = "Predicted Deaths vs. Actual Deaths", color = "Legend") +
     ylab("Deaths") +
     xlab("Date") +
@@ -315,3 +320,4 @@ rm(agegroup, day)
     ggplot(aes(x=date, y=Vaccinations, colour=agegroup)) +
     coord_cartesian(ylim=c(0.0,1.0))+ geom_smooth(formula= y ~ x, method = "loess", span=0.2) +
     guides(color = "none") + facet_wrap(vars(agegroup))
+
