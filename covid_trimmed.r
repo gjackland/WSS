@@ -132,6 +132,7 @@ baseurl <- "https://api.coronavirus.data.gov.uk/v2/data?"
 # Start and end date - the data to collect data from
 startdate <- as.Date("2020/09/22") #as.Date("2020/02/25")
 # Lose only the last day of data - use tail correction for reporting delay
+# Weekend data can be sketchy Extend the enddate if run on Monday moring
 enddate <-  Sys.Date()-5
 # Set the generation time
 genTime <- 5
@@ -379,7 +380,6 @@ NIdat <- NIdat %>%  select(date,
            date <= enddate ) %>%
   arrange(date)
 
-rm(walesurl,scoturl,NIurl)
 
 # Regional data for deaths and cases by specimen date
 regurl <- paste0(baseurl,
@@ -550,7 +550,7 @@ HospitalData  <-  HospitalData %>% filter(date >= startdate &
 
 
 # Remove the no longer needed input datas
-rm(ukcasedat,scotdailycases,scotdailycasesbyboard,d,HospitalUrl,deathurl,casesurl,scoturl)
+rm(ukcasedat,scotdailycases,scotdailycasesbyboard,d,HospitalUrl,deathurl,casesurl,scoturl,walesurl,NIurl)
 
 # Plot all cases against date: Used for the paper, uncomment to recreate
 #comdat %>% ggplot(aes(x=date,y=allCases)) + geom_line() +
@@ -683,7 +683,8 @@ xcastage$'75+' <-casedat$`75_79`+casedat$`80_84`+casedat$`85_89`+casedat$`90+`
 #  Combination required to go from 9 to 7 English regions
 regcases$NE_Yorks<-regcases$`North East`+regcases$`Yorkshire and The Humber`
 regcases$Midlands<-regcases$`East Midlands`+regcases$`West Midlands`
-
+# Reorder regcases
+regcases<-regcases[,c(1,2,3,4,5,6,7,9,10,8,23,26,27,11,12,13,14,15,16,17,18,19,20,21,22,24,25,28,29)]
 # Set false positive adjustment at 0.004, extrapolate tests if the last few days are missing
 comdat$fpCases <- comdat$allCases-0.004*as.integer(comdat$tests)
 
@@ -877,9 +878,9 @@ pStoD <- pStoD - pStoC*(pCtoD+(1-pCtoD)*pCRtoD)
   SARI[iday,agerange]=SARI[iday,agerange]+newSARI[iday,agerange]-oldSARI[iday,agerange]+SARI[(iday-1),agerange]
   CRIT[iday,agerange]=CRIT[iday,agerange]+newCRIT[iday,agerange]-oldCRIT[iday,agerange]+CRIT[(iday-1),agerange]
   CRITREC[iday,agerange]=CRITREC[iday,agerange]+newCRITREC[iday,agerange]-oldCRITREC[iday,agerange]+CRITREC[(iday-1),agerange]
-
 }
-}# End of compartment section
+}
+# End of compartment section
 
 # Monitoring plots
 if(interactive()){
@@ -1294,7 +1295,7 @@ for (ismooth in 4:30){
 # Plot Regional R data vs Government  spdf is spline smoothing factor, lospan for loess
 
 #  various options to silence pdf writing
-pdfpo=FALSE
+pdfpo=TRUE
 
 if(pdfpo){
 
