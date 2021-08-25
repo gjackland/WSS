@@ -130,7 +130,7 @@ Knock<-t(data.frame(
 baseurl <- "https://api.coronavirus.data.gov.uk/v2/data?"
 
 # Start and end date - the data to collect data from
-startdate <- as.Date("2020/09/22") #as.Date("2020/08/25")
+startdate <- as.Date("2020/08/25") #as.Date("2020/08/25")
 # Lose only the last day of data - use tail correction for reporting delay
 enddate <-  Sys.Date()-5
 # Set the generation time
@@ -557,11 +557,11 @@ rm(ukcasedat,scotdailycases,scotdailycasesbyboard,d,HospitalUrl,deathurl,casesur
 #  xlab("Date") + ylab("All cases")
 if(interactive()){
   comdat %>%
-  filter(enddate-30 <= date & date <= enddate) %>%
-  mutate(rollmean = zoo::rollmean(allCases, k = 7, fill = NA)) %>%  # 7-day average
-  ggplot(aes(x=date)) + geom_line(aes(y=allCases)) + geom_point(aes(y=allCases)) +
-  geom_line(aes(y=rollmean), colour="pink",na.rm = TRUE, size=2, alpha=0.5) +
-  xlab("Date") + ylab("All cases")
+    filter(startdate+150 <= date & date <= enddate) %>%
+    mutate(rollmean = zoo::rollmean(allCases, k = 7, fill = NA)) %>%  # 7-day average
+    ggplot(aes(x=date)) + geom_line(aes(y=allCases)) + geom_point(aes(y=allCases)) +
+    geom_line(aes(y=rollmean), colour="pink",na.rm = TRUE, size=2, alpha=0.5) +
+    xlab("Date") + ylab("All cases")
 }
 
 regcases$Wales <- walesdat$allCases
@@ -1294,7 +1294,7 @@ for (ismooth in 4:30){
 # Plot Regional R data vs Government  spdf is spline smoothing factor, lospan for loess
 
 #  various options to silence pdf writing
-pdfpo=FALSE
+pdfpo=TRUE
 
 if(pdfpo){
 
@@ -1402,11 +1402,11 @@ if(interactive()){
   lines(predict(loess(p85 ~ x, data=dfR,span=lospan)),col='red',x=dfR$date)
   invisible(dev.off())
   pdf(file = 'p90.pdf')
-#  plot(smooth.spline(na.omit(dfR$p90),df=spdf,w=sqrt(comdat$allCases[!is.na(dfR$p90)]))$y,ylab="R-number, 90+",xlab="Date",
-#       x=dfR$date[!is.na(dfR$p90)],ylim=c(0.6,1.4),xlim=plotdate,cex.lab=1.6, cex.axis=1.6, cex.main=1.6, cex.sub=1.6)
-#  lines(y=Rest$England_LowerBound[!is.na(dfR$p90)],x=Rest$Date[!is.na(dfR$p90)]-sagedelay)
-#  lines(y=Rest$England_UpperBound[!is.na(dfR$p90)],x=Rest$Date[!is.na(dfR$p90)]-sagedelay)
-#  lines(predict(loess(p90 ~ x, data=dfR[!is.na(dfR$p90),],span=lospan)),col='red',x=dfR$date[!is.na(dfR$p90)])
+  plot(smooth.spline(na.omit(dfR$p90),df=spdf,w=sqrt(comdat$allCases[!is.na(dfR$p90)]))$y,ylab="R-number, 90+",xlab="Date",
+       x=dfR$date[!is.na(dfR$p90)],ylim=c(0.6,1.4),xlim=plotdate,cex.lab=1.6, cex.axis=1.6, cex.main=1.6, cex.sub=1.6)
+  lines(y=Rest$England_LowerBound[!is.na(dfR$p90)],x=Rest$Date[!is.na(dfR$p90)]-sagedelay)
+  lines(y=Rest$England_UpperBound[!is.na(dfR$p90)],x=Rest$Date[!is.na(dfR$p90)]-sagedelay)
+  lines(predict(loess(p90 ~ x, data=dfR[!is.na(dfR$p90),],span=lospan)),col='red',x=dfR$date[!is.na(dfR$p90)])
   invisible(dev.off())
 }
 }
@@ -1539,7 +1539,7 @@ if(CrystalCast){
 }
 
 #####  Figures and analysis for https://www.medrxiv.org/content/10.1101/2021.04.14.21255385v1
-medrxiv=FALSE
+medrxiv=TRUE
 if(as.Date("2020/08/25")!=startdate){medrxiv=FALSE} #  Broken because of hardcoded dates
 if(medrxiv){
   ####  From here on we're reproducing figures from https://www.medrxiv.org/content/10.1101/2021.04.14.21255385v1
@@ -1917,3 +1917,4 @@ lines(rowSums(DEATH[16:20]),col="blue",x=DEATH$date)
 # it will return -1 but you can set a value setStatus(1). Any non-zero value
 # will indicate a problem.  For interactive work "quit" can end Rstudio session altogether
 if(! interactive()){quit(status=returnStatus())}
+
