@@ -549,8 +549,8 @@ HospitalData  <-  HospitalData %>% filter(date >= startdate &
   arrange(date)
 
 
-# Remove the no longer needed input datas
-rm(ukcasedat,scotdailycases,scotdailycasesbyboard,d,HospitalUrl,deathurl,casesurl,scoturl)
+# Remove the no longer needed input data
+rm(ukcasedat,scotdailycases,scotdailycasesbyboard,d,HospitalUrl,deathurl,casesurl)
 
 # Plot all cases against date: Used for the paper, uncomment to recreate
 #comdat %>% ggplot(aes(x=date,y=allCases)) + geom_line() +
