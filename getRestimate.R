@@ -81,3 +81,4 @@ r_est %>% filter(!is.na(Date)) -> r_est
 
 # Write the data to a CSV file
 write_csv(r_est, file = "data/R_estimate.csv")
+

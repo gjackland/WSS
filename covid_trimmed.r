@@ -446,7 +446,7 @@ regagedat <- regagedat %>%  select(date, areaName, age, cases) %>%
 
 # Read in the UK government R estimate data from a csv file
 coltypes <- cols(
-  Date = col_date(format = "%Y-%m-%d"), UK_LowerBound = col_number(),
+  Date = col_date(format = "%d/%m/%Y"), UK_LowerBound = col_number(),
   UK_UpperBound = col_number(), England_LowerBound = col_number(),
   England_UpperBound = col_number(), EEng_LowerBound = col_number(),
   EEng_UpperBound = col_number(), Lon_LowerBound = col_number(),
