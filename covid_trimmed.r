@@ -548,6 +548,7 @@ HospitalData  <-  HospitalData %>% filter(date >= startdate &
   arrange(date)
 
 
+
 # Remove the no longer needed input datas
 rm(ukcasedat,scotdailycases,scotdailycasesbyboard,d,HospitalUrl,deathurl,casesurl,scoturl,walesurl,NIurl)
 
