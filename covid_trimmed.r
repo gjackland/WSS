@@ -689,16 +689,23 @@ regcases$Midlands<-regcases$`East Midlands`+regcases$`West Midlands`
 # Set false positive adjustment at 0.004, extrapolate tests if the last few days are missing
 comdat$fpCases <- comdat$allCases-0.004*as.integer(comdat$tests)
 
-plot(comdat$inputCases,x=comdat$date,xlab="Date",ylab="Cases")
-lines(comdat$allCases,x=comdat$date, col="green",lwd=2)
-lines(comdat$fpCases, x=comdat$date,col="red",lwd=2)
+# Plot only if running interactively
+if(interactive()){
 
-# Same graph using ggplot - alpha sets a level of transparency between 0 (opaque) to 1 (transparent)
-ggplot(comdat,aes(x=date)) +
-  geom_point(aes(y=inputCases),alpha=0.5) +
-  geom_line(aes(y=allCases), color="green", size=1.5, alpha=0.5) +
-  geom_line(aes(y=fpCases),color="red", size=1.5, alpha=0.5) +
-  xlab("Dates") + ylab("Cases")
+  plot(comdat$inputCases,x=comdat$date,xlab="Date",ylab="Cases")
+  lines(comdat$allCases,x=comdat$date, col="green",lwd=2)
+  lines(comdat$fpCases, x=comdat$date,col="red",lwd=2)
+
+  # Same graph using ggplot - alpha sets a level of transparency
+  # between 0 (opaque) to 1 (transparent)
+  ggplot(comdat,aes(x=date)) +
+    geom_point(aes(y=inputCases),alpha=0.5) +
+    geom_line(aes(y=allCases), color="green", size=1.5, alpha=0.5) +
+    geom_line(aes(y=fpCases),color="red", size=1.5, alpha=0.5) +
+    xlab("Dates") + ylab("Cases") +
+    theme_minimal()
+
+}
 
 CFR_All_ByAge=colSums(deathdat[2:20])/colSums(casedat[2:20])
 
