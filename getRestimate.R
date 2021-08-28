@@ -76,6 +76,9 @@ r_est <- as_tibble(r_est)
 # Convert character dates to dates
 r_est$Date <- as.Date(r_est$Date, format = "%d-%b-%y")
 
+# Change format of date to %d/%m/%Y
+r_est$Date <- format(r_est$Date,"%d/%m/%Y")
+
 # Remove NA values
 r_est %>% filter(!is.na(Date)) -> r_est
 

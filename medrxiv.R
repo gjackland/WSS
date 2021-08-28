@@ -186,7 +186,7 @@ rm(agegroup, day)
   gampred$allCasesPred = rowSums(gampred[,2:20])
 
   #### AGE GROUPS - Lognormal Model ####
-  #Calculate age-group CFRs to fit Oct-Nov from Lognormal
+  # Calculate age-group CFRs to fit Oct-Nov from Lognormal
   logageweights = data.frame(agegroup = names(casedat[2:20]), weight = 0, lowerbound = 0, upperbound = 0)
   for (agegroup in 2:20) {
     daterange = seq.Date(as.Date("2020-10-01"), as.Date("2020-11-30"), by = "day")
