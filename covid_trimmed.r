@@ -959,7 +959,8 @@ if(interactive()){
     pivot_longer(!date,names_to = "Region", values_to="R") %>%
     ggplot(aes(x=date, y=R, colour=Region)) +
     coord_cartesian(ylim=c(0.5,1.9))+ geom_smooth(formula= y ~ x, method = "loess", span=0.3) +
-    guides(color = "none") + facet_wrap(vars(Region))
+    guides(color = "none") + facet_wrap(vars(Region)) +
+    theme(axis.text.x=element_text(angle=90,hjust=1)) +xlab("Date")
 
 }
 
