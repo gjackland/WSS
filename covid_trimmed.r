@@ -953,8 +953,10 @@ if(interactive()){
     pivot_longer(!date,names_to = "Region", values_to="R") %>%
     ggplot(aes(x=date, y=R, colour=Region)) + coord_cartesian(ylim=c(0.8,1.5)) +
     geom_smooth(formula= y ~ x, method = "loess", span=0.6) +  guides(color = "none") +
-    facet_wrap(vars(Region))
-#  Plot UK nations and English regions
+    facet_wrap(vars(Region)) +
+    theme(axis.text.x=element_text(angle=90,hjust=1)) +xlab("Date")
+
+  #  Plot UK nations and English regions
   rat[,c(1,2,3,4,5,6,7,8,9,10,11,12,13)]%>% filter(startplot < date & date < endplot) %>%
     pivot_longer(!date,names_to = "Region", values_to="R") %>%
     ggplot(aes(x=date, y=R, colour=Region)) +
