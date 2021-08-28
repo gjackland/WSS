@@ -1,5 +1,5 @@
 #!/usr/bin/env Rscript
-#
+#  Broken August 2021?
 # Code to get the UK reproductive number (R) estimate.
 # Data is made available under an Open Government Licence.
 # For more details see:
@@ -76,8 +76,12 @@ r_est <- as_tibble(r_est)
 # Convert character dates to dates
 r_est$Date <- as.Date(r_est$Date, format = "%d-%b-%y")
 
+# Change format of date to %d/%m/%Y
+r_est$Date <- format(r_est$Date,"%d/%m/%Y")
+
 # Remove NA values
 r_est %>% filter(!is.na(Date)) -> r_est
 
 # Write the data to a CSV file
 write_csv(r_est, file = "data/R_estimate.csv")
+
