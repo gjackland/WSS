@@ -516,7 +516,8 @@ scotdailycases = read_csv(dailycasesurl, col_types = coltypes)
 scotdailycases %>% select(date=Date,board=HBName, cases=DailyPositive)  %>%
   pivot_wider(names_from = board, values_from = cases) %>%
   filter(date >= startdate & date <= enddate )         %>%
-  arrange(date) -> scotdailycasesbyboard # Join the scotdailycases with regcases by date
+  arrange(date) -> scotdailycasesbyboard
+# Join the scotdailycases with regcases by date
 regcases <- inner_join(regcases,scotdailycasesbyboard, by = c("date"="date"))
 
 #### Get tests for England pre-Sept by taking the post-Sept fraction of all tests that were in England (0.867), and set vaccines to zero
