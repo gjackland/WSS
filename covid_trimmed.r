@@ -557,7 +557,8 @@ HospitalData  <-  HospitalData %>% filter(date >= startdate &
 
 
 # Remove the no longer needed input datas
-rm(ukcasedat,scotdailycases,scotdailycasesbyboard,d,HospitalUrl,deathurl,casesurl,scoturl,walesurl,NIurl)
+rm(ukcasedat,scotdailycases,scotdailycasesbyboard,d)
+rm(HospitalUrl,deathurl,casesurl,scoturl,walesurl,NIurl,ageurl,baseurl,regurl,regurl2,ukcaseurl,vacurl)
 
 # Plot all cases against date: Used for the paper, uncomment to recreate
 #comdat %>% ggplot(aes(x=date,y=allCases)) + geom_line() +
@@ -602,6 +603,7 @@ for (i in 1:nrow(comdat)){
   x= (i-Indiadate)*0.4/genTime
   comdat$India[i]=1.0/(1.0+exp(-x))
 }
+rm(x)
 #  Kent is Kentfac worse, india is Indiafac worse
 comdat$Kent<-comdat$Kent-comdat$India
 comdat$lethality<-1.0+ Kentfac*comdat$Kent + Indiafac*comdat$India
@@ -1064,7 +1066,7 @@ dfR$piecewise[lock1:(unlock1-1)]=smoothR2$y
 dfR$piecewise[unlock1:(lock2-1)]=smoothR3$y
 dfR$piecewise[lock2:(unlock2-1)]=smoothR4$y
 dfR$piecewise[unlock2:length(dfR$gjaR)]=smoothRend$y
-
+rm(smoothR1,smoothR2,smoothR3,smoothR4,smoothRend)
 # Plot R estimate vs data and fits discontinuous at lockdown
 #  Have to move the Official R data back by 16 days !
 
@@ -1084,7 +1086,7 @@ lines(predict(loess(gjaR ~ x, data=dfR,span=0.3,weight=sqrt(comdat$allCases))),c
 #lines(predict(loess(gjaR ~ x, data=dfR,span=0.3)),col='green',x=dfR$date)
 lines(predict(loess(bylogR ~ x, data=dfR,span=0.3,weight=sqrt(comdat$allCases))),col='red',x=dfR$date,lwd=2)
 #lines(predict(loess(bylogR ~ x, data=dfR,span=0.3)),col='red',x=dfR$date)
-###  Filters
+### Smoothing Filters
 s1=0.05
 s2=0.1
 s3=0.2
@@ -1442,7 +1444,7 @@ MeanR=comdat$allCases,
 smoothcasesR=comdat$allCases
 )
 meanR=mean(dfR$rawR)
-startpred=genTime+27
+startpred=genTime+19
 for(i in 8:length(dfR$gjaR)){
   Predict$c[i]=Predict$c[i-1]*exp((dfR$bylogR[i-1]-1)/genTime)
   Predict$Lin[i]=Predict$Lin[i-1]*(1.0+(dfR$gjaR[i-1]-1)/genTime)
@@ -1465,7 +1467,7 @@ sum(Predict$MeanR)
 sum(Predict$SmoothRlog)
 sum(Predict$SmoothRito)
 sum(Predict$smoothcasesR)
-sumplot(comdat$allCases,x=Predict$date,xlab="Date",ylab="Cases backdeduced from R"
+plot(comdat$allCases,x=Predict$date,xlab="Date",ylab="Cases backdeduced from R"
      ,xlim=c(Predict$date[(startpred)],Predict$date[350]))
 lines(Predict$c,x=Predict$date, col="black")
 lines(Predict$SmoothRlog,x=Predict$date, col="blue",lwd=2)
