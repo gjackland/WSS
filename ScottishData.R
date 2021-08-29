@@ -4,7 +4,7 @@ library(readr, warn.conflicts = FALSE, quietly = TRUE)
 library(dplyr, warn.conflicts = FALSE, quietly = TRUE)
 library(tidyr, warn.conflicts = FALSE, quietly = TRUE)
 
-rm(scotage)
+
 # Scottish regions --------------------------------------------------------
 
 # List from https://en.wikipedia.org/wiki/Local_government_in_Scotland
