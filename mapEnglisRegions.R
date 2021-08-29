@@ -17,7 +17,7 @@ library(ggplot2)
 library(rgeos)
 library(broom)
 library(plyr)
-
+library(tidyr)
 
 # Load map data -----------------------------------------------------------
 
@@ -53,6 +53,18 @@ mapdata <- tidy(shapefile)
 # 7    South East
 # 8    South West
 
+# Map Region to id
+region2id <- tibble("North East"="0",
+                    "North West"="1",
+                    "Yorkshire and The Humber"="2",
+                    "East Midlands"="3",
+                    "West Midlands"="4",
+                    "East of England"="5",
+                    "London"="6",
+                    "South East"="7",
+                    "South West"="8")
+
+
 # Plot the map data
 ggplot() +
   geom_polygon(data = mapdata, aes(x = long, y = lat, group = group, fill=id),
@@ -76,3 +88,28 @@ ggplot() +
         axis.text.y = element_blank(),
         axis.ticks.y = element_blank())
 
+# Now plot actual data
+keepcols <- names(rat)[2:ncol(rat)]
+keepdate <- max(rat$date)
+
+rat %>% pivot_longer(cols=keepcols, names_to = "regions", values_to = "values") %>%
+        filter(regions %in% c("North East","North West","Yorkshire and The Humber",
+                              "East Midlands","West Midlands","London","East of England",
+                              "South East","South West") & date == keepdate) %>%
+        mutate(id = recode(regions,!!!region2id) )  %>%  # stackoverflow 31296092
+        inner_join(mapdata, by = "id") %>%
+        mutate(totals = scale(values)) %>%
+        ggplot() +
+        geom_polygon(aes(x = long, y = lat, group = group, fill = values),
+                    colour="black",size = 0.25) +
+        coord_fixed(1) + # This gives the map a 1:1 aspect ratio
+        theme_minimal() +
+  theme(axis.title.x=element_blank(),
+        axis.text.x = element_blank(),
+        axis.ticks.x = element_blank()) +
+  theme(axis.title.y=element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks.y = element_blank()) +
+  theme(panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank()) +
+  ggtitle(paste0("Data for ", keepdate))
