@@ -261,14 +261,16 @@ vacdat <- vacdat %>%
   arrange(datetmp)
 
 # Add vaccination data for the under 24s.
-vacdat$`18_24`<-NULL
-vacdat<-cbind('20_24'=0.0,vacdat)
-vacdat<-cbind('15_19'=0.0,vacdat)
+
+vacdat<-cbind('20_24'=vacdat$'18_24',vacdat)
+vacdat<-cbind('15_19'=0.4*vacdat$'18_24',vacdat)
 vacdat<-cbind('10_14'=0.0,vacdat)
 vacdat<-cbind('05_09'=0.0,vacdat)
 vacdat<-cbind('00_04'=0.0,vacdat)
 vacdat<-cbind(date=vacdat$datetmp,vacdat)
-vacdat$date
+vacdat$`18_24`<-NULL
+vacdat$datetmp<-NULL
+#  Extend vacdat to before programme started with zeroes
 tmp<-NULL
 tmp<-casedat %>% filter(date < vacdate)
 tmp[2:20]=0.0
@@ -276,7 +278,7 @@ vacdat <- bind_rows(tmp,vacdat)
 rm(tmp)
 
 # convert to fraction
-vacdat[2:length(vacdat)]<-vacdat[2:length(vacdat)]/100
+vacdat[2:length(vacdat)]<-vacdat[2:length(vacdat)]/100.0
 
 # deaths by age
 deathurl <- paste0(baseurl,
@@ -284,7 +286,6 @@ deathurl <- paste0(baseurl,
                    "areaCode=E92000001&",
                    "metric=newDeaths28DaysByDeathDateAgeDemographics&",
                    "format=csv")
-
 # Explicitly define the types for the columns
 coltypes <- cols(areaCode=col_character(), areaName=col_character(),areaType=col_character(),
                  date=col_date(format="%Y-%m-%d"),age=col_character(),
@@ -708,7 +709,7 @@ regcases<-regcases[,c(1,2,3,4,5,6,7,9,10,8,23,26,27,11,12,13,14,15,16,17,18,19,2
 # Set false positive adjustment at 0.004, extrapolate tests if the last few days are missing
 comdat$fpCases <- comdat$allCases-0.004*as.integer(comdat$tests)
 
-comdat$regions<-regcases$London+regcases$`South East`+regcases$`South West`+regcases$NE_Yorks+regcases$Midlands+regcases$`North West`
+comdat$regions<-regcases$London+regcases$`South East`+regcases$`South West`+regcases$NE_Yorks+regcases$Midlands+regcases$`North West`+regcases$`East of England`
 # Plot only if running interactively
 if(interactive()){
 
@@ -966,7 +967,7 @@ if(interactive()){
   rat %>% filter(startplot < date & date < endplot) %>%
     pivot_longer(!date,names_to = "Region", values_to="R") %>%
     ggplot(aes(x=date, y=R, colour=Region)) + coord_cartesian(ylim=c(0.8,1.5)) +
-    geom_smooth(formula= y ~ x, method = "loess", span=0.6) +  guides(color = "none") +
+    geom_smooth(formula= y ~ x, method = "loess", span=0.3) +  guides(color = "none") +
     facet_wrap(vars(Region)) +
     theme(axis.text.x=element_text(angle=90,hjust=1)) +xlab("Date")
 
@@ -1120,7 +1121,7 @@ s2=0.1
 s3=0.2
 s4=0.3
 filteredR <-append(
-  append((predict(loess(bylogR ~ x, data=dfR,weight=comdat$allCases, span=s1))),
+  append(tail(predict(loess(bylogR ~ x, data=dfR,weight=comdat$allCases, span=s1))),
          tail(predict(loess(bylogR ~ x, data=dfR,weight=comdat$allCases,span=s2))) ) ,
   append(tail(predict(loess(bylogR ~ x, data=dfR,weight=comdat$allCases,span=s3))),
          tail(predict(loess(bylogR ~ x, data=dfR,weight=comdat$allCases,span=s4))))
@@ -1226,17 +1227,24 @@ R_SW_Quant <-unname(quantile(filteredR, probs=c(0.05,0.25,0.5,0.75,0.95)))
 
 
 rat$tmp <- rat$Wales
-
 filteredR <-append(
   append(tail(predict(loess(tmp ~ as.numeric(date), data=rat,weight=regcases$Wales,span=s1))),
          tail(predict(loess(tmp ~ as.numeric(date), data=rat,weight=regcases$Wales,span=s2))) ) ,
   append(tail(predict(loess(tmp ~ as.numeric(date), data=rat,weight=regcases$Wales,span=s3))),
          tail(predict(loess(tmp ~ as.numeric(date), data=rat,weight=regcases$Wales,span=s4))))
 )
-
 R_Wales_BestGuess <-mean(filteredR)
 R_Wales_Quant <-unname(quantile(filteredR, probs=c(0.05,0.25,0.5,0.75,0.95)))
 
+rat$tmp <-dfR$regions
+filteredR <-append(
+  append(tail(predict(loess(tmp ~ as.numeric(date),weight=regcases$England, data=rat,span=s1))),
+         tail(predict(loess(tmp ~ as.numeric(date),weight=regcases$England,  data=rat,span=s2))) ) ,
+  append(tail(predict(loess(tmp ~ as.numeric(date),weight=regcases$England,  data=rat,span=s3))),
+         tail(predict(loess(tmp ~ as.numeric(date),weight=regcases$England,  data=rat,span=s4))))
+)
+R_Regions_BestGuess <-mean(filteredR)
+R_Regions_Quant <-unname(quantile(filteredR, probs=c(0.05,0.25,0.5,0.75,0.95)))
 
 filteredR <-append(
   append(tail(predict(loess(NI ~ as.numeric(date),weight=regcases$NI, data=rat,span=s1))),
