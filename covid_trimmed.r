@@ -33,7 +33,7 @@ setwd(".")
 options(scipen = 999)
 
 # Copy transition rates from covidsim.  There are three different functions for
-# ICDFs, no idea why.  x-axis divided into 20 blocks of 5%.
+# ICDFs (Inverse Cumulative Distribution Function), no idea why.  x-axis divided into 20 blocks of 5%.
 # Will need to invert this.  Recent versions include a "Stepdown" state which seems to entail dying in CRITREC
 #  https://www.imperial.ac.uk/mrc-global-infectious-disease-analysis/covid-19/report-41-rtm/
 # PropSARI taken from Knock et al to increase smoothly with age
@@ -100,8 +100,7 @@ covidsimICDF<-data.frame(
     0, 0.133993315, 0.265922775, 0.402188416, 0.544657341, 0.694774487, 0.853984373, 1.023901078, 1.206436504, 1.403942719, 1.619402771, 1.856711876, 2.121118605, 2.419957988, 2.763950408, 3.169692564, 3.664959893, 4.301777536, 5.196849239, 6.7222126, 10.24997697
   )
   )
-
-## covidsim has 17 agegroups.  We need 19,  assume same params for 85_89 & 90+ as for 80+
+## covidsim has 17 agegroups.  We need 19, assume same params for 85_89 & 90+ as for 80+
 # Data from Knock et al  case-> Hosp Triage -> ICU DEath|Hosp Death |ICU Death in Stepdown
 Knock<-t(data.frame(
 "00_04" = c( 0.039, 0.243, 0.039, 0.282, 0.091, 0),
@@ -126,15 +125,15 @@ Knock<-t(data.frame(
 )
 )
 
-####, Read data ####
+#### Read data ####
 # Base URL to get the UK government data
 baseurl <- "https://api.coronavirus.data.gov.uk/v2/data?"
 
 # Start and end date - the data to collect data from
-startdate <- as.Date("2020/08/25") #as.Date("2020/02/25")
+startdate <- as.Date("2020/08/25") #as.Date("2020/08/25")
 
 # Lose only the last day of data - use tail correction for reporting delay
-# Weekend data can be sketchy Extend the enddate if run on Monday moring
+# Weekend data can be sketchy Extend the enddate if run on Monday morning
 enddate <-  Sys.Date()-5
 # Set the generation time
 genTime <- 5
@@ -269,7 +268,8 @@ vacdat<-cbind('10_14'=0.0,vacdat)
 vacdat<-cbind('05_09'=0.0,vacdat)
 vacdat<-cbind('00_04'=0.0,vacdat)
 vacdat<-cbind(date=vacdat$datetmp,vacdat)
-vacdat$datetmp<-NULL
+vacdat$date
+tmp<-NULL
 tmp<-casedat %>% filter(date < vacdate)
 tmp[2:20]=0.0
 vacdat <- bind_rows(tmp,vacdat)
@@ -322,6 +322,16 @@ coltypes <-  cols(
 )
 #  Trying and failing to get data from PHS
 #scotdeaths<- read.csv(file="https://www.opendata.nhs.scot/api/3/action/datastore_search?resource_id=9393bd66-5012-4f01-9bc5-e7a10accacf4")
+#
+# Data is not being returned as a CSV but JSON you have to use:
+#
+# library(jsonlite)
+# d <- jsonlite::fromJSON("https://www.opendata.nhs.scot/api/3/action/datastore_search?resource_id=9393bd66-5012-4f01-9bc5-e7a10accacf4",
+#                         flatten = TRUE)
+#
+# This still returns contents as a list so you will have to rummage around to extract the actual contents that you require in
+# the data structure returned.
+
 
 # Read in the Scottish deaths and case data
 scotdat <-  read_csv(file = scoturl, col_types = coltypes)
@@ -463,8 +473,6 @@ coltypes <- cols(
 # Read in the data
 Rest <- read_csv(file="data/R_estimate.csv", col_types = coltypes)
 
-# Change date format to %d/%m/%Y
-Rest$Date <- format(Rest$Date,"%d/%m/%Y")
 
 # Read in Scottish R value estimates
 # coltypes <- cols(
@@ -559,18 +567,19 @@ HospitalData  <-  HospitalData %>% filter(date >= startdate &
 
 
 # Remove the no longer needed input datas
-rm(ukcasedat,scotdailycases,scotdailycasesbyboard,d,HospitalUrl,deathurl,casesurl,scoturl,walesurl,NIurl)
+rm(ukcasedat,scotdailycases,scotdailycasesbyboard,d)
+rm(HospitalUrl,deathurl,casesurl,scoturl,walesurl,NIurl,ageurl,baseurl,regurl,regurl2,ukcaseurl,vacurl)
 
 # Plot all cases against date: Used for the paper, uncomment to recreate
 #comdat %>% ggplot(aes(x=date,y=allCases)) + geom_line() +
 #  xlab("Date") + ylab("All cases")
 if(interactive()){
   comdat %>%
-  filter(enddate-30 <= date & date <= enddate) %>%
-  mutate(rollmean = zoo::rollmean(allCases, k = 7, fill = NA)) %>%  # 7-day average
-  ggplot(aes(x=date)) + geom_line(aes(y=allCases)) + geom_point(aes(y=allCases)) +
-  geom_line(aes(y=rollmean), colour="pink",na.rm = TRUE, size=2, alpha=0.5) +
-  xlab("Date") + ylab("All cases")
+    filter(startdate+150 <= date & date <= enddate) %>%
+    mutate(rollmean = zoo::rollmean(allCases, k = 7, fill = NA)) %>%  # 7-day average
+    ggplot(aes(x=date)) + geom_line(aes(y=allCases)) + geom_point(aes(y=allCases)) +
+    geom_line(aes(y=rollmean), colour="pink",na.rm = TRUE, size=2, alpha=0.5) +
+    xlab("Date") + ylab("All cases")
 }
 
 regcases$Wales <- walesdat$allCases
@@ -604,6 +613,7 @@ for (i in 1:nrow(comdat)){
   x= (i-Indiadate)*0.4/genTime
   comdat$India[i]=1.0/(1.0+exp(-x))
 }
+rm(x)
 #  Kent is Kentfac worse, india is Indiafac worse
 comdat$Kent<-comdat$Kent-comdat$India
 comdat$lethality<-1.0+ Kentfac*comdat$Kent + Indiafac*comdat$India
@@ -916,13 +926,12 @@ smoothcases=smooth.spline(comdat$fpCases, df=20)
 # Create a vector to hold the results for various R-numbers
 ninit <- as.numeric(1:nrow(comdat))/as.numeric(1:nrow(comdat))
 dfR <- data.frame(x=1.0:length(comdat$date),
-                  date=comdat$date, gjaR=ninit, rawR=ninit,  fpR=ninit,  weeklyR=ninit,  bylogR=ninit,
+                  date=comdat$date, itoR=ninit, stratR=ninit, rawR=ninit,  fpR=ninit,  weeklyR=ninit,  bylogR=ninit,
                   p00=ninit,  p05=ninit,  p10=ninit,  p15=ninit,  p20=ninit,  p25=ninit,  p30=ninit,
                   p35=ninit,  p40=ninit,  p45=ninit,  p50=ninit,  p55=ninit,  p60=ninit,  p65=ninit,
                   p70=ninit,  p75=ninit,  p80=ninit,  p85=ninit,  p90=ninit, x05=ninit, x15=ninit,
                   x25=ninit, x45=ninit, x65=ninit, x75=ninit, smoothcasesR=ninit)
-# df#Ito: gjaR[i]<-(1+(comdat$allCases[i]-comdat$allCases[i-1])*2*genTime/(comdat$allCases[i]+comdat$allCases[i-1]))
-#  #Stratanovitch calculus
+#  #Ito, Stratanovitch and exponential calculus
 # rawR averages cases over previous genTime days - assumes genTime is the same as infectious period
 
 # Check if there are any zero cases in the data
@@ -970,10 +979,13 @@ if(interactive()){
 }
 
 
-#  Generate R over all ages, with some options for the calculus  gjaR is Ito, rawR is stratonovich, bylogR is harmonic Ito fpR includes false positive correction
-for(i in ((genTime+1):length(dfR$gjaR))    ){
-  dfR$gjaR[i]=(1+(comdat$allCases[i]-comdat$allCases[i-1])*genTime/(comdat$allCases[i-1]))
-  dfR$rawR[i]=1+ (comdat$allCases[i]-comdat$allCases[i-1])*genTime/mean(comdat$allCases[(i-1):i])
+#  Generate R over all ages, with some options for the calculus  itoR is Ito, stratR is stratonovich, bylogR is harmonic Ito fpR includes false positive correction
+#  Avoid zero cases in R-calculation
+casedat[casedat==0]=1
+
+for(i in ((genTime+1):length(dfR$itoR))    ){
+  dfR$itoR[i]=(1+(comdat$allCases[i]-comdat$allCases[i-1])*genTime/(comdat$allCases[i-1]))
+  dfR$stratR[i]=1+ (comdat$allCases[i]-comdat$allCases[i-1])*genTime/mean(comdat$allCases[(i-1):i])
   dfR$fpR[i]=(1+(comdat$fpCases[i]-comdat$fpCases[i-1])*genTime/(comdat$fpCases[i-1]))
   dfR$bylogR[i]=1+log(comdat$allCases[i]/comdat$allCases[i-1])*genTime
   dfR$p00[i]=1+log(casedat$'00_04'[i]/casedat$'00_04'[i-1])*genTime
@@ -1006,7 +1018,7 @@ for(i in ((genTime+1):length(dfR$gjaR))    ){
 }
 
 dfR$smoothRlog<-smooth.spline(dfR$bylogR,df=20)$y
-dfR$smoothRito<-smooth.spline(dfR$gjaR,df=20)$y
+dfR$smoothRito<-smooth.spline(dfR$itoR,df=20)$y
 dfR$loessR<-predict(loess(bylogR~x,data=dfR,span=0.25))
 dfR[is.na(dfR)]=1.0
 dfR[dfR==Inf]=1.0
@@ -1019,7 +1031,7 @@ for (i in 3:nrow(dfR)){dfR[i,1]=dfR[i,2]}
 for(i in 4:(length(dfR$weeklyR)-3)){
     day1=i-3
     day7=i+3
-    dfR$weeklyR[i]=sum(dfR$gjaR[day1:day7])/7.0
+    dfR$weeklyR[i]=sum(dfR$itoR[day1:day7])/7.0
 }
 # End effect
 dfR$weeklyR[length(dfR$weeklyR)]=1.0
@@ -1037,8 +1049,8 @@ spdf=18
 lospan=0.3
 
 smoothweightR<-smooth.spline(dfR$bylogR,df=spdf,w=sqrt(comdat$allCases))
-smoothweightRraw<-smooth.spline(dfR$rawR,df=spdf,w=sqrt(comdat$allCases))
-smoothweightRgja<-smooth.spline(dfR$gjaR,df=spdf,w=sqrt(comdat$allCases))
+smoothweightRstrat<-smooth.spline(dfR$stratR,df=spdf,w=sqrt(comdat$allCases))
+smoothweightRito<-smooth.spline(dfR$itoR,df=spdf,w=sqrt(comdat$allCases))
 smoothweightRfp<-smooth.spline(dfR$fpR,df=spdf,w=sqrt(comdat$fpCases))
 rat$smoothScotland <-smooth.spline(rat$Scotland,df=spdf,w=sqrt(regcases$Scotland))$y
 rat$smoothNW <-smooth.spline(rat$`North West`,df=spdf,w=sqrt(regcases$`North West`))$y
@@ -1069,14 +1081,14 @@ smoothR4$x=smoothR4$x+unlock2
 smoothR4$date<-dfR$date[lock2:(unlock2-1)]
 smoothRend<-smooth.spline(dfR$bylogR[unlock2:length(dfR$date)],df=(length(dfR$date)-unlock2)/14)
 smoothRend$x=smoothRend$x+unlock2
-smoothRend$date<-dfR$date[unlock2:length(dfR$gjaR)]
-dfR$piecewise<-dfR$gjaR
+smoothRend$date<-dfR$date[unlock2:length(dfR$itoR)]
+dfR$piecewise<-dfR$itoR
 dfR$piecewise[1:(lock1-1)]=smoothR1$y
 dfR$piecewise[lock1:(unlock1-1)]=smoothR2$y
 dfR$piecewise[unlock1:(lock2-1)]=smoothR3$y
 dfR$piecewise[lock2:(unlock2-1)]=smoothR4$y
-dfR$piecewise[unlock2:length(dfR$gjaR)]=smoothRend$y
-
+dfR$piecewise[unlock2:length(dfR$itoR)]=smoothRend$y
+rm(smoothR1,smoothR2,smoothR3,smoothR4,smoothRend)
 # Plot R estimate vs data and fits discontinuous at lockdown
 #  Have to move the Official R data back by 16 days !
 
@@ -1089,23 +1101,23 @@ for (i in 8:17){
 }
 plot(dfR$piecewise,x=smoothweightR$date,ylab="R-number",xlab="",
      title("R, England"),ylim=c(0.6,1.4),xlim=plotdate,cex.lab=1.6, cex.axis=1.6, cex.main=1.6, cex.sub=1.6)
-lines(y=Rest$England_LowerBound,x=Rest$Date-sagedelay)
+lines(Rest$England_LowerBound,x=(Rest$Date-sagedelay))
 lines(y=Rest$England_UpperBound,x=Rest$Date-sagedelay)
 lines(smoothweightR$y,col="blue",lwd=2,x=dfR$date)
-lines(predict(loess(gjaR ~ x, data=dfR,span=0.3,weight=sqrt(comdat$allCases))),col='green',x=dfR$date,lwd=2)
-#lines(predict(loess(gjaR ~ x, data=dfR,span=0.3)),col='green',x=dfR$date)
+lines(predict(loess(itoR ~ x, data=dfR,span=0.3,weight=sqrt(comdat$allCases))),col='green',x=dfR$date,lwd=2)
+#lines(predict(loess(itoR ~ x, data=dfR,span=0.3)),col='green',x=dfR$date)
 lines(predict(loess(bylogR ~ x, data=dfR,span=0.3,weight=sqrt(comdat$allCases))),col='red',x=dfR$date,lwd=2)
 #lines(predict(loess(bylogR ~ x, data=dfR,span=0.3)),col='red',x=dfR$date)
-###  Filters
+### Smoothing Filters
 s1=0.05
 s2=0.1
 s3=0.2
 s4=0.3
 filteredR <-append(
-  append((predict(loess(gjaR ~ x, data=dfR,span=s1))),
-         tail(predict(loess(gjaR ~ x, data=dfR,span=s2))) ) ,
-  append(tail(predict(loess(gjaR ~ x, data=dfR,span=s3))),
-         tail(predict(loess(gjaR ~ x, data=dfR,span=s4))))
+  append((predict(loess(itoR ~ x, data=dfR,span=s1))),
+         tail(predict(loess(itoR ~ x, data=dfR,span=s2))) ) ,
+  append(tail(predict(loess(itoR ~ x, data=dfR,span=s3))),
+         tail(predict(loess(itoR ~ x, data=dfR,span=s4))))
 )
 R_England_BestGuess<- mean(filteredR)
 R_England_Quant <-unname(quantile(filteredR, probs=c(0.05,0.25,0.5,0.75,0.95)))
@@ -1320,7 +1332,7 @@ for (ismooth in 4:30){
 # Plot Regional R data vs Government  spdf is spline smoothing factor, lospan for loess
 
 #  various options to silence pdf writing
-pdfpo=FALSE
+pdfpo=TRUE
 
 if(pdfpo){
 
@@ -1412,7 +1424,7 @@ if(interactive()){
   pdf(file = 'p75.pdf')
   plot(smooth.spline(dfR$p75,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number, 75-79",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),xlim=plotdate,cex.lab=1.6, cex.axis=1.6, cex.main=1.6, cex.sub=1.6)
   lines(y=Rest$England_LowerBound,x=Rest$Date-sagedelay)
-  lines(y=Rest$England_UpperBound,x=Rest$Date-sagedelay)
+  lines(Rest$England_UpperBound,col="red",x=Rest$Date-sagedelay)
   lines(predict(loess(p75 ~ x, data=dfR,span=lospan)),col='red',x=dfR$date)
   invisible(dev.off())
   pdf(file = 'p80.pdf')
@@ -1428,11 +1440,11 @@ if(interactive()){
   lines(predict(loess(p85 ~ x, data=dfR,span=lospan)),col='red',x=dfR$date)
   invisible(dev.off())
   pdf(file = 'p90.pdf')
-#  plot(smooth.spline(na.omit(dfR$p90),df=spdf,w=sqrt(comdat$allCases[!is.na(dfR$p90)]))$y,ylab="R-number, 90+",xlab="Date",
-#       x=dfR$date[!is.na(dfR$p90)],ylim=c(0.6,1.4),xlim=plotdate,cex.lab=1.6, cex.axis=1.6, cex.main=1.6, cex.sub=1.6)
-#  lines(y=Rest$England_LowerBound[!is.na(dfR$p90)],x=Rest$Date[!is.na(dfR$p90)]-sagedelay)
-#  lines(y=Rest$England_UpperBound[!is.na(dfR$p90)],x=Rest$Date[!is.na(dfR$p90)]-sagedelay)
-#  lines(predict(loess(p90 ~ x, data=dfR[!is.na(dfR$p90),],span=lospan)),col='red',x=dfR$date[!is.na(dfR$p90)])
+  plot(smooth.spline(na.omit(dfR$p90),df=spdf,w=sqrt(comdat$allCases[!is.na(dfR$p90)]))$y,ylab="R-number, 90+",xlab="Date",
+       x=dfR$date[!is.na(dfR$p90)],ylim=c(0.6,1.4),xlim=plotdate,cex.lab=1.6, cex.axis=1.6, cex.main=1.6, cex.sub=1.6)
+  lines(y=Rest$England_LowerBound[!is.na(dfR$p90)],x=Rest$Date[!is.na(dfR$p90)]-sagedelay)
+  lines(y=Rest$England_UpperBound[!is.na(dfR$p90)],x=Rest$Date[!is.na(dfR$p90)]-sagedelay)
+  lines(predict(loess(p90 ~ x, data=dfR[!is.na(dfR$p90),],span=lospan)),col='red',x=dfR$date[!is.na(dfR$p90)])
   invisible(dev.off())
 }
 }
@@ -1451,15 +1463,16 @@ Lin=comdat$allCases,
 Raw=comdat$allCases,
 SmoothRlog=comdat$allCases,
 SmoothRito=comdat$allCases,
+SmoothRstrat=comdat$allCases,
 MeanR=comdat$allCases,
 smoothcasesR=comdat$allCases
 )
-meanR=mean(dfR$rawR)
-startpred=genTime+27
-for(i in 8:length(dfR$gjaR)){
+meanR=mean(dfR$stratR)
+startpred=genTime+19
+for(i in 8:length(dfR$itoR)){
   Predict$c[i]=Predict$c[i-1]*exp((dfR$bylogR[i-1]-1)/genTime)
-  Predict$Lin[i]=Predict$Lin[i-1]*(1.0+(dfR$gjaR[i-1]-1)/genTime)
-  Predict$Raw[i]=Predict$Raw[i-1]*(1.0+(dfR$rawR[i-1]-1)/genTime)
+  Predict$Lin[i]=Predict$Lin[i-1]*(1.0+(dfR$itoR[i-1]-1)/genTime)
+  Predict$SmoothRstrat[i]=Predict$SmoothRstrat[i-1]*(1.0+(dfR$stratR[i-1]-1)/genTime)
   Predict$MeanR[i]=Predict$MeanR[i-1]*(1.0+(meanR-1)/genTime)
   Predict$SmoothRlog[i]=Predict$SmoothRlog[i-1]*exp((dfR$smoothRlog[i-1]-1)/genTime)
   Predict$SmoothRito[i]=Predict$SmoothRito[i-1]*exp((dfR$smoothRito[i-1]-1)/genTime)
@@ -1478,7 +1491,7 @@ sum(Predict$MeanR)
 sum(Predict$SmoothRlog)
 sum(Predict$SmoothRito)
 sum(Predict$smoothcasesR)
-sumplot(comdat$allCases,x=Predict$date,xlab="Date",ylab="Cases backdeduced from R"
+plot(comdat$allCases,x=Predict$date,xlab="Date",ylab="Cases backdeduced from R"
      ,xlim=c(Predict$date[(startpred)],Predict$date[350]))
 lines(Predict$c,x=Predict$date, col="black")
 lines(Predict$SmoothRlog,x=Predict$date, col="blue",lwd=2)
@@ -1571,7 +1584,8 @@ if(CrystalCast){
 }
 
 #####  Figures and analysis for https://www.medrxiv.org/content/10.1101/2021.04.14.21255385v1
-medrxiv=FALSE
+medrxiv=TRUE
+if(as.Date("2020/08/25")!=startdate){medrxiv=FALSE} #  Broken because of hardcoded dates
 if(medrxiv){
   ####  From here on we're reproducing figures from https://www.medrxiv.org/content/10.1101/2021.04.14.21255385v1
   ##### Fig 1. - Heatmaps ####
@@ -1911,6 +1925,7 @@ if(compartment){
 #Monitoring plots
 plot(HospitalData$newAdmissions)
 lines(rowSums(newSARI[2:20]),col="blue")
+
 plot(HospitalData$hospitalCases,x=HospitalData$date,ylab="Hospital Cases",xlab="Date")
 lines(rowSums(SARI[2:20]+CRIT[2:20]+CRITREC[2:20]),x=SARI$date,col='red')
 plot(rowSums(CASE[2:20]),x=deathdat$date,ylab="Cases",xlab="Date")
@@ -1926,3 +1941,4 @@ lines(rowSums(DEATH[16:20]),col="blue",x=DEATH$date)
 # it will return -1 but you can set a value setStatus(1). Any non-zero value
 # will indicate a problem.  For interactive work "quit" can end Rstudio session altogether
 if(! interactive()){quit(status=returnStatus())}
+

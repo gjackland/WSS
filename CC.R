@@ -508,4 +508,3 @@ for (d in 4:(length(rat$date)-3)){
 
 # Write to excel
 write.xlsx(CC, file = "Data/WSS_CC.xlsx", sheetName = "WSS", row.names = FALSE)
-

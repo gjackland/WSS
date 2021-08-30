@@ -6,14 +6,6 @@
 # http://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/
 #
 
-
-# Load packages -----------------------------------------------------------
-
-# Read packages used by the script
-library(readr, warn.conflicts = FALSE, quietly = TRUE)
-library(dplyr, warn.conflicts = FALSE, quietly = TRUE)
-library(tidyr, warn.conflicts = FALSE, quietly = TRUE)
-
 #  ISSUES #####################################################################
 #
 # * newPCRTestsByPublishDate are all NULL for English regions for the total
@@ -32,6 +24,14 @@ library(tidyr, warn.conflicts = FALSE, quietly = TRUE)
 # * No vaccination data for GB-WLS, GB-NIR.
 # * No death by age for GB-NIR.
 # * No regional cases by age data for GB-WLS.
+
+
+# Load packages -----------------------------------------------------------
+
+# Read packages used by the script
+library(readr, warn.conflicts = FALSE, quietly = TRUE)
+library(dplyr, warn.conflicts = FALSE, quietly = TRUE)
+library(tidyr, warn.conflicts = FALSE, quietly = TRUE)
 
 # Region look-up tables ---------------------------------------------------
 
@@ -148,7 +148,6 @@ if (subregion == "Midlands"){
   code <- region9Tocode[subregion]
 }
 
-
 # getURL function ---------------------------------------------------------
 
 # Function to return one or more URLs to query for the requested data based
@@ -187,7 +186,7 @@ getURL <- function(code, query){
 # Get data from the URLs - if more than one URL is specified it will do
 # up to two fetches and add the two data frames.
 getData <-  function(urls) {
-
+  
   # Can only deal with up to two URLs.
   if(length(urls) > 2){
     stop("Can only deal with up to 2 URLs.")
@@ -335,6 +334,11 @@ getData <-  function(urls) {
 # Base URL to get the UK government data
 baseurl <- "https://api.coronavirus.data.gov.uk/v2/data?"
 
+
+# Set parameters ------------------------------------------------------------
+
+# Base URL to get the UK government data
+baseurl <- "https://api.coronavirus.data.gov.uk/v2/data?"
 
 # Start and end date for the data
 # for the end date lose only the last day of data -
@@ -486,6 +490,7 @@ if (is.null(vacdat)){
   vacdat<-cbind('00_04'=0.0,vacdat)
   vacdat<-cbind(date=vacdat$datetmp,vacdat)
   vacdat$datetmp<-NULL
+
   if (!is.null(casedat)) {
 
     tmp <-casedat %>% filter(date < vacdate)
