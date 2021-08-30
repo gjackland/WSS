@@ -303,8 +303,8 @@ CC <- rbind(CC, CCmid)
 
 CCmid <-CCtmp
 CCmid$Geography="North West"
-CCmid$Value = R_London_BestGuess
-Quant = R_London_Quant
+CCmid$Value = R_NW_BestGuess
+Quant = R_NW_Quant
 CCmid$"Quantile 0.05"=Quant[1]
 CCmid$"Quantile 0.25"=Quant[2]
 CCmid$"Quantile 0.5"=Quant[3]
@@ -336,15 +336,7 @@ CCmid$"Quantile 0.95"=Quant[5]
 CC <- rbind(CC, CCmid)
 
 
-CCmid <-CCtmp
-CCmid$Geography="London"
-CCmid$Value = R_London_BestGuess
-Quant = unname(quantile(tail(rat$London), probs=c(0.05,0.25,0.5,0.75,0.95)))
-CCmid$"Quantile 0.05"=R_London_Quant[1]
-CCmid$"Quantile 0.25"=R_London_Quant[2]
-CCmid$"Quantile 0.5"=R_London_Quant[3]
-CCmid$"Quantile 0.75"=R_London_Quant[4]
-CCmid$"Quantile 0.95"=R_London_Quant[5]
+
 # Add the new row
 CC <- rbind(CC, CCmid)
 
