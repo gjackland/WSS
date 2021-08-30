@@ -198,16 +198,16 @@ ukcaseurl <- paste0(baseurl,
 
 # Explicitly define the types for the columns
 coltypes <- cols(col_character(), col_character(),col_character(),
-                 col_date(format="%Y-%m-%d"), col_integer())
+                 col_date(format="%Y-%m-%d"), col_double())
 
 # Read the case data
 ukcasedat <-  read_csv(file = ukcaseurl, col_types = coltypes)
 
 # Transform the case data
-ukcasedat <- ukcasedat %>%  select(date = date, tests = newPCRTestsByPublishDate) %>%
-  filter(date >= startdate &
-           date <= enddate ) %>%
-  arrange(date)
+ukcasedat <- ukcasedat %>%
+             select(date = date, tests = newPCRTestsByPublishDate) %>%
+             filter(date >= startdate & date <= enddate ) %>%
+             arrange(date)
 
 # cases by age
 ageurl <- paste0(baseurl,
@@ -225,16 +225,15 @@ coltypes <- cols(col_character(), col_character(),col_character(),
 # read in the cases by age data
 casedat <-  read_csv(file = ageurl, col_types = coltypes)
 
-
 # Remap the ages column to be the header rows, remove the unassigned,
 # 60+ and 00_59 columns, filter dates to be between the start and end
 # dates and order the output by date
 casedat <- casedat %>%
-  select(date = date, age = age, values = cases) %>%
-  pivot_wider(id_cols = date, names_from = age, values_from = values) %>%
-  select(-unassigned, -"60+", -"00_59") %>%
-  filter(date >= startdate & date <= enddate) %>%
-  arrange(date)
+           select(date = date, age = age, values = cases) %>%
+           pivot_wider(id_cols = date, names_from = age, values_from = values) %>%
+           select(-unassigned, -"60+", -"00_59") %>%
+           filter(date >= startdate & date <= enddate) %>%
+           arrange(date)
 
 vacdate="2020-12-08"
 # vaccination by age
@@ -257,7 +256,7 @@ vacdat <-  read_csv(file = vacurl, col_types = coltypes)
 vacdat <- vacdat %>%
   select(datetmp = date, age = age, values = cumVaccinationFirstDoseUptakeByVaccinationDatePercentage) %>%
   pivot_wider(id_cols = datetmp, names_from = age, values_from = values) %>%
-  filter(datetmp >=vacdate  & datetmp <= enddate) %>%
+  filter(datetmp >= vacdate  & datetmp <= enddate) %>%
   arrange(datetmp)
 
 # Add vaccination data for the under 24s.
