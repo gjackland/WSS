@@ -4,7 +4,7 @@ library(readr, warn.conflicts = FALSE, quietly = TRUE)
 library(dplyr, warn.conflicts = FALSE, quietly = TRUE)
 library(tidyr, warn.conflicts = FALSE, quietly = TRUE)
 
-
+rm(scotage)
 # Scottish regions --------------------------------------------------------
 
 # List from https://en.wikipedia.org/wiki/Local_government_in_Scotland
@@ -115,11 +115,11 @@ coltypes <- cols(
 allagedat <- read_csv(ageurl, col_types = coltypes)
 
 # Restrict to Scottish regions and change from long to wide format
-# allagedat %>% filter(areaName %in% ScottishAuthorities) %>%  # Keep only Scottish regions
-#               select(date = date, age = age, values = cases, area = areaName) %>%
-#               pivot_wider(names_from = age, values_from = values ) %>%
-#               filter(date >= startdate & date <= enddate) %>%
-#               arrange(date) -> scotagedat
+ allagedat %>% filter(areaName %in% ScottishAuthorities) %>%  # Keep only Scottish regions
+              select(date = date, age = age, values = cases, area = areaName) %>%
+               pivot_wider(names_from = age, values_from = values ) %>%
+               filter(date >= startdate & date <= enddate) %>%
+               arrange(date) -> scotagedat
 
 # Getting data by NHS region but this only supports English NHS regions
 trust <- paste0(baseurl,
@@ -262,6 +262,77 @@ package_list(as="table")
 tags <- tag_list(as="table")
 
 corona <- tag_show("coronavirus", as = "table")
+scotagedat[,c(1,3,5,7,8, 10,11)] %>% filter(Sex=="Total") %>% filter(Date>=casedat$date[1]) %>% filter(Date<=casedat$date[nrow(casedat)])->jnk 
+jnk %>% filter(AgeGroup == "0 to 14") -> jnk2
+sum24=sum(casedat[2:4])
 
+scotage <-casedat
+scotdeath <-deathdat
+
+scotage$'05_09' <-jnk2$DailyPositive*sum(casedat$`05_09`)/sum24
+scotage$`00_04` <- jnk2$DailyPositive*sum(casedat$`00_04`)/sum24
+scotage$`10_14` <- jnk2$DailyPositive*sum(casedat$`10_14`)/sum24
+scotdeath$'05_09' <-jnk2$DailyDeaths *sum(casedat$`05_09`)/sum24
+scotdeath$`00_04` <- jnk2$DailyDeaths*sum(casedat$`00_04`)/sum24
+scotdeath$`10_14` <- jnk2$DailyDeaths*sum(casedat$`10_14`)/sum24
+jnk %>% filter(AgeGroup == "15 to 19") -> jnk2
+scotage$`15_19` <- jnk2$DailyPositive
+scotdeath$`15_19` <- jnk2$DailyDeaths
+jnk %>% filter(AgeGroup == "20 to 24") -> jnk2
+scotage$`20_24` <- jnk2$DailyPositive
+scotdeath$`20_24` <- jnk2$DailyDeaths
+jnk %>% filter(AgeGroup == "25 to 44") -> jnk2
+sum24=sum(casedat[7:10])
+scotage$`25_29` <- jnk2$DailyPositive*sum(casedat$`25_29`)/sum24
+scotage$`30_34` <- jnk2$DailyPositive*sum(casedat$`30_34`)/sum24
+scotage$`35_39` <- jnk2$DailyPositive*sum(casedat$`35_39`)/sum24
+scotage$`40_44` <- jnk2$DailyPositive*sum(casedat$`40_44`)/sum24
+scotdeath$`25_29` <- jnk2$DailyDeaths*sum(casedat$`25_29`)/sum24
+scotdeath$`30_34` <- jnk2$DailyDeaths*sum(casedat$`30_34`)/sum24
+scotdeath$`35_39` <- jnk2$DailyDeaths*sum(casedat$`35_39`)/sum24
+scotdeath$`40_44` <- jnk2$DailyDeaths*sum(casedat$`40_44`)/sum24
+jnk %>% filter(AgeGroup == "45 to 64") -> jnk2
+
+sum24=sum(casedat[11:14])
+
+scotage$`45_49` <- jnk2$DailyPositive*sum(casedat$`45_49`)/sum24
+scotage$`50_54` <- jnk2$DailyPositive*sum(casedat$`50_54`)/sum24
+scotage$`55_59` <- jnk2$DailyPositive*sum(casedat$`55_59`)/sum24
+scotage$`60_64` <- jnk2$DailyPositive*sum(casedat$`60_64`)/sum24
+
+scotdeath$`45_49` <- jnk2$DailyDeaths*sum(casedat$`45_49`)/sum24
+scotdeath$`50_54` <- jnk2$DailyDeaths*sum(casedat$`50_54`)/sum24
+scotdeath$`55_59` <- jnk2$DailyDeaths*sum(casedat$`55_59`)/sum24
+scotdeath$`60_64` <- jnk2$DailyDeaths*sum(casedat$`60_64`)/sum24
+
+# so fe wdeaths in younger groups, use case numbers as proxy. For over 65 use actual deaths
+jnk %>% filter(AgeGroup == "65 to 74") -> jnk2
+sum24=sum(casedat[15:16])
+sumRIP=sum(deathdat[15:16])
+scotage$`65_69` <- jnk2$DailyPositive*sum(casedat$`65_69`)/sum24
+scotage$`70_74` <- jnk2$DailyPositive*sum(casedat$`70_74`)/sum24
+scotdeath$`65_69` <- jnk2$DailyDeaths*sum(deathdat$`65_69`)/sumRIP
+scotdeath$`70_74` <- jnk2$DailyDeaths*sum(deathdat$`70_74`)/sumRIP
+jnk %>% filter(AgeGroup == "75 to 84") -> jnk2
+sum24=sum(casedat[17:18])
+sumRIP=sum(deathdat[17:18])
+scotage$`75_79` <- jnk2$DailyPositive*sum(casedat$`75_79`)/sum24
+scotage$`80_84` <- jnk2$DailyPositive*sum(casedat$`80_84`)/sum24
+scotdeath$`75_79` <- jnk2$DailyDeaths*sum(deathdat$`75_79`)/sumRIP
+scotdeath$`80_84` <- jnk2$DailyDeaths*sum(deathdat$`80_84`)/sumRIP
+jnk %>% filter(AgeGroup == "85plus") -> jnk2
+sum24=sum(casedat[19:20])
+sumRIP=sum(deathdat[19:20])
+scotage$`85_89` <- jnk2$DailyPositive*sum(casedat$`85_89`)/sum24
+scotage$`90+` <- jnk2$DailyPositive*sum(casedat$`90+`)/sum24
+scotdeath$`85_89` <- jnk2$DailyDeaths*sum(casedat$`85_89`)/sumRIP
+scotdeath$`90+` <- jnk2$DailyDeaths*sum(casedat$`90+`)/sumRIP
+rm(sum24,sumRIP,jnk,jnk2)
+scotage[is.na(scotage)] <- 0.01
+scotage[scotage==Inf] <- 0.01
+scotage[scotage==-Inf] <- 0.01
+scotdeath[is.na(scotdeath)] <- 0.01
+scotdeath[scotdeath==Inf] <- 0.01
+scotdeath[scotdeath==-Inf] <- 0.01
 pckg <- package_show("covid-19-wider-impacts-deaths", as ="table")
 
