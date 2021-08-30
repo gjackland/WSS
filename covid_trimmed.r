@@ -33,7 +33,7 @@ setwd(".")
 options(scipen = 999)
 
 # Copy transition rates from covidsim.  There are three different functions for
-# ICDFs, no idea why.  x-axis divided into 20 blocks of 5%.
+# ICDFs (Inverse Cumulative Distribution Function), no idea why.  x-axis divided into 20 blocks of 5%.
 # Will need to invert this.  Recent versions include a "Stepdown" state which seems to entail dying in CRITREC
 #  https://www.imperial.ac.uk/mrc-global-infectious-disease-analysis/covid-19/report-41-rtm/
 # PropSARI taken from Knock et al to increase smoothly with age
@@ -100,7 +100,7 @@ covidsimICDF<-data.frame(
     0, 0.133993315, 0.265922775, 0.402188416, 0.544657341, 0.694774487, 0.853984373, 1.023901078, 1.206436504, 1.403942719, 1.619402771, 1.856711876, 2.121118605, 2.419957988, 2.763950408, 3.169692564, 3.664959893, 4.301777536, 5.196849239, 6.7222126, 10.24997697
   )
   )
-## covidsim has 17 agegroups.  We need 19,  assume same params for 85_89 & 90+ as for 80+
+## covidsim has 17 agegroups.  We need 19, assume same params for 85_89 & 90+ as for 80+
 # Data from Knock et al  case-> Hosp Triage -> ICU DEath|Hosp Death |ICU Death in Stepdown
 Knock<-t(data.frame(
 "00_04" = c( 0.039, 0.243, 0.039, 0.282, 0.091, 0),
@@ -125,7 +125,7 @@ Knock<-t(data.frame(
 )
 )
 
-####, Read data ####
+#### Read data ####
 # Base URL to get the UK government data
 baseurl <- "https://api.coronavirus.data.gov.uk/v2/data?"
 
@@ -268,7 +268,8 @@ vacdat<-cbind('10_14'=0.0,vacdat)
 vacdat<-cbind('05_09'=0.0,vacdat)
 vacdat<-cbind('00_04'=0.0,vacdat)
 vacdat<-cbind(date=vacdat$datetmp,vacdat)
-vacdat$datetmp<-NULL
+vacdat$date
+tmp<-NULL
 tmp<-casedat %>% filter(date < vacdate)
 tmp[2:20]=0.0
 vacdat <- bind_rows(tmp,vacdat)
@@ -321,6 +322,16 @@ coltypes <-  cols(
 )
 #  Trying and failing to get data from PHS
 #scotdeaths<- read.csv(file="https://www.opendata.nhs.scot/api/3/action/datastore_search?resource_id=9393bd66-5012-4f01-9bc5-e7a10accacf4")
+#
+# Data is not being returned as a CSV but JSON you have to use:
+#
+# library(jsonlite)
+# d <- jsonlite::fromJSON("https://www.opendata.nhs.scot/api/3/action/datastore_search?resource_id=9393bd66-5012-4f01-9bc5-e7a10accacf4",
+#                         flatten = TRUE)
+#
+# This still returns contents as a list so you will have to rummage around to extract the actual contents that you require in
+# the data structure returned.
+
 
 # Read in the Scottish deaths and case data
 scotdat <-  read_csv(file = scoturl, col_types = coltypes)

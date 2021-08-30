@@ -1,5 +1,7 @@
 #!/usr/bin/env Rscript
-#  Broken August 2021?
+#
+# From 2 April 2021, UK estimates for the R value and growth rate were no longer produced.
+#
 # Code to get the UK reproductive number (R) estimate.
 # Data is made available under an Open Government Licence.
 # For more details see:
