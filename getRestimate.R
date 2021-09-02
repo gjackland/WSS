@@ -2,7 +2,13 @@
 #
 # From 2 April 2021, UK estimates for the R value and growth rate were no longer produced.
 #
-# Code to get the UK reproductive number (R) estimate.
+# Code to get the UK reproductive number (R) estimate. Data is downloaded from
+#
+# https://www.gov.uk/guidance/the-r-value-and-growth-rat
+#
+# A spreadsheet is downloaded from that page if it has not already been downloaded.
+# The content from the "Table1_-_R" is saved to a csv file.
+#
 # Data is made available under an Open Government Licence.
 # For more details see:
 #
