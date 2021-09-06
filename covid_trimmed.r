@@ -1105,6 +1105,18 @@ plot(smoothweightR$y,ylab="Regional R-number",xlab="Date",x=dfR$date)
 for (i in 8:17){
   lines(smooth.spline(na.omit(dfR[i]),df=12)$y,col=i,x=dfR$date[!is.na(dfR[i])])
 }
+
+plot(dfR$bylogR,x=smoothweightR$date,ylab="R-number",xlab="",
+     title("R, England"),ylim=c(0.6,1.6),xlim=plotdate,cex.lab=1.6, cex.axis=1.6, cex.main=1.6, cex.sub=1.6)
+lines(Rest$England_LowerBound,x=Rest$Date-sagedelay,lwd=2)
+lines(y=Rest$England_UpperBound,x=Rest$Date-sagedelay,lwd=2)
+lines(dfR$piecewise,col="violet",lwd=3,x=dfR$date)
+lines(smoothweightR$y,col="blue",lwd=3,x=dfR$date)
+lines(predict(loess(itoR ~ x, data=dfR,span=0.3,weight=sqrt(comdat$allCases))),col='green',x=dfR$date,lwd=3)
+#lines(predict(loess(itoR ~ x, data=dfR,span=0.3)),col='green',x=dfR$date)
+lines(predict(loess(bylogR ~ x, data=dfR,span=0.3,weight=sqrt(comdat$allCases))),col='red',x=dfR$date,lwd=3)
+#lines(predict(loess(bylogR ~ x, data=dfR,span=0.3)),col='red',x=dfR$date)
+
 plot(dfR$piecewise,x=smoothweightR$date,ylab="R-number",xlab="",
      title("R, England"),ylim=c(0.6,1.4),xlim=plotdate,cex.lab=1.5, cex.axis=1.5, cex.main=1.5, cex.sub=1.6)
 lines(Rest$England_LowerBound,x=(Rest$Date-sagedelay))
@@ -1593,16 +1605,16 @@ t0 <-  min(dfR$date)
 days <- as.integer(dfR$date - t0)
 
 # Labels are optional
-myCritRecov <- rowSums(CRITREC[2:20])
-myCritical <- rowSums(CRIT[2:20])
-myILI <- rowSums(ILI[2:20])
-myMild <- rowSums(MILD[2:20])
-mySARI <-  rowSums(ILI[2:20])
-mynewCritRecov <- rowSums(newCRITREC[2:20])
-mynewCritical <- rowSums(newCRIT[2:20])
-mynewILI <- rowSums(newILI[2:20])
-mynewMild <- rowSums(newMILD[2:20])
-mynewSARI <-  rowSums(newILI[2:20])
+myCritRecov <- as.integer(rowSums(CRITREC[2:20]))
+myCritical <- as.integer(rowSums(CRIT[2:20]))
+myILI <- as.integer(rowSums(ILI[2:20]))
+myMild <- as.integer(rowSums(MILD[2:20]))
+mySARI <-  as.integer(rowSums(ILI[2:20]))
+mynewCritRecov <- as.integer(rowSums(newCRITREC[2:20]))
+mynewCritical <- as.integer(rowSums(newCRIT[2:20]))
+mynewILI <- as.integer(rowSums(newILI[2:20]))
+mynewMild <- as.integer(rowSums(newMILD[2:20]))
+mynewSARI <-  as.integer(rowSums(newILI[2:20]))
 outputJSON(myt0 = t0,
            mydaysarray = days,
            myregion = region,
@@ -1635,7 +1647,7 @@ if(CrystalCast){
 }
 
 #####  Figures and analysis for https://www.medrxiv.org/content/10.1101/2021.04.14.21255385v1
-medrxiv=TRUE
+medrxiv=FALSE
 if(as.Date("2020/08/25")!=startdate){medrxiv=FALSE} #  Broken because of hardcoded dates
 if(medrxiv){
   ####  From here on we're reproducing figures from https://www.medrxiv.org/content/10.1101/2021.04.14.21255385v1
@@ -1675,6 +1687,7 @@ if(medrxiv){
   alpha = 4.447900991
   beta = 4.00188764
   gamdist = dgamma(1:28, shape = alpha, scale = beta) #params from Verity et al.
+
 #  ggplot(data.frame(index = 1:28, prop = gamdist)) +
 #    geom_point(aes(x = index, y = prop)) +
 #    labs(title = "Discretised Gamma Distribution (Verity)") +
@@ -1821,7 +1834,7 @@ plot(reglnpredict$England)
     geom_line(data = gampred, aes(y = allCasesPred, color = "Gamma Model Predicted Deaths"), size = 1, na.rm = TRUE) +
     geom_line(data = logpred, aes(y = allCasesPred, color = "Lognormal Model Predicted Deaths"), size = 1, na.rm = TRUE) +
     geom_line(data = WSS, aes(y = values, color = "WSS Original"), size = 1, na.rm = TRUE) +
-    labs(title = "Predicted Deaths vs. Actual Deaths", color = "Legend") +
+    labs(title = "Predicted Deaths vs. Actual Deaths (no Vaccine)", color = "Legend") +
     ylab("Deaths") +
     xlab("Date") +
     scale_color_manual(values = c("Deaths (Government Figures)" = "Blue",
@@ -1982,15 +1995,19 @@ lines(rowSums(newSARI[2:20]),col="blue")
 
 plot(HospitalData$hospitalCases,x=HospitalData$date,ylab="Hospital Cases",xlab="Date")
 lines(rowSums(SARI[2:20]+CRIT[2:20]+CRITREC[2:20]),x=SARI$date,col='red')
-plot(rowSums(CASE[2:20]),x=deathdat$date,ylab="Cases",xlab="Date")
-lines(rowSums(newMILD[2:20]+newILI[2:20]),col="red",x=newMILD$date)
 
-plot(HospitalData$covidOccupiedMVBeds,x=deathdat$date,ylab="ICU Occupation",xlab="Date")
+plot(rowSums(newMILD[2:20]+newILI[2:20]),col="blue",x=newMILD$date,type="l",xlab="Date",ylab="Cases")
+points(rowSums(CASE[2:20]),x=deathdat$date)
+lines(rowSums(newMILD[2:10]+newILI[2:10]),col="green",x=newMILD$date,type="l",xlab="Date",ylab="Cases")
+lines(rowSums(newMILD[11:20]+newILI[11:20]),col="red",x=newMILD$date,type="l",xlab="Date",ylab="Cases")
+
+
+plot(HospitalData$covidOccupiedMVBeds,x=HospitalData$date,ylab="ICU Occupation",xlab="Date")
 lines(rowSums(CRIT[2:20]),col="blue",x=CRIT$date)
 
-plot(rowSums(DEATH[16:20]),col="blue",x=DEATH$date, type="l",ylab="Deaths"
+plot(rowSums(DEATH[2:20]),col="blue",x=DEATH$date, type="l",ylab="Deaths"
      ,xlab="Date")#,xlim=c(startdate,(enddate+predtime)))
-points(rowSums(deathdat[16:20]),x=deathdat$date)
+points(rowSums(deathdat[2:20]),x=deathdat$date)
 
 # This needs to be the last routine called for the UI, by default it returns
 # success (0), if there is no success setStatus() should be called. By default
