@@ -1610,6 +1610,11 @@ myCritical <- rowSums(CRIT[2:20])
 myILI <- rowSums(ILI[2:20])
 myMild <- rowSums(MILD[2:20])
 mySARI <-  rowSums(ILI[2:20])
+mynewCritRecov <- rowSums(newCRITREC[2:20])
+mynewCritical <- rowSums(newCRIT[2:20])
+mynewILI <- rowSums(newILI[2:20])
+mynewMild <- rowSums(newMILD[2:20])
+mynewSARI <-  rowSums(newILI[2:20])
 outputJSON(myt0 = t0,
            mydaysarray = days,
            myregion = region,
@@ -1625,11 +1630,11 @@ outputJSON(myt0 = t0,
            myMild = myMild,
            myR = dfR$piecewise,
            mySARI = rowSums(SARI[2:20]),
-           mycumCritRecov = cumsum(myCritRecov),
-           mycumCritical = cumsum(myCritical),
-           mycumILI = cumsum(myILI),
-           mycumMild = cumsum(myMild),
-           mycumSARI = cumsum(mySARI),
+           mycumCritRecov = cumsum(mynewCritRecov),
+           mycumCritical = cumsum(mynewCritical),
+           mycumILI = cumsum(mynewILI),
+           mycumMild = cumsum(mynewMild),
+           mycumSARI = cumsum(mynewSARI),
            myincDeath = rowSums(DEATH[2:20])
 )
 CrystalCast=TRUE
@@ -1802,20 +1807,19 @@ plot(reglnpredict$England)
   #Get Autumn model fits
   if(interactive()){
     model = lm(filter(comdat, date %in% daterange)$allDeaths ~ filter(gampred, date %in% daterange)$allCasesPred)
-    summary(model)
+#    summary(model)
 
     model = lm(filter(comdat, date %in% daterange)$allDeaths ~ filter(logpred, date %in% daterange)$allCasesPred)
-    summary(model)
+#    summary(model)
 
     model = lm(filter(comdat, date %in% daterange)$allDeaths ~ filter(WSS, date %in% daterange)$values)
     summary(model)
 
     #Get overall model fits
-
-    model = lm(comdat$allDeaths[startdate:enddate] ~ gampred$allCasesPred[startdate:enddate])
+    model = lm(comdat$allDeaths[28:nrow(comdat)] ~ gampred$allCasesPred[28:nrow(comdat)])
     summary(model)
-
-    model = lm(comdat$allDeaths[startdate:enddate] ~ logpred$allCasesPred[startdate:enddate])
+    
+    model = lm(comdat$allDeaths[28:nrow(comdat)] ~ logpred$allCasesPred[28:nrow(comdat)])
     summary(model)
 
     model = lm(filter(comdat, date %in% WSS$date)$allDeaths ~ WSS$values)
