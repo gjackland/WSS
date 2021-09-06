@@ -1105,6 +1105,18 @@ plot(smoothweightR$y,ylab="Regional R-number",xlab="Date",x=dfR$date)
 for (i in 8:17){
   lines(smooth.spline(na.omit(dfR[i]),df=12)$y,col=i,x=dfR$date[!is.na(dfR[i])])
 }
+
+plot(dfR$bylogR,x=smoothweightR$date,ylab="R-number",xlab="",
+     title("R, England"),ylim=c(0.6,1.6),xlim=plotdate,cex.lab=1.6, cex.axis=1.6, cex.main=1.6, cex.sub=1.6)
+lines(Rest$England_LowerBound,x=Rest$Date-sagedelay,lwd=2)
+lines(y=Rest$England_UpperBound,x=Rest$Date-sagedelay,lwd=2)
+lines(dfR$piecewise,col="violet",lwd=3,x=dfR$date)
+lines(smoothweightR$y,col="blue",lwd=3,x=dfR$date)
+lines(predict(loess(itoR ~ x, data=dfR,span=0.3,weight=sqrt(comdat$allCases))),col='green',x=dfR$date,lwd=3)
+#lines(predict(loess(itoR ~ x, data=dfR,span=0.3)),col='green',x=dfR$date)
+lines(predict(loess(bylogR ~ x, data=dfR,span=0.3,weight=sqrt(comdat$allCases))),col='red',x=dfR$date,lwd=3)
+#lines(predict(loess(bylogR ~ x, data=dfR,span=0.3)),col='red',x=dfR$date)
+
 plot(dfR$piecewise,x=smoothweightR$date,ylab="R-number",xlab="",
      title("R, England"),ylim=c(0.6,1.4),xlim=plotdate,cex.lab=1.5, cex.axis=1.5, cex.main=1.5, cex.sub=1.6)
 lines(Rest$England_LowerBound,x=(Rest$Date-sagedelay))
@@ -1675,6 +1687,7 @@ if(medrxiv){
   alpha = 4.447900991
   beta = 4.00188764
   gamdist = dgamma(1:28, shape = alpha, scale = beta) #params from Verity et al.
+
 #  ggplot(data.frame(index = 1:28, prop = gamdist)) +
 #    geom_point(aes(x = index, y = prop)) +
 #    labs(title = "Discretised Gamma Distribution (Verity)") +
@@ -1821,7 +1834,7 @@ plot(reglnpredict$England)
     geom_line(data = gampred, aes(y = allCasesPred, color = "Gamma Model Predicted Deaths"), size = 1, na.rm = TRUE) +
     geom_line(data = logpred, aes(y = allCasesPred, color = "Lognormal Model Predicted Deaths"), size = 1, na.rm = TRUE) +
     geom_line(data = WSS, aes(y = values, color = "WSS Original"), size = 1, na.rm = TRUE) +
-    labs(title = "Predicted Deaths vs. Actual Deaths", color = "Legend") +
+    labs(title = "Predicted Deaths vs. Actual Deaths (no Vaccine)", color = "Legend") +
     ylab("Deaths") +
     xlab("Date") +
     scale_color_manual(values = c("Deaths (Government Figures)" = "Blue",
