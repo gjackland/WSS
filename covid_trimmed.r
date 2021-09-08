@@ -1918,7 +1918,7 @@ plot(reglnpredict$England)
 ###Assume that R and lethality are constants
 if(compartment){
   predtime = 28
-
+  RGUESS=R_England_BestGuess-1.0
   #  For loop over time, predCASE using R numbers
   predCASE<-ILI[lengthofdata,(1:20)]
   predCASE[1,(2:20)]<-CASE[lengthofdata,(2:20)] #  Growth rate by age group
@@ -1977,7 +1977,9 @@ if(compartment){
     #
     ##  Finally, estimate cases for tomorrow.  This uses an R value calculated above, but for CrystalCast purposes from
     ##  we can use MLP Rx.x as an input here
-    predCASE[(ipred+1),(2:20)]<-predCASE[ipred,(2:20)]*exp((R_England_BestGuess-1.0)/genTime)
+    
+    RGUESS=RGUESS*0.9
+    predCASE[(ipred+1),(2:20)]<-predCASE[ipred,(2:20)]*exp(RGUESS/genTime)
     predCASE[ipred+1,1]<-startdate+iday
     ipred=ipred+1
     # End of compartment section
@@ -1988,7 +1990,7 @@ if(compartment){
 
 #Monitoring plots
 rbind(CASE,predCASE)->plotCASE
-plot(rowSums(plotCASE[2:20]),x=plotCASE$date)
+plot(rowSums(plotCASE[11:20]),x=plotCASE$date)
 
 plot(HospitalData$newAdmissions)
 lines(rowSums(newSARI[2:20]),col="blue")
