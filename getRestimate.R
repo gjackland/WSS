@@ -2,7 +2,13 @@
 #
 # From 2 April 2021, UK estimates for the R value and growth rate were no longer produced.
 #
-# Code to get the UK reproductive number (R) estimate.
+# Code to get the UK reproductive number (R) estimate. Data is downloaded from
+#
+# https://www.gov.uk/guidance/the-r-value-and-growth-rat
+#
+# A spreadsheet is downloaded from that page if it has not already been downloaded.
+# The content from the "Table1_-_R" is saved to a csv file.
+#
 # Data is made available under an Open Government Licence.
 # For more details see:
 #
@@ -23,27 +29,28 @@ stop_quietly <- function() {
   stop()
 }
 
-# Get the Government R estimates
-# URL data of where the information is held
+# Get the Government R estimates.
+# URL data of where the information is held.
 r_url <- "https://www.gov.uk/guidance/the-r-value-and-growth-rate"
 
-# Get the URL that holds the time series
+# Get the URL that holds the time series from this URL. Use a link that has
+# "time series of published", if this changes the text will have to change.
 read_html(r_url) %>%
   html_nodes(xpath = '//a[contains(text(),"time series of published")]') %>%
   html_attr("href") -> r_url
 
-# Get the file name from the URL
+# Get the file name from the end of the URL.
 file <- basename(r_url)
 
-# Print available data
+# Print the filename of the available data.
 message(paste0("\nCurrent data file available: ", file, "."))
 
-# Create a data subdirectory if it does not exist
+# Create a data subdirectory if it does not already exist.
 if (!dir.exists("data")) {
   dir.create("data")
 }
 
-# Download the file with the data if it does not already exist
+# Download the file with the data only if it does not already already exist.
 
 if (!file.exists(paste0("data/uk-data", file))) {
   download.file(r_url, destfile = paste0("data/uk-data/", file), quiet = TRUE)
@@ -53,14 +60,14 @@ if (!file.exists(paste0("data/uk-data", file))) {
   stop_quietly()
 }
 
-# Read the contents of the file
-# skip the first 8 rows, table header and merged cells (read can't handle)
-# read "."s as NAs as the "." is used to mean not applicable
+# Read the contents of the file:
+# skip the first 8 rows, table header and merged cells (read can't handle these).
+# read "."s as NAs as the "." is used to mean not applicable.
 
 r_est <- read_ods(paste0("data/uk-data/", file), sheet = "Table1_-_R",
                  skip = 8, na = ".")
 
-# Rename the columns
+# Rename the columns.
 names(r_est) <- c("", "Date", "UK_LowerBound", "UK_UpperBound",
                  "England_LowerBound", "England_UpperBound",
                  "EEng_LowerBound", "EEng_UpperBound",
@@ -69,21 +76,22 @@ names(r_est) <- c("", "Date", "UK_LowerBound", "UK_UpperBound",
                  "NW_LowerBound", "NW_UpperBound", "SE_LowerBound",
                  "SE_UpperBound", "SW_LowerBound", "SW_UpperBound")
 
-# Remove the first column that contains nothing
+# Remove the first column as it contains nothing.
 r_est <- r_est[, -1]
 
-# Convert to a tibble
+# Convert to a tibble.
 r_est <- as_tibble(r_est)
 
-# Convert character dates to dates
+# Convert character dates to dates.
 r_est$Date <- as.Date(r_est$Date, format = "%d-%b-%y")
 
-# Change format of date to %d/%m/%Y
+# Change the format of dates to %d/%m/%Y.
 r_est$Date <- format(r_est$Date,"%d/%m/%Y")
 
-# Remove NA values
+# Remove NA values in Dates (rows that do not have an explicit date to clean up
+# empty rows).
 r_est %>% filter(!is.na(Date)) -> r_est
 
-# Write the data to a CSV file
+# Write the data to a CSV file.
 write_csv(r_est, file = "data/R_estimate.csv")
 

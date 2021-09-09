@@ -218,6 +218,11 @@ scotdailycases %>% select(date=Date,board=HBName, cases=DailyPositive)  %>%
                    filter(date >= startdate & date <= enddate )         %>%
                    arrange(date) -> scotdailycasesbyboard
 
+# Hospital data
+scotdailycases %>% filter(HBName=="Scotland")->jnk
+jnk[1,20,22] %>% jnk2
+jnk2 %>%  filter(Date>=casedat$date[1]) %>% filter(Date<=casedat$date[nrow(casedat)])->scotHospital
+
 # Daily Case Trends By Age and Sex
 # See:
 # https://www.opendata.nhs.scot/dataset/covid-19-in-scotland/resource/9393bd66-5012-4f01-9bc5-e7a10accacf4

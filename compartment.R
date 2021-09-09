@@ -1,8 +1,13 @@
 #  Compartment section from WSS.
 #  Set CASE to the appropriate region
-  #  CASE is the input cases which get WSS'ed.  CASE=casedat produces estimates for UK.  CASE=scotage is for Scotland
-  CASE=scotage
+  #  CASE is the input cases which get WSS'ed.  
+# CASE=casedat produces estimates for UK.  CASE=scotage is for Scotland
+  
+CASE=scotage
   deathdat=scotdeath
+  R_BestGuess=R_Scotland_BestGuess
+  region="Scotland"
+  
   RawCFR=colSums(deathdat[2:20])/colSums(CASE[2:20])
   cdflength =50
   #  Time dependences of transitions - assumed age independent
@@ -187,7 +192,12 @@
   predCASE[1,1]=enddate
   
   ipred=1
+  startdate=CASE$date[nrow(CASE)]
   for (iday in ((lengthofdata+1):(lengthofdata+predtime))){
+    
+    # R decays back to 1 with growth rate down 10% a day
+    # R is the same in all age groups
+    R_BestGuess=(R_BestGuess-1)*0.9+1.0
     #  Proportions become variant dependent.  ILI is case driven, so extra infectivity is automatic
     # from the data. ILI->SARI increases with variant.  CRIT is an NHS decision, not favoured for very old
     #  Need to increase CFR without exceeding 1.  Note inverse lethality isnt a simple % as CFR cant be >1
@@ -239,13 +249,14 @@
     #
     ##  Finally, estimate cases for tomorrow.  This uses an R value calculated above, but for CrystalCast purposes from
     ##  we can use MLP Rx.x as an input here
-    predCASE[(ipred+1),(2:20)]<-predCASE[ipred,(2:20)]*exp((R_England_BestGuess-1.0)/genTime)
-    predCASE[ipred+1,1]<-startdate+iday
+    predCASE[(ipred+1),(2:20)]<-predCASE[ipred,(2:20)]*exp((R_BestGuess-1.0)/genTime)
+    predCASE[ipred+1,1]<-startdate+ipred
     ipred=ipred+1
     # End of compartment section
   }
 #CrystalCast output - use CC.R
-
+rbind(CASE,predCASE)->plotCASE
+plot(rowSums(plotCASE[2:20]),x=plotCASE$date)
 #Monitoring plots
 plot(HospitalData$newAdmissions)
 lines(rowSums(newSARI[2:20]),col="blue")
@@ -256,6 +267,6 @@ lines(rowSums(newMILD[2:20]+newILI[2:20]),col="red",x=newMILD$date)
 
 plot(HospitalData$covidOccupiedMVBeds,x=deathdat$date,ylab="ICU Occupation",xlab="Date")
 lines(rowSums(CRIT[2:20]),col="blue",x=CRIT$date)
-plot(rowSums(deathdat[2:20]),x=deathdat$date,ylab="Deaths",xlab="Date")
-lines(rowSums(DEATH[2:20]),col="blue",x=DEATH$date)
 
+plot(rowSums(DEATH[2:20]),col="blue",x=DEATH$date)
+lines(rowSums(deathdat[2:20]),x=deathdat$date,ylab="Deaths",xlab="Date")
