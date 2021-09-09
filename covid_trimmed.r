@@ -129,7 +129,7 @@ Knock<-t(data.frame(
 # Base URL to get the UK government data
 baseurl <- "https://api.coronavirus.data.gov.uk/v2/data?"
 
-# Start and end date - the data to collect data from
+# Start and end date - the date to collect data from
 startdate <- as.Date("2020/08/25") #as.Date("2020/08/25")
 
 # Lose only the last day of data - use tail correction for reporting delay
@@ -921,8 +921,8 @@ if(interactive()){
   plot(HospitalData$hospitalCases)
   lines(rowSums(SARI[2:20]+CRIT[2:20]+CRITREC[2:20]))
 }
-#  Smoothcasedat
 
+#  Smoothcasedat
 smoothcases=smooth.spline(comdat$allCases, df=20)
 
 # Create a vector to hold the results for various R-numbers
@@ -1271,7 +1271,7 @@ R_NI_Quant <-unname(quantile(filteredR, probs=c(0.05,0.25,0.5,0.75,0.95)))
 
 
 #  Delete tmp
-rat[,-length(rat)]
+rat <- rat[,-which(names(rat)=="tmp")]
 
 
 ##########   Age groups  ########
