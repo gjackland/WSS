@@ -33,7 +33,7 @@ setwd(".")
 options(scipen = 999)
 
 # Copy transition rates from covidsim.  There are three different functions for
-# ICDFs (Inverse Cumulative Distribution Function), no idea why.  x-axis divided into 20 blocks of 5%.
+# ICDFs (Inverse Cumulative Distribution Function).  x-axis divided into 20 blocks of 5%.
 # Will need to invert this.  Recent versions include a "Stepdown" state which seems to entail dying in CRITREC
 #  https://www.imperial.ac.uk/mrc-global-infectious-disease-analysis/covid-19/report-41-rtm/
 # PropSARI taken from Knock et al to increase smoothly with age
@@ -969,7 +969,7 @@ if(interactive()){
     geom_smooth(formula= y ~ x, method = "loess", span=0.3) +  guides(color = "none") +
     facet_wrap(vars(Region)) +
     theme(axis.text.x=element_text(angle=90,hjust=1)) +xlab("Date")
-  
+
   #  Plot UK nations and English regions
   rat[,c(1,2,3,4,5,6,7,8,9,10,11,12,13)]%>% filter(startplot < date & date < endplot) %>%
     pivot_longer(!date,names_to = "Region", values_to="R") %>%
@@ -977,7 +977,7 @@ if(interactive()){
     coord_cartesian(ylim=c(0.5,1.9))+ geom_smooth(formula= y ~ x, method = "loess", span=0.3) +
     guides(color = "none") + facet_wrap(vars(Region)) +
     theme(axis.text.x=element_text(angle=90,hjust=1)) +xlab("Date")
-  
+
 }
 
 
@@ -1563,7 +1563,7 @@ tibble(date=comdat$date,c=Predict$c,
        SmoothRito=dfR$smoothRito,
        bylogR=dfR$bylogR,
        MeanR=mean(dfR$bylogR) )->tmpdat
-ggplot(comdat,aes(x=date)) + 
+ggplot(comdat,aes(x=date)) +
   geom_point(data=tmpdat, aes(x=date,y=bylogR),colour="black",alpha=0.75) +
   geom_line(data=tmpdat, aes(x=date,y=SmoothRlog),colour="blue",alpha=0.75) +
   geom_line(data=tmpdat, aes(x=date,y=SmoothRito),colour="violet",alpha=0.75) +
@@ -1818,7 +1818,7 @@ plot(reglnpredict$England)
     #Get overall model fits
     model = lm(comdat$allDeaths[28:nrow(comdat)] ~ gampred$allCasesPred[28:nrow(comdat)])
     summary(model)
-    
+
     model = lm(comdat$allDeaths[28:nrow(comdat)] ~ logpred$allCasesPred[28:nrow(comdat)])
     summary(model)
 
@@ -1977,7 +1977,7 @@ if(compartment){
     #
     ##  Finally, estimate cases for tomorrow.  This uses an R value calculated above, but for CrystalCast purposes from
     ##  we can use MLP Rx.x as an input here
-    
+
     RGUESS=RGUESS*0.9
     predCASE[(ipred+1),(2:20)]<-predCASE[ipred,(2:20)]*exp(RGUESS/genTime)
     predCASE[ipred+1,1]<-startdate+iday
