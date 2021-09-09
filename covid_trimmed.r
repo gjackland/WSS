@@ -33,7 +33,7 @@ setwd(".")
 options(scipen = 999)
 
 # Copy transition rates from covidsim.  There are three different functions for
-# ICDFs (Inverse Cumulative Distribution Function), no idea why.  x-axis divided into 20 blocks of 5%.
+# ICDFs (Inverse Cumulative Distribution Function).  x-axis divided into 20 blocks of 5%.
 # Will need to invert this.  Recent versions include a "Stepdown" state which seems to entail dying in CRITREC
 #  https://www.imperial.ac.uk/mrc-global-infectious-disease-analysis/covid-19/report-41-rtm/
 # PropSARI taken from Knock et al to increase smoothly with age
@@ -129,7 +129,7 @@ Knock<-t(data.frame(
 # Base URL to get the UK government data
 baseurl <- "https://api.coronavirus.data.gov.uk/v2/data?"
 
-# Start and end date - the data to collect data from
+# Start and end date - the date to collect data from
 startdate <- as.Date("2020/08/25") #as.Date("2020/08/25")
 
 # Lose only the last day of data - use tail correction for reporting delay
@@ -921,8 +921,8 @@ if(interactive()){
   plot(HospitalData$hospitalCases)
   lines(rowSums(SARI[2:20]+CRIT[2:20]+CRITREC[2:20]))
 }
-#  Smoothcasedat
 
+#  Smoothcasedat
 smoothcases=smooth.spline(comdat$allCases, df=20)
 
 # Create a vector to hold the results for various R-numbers
@@ -969,7 +969,7 @@ if(interactive()){
     geom_smooth(formula= y ~ x, method = "loess", span=0.3) +  guides(color = "none") +
     facet_wrap(vars(Region)) +
     theme(axis.text.x=element_text(angle=90,hjust=1)) +xlab("Date")
-  
+
   #  Plot UK nations and English regions
   rat[,c(1,2,3,4,5,6,7,8,9,10,11,12,13)]%>% filter(startplot < date & date < endplot) %>%
     pivot_longer(!date,names_to = "Region", values_to="R") %>%
@@ -977,7 +977,7 @@ if(interactive()){
     coord_cartesian(ylim=c(0.5,1.9))+ geom_smooth(formula= y ~ x, method = "loess", span=0.3) +
     guides(color = "none") + facet_wrap(vars(Region)) +
     theme(axis.text.x=element_text(angle=90,hjust=1)) +xlab("Date")
-  
+
 }
 
 
@@ -1268,10 +1268,8 @@ filteredR <-append(
 R_NI_BestGuess <-mean(filteredR)
 R_NI_Quant <-unname(quantile(filteredR, probs=c(0.05,0.25,0.5,0.75,0.95)))
 
-
-
-#  Delete tmp
-rat[,-length(rat)]
+#  Delete the tmp column
+rat <- rat[,-which(names(rat)=="tmp")]
 
 
 ##########   Age groups  ########
@@ -1523,10 +1521,14 @@ Predict$smoothcasesR =Predict$smoothcasesR*sum(comdat$allCases)/sum(Predict$smoo
 Predict$SmoothRito =Predict$SmoothRito*sum(comdat$allCases)/sum(Predict$SmoothRito)
 Predict$SmoothRlog=Predict$SmoothRlog*sum(comdat$allCases)/sum(Predict$SmoothRlog)
 Predict$MeanR=Predict$MeanR*sum(comdat$allCases)/sum(Predict$MeanR)
-sum(Predict$MeanR)
-sum(Predict$SmoothRlog)
-sum(Predict$SmoothRito)
-sum(Predict$smoothcasesR)
+
+if(interactive()){
+  sum(Predict$MeanR)
+  sum(Predict$SmoothRlog)
+  sum(Predict$SmoothRito)
+  sum(Predict$smoothcasesR)
+}
+
 plot(comdat$allCases,x=Predict$date,xlab="Date",ylab="Cases backdeduced from R"
      ,xlim=c(Predict$date[(startpred+10)],Predict$date[350]))
 lines(Predict$c,x=Predict$date, col="black",lwd=2)
@@ -1563,7 +1565,7 @@ tibble(date=comdat$date,c=Predict$c,
        SmoothRito=dfR$smoothRito,
        bylogR=dfR$bylogR,
        MeanR=mean(dfR$bylogR) )->tmpdat
-ggplot(comdat,aes(x=date)) + 
+ggplot(comdat,aes(x=date)) +
   geom_point(data=tmpdat, aes(x=date,y=bylogR),colour="black",alpha=0.75) +
   geom_line(data=tmpdat, aes(x=date,y=SmoothRlog),colour="blue",alpha=0.75) +
   geom_line(data=tmpdat, aes(x=date,y=SmoothRito),colour="violet",alpha=0.75) +
@@ -1629,13 +1631,13 @@ outputJSON(myt0 = t0,
            myILI = myILI,
            myMild = myMild,
            myR = dfR$piecewise,
-           mySARI = rowSums(SARI[2:20]),
+           mySARI = as.integer(rowSums(SARI[2:20])),
            mycumCritRecov = cumsum(mynewCritRecov),
            mycumCritical = cumsum(mynewCritical),
            mycumILI = cumsum(mynewILI),
            mycumMild = cumsum(mynewMild),
            mycumSARI = cumsum(mynewSARI),
-           myincDeath = rowSums(DEATH[2:20])
+           myincDeath = as.integer(rowSums(DEATH[2:20]))
 )
 CrystalCast=TRUE
 if(CrystalCast){
@@ -1818,7 +1820,7 @@ plot(reglnpredict$England)
     #Get overall model fits
     model = lm(comdat$allDeaths[28:nrow(comdat)] ~ gampred$allCasesPred[28:nrow(comdat)])
     summary(model)
-    
+
     model = lm(comdat$allDeaths[28:nrow(comdat)] ~ logpred$allCasesPred[28:nrow(comdat)])
     summary(model)
 
@@ -1977,7 +1979,7 @@ if(compartment){
     #
     ##  Finally, estimate cases for tomorrow.  This uses an R value calculated above, but for CrystalCast purposes from
     ##  we can use MLP Rx.x as an input here
-    
+
     RGUESS=RGUESS*0.9
     predCASE[(ipred+1),(2:20)]<-predCASE[ipred,(2:20)]*exp(RGUESS/genTime)
     predCASE[ipred+1,1]<-startdate+iday
