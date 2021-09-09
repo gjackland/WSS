@@ -1268,9 +1268,7 @@ filteredR <-append(
 R_NI_BestGuess <-mean(filteredR)
 R_NI_Quant <-unname(quantile(filteredR, probs=c(0.05,0.25,0.5,0.75,0.95)))
 
-
-
-#  Delete tmp
+#  Delete the tmp column
 rat <- rat[,-which(names(rat)=="tmp")]
 
 
@@ -1523,10 +1521,14 @@ Predict$smoothcasesR =Predict$smoothcasesR*sum(comdat$allCases)/sum(Predict$smoo
 Predict$SmoothRito =Predict$SmoothRito*sum(comdat$allCases)/sum(Predict$SmoothRito)
 Predict$SmoothRlog=Predict$SmoothRlog*sum(comdat$allCases)/sum(Predict$SmoothRlog)
 Predict$MeanR=Predict$MeanR*sum(comdat$allCases)/sum(Predict$MeanR)
-sum(Predict$MeanR)
-sum(Predict$SmoothRlog)
-sum(Predict$SmoothRito)
-sum(Predict$smoothcasesR)
+
+if(interactive()){
+  sum(Predict$MeanR)
+  sum(Predict$SmoothRlog)
+  sum(Predict$SmoothRito)
+  sum(Predict$smoothcasesR)
+}
+
 plot(comdat$allCases,x=Predict$date,xlab="Date",ylab="Cases backdeduced from R"
      ,xlim=c(Predict$date[(startpred+10)],Predict$date[350]))
 lines(Predict$c,x=Predict$date, col="black",lwd=2)
@@ -1629,13 +1631,13 @@ outputJSON(myt0 = t0,
            myILI = myILI,
            myMild = myMild,
            myR = dfR$piecewise,
-           mySARI = rowSums(SARI[2:20]),
+           mySARI = as.integer(rowSums(SARI[2:20])),
            mycumCritRecov = cumsum(mynewCritRecov),
            mycumCritical = cumsum(mynewCritical),
            mycumILI = cumsum(mynewILI),
            mycumMild = cumsum(mynewMild),
            mycumSARI = cumsum(mynewSARI),
-           myincDeath = rowSums(DEATH[2:20])
+           myincDeath = as.integer(rowSums(DEATH[2:20]))
 )
 CrystalCast=TRUE
 if(CrystalCast){
