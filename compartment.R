@@ -7,7 +7,7 @@ CASE=scotage
   deathdat=scotdeath
   R_BestGuess=R_Scotland_BestGuess
   region="Scotland"
-  
+  Hospital<-scotHospital
   RawCFR=colSums(deathdat[2:20])/colSums(CASE[2:20])
   cdflength =50
   #  Time dependences of transitions - assumed age independent
@@ -195,9 +195,9 @@ CASE=scotage
   startdate=CASE$date[nrow(CASE)]
   for (iday in ((lengthofdata+1):(lengthofdata+predtime))){
     
-    # R decays back to 1 with growth rate down 10% a day
+    # R decays back to 1 with growth rate down 15% a day
     # R is the same in all age groups
-    R_BestGuess=(R_BestGuess-1)*0.9+1.0
+    R_BestGuess=(R_BestGuess-1)*0.85+1.0
     #  Proportions become variant dependent.  ILI is case driven, so extra infectivity is automatic
     # from the data. ILI->SARI increases with variant.  CRIT is an NHS decision, not favoured for very old
     #  Need to increase CFR without exceeding 1.  Note inverse lethality isnt a simple % as CFR cant be >1
@@ -258,15 +258,18 @@ CASE=scotage
 rbind(CASE,predCASE)->plotCASE
 plot(rowSums(plotCASE[2:20]),x=plotCASE$date)
 #Monitoring plots
-plot(HospitalData$newAdmissions)
-lines(rowSums(newSARI[2:20]),col="blue")
-plot(HospitalData$hospitalCases,x=HospitalData$date,ylab="Hospital Cases",xlab="Date")
-lines(rowSums(SARI[2:20]+CRIT[2:20]+CRITREC[2:20]),x=SARI$date,col='red')
+
+plot(rowSums(newSARI[2:20]),col="blue",type='l')
+points(Hospital$newAdmissions)
+
+plot(Hospital$newAdmissions,x=Hospital$Date,ylab="Scottish Hospital Cases",xlab="Date",xlim=c(Hospital$Date[1],(Hospital$Date[350]+48)))
+lines(rowSums(newSARI[2:20]),x=SARI$date,col='red')
 plot(rowSums(CASE[2:20]),x=deathdat$date,ylab="Cases",xlab="Date")
 lines(rowSums(newMILD[2:20]+newILI[2:20]),col="red",x=newMILD$date)
 
-plot(HospitalData$covidOccupiedMVBeds,x=deathdat$date,ylab="ICU Occupation",xlab="Date")
-lines(rowSums(CRIT[2:20]),col="blue",x=CRIT$date)
+plot(Hospital$ICUAdmissions,x=deathdat$date,ylab="ICU Occupation",xlab="Date")
+lines(rowSums(newCRIT[2:20]),col="blue",x=CRIT$date)
 
-plot(rowSums(DEATH[2:20]),col="blue",x=DEATH$date)
-lines(rowSums(deathdat[2:20]),x=deathdat$date,ylab="Deaths",xlab="Date")
+plot(rowSums(DEATH[2:20]),col="blue",x=DEATH$date,type="l",
+      xlim=c(startdate,(enddate+7)),ylab="Deaths",xlab="Date")
+points(rowSums(deathdat[2:20]),x=deathdat$date,ylab="Deaths",xlab="Date")

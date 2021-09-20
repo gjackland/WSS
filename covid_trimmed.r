@@ -595,11 +595,12 @@ if(enddate == (Sys.Date()-1)){
 }
 
 
-# Add variant data to comdat
+# Add variant data to comdat  Kentfac tells us how much more virulent the variant is
+#  Numbers are fitted to death and hospitalistaion data
 comdat$Kent <- 0.0
 comdat$India <- 0.0
 Kentfac <- 0.6
-Indiafac <- 0.4
+Indiafac <- 0.9
 Kentdate <- as.integer(as.Date("2021/01/01")-startdate)
 
 # Approximate Kent by logistic rise around 2021/01/01  Same gen time, R+0.3 vs Wild  (0.3 is NOT lethality factor)
@@ -826,7 +827,7 @@ if(compartment){
   bpow = 0.4
   cpow = 1.0-apow-bpow
   afac=1.0
-  bfac=1.1
+  bfac=1.2
   cfac=1.0/afac/bfac
   for (iday in (2:lengthofdata)){
     pTtoI<-afac*RawCFR^apow*sqrt(comdat$lethality[iday])
@@ -1919,11 +1920,11 @@ plot(reglnpredict$England)
 }
 
 ################################################################
-###  Finally, Use all this to make predictions
+###  Finally, Use all this to make predictions for England (Scotland & Regions in separate compartment.R code)
 ###Assume that R and lethality are constants
 if(compartment){
   predtime = 28
-  RGUESS=R_England_BestGuess-1.0
+  R_BestGuess=R_England_BestGuess-1.0
   #  For loop over time, predCASE using R numbers
   predCASE<-ILI[lengthofdata,(1:20)]
   predCASE[1,(2:20)]<-CASE[lengthofdata,(2:20)] #  Growth rate by age group
@@ -1983,8 +1984,11 @@ if(compartment){
     ##  Finally, estimate cases for tomorrow.  This uses an R value calculated above, but for CrystalCast purposes from
     ##  we can use MLP Rx.x as an input here
 
-    RGUESS=RGUESS*0.9
-    predCASE[(ipred+1),(2:20)]<-predCASE[ipred,(2:20)]*exp(RGUESS/genTime)
+    # R decays back to 1 with growth rate down 15% a day
+    # R is the same in all age groups
+    R_BestGuess=(R_BestGuess-1)*0.85+1.0
+   
+    predCASE[(ipred+1),(2:20)]<-predCASE[ipred,(2:20)]*exp(R_BestGuess/genTime)
     predCASE[ipred+1,1]<-startdate+iday
     ipred=ipred+1
     # End of compartment section
@@ -1997,7 +2001,7 @@ if(compartment){
 rbind(CASE,predCASE)->plotCASE
 plot(rowSums(plotCASE[11:20]),x=plotCASE$date)
 
-plot(HospitalData$newAdmissions)
+plot(HospitalData$newAdmissions,ylab="Hospital Admission",xlab="Date")
 lines(rowSums(newSARI[2:20]),col="blue")
 
 plot(HospitalData$hospitalCases,x=HospitalData$date,ylab="Hospital Cases",xlab="Date")
@@ -2013,7 +2017,7 @@ plot(HospitalData$covidOccupiedMVBeds,x=HospitalData$date,ylab="ICU Occupation",
 lines(rowSums(CRIT[2:20]),col="blue",x=CRIT$date)
 
 plot(rowSums(DEATH[2:20]),col="blue",x=DEATH$date, type="l",ylab="Deaths"
-     ,xlab="Date")#,xlim=c(startdate,(enddate+predtime)))
+     ,xlab="Date",xlim=c(startdate,(enddate+15)))
 points(rowSums(deathdat[2:20]),x=deathdat$date)
 
 # This needs to be the last routine called for the UI, by default it returns

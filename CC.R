@@ -496,5 +496,33 @@ for (d in 4:(length(rat$date)-3)){
 }
 
 
+
 # Write to excel
+
+
+#  Medium term projections
+
+
+today <- today()
+ageband <-  "All"
+region="Scotland"
+CCdate$Scenario="MTP"
+CCdate$Geography=region
+CCdate$ValueType="hospital_inc"
+#  Log. Errors from fluctuations time 4 for uncertainty
+for (d in 8:(nrow(newSARI)-22)){
+  CCdate$Value = sum(newSARI[d,2:20])
+  CCdate$"Quantile 0.05"=max(0,CCdate$Value*(1-12*sqrt(sum(newSARI[(d-6):d,2:20])/7)/CCdate$Value))
+  CCdate$"Quantile 0.25"=max(0,CCdate$Value*(1-4*sqrt(sum(newSARI[(d-6):d,2:20])/7)/CCdate$Value))
+  CCdate$"Quantile 0.5"=CCdate$Value
+  CCdate$"Quantile 0.75"=CCdate$Value*(1+4*sqrt(sum(newSARI[(d-6):d,2:20])/7)/CCdate$Value)
+  CCdate$"Quantile 0.95"=CCdate$Value*(1+12*sqrt(sum(newSARI[(d-7):d,2:20])/7)/CCdate$Value)
+  CCdate$"Day of Value" = day(newSARI$date[d])
+  CCdate$"Month of Value" = month(newSARI$date[d])
+  CCdate$"Year of Value" = year(newSARI$date[d])
+  # Add the new row
+  CC <- rbind(CC, CCdate)
+}
+
 write.xlsx(CC, file = "Data/WSS_CC.xlsx", sheetName = "WSS", row.names = FALSE)
+
