@@ -950,6 +950,9 @@ rat <- regcases
 for(i in (2:nrow(regcases))    ){
   rat[i,2:ncol(regcases)] <- 1+log(regcases[i,2:ncol(regcases)]/regcases[(i-1),2:ncol(regcases)])*genTime
 }
+# Rest first row to 1, because there's no data
+# Fix R=1 not NaN or Inf when previous cases are zero
+# Its not really defined.  This generates a warning which we can ignore
 rat[1,2:ncol(regcases)]<-1.0
 rat[is.na(rat)] <- 1.0
 rat[rat==Inf] <- 1.0

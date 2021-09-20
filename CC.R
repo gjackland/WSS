@@ -3,8 +3,8 @@
 # Code to write out excel using the CC Schema.
 #
 
-# Load packages
-library(xlsx)
+# Load packages  - Without java dependency 
+library(openxlsx)
 library(lubridate)
 
 
