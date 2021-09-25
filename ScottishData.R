@@ -220,8 +220,8 @@ scotdailycases %>% select(date=Date,board=HBName, cases=DailyPositive)  %>%
 
 # Hospital data
 scotdailycases %>% filter(HBName=="Scotland")->jnk
-jnk[1,20,22] %>% jnk2
-jnk2 %>%  filter(Date>=casedat$date[1]) %>% filter(Date<=casedat$date[nrow(casedat)])->scotHospital
+jnk %>% select(1,20,22)  %>%  filter(Date>=casedat$date[1]) %>% filter(Date<=casedat$date[nrow(casedat)])->scotHospital
+names(scotHospital)[names(scotHospital) == 'HospitalAdmissions'] <- 'newAdmissions'
 
 # Daily Case Trends By Age and Sex
 # See:
