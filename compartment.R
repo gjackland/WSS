@@ -95,14 +95,15 @@ CASE=scotage
   # Nobody changes age band.  Vectorize over distributions
   
   #Age dependent transition probabilities a->ILI b->SARI c->Death
-  # apow+bpow+cpow=1 gives a fit to death data, not accounting for variant & vaccination effect
-  # bpow/bfac conditions the hospital admissions by age Distribution is Approx U65=65-85=2 * 85+
-  apow = 0.15
-  bpow = 0.4
-  cpow = 1.0-apow-bpow
-  afac=1.0
-  bfac=1.1
-  cfac=1.0/afac/bfac
+#  Inherit these from main code
+# apow+bpow+cpow=1 gives a fit to death data, not accounting for variant & vaccination effect
+# bpow/bfac conditions the hospital admissions by age Distribution is Approx U65=65-85=2 * 85+
+# apow = 0.15
+#  bpow = 0.4
+#  cpow = 1.0-apow-bpow
+#  afac=1.0
+#  bfac=1.1
+#  cfac=1.0/afac/bfac
   for (iday in (2:lengthofdata)){
     pTtoI<-afac*RawCFR^apow*sqrt(comdat$lethality[iday])
     pItoS<-bfac*RawCFR^bpow*sqrt(comdat$lethality[iday])
@@ -197,7 +198,7 @@ CASE=scotage
     
     # R decays back to 1 with growth rate down 15% a day
     # R is the same in all age groups
-    R_BestGuess=(R_BestGuess-1)*0.85+1.0
+    if(R_BestGuess > 1.0){R_BestGuess=(R_BestGuess-1)*0.95+1.0}
     #  Proportions become variant dependent.  ILI is case driven, so extra infectivity is automatic
     # from the data. ILI->SARI increases with variant.  CRIT is an NHS decision, not favoured for very old
     #  Need to increase CFR without exceeding 1.  Note inverse lethality isnt a simple % as CFR cant be >1
