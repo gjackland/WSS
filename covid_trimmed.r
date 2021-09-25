@@ -1924,7 +1924,7 @@ plot(reglnpredict$England)
 ###Assume that R and lethality are constants
 if(compartment){
   predtime = 28
-  R_BestGuess=R_England_BestGuess-1.0
+  R_BestGuess=R_England_BestGuess
   #  For loop over time, predCASE using R numbers
   predCASE<-ILI[lengthofdata,(1:20)]
   predCASE[1,(2:20)]<-CASE[lengthofdata,(2:20)] #  Growth rate by age group
@@ -1986,9 +1986,9 @@ if(compartment){
 
     # R decays back to 1 with growth rate down 15% a day
     # R is the same in all age groups
-    R_BestGuess=(R_BestGuess-1)*0.85+1.0
+    R_BestGuess=(R_BestGuess-1)*0.95+1.0
    
-    predCASE[(ipred+1),(2:20)]<-predCASE[ipred,(2:20)]*exp(R_BestGuess/genTime)
+    predCASE[(ipred+1),(2:20)]<-predCASE[ipred,(2:20)]*exp((R_BestGuess-1.0)/genTime)
     predCASE[ipred+1,1]<-startdate+iday
     ipred=ipred+1
     # End of compartment section
@@ -1998,26 +1998,29 @@ if(compartment){
 #CrystalCast output - use CC.R
 
 #Monitoring plots
+startplot=startdate+3
+endplot=startdate+iday-3
 rbind(CASE,predCASE)->plotCASE
-plot(rowSums(plotCASE[11:20]),x=plotCASE$date)
+plot(rowSums(plotCASE[2:20]),x=plotCASE$date,xlim=c(startplot,endplot))
 
-plot(HospitalData$newAdmissions,ylab="Hospital Admission",xlab="Date")
-lines(rowSums(newSARI[2:20]),col="blue")
+plot(HospitalData$newAdmissions,x=HospitalData$date, ylab="Hospital Admission",xlab="Date",xlim=c(startplot,endplot-11
+                                                                                                ))
+lines(rowSums(newSARI[2:20]),x=newSARI$date,col="blue")
 
-plot(HospitalData$hospitalCases,x=HospitalData$date,ylab="Hospital Cases",xlab="Date")
+plot(HospitalData$hospitalCases,x=HospitalData$date,ylab="Hospital Cases",xlab="Date",xlim=c((startplot),endplot))
 lines(rowSums(SARI[2:20]+CRIT[2:20]+CRITREC[2:20]),x=SARI$date,col='red')
 
-plot(rowSums(newMILD[2:20]+newILI[2:20]),col="blue",x=newMILD$date,type="l",xlab="Date",ylab="Cases")
+plot(rowSums(newMILD[2:20]+newILI[2:20]),xlim=c((startplot),endplot),col="blue",x=newMILD$date,type="l",xlab="Date",ylab="Cases")
 points(rowSums(CASE[2:20]),x=deathdat$date)
 lines(rowSums(newMILD[2:10]+newILI[2:10]),col="green",x=newMILD$date,type="l",xlab="Date",ylab="Cases")
 lines(rowSums(newMILD[11:20]+newILI[11:20]),col="red",x=newMILD$date,type="l",xlab="Date",ylab="Cases")
 
 
-plot(HospitalData$covidOccupiedMVBeds,x=HospitalData$date,ylab="ICU Occupation",xlab="Date")
+plot(HospitalData$covidOccupiedMVBeds,x=HospitalData$date,ylab="ICU Occupation",xlab="Date",xlim=c(startplot,endplot))
 lines(rowSums(CRIT[2:20]),col="blue",x=CRIT$date)
 
 plot(rowSums(DEATH[2:20]),col="blue",x=DEATH$date, type="l",ylab="Deaths"
-     ,xlab="Date",xlim=c(startdate,(enddate+15)))
+     ,xlab="Date",xlim=c(startplot,endplot-11))
 points(rowSums(deathdat[2:20]),x=deathdat$date)
 
 # This needs to be the last routine called for the UI, by default it returns

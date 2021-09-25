@@ -265,10 +265,15 @@ ckanr_setup(url = "https://www.opendata.nhs.scot/")
 package_list(as="table")
 
 tags <- tag_list(as="table")
-
+#  Filter out the relevant columns
 corona <- tag_show("coronavirus", as = "table")
 scotagedat[,c(1,3,5,7,8, 10,11)] %>% filter(Sex=="Total") %>% filter(Date>=casedat$date[1]) %>% filter(Date<=casedat$date[nrow(casedat)])->jnk 
 jnk %>% filter(AgeGroup == "0 to 14") -> jnk2
+
+#  Scottish data is in broader age groups.  To be compatible with the code,
+#  subdivide it (evenly)  into 5 year bands.   
+
+
 sum24=sum(casedat[2:4])
 
 scotage <-casedat
@@ -310,7 +315,7 @@ scotdeath$`50_54` <- jnk2$DailyDeaths*sum(casedat$`50_54`)/sum24
 scotdeath$`55_59` <- jnk2$DailyDeaths*sum(casedat$`55_59`)/sum24
 scotdeath$`60_64` <- jnk2$DailyDeaths*sum(casedat$`60_64`)/sum24
 
-# so fe wdeaths in younger groups, use case numbers as proxy. For over 65 use actual deaths
+# so few deaths in younger groups, use case numbers as proxy. For over 65 use actual deaths
 jnk %>% filter(AgeGroup == "65 to 74") -> jnk2
 sum24=sum(casedat[15:16])
 sumRIP=sum(deathdat[15:16])
