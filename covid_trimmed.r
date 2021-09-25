@@ -1924,7 +1924,7 @@ plot(reglnpredict$England)
 ###Assume that R and lethality are constants
 if(compartment){
   predtime = 28
-  R_BestGuess=R_England_BestGuess-1.0
+  R_BestGuess=R_England_BestGuess
   #  For loop over time, predCASE using R numbers
   predCASE<-ILI[lengthofdata,(1:20)]
   predCASE[1,(2:20)]<-CASE[lengthofdata,(2:20)] #  Growth rate by age group
@@ -1984,11 +1984,11 @@ if(compartment){
     ##  Finally, estimate cases for tomorrow.  This uses an R value calculated above, but for CrystalCast purposes from
     ##  we can use MLP Rx.x as an input here
 
-    # R decays back to 1 with growth rate down 15% a day
+    # R decays back to 1 with growth rate down 5% a day
     # R is the same in all age groups
-    R_BestGuess=(R_BestGuess-1)*0.85+1.0
+    if(R_BestGuess > 1.0) {R_BestGuess=(R_BestGuess-1)*0.95+1.0}
    
-    predCASE[(ipred+1),(2:20)]<-predCASE[ipred,(2:20)]*exp(R_BestGuess/genTime)
+    predCASE[(ipred+1),(2:20)]<-predCASE[ipred,(2:20)]*exp((R_BestGuess-1)/genTime)
     predCASE[ipred+1,1]<-startdate+iday
     ipred=ipred+1
     # End of compartment section
