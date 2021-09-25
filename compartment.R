@@ -190,9 +190,9 @@ CASE=scotage
   #  For loop over time, predCASE using R numbers
   predCASE<-ILI[lengthofdata,(1:20)]
   predCASE[1,(2:20)]<-CASE[lengthofdata,(2:20)] #  Growth rate by age group
-  predCASE[1,1]=enddate
+  predCASE[1,1]=CASE$date[nrow(CASE)]
   
-  ipred=1
+  ipred=1 #  Counter for date prediction
   startdate=CASE$date[nrow(CASE)]
   for (iday in ((lengthofdata+1):(lengthofdata+predtime))){
     
@@ -272,5 +272,5 @@ plot(Hospital$ICUAdmissions,x=deathdat$date,ylab="ICU Occupation",xlab="Date")
 lines(rowSums(newCRIT[2:20]),col="blue",x=CRIT$date)
 
 plot(rowSums(DEATH[2:20]),col="blue",x=DEATH$date,type="l",
-      xlim=c(startdate,(enddate+7)),ylab="Deaths",xlab="Date")
+      ylab="Deaths",xlab="Date")
 points(rowSums(deathdat[2:20]),x=deathdat$date,ylab="Deaths",xlab="Date")

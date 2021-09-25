@@ -16,7 +16,7 @@ modeltype <- "Cases"
 version <- 0.1
 today <- today()
 ageband <-  "All"
-region <- "Scotland"
+# Region should be inherited from most recent compartment run, e.g. region <- "Scotland"
 valuetype <- "R"
 
 # If you need multiple repeated values you can use the rep command so
@@ -510,6 +510,9 @@ CCdate$Scenario="MTP"
 CCdate$Geography=region
 CCdate$ValueType="hospital_inc"
 #  Log. Errors from fluctuations time 4 for uncertainty
+#  adjust for recent discrepancy
+
+
 for (d in 8:(nrow(newSARI)-22)){
   CCdate$Value = sum(newSARI[d,2:20])
   CCdate$"Quantile 0.05"=max(0,CCdate$Value*(1-12*sqrt(sum(newSARI[(d-6):d,2:20])/7)/CCdate$Value))
@@ -523,6 +526,20 @@ for (d in 8:(nrow(newSARI)-22)){
   # Add the new row
   CC <- rbind(CC, CCdate)
 }
+CCdate$ValueType="death_inc_line"
+for (d in 8:(nrow(DEATH)-22)){
+  CCdate$Value = sum(DEATH[d,2:20])
+  CCdate$"Quantile 0.05"=max(0,CCdate$Value*(1-12*sqrt(sum(DEATH[(d-6):d,2:20])/7)/CCdate$Value))
+  CCdate$"Quantile 0.25"=max(0,CCdate$Value*(1-4*sqrt(sum(DEATH[(d-6):d,2:20])/7)/CCdate$Value))
+  CCdate$"Quantile 0.5"=CCdate$Value
+  CCdate$"Quantile 0.75"=CCdate$Value*(1+4*sqrt(sum(DEATH[(d-6):d,2:20])/7)/CCdate$Value)
+  CCdate$"Quantile 0.95"=CCdate$Value*(1+12*sqrt(sum(DEATH[(d-7):d,2:20])/7)/CCdate$Value)
+  CCdate$"Day of Value" = day(DEATH$date[d])
+  CCdate$"Month of Value" = month(DEATH$date[d])
+  CCdate$"Year of Value" = year(DEATH$date[d])
+  # Add the new row
+  CC <- rbind(CC, CCdate)
+}
 
-write.xlsx(CC, file = "Data/WSS_CC.xlsx", sheetName = "WSS", row.names = FALSE)
+write.xlsx(CC, file = "Data/WSS_CC.xlsx", sheetName = "WSS", rowNames = FALSE)
 
