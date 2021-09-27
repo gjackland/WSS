@@ -6,6 +6,8 @@
 #                James A Ackland, The University of Cambridge
 #                David J Wallace.
 #
+# This code is made available under a GPL-3.0 License.
+#
 # Data used in making calculations is made available under an Open Government
 # Licence. For more details see:
 #
@@ -1988,7 +1990,7 @@ if(compartment){
     # R is the same in all age groups
 
     if(R_BestGuess > 1.0) {R_BestGuess=(R_BestGuess-1)*0.95+1.0}
-   
+
     predCASE[(ipred+1),(2:20)]<-predCASE[ipred,(2:20)]*exp((R_BestGuess-1)/genTime)
     predCASE[ipred+1,1]<-startdate+iday
     ipred=ipred+1
