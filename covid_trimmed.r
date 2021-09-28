@@ -262,20 +262,22 @@ vacdat <- vacdat %>%
   arrange(datetmp)
 
 # Add vaccination data for the under 24s.
+
 # casedat has age groups 00-04, 05-09, 10-14, 15-19, 20-24, rest are the same
 # vacdat has age groups  16-17 18-24, rest are the same
-vacdat <- cbind('20_24' = vacdat$'18_24', vacdat)
-vacdat <- cbind('15_19' = 0.4*vacdat$'18_24', vacdat)
-vacdat <- cbind('10_14' = 0.0, vacdat)
-vacdat <- cbind('05_09' = 0.0, vacdat)
-vacdat <- cbind('00_04' = 0.0, vacdat)
-vacdat <- cbind(date = vacdat$datetmp, vacdat)
-vacdat$`18_24` <- NULL
-vacdat$datetmp <- NULL
-# Extend vacdat to before programme started with zeroes
-tmp <- NULL
-tmp <- casedat %>% filter(date < vacdate)
-tmp[2:ncol(tmp)]=0.0
+vacdat<-cbind('20_24'=vacdat$'18_24',vacdat)
+vacdat<-cbind('15_19'=0.4*vacdat$'18_24'+0.4*vacdat$'16_17',vacdat)
+vacdat<-cbind('10_14'=0.0,vacdat)
+vacdat<-cbind('05_09'=0.0,vacdat)
+vacdat<-cbind('00_04'=0.0,vacdat)
+vacdat<-cbind(date=vacdat$datetmp,vacdat)
+vacdat$`18_24`<-NULL
+vacdat$datetmp<-NULL
+#  Extend vacdat to before programme started with zeroes
+tmp<-NULL
+tmp<-casedat %>% filter(date < vacdate)
+tmp[2:20]=0.0
+
 vacdat <- bind_rows(tmp,vacdat)
 rm(tmp)
 
