@@ -345,9 +345,9 @@ scotdat <- scotdat %>%  select(date,
                                allDeaths = newDeaths28DaysByDeathDate,
                                inputCases = newCasesBySpecimenDate,
                                fpCases = newCasesBySpecimenDate) %>%
-  filter(date >= startdate &
-           date <= enddate ) %>%
-  arrange(date)
+                        filter(date >= startdate &
+                               date <= enddate ) %>%
+                        arrange(date)
 
 # Wales data https://api.coronavirus.data.gov.uk/v2/data?areaType=nation&areaCode=W92000004&metric=newCasesBySpecimenDate&metric=newDeaths28DaysByDeathDate&format=csv
 
@@ -371,16 +371,17 @@ walesdat <- walesdat %>%  select(date,
                                  allCases = newCasesBySpecimenDate,
                                  allDeaths = newDeaths28DaysByDeathDate,
                                  inputCases = newCasesBySpecimenDate) %>%
-  filter(date >= startdate &
-           date <= enddate ) %>%
-  arrange(date)
+                          filter(date >= startdate &
+                                 date <= enddate ) %>%
+                           arrange(date)
 
+# Get the Northern Irish deaths and case data
 NIurl <-  paste0(baseurl,
-                    "areaType=nation&",
-                    "areaCode=N92000002&",
-                    "metric=newCasesBySpecimenDate&",
-                    "metric=newDeaths28DaysByDeathDate&",
-                    "format=csv")
+                 "areaType=nation&",
+                 "areaCode=N92000002&",
+                 "metric=newCasesBySpecimenDate&",
+                 "metric=newDeaths28DaysByDeathDate&",
+                 "format=csv")
 
 
 # Read in the Welsh deaths and case data
@@ -388,13 +389,12 @@ NIdat <-  read_csv(file = NIurl, col_types = coltypes)
 
 # Transform the data
 NIdat <- NIdat %>%  select(date,
-                                 allCases = newCasesBySpecimenDate,
-                                 allDeaths = newDeaths28DaysByDeathDate,
-                                 inputCases = newCasesBySpecimenDate) %>%
-  filter(date >= startdate &
-           date <= enddate ) %>%
-  arrange(date)
-
+                           allCases = newCasesBySpecimenDate,
+                           allDeaths = newDeaths28DaysByDeathDate,
+                           inputCases = newCasesBySpecimenDate) %>%
+                    filter(date >= startdate &
+                           date <= enddate ) %>%
+                    arrange(date)
 
 # Regional data for deaths and cases by specimen date
 regurl <- paste0(baseurl,
@@ -418,20 +418,26 @@ regdat <-  read_csv(file = regurl, col_types = coltypes)
 
 # Transform the data
 regcases <- regdat %>%  select(date,areaName,areaCode,
-                               Cases = newCasesBySpecimenDate
-) %>%
-  pivot_wider(id_cols = date, names_from = areaName, values_from = Cases) %>%
-  filter(date >= startdate &
-           date <= enddate )%>%
-  arrange(date)
+                               Cases = newCasesBySpecimenDate) %>%
+                        pivot_wider(id_cols = date,
+                                    names_from = areaName,
+                                    values_from = Cases) %>%
+                        filter(date >= startdate &
+                               date <= enddate )%>%
+                        arrange(date)
 
-regdeaths <- regdat %>%  select(date,areaName,Deaths = newDeaths28DaysByDeathDate) %>%
-  pivot_wider(id_cols = date, names_from = areaName, values_from = Deaths) %>%
-  filter(date >= startdate &
-           date <= enddate )%>%
-  arrange(date)
+# Map the rows in the areaType column to become columns and map the death data
+# to lie under the corresponding column.
+regdeaths <- regdat %>%
+             select(date, areaName, Deaths = newDeaths28DaysByDeathDate) %>%
+             pivot_wider(id_cols = date,
+                         names_from = areaName, values_from = Deaths) %>%
+             filter(date >= startdate &
+                    date <= enddate )%>%
+             arrange(date)
 
-# Get age data for regions because can't download simultaneously
+# Get the demographic data for regions because can't download simultaneously with
+# the death data.
 regurl2 <- paste0(baseurl,
                   "areaType=region&",
                   "metric=newCasesBySpecimenDateAgeDemographics&",
@@ -453,11 +459,13 @@ coltypes <- cols(
 # Read in the regiona case and death data by age
 regagedat <-  read_csv(file = regurl2, col_types = coltypes)
 
-# Transform the data
-regagedat <- regagedat %>%  select(date, areaName, age, cases) %>%
-  filter(date >= startdate &
-           date <= enddate ) %>%
-  arrange(date)
+# Transform the data - reduce the number of columns and filter the data to
+# lie between specific dates.
+regagedat <- regagedat %>%
+             select(date, areaName, age, cases) %>%
+             filter(date >= startdate &
+                    date <= enddate ) %>%
+             arrange(date)
 
 # Define the columns for the UK government R estimate data from a csv file
 coltypes <- cols(
@@ -473,9 +481,8 @@ coltypes <- cols(
   SW_UpperBound = col_number()
 )
 
-# Read in the data
+# Read in the data - this data is obtained by a different script.
 Rest <- read_csv(file="data/R_estimate.csv", col_types = coltypes)
-
 
 # Read in Scottish R value estimates
 # coltypes <- cols(
