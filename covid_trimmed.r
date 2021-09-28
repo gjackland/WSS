@@ -601,7 +601,6 @@ if(enddate == (Sys.Date()-1)){
   regcases[nrow(regcases-1),2:ncol(regcases)]=regcases[nrow(regcases-1),2:ncol(regcases)]*1.005
 }
 
-
 # Add variant data to comdat  Kentfac tells us how much more virulent the variant is
 # Numbers are fitted to death and hospitalistaion data
 comdat$Kent <- 0.0
@@ -719,7 +718,10 @@ regcases<-regcases[,c(1,2,3,4,5,6,7,9,10,8,23,26,27,11,12,13,14,15,16,17,18,19,2
 # Set false positive adjustment at 0.004, extrapolate tests if the last few days are missing
 comdat$fpCases <- comdat$allCases-0.004*as.integer(comdat$tests)
 
-comdat$regions<-regcases$London+regcases$`South East`+regcases$`South West`+regcases$NE_Yorks+regcases$Midlands+regcases$`North West`+regcases$`East of England`
+comdat$regions <- regcases$London + regcases$`South East` + regcases$`South West` +
+                  regcases$NE_Yorks + regcases$Midlands + regcases$`North West` +
+                  regcases$`East of England`
+
 # Plot only if running interactively
 if(interactive()){
 
@@ -738,7 +740,7 @@ if(interactive()){
     theme_minimal()
 }
 
-CFR_All_ByAge=colSums(deathdat[2:20])/colSums(casedat[2:20])
+CFR_All_ByAge=colSums(deathdat[2:ncol(deathdat)])/colSums(casedat[2:ncol(casedat)])
 
 
 compartment=TRUE
