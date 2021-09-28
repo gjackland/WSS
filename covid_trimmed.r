@@ -6,13 +6,15 @@
 #                James A Ackland, The University of Cambridge
 #                David J Wallace.
 #
+# This code is made available under a GPL-3.0 License.
+#
 # Data used in making calculations is made available under an Open Government
 # Licence. For more details see:
 #
 # http://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/
 #
 
-# Remove existing variables
+# Remove existing variables if in an interactive session.
 if(interactive()){
   rm(list = ls())
 }
@@ -26,7 +28,7 @@ library(lubridate, warn.conflicts = FALSE, quietly = TRUE)
 library(zoo, warn.conflicts = FALSE, quietly = TRUE)
 library(RColorBrewer, warn.conflicts = FALSE, quietly = TRUE)
 
-# Set the working directory from where the script is run.
+# Set the working directory to be the same as to where the script is run from.
 setwd(".")
 
 # Turn off scientific notation.
@@ -239,7 +241,7 @@ vacdate="2020-12-08"
 # vaccination by age
 vacurl <- paste0(baseurl,
                  "areaType=nation&",
-                 "areaCode=E92000001&",
+                 "areaCode=E92000001&",    # England
                  "metric=vaccinationsAgeDemographics&",
                  "format=csv")
 
@@ -261,6 +263,8 @@ vacdat <- vacdat %>%
 
 # Add vaccination data for the under 24s.
 
+# casedat has age groups 00-04, 05-09, 10-14, 15-19, 20-24, rest are the same
+# vacdat has age groups  16-17 18-24, rest are the same
 vacdat<-cbind('20_24'=vacdat$'18_24',vacdat)
 vacdat<-cbind('15_19'=0.4*vacdat$'18_24'+0.4*vacdat$'16_17',vacdat)
 vacdat<-cbind('10_14'=0.0,vacdat)
@@ -273,6 +277,7 @@ vacdat$datetmp<-NULL
 tmp<-NULL
 tmp<-casedat %>% filter(date < vacdate)
 tmp[2:20]=0.0
+
 vacdat <- bind_rows(tmp,vacdat)
 rm(tmp)
 
@@ -342,9 +347,9 @@ scotdat <- scotdat %>%  select(date,
                                allDeaths = newDeaths28DaysByDeathDate,
                                inputCases = newCasesBySpecimenDate,
                                fpCases = newCasesBySpecimenDate) %>%
-  filter(date >= startdate &
-           date <= enddate ) %>%
-  arrange(date)
+                        filter(date >= startdate &
+                               date <= enddate ) %>%
+                        arrange(date)
 
 # Wales data https://api.coronavirus.data.gov.uk/v2/data?areaType=nation&areaCode=W92000004&metric=newCasesBySpecimenDate&metric=newDeaths28DaysByDeathDate&format=csv
 
@@ -368,16 +373,17 @@ walesdat <- walesdat %>%  select(date,
                                  allCases = newCasesBySpecimenDate,
                                  allDeaths = newDeaths28DaysByDeathDate,
                                  inputCases = newCasesBySpecimenDate) %>%
-  filter(date >= startdate &
-           date <= enddate ) %>%
-  arrange(date)
+                          filter(date >= startdate &
+                                 date <= enddate ) %>%
+                           arrange(date)
 
+# Get the Northern Irish deaths and case data
 NIurl <-  paste0(baseurl,
-                    "areaType=nation&",
-                    "areaCode=N92000002&",
-                    "metric=newCasesBySpecimenDate&",
-                    "metric=newDeaths28DaysByDeathDate&",
-                    "format=csv")
+                 "areaType=nation&",
+                 "areaCode=N92000002&",
+                 "metric=newCasesBySpecimenDate&",
+                 "metric=newDeaths28DaysByDeathDate&",
+                 "format=csv")
 
 
 # Read in the Welsh deaths and case data
@@ -385,13 +391,12 @@ NIdat <-  read_csv(file = NIurl, col_types = coltypes)
 
 # Transform the data
 NIdat <- NIdat %>%  select(date,
-                                 allCases = newCasesBySpecimenDate,
-                                 allDeaths = newDeaths28DaysByDeathDate,
-                                 inputCases = newCasesBySpecimenDate) %>%
-  filter(date >= startdate &
-           date <= enddate ) %>%
-  arrange(date)
-
+                           allCases = newCasesBySpecimenDate,
+                           allDeaths = newDeaths28DaysByDeathDate,
+                           inputCases = newCasesBySpecimenDate) %>%
+                    filter(date >= startdate &
+                           date <= enddate ) %>%
+                    arrange(date)
 
 # Regional data for deaths and cases by specimen date
 regurl <- paste0(baseurl,
@@ -415,20 +420,26 @@ regdat <-  read_csv(file = regurl, col_types = coltypes)
 
 # Transform the data
 regcases <- regdat %>%  select(date,areaName,areaCode,
-                               Cases = newCasesBySpecimenDate
-) %>%
-  pivot_wider(id_cols = date, names_from = areaName, values_from = Cases) %>%
-  filter(date >= startdate &
-           date <= enddate )%>%
-  arrange(date)
+                               Cases = newCasesBySpecimenDate) %>%
+                        pivot_wider(id_cols = date,
+                                    names_from = areaName,
+                                    values_from = Cases) %>%
+                        filter(date >= startdate &
+                               date <= enddate )%>%
+                        arrange(date)
 
-regdeaths <- regdat %>%  select(date,areaName,Deaths = newDeaths28DaysByDeathDate) %>%
-  pivot_wider(id_cols = date, names_from = areaName, values_from = Deaths) %>%
-  filter(date >= startdate &
-           date <= enddate )%>%
-  arrange(date)
+# Map the rows in the areaType column to become columns and map the death data
+# to lie under the corresponding column.
+regdeaths <- regdat %>%
+             select(date, areaName, Deaths = newDeaths28DaysByDeathDate) %>%
+             pivot_wider(id_cols = date,
+                         names_from = areaName, values_from = Deaths) %>%
+             filter(date >= startdate &
+                    date <= enddate )%>%
+             arrange(date)
 
-# Get age data for regions because can't download simultaneously
+# Get the demographic data for regions because can't download simultaneously with
+# the death data.
 regurl2 <- paste0(baseurl,
                   "areaType=region&",
                   "metric=newCasesBySpecimenDateAgeDemographics&",
@@ -450,11 +461,13 @@ coltypes <- cols(
 # Read in the regiona case and death data by age
 regagedat <-  read_csv(file = regurl2, col_types = coltypes)
 
-# Transform the data
-regagedat <- regagedat %>%  select(date, areaName, age, cases) %>%
-  filter(date >= startdate &
-           date <= enddate ) %>%
-  arrange(date)
+# Transform the data - reduce the number of columns and filter the data to
+# lie between specific dates.
+regagedat <- regagedat %>%
+             select(date, areaName, age, cases) %>%
+             filter(date >= startdate &
+                    date <= enddate ) %>%
+             arrange(date)
 
 # Define the columns for the UK government R estimate data from a csv file
 coltypes <- cols(
@@ -470,17 +483,8 @@ coltypes <- cols(
   SW_UpperBound = col_number()
 )
 
-# Read in the data
+# Read in the data - this data is obtained by a different script.
 Rest <- read_csv(file="data/R_estimate.csv", col_types = coltypes)
-
-
-# Read in Scottish R value estimates
-# coltypes <- cols(
-#                 Date = col_date(format = "%Y-%m-%d"),
-#                 R_LowerBound = col_number(),
-#                 R_UpperBound = col_number()
-#                 )
-# R_ScotEst <- read_csv(file="data/R_scottish_estimate.csv", col_types = coltypes)
 
 # Scottish Daily Case Trends By Health Board
 #
@@ -1988,7 +1992,7 @@ if(compartment){
     # R is the same in all age groups
 
     if(R_BestGuess > 1.0) {R_BestGuess=(R_BestGuess-1)*0.95+1.0}
-   
+
     predCASE[(ipred+1),(2:20)]<-predCASE[ipred,(2:20)]*exp((R_BestGuess-1)/genTime)
     predCASE[ipred+1,1]<-startdate+iday
     ipred=ipred+1
