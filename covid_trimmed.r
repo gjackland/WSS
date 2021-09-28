@@ -417,7 +417,7 @@ coltypes <-  cols(
 regdat <-  read_csv(file = regurl, col_types = coltypes)
 
 # Transform the data
-regcases <- regdat %>%  select(date,areaName,areaCode,
+regcases <- regdat %>%  select(date, areaName, areaCode,
                                Cases = newCasesBySpecimenDate) %>%
                         pivot_wider(id_cols = date,
                                     names_from = areaName,
@@ -456,7 +456,7 @@ coltypes <- cols(
   rollingRate = col_number()
 )
 
-# Read in the regiona case and death data by age
+# Read in the regional case and death data by age
 regagedat <-  read_csv(file = regurl2, col_types = coltypes)
 
 # Transform the data - reduce the number of columns and filter the data to
@@ -525,15 +525,20 @@ coltypes <- cols(
 scotdailycases = read_csv(dailycasesurl, col_types = coltypes)
 
 # Make the NHS boards the columns - DailyPositives are the values
-scotdailycases %>% select(date=Date,board=HBName, cases=DailyPositive)  %>%
-  pivot_wider(names_from = board, values_from = cases) %>%
-  filter(date >= startdate & date <= enddate )         %>%
-  arrange(date) -> scotdailycasesbyboard
-# Join the scotdailycases with regcases by date
-regcases <- inner_join(regcases,scotdailycasesbyboard, by = c("date"="date"))
+scotdailycasesbyboard <- scotdailycases                                %>%
+                         select(date=Date,board = HBName,
+                                cases = DailyPositive)                 %>%
+                         pivot_wider(names_from = board,
+                                     values_from = cases)              %>%
+                         filter(date >= startdate & date <= enddate )  %>%
+                         arrange(date)
 
-#### Get tests for England pre-Sept by taking the post-Sept fraction of all tests that were in England (0.867), and set vaccines to zero
-comdat$tests[1:58] = as.integer(ukcasedat$tests[1:58] * 0.867)
+# Join the scotdailycases with regcases by date
+regcases <- inner_join(regcases, scotdailycasesbyboard, by = c("date" = "date"))
+
+#### Get tests for England pre-Sept by taking the post-Sept fraction of all tests
+#    that were in England (0.867), and set vaccines to zero
+comdat$tests[1:58] <- as.integer(ukcasedat$tests[1:58] * 0.867)
 comdat$vaccines[is.na(comdat$vaccines)] <- 0.0
 #### Get the UK hospital data & Append data to tibble
 ####  MV beds = CRIT
@@ -562,21 +567,17 @@ d <- read_csv(HospitalUrl, col_types = coltypes)
 HospitalData <- tibble()
 HospitalData <- rev( bind_rows(HospitalData,d) )
 
-HospitalData  <-  HospitalData %>% filter(date >= startdate &
-                          date <= enddate ) %>%
-  arrange(date)
+HospitalData  <-  HospitalData %>%
+                  filter(date >= startdate & date <= enddate ) %>%
+                  arrange(date)
 
-
-
-# Remove the no longer needed input datas
+# Remove the no longer needed input data
 rm(ukcasedat,scotdailycases,scotdailycasesbyboard,d,coltypes)
 rm(HospitalUrl,deathurl,casesurl,scoturl,walesurl,NIurl,ageurl,baseurl,regurl,regurl2,ukcaseurl,vacurl)
 
 # Plot all cases against date: Used for the paper, uncomment to recreate
-#comdat %>% ggplot(aes(x=date,y=allCases)) + geom_line() +
-#  xlab("Date") + ylab("All cases")
 if(interactive()){
-  comdat %>%
+    comdat %>%
     filter(startdate+150 <= date & date <= enddate) %>%
     mutate(rollmean = zoo::rollmean(allCases, k = 7, fill = NA)) %>%  # 7-day average
     ggplot(aes(x=date)) + geom_line(aes(y=allCases)) + geom_point(aes(y=allCases)) +
@@ -584,8 +585,10 @@ if(interactive()){
     xlab("Date") + ylab("All cases")
 }
 
+# Add the Welsh and Northern Ireland cases data
 regcases$Wales <- walesdat$allCases
 regcases$NI <- NIdat$allCases
+
 # Tail correction.  Assumes we read in all but the last row
 if(enddate == (Sys.Date()-1)){
   scotdat$allCases[nrow(scotdat)]=scotdat$allCases[nrow(scotdat)]*1.05
@@ -598,39 +601,40 @@ if(enddate == (Sys.Date()-1)){
 
 
 # Add variant data to comdat  Kentfac tells us how much more virulent the variant is
-#  Numbers are fitted to death and hospitalistaion data
+# Numbers are fitted to death and hospitalistaion data
 comdat$Kent <- 0.0
 comdat$India <- 0.0
 Kentfac <- 0.6
 Indiafac <- 0.9
 Kentdate <- as.integer(as.Date("2021/01/01")-startdate)
 
-# Approximate Kent by logistic rise around 2021/01/01  Same gen time, R+0.3 vs Wild  (0.3 is NOT lethality factor)
+# Approximate Kent by logistic rise around 2021/01/01
+# Same gen time, R+0.3 vs Wild  (0.3 is NOT lethality factor)
 for (i in 1:nrow(comdat)){
   x= (i-Kentdate)*0.3/genTime
   comdat$Kent[i]=1.0/(1.0+exp(-x))
 }
 Indiadate <- as.integer(as.Date("2021/05/15")-startdate)
-# Approximate India by logistic rise around 2021/15/01: see covid19.sanger.  Same genTime R+0.4 vs Kent
+# Approximate India by logistic rise around 2021/15/01: see covid19.sanger.
+# Same genTime R+0.4 vs Kent
 for (i in 1:nrow(comdat)){
   x= (i-Indiadate)*0.4/genTime
   comdat$India[i]=1.0/(1.0+exp(-x))
 }
 rm(x)
-#  Kent is Kentfac worse, india is Indiafac worse
+# Kent is Kentfac worse, india is Indiafac worse
 comdat$Kent<-comdat$Kent-comdat$India
 comdat$lethality<-1.0+ Kentfac*comdat$Kent + Indiafac*comdat$India
 
-#  Fix missing data to constant values
+# Fix missing data to constant values
 HospitalData <- na.locf(HospitalData)
 casedat <- na.locf(casedat)
 comdat <- na.locf(comdat)
 regcases <- na.locf(regcases)
 scotdat <- na.locf(scotdat)
 
-#  Get mean age-related CFR across the whole pandemic
-
-RawCFR=colSums(deathdat[2:20])/colSums(casedat[2:20])
+# Get mean age-related CFR across the whole pandemic
+RawCFR=colSums(deathdat[2:ncol(deathdat)])/colSums(casedat[2:ncol(casedat)])
 
 # Remove weekend effect,  assuming each weekday has same number of cases over the
 # epidemic, and national averages hold regionally.
@@ -655,7 +659,7 @@ for(i in 1:nrow(comdat)){
   }
 }
 
-# Fix Xmas anomaly over XMdays=12 days in comdat,regcases by linear fit
+# Fix Xmas anomaly over XMdays=12 days in comdat, regcases by linear fit
 Xmasav <- sum(comdat$allCases[XMstart:XMend])/XMdays
 Xmasgrad <- comdat$allCases[XMend]-comdat$allCases[XMstart]
 for (i in XMstart:XMend){
@@ -702,12 +706,14 @@ xcastage$'45_64' <-casedat$`45_49`+casedat$`50_54`+casedat$`55_59`+casedat$`60_6
 xcastage$'65_74' <-casedat$`65_69`+casedat$`70_74`
 xcastage$'75+' <-casedat$`75_79`+casedat$`80_84`+casedat$`85_89`+casedat$`90+`
 
-#  Combination required to go from 9 to 7 English regions
-regcases$NE_Yorks<-regcases$`North East`+regcases$`Yorkshire and The Humber`
-regcases$Midlands<-regcases$`East Midlands`+regcases$`West Midlands`
-regcases$England<-comdat$allCases
+# Combination required to go from 9 to 7 English regions
+regcases$NE_Yorks <- regcases$`North East` + regcases$`Yorkshire and The Humber`
+regcases$Midlands <- regcases$`East Midlands` + regcases$`West Midlands`
+regcases$England <- comdat$allCases
+
 # Reorder regcases
 regcases<-regcases[,c(1,2,3,4,5,6,7,9,10,8,23,26,27,11,12,13,14,15,16,17,18,19,20,21,22,24,25,28,29,30)]
+
 # Set false positive adjustment at 0.004, extrapolate tests if the last few days are missing
 comdat$fpCases <- comdat$allCases-0.004*as.integer(comdat$tests)
 
