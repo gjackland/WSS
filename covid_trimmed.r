@@ -484,14 +484,6 @@ coltypes <- cols(
 # Read in the data - this data is obtained by a different script.
 Rest <- read_csv(file="data/R_estimate.csv", col_types = coltypes)
 
-# Read in Scottish R value estimates
-# coltypes <- cols(
-#                 Date = col_date(format = "%Y-%m-%d"),
-#                 R_LowerBound = col_number(),
-#                 R_UpperBound = col_number()
-#                 )
-# R_ScotEst <- read_csv(file="data/R_scottish_estimate.csv", col_types = coltypes)
-
 # Scottish Daily Case Trends By Health Board
 #
 # See: https://www.opendata.nhs.scot/dataset/covid-19-in-scotland/resource/2dd8534b-0a6f-4744-9253-9565d62f96c2
