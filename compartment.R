@@ -113,9 +113,8 @@ CASE=scotage
       ( covidsimAge$Prop_Critical_ByAge + covidsimAge$Prop_SARI_ByAge )#*comdat$lethality[iday]
     # All routes to death are the same, vary by age
     pCtoD <- pStoD
-    pCRtoD <- pStoD
-    #REscale pStoD to allow for CRIT->CRITREC route
-    pStoD <- pStoD - pStoC*(pCtoD+(1-pCtoD)*pCRtoD)
+    #REscale pStoD to allow for CRIT->DEATH route
+    pStoD <- pStoD - pStoC*(pCtoD)
     
     #  For loop over time
     

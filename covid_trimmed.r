@@ -850,9 +850,8 @@ if(compartment){
       ( covidsimAge$Prop_Critical_ByAge + covidsimAge$Prop_SARI_ByAge )#*comdat$lethality[iday]
     # All routes to death are the same, vary by age
     pCtoD <- pStoD
-    pCRtoD <- pStoD
-    #REscale pStoD to allow for CRIT->CRITREC route
-    pStoD <- pStoD - pStoC*(pCtoD+(1-pCtoD)*pCRtoD)
+    #REscale pStoD to allow for CRIT->DEATH route
+    pStoD <- pStoD - pStoC*(pCtoD)
 
     #  For loop over time
 
@@ -880,7 +879,7 @@ if(compartment){
     #  vectorize
     MtoR=outer(as.numeric(newMILD[iday,agerange]),MildToRecovery,FUN="*")
     oldMILD[(iday:xday),agerange]=oldMILD[(iday:xday),agerange]+MtoR
-    vacCFR=0.75 #Vaccine reduction in ILI-> SARI
+    vacCFR=0.85 #Vaccine reduction in ILI-> SARI
     for (iage in agerange){
       # All todays new MILDs will all leave to REC across distribution
       # multiple by vaccination and its CFR reduction
