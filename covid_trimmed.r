@@ -134,7 +134,7 @@ startdate <- as.Date("2020/08/25") #as.Date("2020/08/25")
 
 # Lose only the last day of data - use tail correction for reporting delay
 # Weekend data can be sketchy Extend the enddate if run on Monday morning
-enddate <-  Sys.Date()-5
+enddate <-  Sys.Date()-6
 # Set the generation time
 genTime <- 5
 #  Dates for the plots
@@ -868,7 +868,7 @@ if(compartment){
     #  vectorize
     MtoR=outer(as.numeric(newMILD[iday,agerange]),MildToRecovery,FUN="*")
     oldMILD[(iday:xday),agerange]=oldMILD[(iday:xday),agerange]+MtoR
-    vacCFR=0.75 #Vaccine reduction in ILI-> SARI
+    vacCFR=0.85 #Vaccine reduction in ILI-> SARI
     for (iage in agerange){
       # All todays new MILDs will all leave to REC across distribution
       # multiple by vaccination and its CFR reduction
@@ -1594,9 +1594,9 @@ if(dir.exists("/data/input")){
 dataIn <- getInput(infile)
 
 # NOTE: These are the regions and subregions being asked for - data should be produced
-# that corresponds to these.
-region <- dataIn$region
-subregion <- dataIn$subregion
+# that corresponds to these.  Add UI to avoid name clash with CrystalCast
+UI_region <- dataIn$region
+UI_subregion <- dataIn$subregion
 
 # Read these parameters to output again
 calibrationDate <- dataIn$parameters$calibrationDate
@@ -1623,8 +1623,8 @@ mynewMild <- as.integer(rowSums(newMILD[2:20]))
 mynewSARI <-  as.integer(rowSums(newILI[2:20]))
 outputJSON(myt0 = t0,
            mydaysarray = days,
-           myregion = region,
-           mysubregion = subregion, # see https://en.wikipedia.org/wiki/ISO_3166-2:GB
+           myregion = UI_region,
+           mysubregion = UI_subregion, # see https://en.wikipedia.org/wiki/ISO_3166-2:GB
            mycalibrationCaseCount = calibrationCaseCount,
            mycalibrationDate = calibrationDate,
            mycalibrationDeathCount = calibrationDeathCount,
@@ -1924,6 +1924,7 @@ plot(reglnpredict$England)
 ###Assume that R and lethality are constants
 if(compartment){
   predtime = 28
+  region="England"
   R_BestGuess=R_England_BestGuess
   #  For loop over time, predCASE using R numbers
   predCASE<-ILI[lengthofdata,(1:20)]

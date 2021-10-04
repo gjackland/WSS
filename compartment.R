@@ -1,7 +1,7 @@
 #  Compartment section from WSS.
 #  Set CASE to the appropriate region
   #  CASE is the input cases which get WSS'ed.  
-# CASE=casedat produces estimates for UK.  CASE=scotage is for Scotland
+# CASE=casedat produces estimates for UK, this already happens at the end of the main code.  CASE=scotage is for Scotland
   
 CASE=scotage
   deathdat=scotdeath
@@ -196,9 +196,10 @@ CASE=scotage
   startdate=CASE$date[nrow(CASE)]
   for (iday in ((lengthofdata+1):(lengthofdata+predtime))){
     
-    # R decays back to 1 with growth rate down 15% a day
+    # R decays back to 1 with growth rate down 5% a day or back up at 5%
     # R is the same in all age groups
     if(R_BestGuess > 1.0){R_BestGuess=(R_BestGuess-1)*0.95+1.0}
+    if(R_BestGuess < 1.0){R_BestGuess=(R_BestGuess-1)*0.95+1.0}
     #  Proportions become variant dependent.  ILI is case driven, so extra infectivity is automatic
     # from the data. ILI->SARI increases with variant.  CRIT is an NHS decision, not favoured for very old
     #  Need to increase CFR without exceeding 1.  Note inverse lethality isnt a simple % as CFR cant be >1
@@ -255,13 +256,61 @@ CASE=scotage
     ipred=ipred+1
     # End of compartment section
   }
+
 #CrystalCast output - use CC.R
+  
+  
+  #  Medium term projections
+  
+  
+  today <- today()
+  ageband <-  "All"
+  CCdate$Scenario="MTP"
+  CCdate$Geography=region
+  CCdate$ValueType="hospital_inc"
+  #  Log. Errors from fluctuations time 4 for methodological uncertainty
+  #  adjust for recent discrepancy
+  
+  
+  for (d in 8:(nrow(newSARI)-22)){
+    CCdate$Value = sum(newSARI[d,2:20])
+    CCdate$"Quantile 0.05"=max(0,CCdate$Value*(1-12*sqrt(sum(newSARI[(d-6):d,2:20])/7)/CCdate$Value))
+    CCdate$"Quantile 0.25"=max(0,CCdate$Value*(1-4*sqrt(sum(newSARI[(d-6):d,2:20])/7)/CCdate$Value))
+    CCdate$"Quantile 0.5"=CCdate$Value
+    CCdate$"Quantile 0.75"=CCdate$Value*(1+4*sqrt(sum(newSARI[(d-6):d,2:20])/7)/CCdate$Value)
+    CCdate$"Quantile 0.95"=CCdate$Value*(1+12*sqrt(sum(newSARI[(d-7):d,2:20])/7)/CCdate$Value)
+    CCdate$"Day of Value" = day(newSARI$date[d])
+    CCdate$"Month of Value" = month(newSARI$date[d])
+    CCdate$"Year of Value" = year(newSARI$date[d])
+    # Add the new row
+    CC <- rbind(CC, CCdate)
+  }
+  CCdate$ValueType="death_inc_line"
+  for (d in 8:(nrow(DEATH)-22)){
+    CCdate$Value = sum(DEATH[d,2:20])
+    CCdate$"Quantile 0.05"=max(0,CCdate$Value*(1-12*sqrt(sum(DEATH[(d-6):d,2:20])/7)/CCdate$Value))
+    CCdate$"Quantile 0.25"=max(0,CCdate$Value*(1-4*sqrt(sum(DEATH[(d-6):d,2:20])/7)/CCdate$Value))
+    CCdate$"Quantile 0.5"=CCdate$Value
+    CCdate$"Quantile 0.75"=CCdate$Value*(1+4*sqrt(sum(DEATH[(d-6):d,2:20])/7)/CCdate$Value)
+    CCdate$"Quantile 0.95"=CCdate$Value*(1+12*sqrt(sum(DEATH[(d-7):d,2:20])/7)/CCdate$Value)
+    CCdate$"Day of Value" = day(DEATH$date[d])
+    CCdate$"Month of Value" = month(DEATH$date[d])
+    CCdate$"Year of Value" = year(DEATH$date[d])
+    # Add the new row
+    CC <- rbind(CC, CCdate)
+  }
+#  Crystalcast format output  
+  write.xlsx(CC, file = "Data/compartment.xlsx", sheetName = "WSS", rowNames = FALSE)
+  
+  
+  
+  
 rbind(CASE,predCASE)->plotCASE
 plot(rowSums(plotCASE[2:20]),x=plotCASE$date)
 #Monitoring plots
 
-plot(rowSums(newSARI[2:20]),col="blue",type='l')
-points(Hospital$newAdmissions)
+plot(rowSums(newSARI[2:20]),col="blue",x=SARI$date, type='l',xlim=c(Hospital$Date[1],(enddate+predtime)))
+points(Hospital$newAdmissions,x=Hospital$Date,ylab="Scottish Hospital Cases",xlab="Date")
 
 plot(Hospital$newAdmissions,x=Hospital$Date,ylab="Scottish Hospital Cases",xlab="Date",xlim=c(Hospital$Date[1],(Hospital$Date[350]+48)))
 lines(rowSums(newSARI[2:20]),x=SARI$date,col='red')
