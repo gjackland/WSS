@@ -143,7 +143,7 @@ CASE=scotage
     #  vectorize
     MtoR=outer(as.numeric(newMILD[iday,agerange]),MildToRecovery,FUN="*")
     oldMILD[(iday:xday),agerange]=oldMILD[(iday:xday),agerange]+MtoR
-    vacCFR=0.75 #Vaccine reduction in ILI-> SARI
+    vacCFR=0.85 #Vaccine reduction in ILI-> SARI
     for (iage in agerange){
       # All todays new MILDs will all leave to REC across distribution
       # multiple by vaccination and its CFR reduction
