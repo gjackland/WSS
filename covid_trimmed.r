@@ -6,13 +6,15 @@
 #                James A Ackland, The University of Cambridge
 #                David J Wallace.
 #
+# This code is made available under a GPL-3.0 License.
+#
 # Data used in making calculations is made available under an Open Government
 # Licence. For more details see:
 #
 # http://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/
 #
 
-# Remove existing variables
+# Remove existing variables if in an interactive session.
 if(interactive()){
   rm(list = ls())
 }
@@ -26,7 +28,7 @@ library(lubridate, warn.conflicts = FALSE, quietly = TRUE)
 library(zoo, warn.conflicts = FALSE, quietly = TRUE)
 library(RColorBrewer, warn.conflicts = FALSE, quietly = TRUE)
 
-# Set the working directory from where the script is run.
+# Set the working directory to be the same as to where the script is run from.
 setwd(".")
 
 # Turn off scientific notation.
@@ -239,7 +241,7 @@ vacdate="2020-12-08"
 # vaccination by age
 vacurl <- paste0(baseurl,
                  "areaType=nation&",
-                 "areaCode=E92000001&",
+                 "areaCode=E92000001&",    # England
                  "metric=vaccinationsAgeDemographics&",
                  "format=csv")
 
@@ -261,8 +263,10 @@ vacdat <- vacdat %>%
 
 # Add vaccination data for the under 24s.
 
+# casedat has age groups 00-04, 05-09, 10-14, 15-19, 20-24, rest are the same
+# vacdat has age groups  16-17 18-24, rest are the same
 vacdat<-cbind('20_24'=vacdat$'18_24',vacdat)
-vacdat<-cbind('15_19'=0.4*vacdat$'18_24',vacdat)
+vacdat<-cbind('15_19'=0.4*vacdat$'18_24'+0.4*vacdat$'16_17',vacdat)
 vacdat<-cbind('10_14'=0.0,vacdat)
 vacdat<-cbind('05_09'=0.0,vacdat)
 vacdat<-cbind('00_04'=0.0,vacdat)
@@ -273,6 +277,7 @@ vacdat$datetmp<-NULL
 tmp<-NULL
 tmp<-casedat %>% filter(date < vacdate)
 tmp[2:20]=0.0
+
 vacdat <- bind_rows(tmp,vacdat)
 rm(tmp)
 
@@ -342,9 +347,9 @@ scotdat <- scotdat %>%  select(date,
                                allDeaths = newDeaths28DaysByDeathDate,
                                inputCases = newCasesBySpecimenDate,
                                fpCases = newCasesBySpecimenDate) %>%
-  filter(date >= startdate &
-           date <= enddate ) %>%
-  arrange(date)
+                        filter(date >= startdate &
+                               date <= enddate ) %>%
+                        arrange(date)
 
 # Wales data https://api.coronavirus.data.gov.uk/v2/data?areaType=nation&areaCode=W92000004&metric=newCasesBySpecimenDate&metric=newDeaths28DaysByDeathDate&format=csv
 
@@ -368,16 +373,17 @@ walesdat <- walesdat %>%  select(date,
                                  allCases = newCasesBySpecimenDate,
                                  allDeaths = newDeaths28DaysByDeathDate,
                                  inputCases = newCasesBySpecimenDate) %>%
-  filter(date >= startdate &
-           date <= enddate ) %>%
-  arrange(date)
+                          filter(date >= startdate &
+                                 date <= enddate ) %>%
+                           arrange(date)
 
+# Get the Northern Irish deaths and case data
 NIurl <-  paste0(baseurl,
-                    "areaType=nation&",
-                    "areaCode=N92000002&",
-                    "metric=newCasesBySpecimenDate&",
-                    "metric=newDeaths28DaysByDeathDate&",
-                    "format=csv")
+                 "areaType=nation&",
+                 "areaCode=N92000002&",
+                 "metric=newCasesBySpecimenDate&",
+                 "metric=newDeaths28DaysByDeathDate&",
+                 "format=csv")
 
 
 # Read in the Welsh deaths and case data
@@ -385,13 +391,12 @@ NIdat <-  read_csv(file = NIurl, col_types = coltypes)
 
 # Transform the data
 NIdat <- NIdat %>%  select(date,
-                                 allCases = newCasesBySpecimenDate,
-                                 allDeaths = newDeaths28DaysByDeathDate,
-                                 inputCases = newCasesBySpecimenDate) %>%
-  filter(date >= startdate &
-           date <= enddate ) %>%
-  arrange(date)
-
+                           allCases = newCasesBySpecimenDate,
+                           allDeaths = newDeaths28DaysByDeathDate,
+                           inputCases = newCasesBySpecimenDate) %>%
+                    filter(date >= startdate &
+                           date <= enddate ) %>%
+                    arrange(date)
 
 # Regional data for deaths and cases by specimen date
 regurl <- paste0(baseurl,
@@ -414,21 +419,27 @@ coltypes <-  cols(
 regdat <-  read_csv(file = regurl, col_types = coltypes)
 
 # Transform the data
-regcases <- regdat %>%  select(date,areaName,areaCode,
-                               Cases = newCasesBySpecimenDate
-) %>%
-  pivot_wider(id_cols = date, names_from = areaName, values_from = Cases) %>%
-  filter(date >= startdate &
-           date <= enddate )%>%
-  arrange(date)
+regcases <- regdat %>%  select(date, areaName, areaCode,
+                               Cases = newCasesBySpecimenDate) %>%
+                        pivot_wider(id_cols = date,
+                                    names_from = areaName,
+                                    values_from = Cases) %>%
+                        filter(date >= startdate &
+                               date <= enddate )%>%
+                        arrange(date)
 
-regdeaths <- regdat %>%  select(date,areaName,Deaths = newDeaths28DaysByDeathDate) %>%
-  pivot_wider(id_cols = date, names_from = areaName, values_from = Deaths) %>%
-  filter(date >= startdate &
-           date <= enddate )%>%
-  arrange(date)
+# Map the rows in the areaType column to become columns and map the death data
+# to lie under the corresponding column.
+regdeaths <- regdat %>%
+             select(date, areaName, Deaths = newDeaths28DaysByDeathDate) %>%
+             pivot_wider(id_cols = date,
+                         names_from = areaName, values_from = Deaths) %>%
+             filter(date >= startdate &
+                    date <= enddate )%>%
+             arrange(date)
 
-# Get age data for regions because can't download simultaneously
+# Get the demographic data for regions because can't download simultaneously with
+# the death data.
 regurl2 <- paste0(baseurl,
                   "areaType=region&",
                   "metric=newCasesBySpecimenDateAgeDemographics&",
@@ -447,14 +458,16 @@ coltypes <- cols(
   rollingRate = col_number()
 )
 
-# Read in the regiona case and death data by age
+# Read in the regional case and death data by age
 regagedat <-  read_csv(file = regurl2, col_types = coltypes)
 
-# Transform the data
-regagedat <- regagedat %>%  select(date, areaName, age, cases) %>%
-  filter(date >= startdate &
-           date <= enddate ) %>%
-  arrange(date)
+# Transform the data - reduce the number of columns and filter the data to
+# lie between specific dates.
+regagedat <- regagedat %>%
+             select(date, areaName, age, cases) %>%
+             filter(date >= startdate &
+                    date <= enddate ) %>%
+             arrange(date)
 
 # Define the columns for the UK government R estimate data from a csv file
 coltypes <- cols(
@@ -470,17 +483,8 @@ coltypes <- cols(
   SW_UpperBound = col_number()
 )
 
-# Read in the data
+# Read in the data - this data is obtained by a different script.
 Rest <- read_csv(file="data/R_estimate.csv", col_types = coltypes)
-
-
-# Read in Scottish R value estimates
-# coltypes <- cols(
-#                 Date = col_date(format = "%Y-%m-%d"),
-#                 R_LowerBound = col_number(),
-#                 R_UpperBound = col_number()
-#                 )
-# R_ScotEst <- read_csv(file="data/R_scottish_estimate.csv", col_types = coltypes)
 
 # Scottish Daily Case Trends By Health Board
 #
@@ -523,15 +527,20 @@ coltypes <- cols(
 scotdailycases = read_csv(dailycasesurl, col_types = coltypes)
 
 # Make the NHS boards the columns - DailyPositives are the values
-scotdailycases %>% select(date=Date,board=HBName, cases=DailyPositive)  %>%
-  pivot_wider(names_from = board, values_from = cases) %>%
-  filter(date >= startdate & date <= enddate )         %>%
-  arrange(date) -> scotdailycasesbyboard
-# Join the scotdailycases with regcases by date
-regcases <- inner_join(regcases,scotdailycasesbyboard, by = c("date"="date"))
+scotdailycasesbyboard <- scotdailycases                                %>%
+                         select(date=Date,board = HBName,
+                                cases = DailyPositive)                 %>%
+                         pivot_wider(names_from = board,
+                                     values_from = cases)              %>%
+                         filter(date >= startdate & date <= enddate )  %>%
+                         arrange(date)
 
-#### Get tests for England pre-Sept by taking the post-Sept fraction of all tests that were in England (0.867), and set vaccines to zero
-comdat$tests[1:58] = as.integer(ukcasedat$tests[1:58] * 0.867)
+# Join the scotdailycases with regcases by date
+regcases <- inner_join(regcases, scotdailycasesbyboard, by = c("date" = "date"))
+
+#### Get tests for England pre-Sept by taking the post-Sept fraction of all tests
+#    that were in England (0.867), and set vaccines to zero
+comdat$tests[1:58] <- as.integer(ukcasedat$tests[1:58] * 0.867)
 comdat$vaccines[is.na(comdat$vaccines)] <- 0.0
 #### Get the UK hospital data & Append data to tibble
 ####  MV beds = CRIT
@@ -560,21 +569,17 @@ d <- read_csv(HospitalUrl, col_types = coltypes)
 HospitalData <- tibble()
 HospitalData <- rev( bind_rows(HospitalData,d) )
 
-HospitalData  <-  HospitalData %>% filter(date >= startdate &
-                          date <= enddate ) %>%
-  arrange(date)
+HospitalData  <-  HospitalData %>%
+                  filter(date >= startdate & date <= enddate ) %>%
+                  arrange(date)
 
-
-
-# Remove the no longer needed input datas
+# Remove the no longer needed input data
 rm(ukcasedat,scotdailycases,scotdailycasesbyboard,d,coltypes)
 rm(HospitalUrl,deathurl,casesurl,scoturl,walesurl,NIurl,ageurl,baseurl,regurl,regurl2,ukcaseurl,vacurl)
 
 # Plot all cases against date: Used for the paper, uncomment to recreate
-#comdat %>% ggplot(aes(x=date,y=allCases)) + geom_line() +
-#  xlab("Date") + ylab("All cases")
 if(interactive()){
-  comdat %>%
+    comdat %>%
     filter(startdate+150 <= date & date <= enddate) %>%
     mutate(rollmean = zoo::rollmean(allCases, k = 7, fill = NA)) %>%  # 7-day average
     ggplot(aes(x=date)) + geom_line(aes(y=allCases)) + geom_point(aes(y=allCases)) +
@@ -582,8 +587,10 @@ if(interactive()){
     xlab("Date") + ylab("All cases")
 }
 
+# Add the Welsh and Northern Ireland cases data
 regcases$Wales <- walesdat$allCases
 regcases$NI <- NIdat$allCases
+
 # Tail correction.  Assumes we read in all but the last row
 if(enddate == (Sys.Date()-1)){
   scotdat$allCases[nrow(scotdat)]=scotdat$allCases[nrow(scotdat)]*1.05
@@ -594,43 +601,43 @@ if(enddate == (Sys.Date()-1)){
   regcases[nrow(regcases-1),2:ncol(regcases)]=regcases[nrow(regcases-1),2:ncol(regcases)]*1.005
 }
 
-
 # Add variant data to comdat  Kentfac tells us how much more virulent the variant is
-#  Numbers are fitted to death and hospitalistaion data
+# Numbers are fitted to death and hospitalistaion data
 comdat$Kent <- 0.0
 comdat$India <- 0.0
 Kentfac <- 0.6
 Indiafac <- 0.9
 Kentdate <- as.integer(as.Date("2021/01/01")-startdate)
 
-# Approximate Kent by logistic rise around 2021/01/01  Same gen time, R+0.3 vs Wild  (0.3 is NOT lethality factor)
+# Approximate Kent by logistic rise around 2021/01/01
+# Same gen time, R+0.3 vs Wild  (0.3 is NOT lethality factor)
 for (i in 1:nrow(comdat)){
   x= (i-Kentdate)*0.3/genTime
   comdat$Kent[i]=1.0/(1.0+exp(-x))
 }
 Indiadate <- as.integer(as.Date("2021/05/15")-startdate)
-# Approximate India by logistic rise around 2021/15/01: see covid19.sanger.  Same genTime R+0.4 vs Kent
+# Approximate India by logistic rise around 2021/15/01: see covid19.sanger.
+# Same genTime R+0.4 vs Kent
 for (i in 1:nrow(comdat)){
   x= (i-Indiadate)*0.4/genTime
   comdat$India[i]=1.0/(1.0+exp(-x))
 }
 rm(x)
-#  Kent is Kentfac worse, india is Indiafac worse
+# Kent is Kentfac worse, india is Indiafac worse
 comdat$Kent<-comdat$Kent-comdat$India
 comdat$lethality<-1.0+ Kentfac*comdat$Kent + Indiafac*comdat$India
 
-#  Fix missing data to constant values
+# Fix missing data to constant values
 HospitalData <- na.locf(HospitalData)
 casedat <- na.locf(casedat)
 comdat <- na.locf(comdat)
 regcases <- na.locf(regcases)
 scotdat <- na.locf(scotdat)
 
-#  Get mean age-related CFR across the whole pandemic
+# Get mean age-related CFR across the whole pandemic
+RawCFR=colSums(deathdat[2:ncol(deathdat)])/colSums(casedat[2:ncol(casedat)])
 
-RawCFR=colSums(deathdat[2:20])/colSums(casedat[2:20])
-
-# Remove weekend effect,  assuming each weekday has same number of cases over the
+# Remove weekend effect, assuming each weekday has same number of cases over the
 # epidemic, and national averages hold regionally.
 days <-1:7
 weeks<-as.integer(length(comdat$allCases)/7)-1
@@ -653,7 +660,7 @@ for(i in 1:nrow(comdat)){
   }
 }
 
-# Fix Xmas anomaly over XMdays=12 days in comdat,regcases by linear fit
+# Fix Xmas anomaly over XMdays=12 days in comdat, regcases by linear fit
 Xmasav <- sum(comdat$allCases[XMstart:XMend])/XMdays
 Xmasgrad <- comdat$allCases[XMend]-comdat$allCases[XMstart]
 for (i in XMstart:XMend){
@@ -700,16 +707,21 @@ xcastage$'45_64' <-casedat$`45_49`+casedat$`50_54`+casedat$`55_59`+casedat$`60_6
 xcastage$'65_74' <-casedat$`65_69`+casedat$`70_74`
 xcastage$'75+' <-casedat$`75_79`+casedat$`80_84`+casedat$`85_89`+casedat$`90+`
 
-#  Combination required to go from 9 to 7 English regions
-regcases$NE_Yorks<-regcases$`North East`+regcases$`Yorkshire and The Humber`
-regcases$Midlands<-regcases$`East Midlands`+regcases$`West Midlands`
-regcases$England<-comdat$allCases
+# Combination required to go from 9 to 7 English regions
+regcases$NE_Yorks <- regcases$`North East` + regcases$`Yorkshire and The Humber`
+regcases$Midlands <- regcases$`East Midlands` + regcases$`West Midlands`
+regcases$England <- comdat$allCases
+
 # Reorder regcases
 regcases<-regcases[,c(1,2,3,4,5,6,7,9,10,8,23,26,27,11,12,13,14,15,16,17,18,19,20,21,22,24,25,28,29,30)]
+
 # Set false positive adjustment at 0.004, extrapolate tests if the last few days are missing
 comdat$fpCases <- comdat$allCases-0.004*as.integer(comdat$tests)
 
-comdat$regions<-regcases$London+regcases$`South East`+regcases$`South West`+regcases$NE_Yorks+regcases$Midlands+regcases$`North West`+regcases$`East of England`
+comdat$regions <- regcases$London + regcases$`South East` + regcases$`South West` +
+                  regcases$NE_Yorks + regcases$Midlands + regcases$`North West` +
+                  regcases$`East of England`
+
 # Plot only if running interactively
 if(interactive()){
 
@@ -725,10 +737,10 @@ if(interactive()){
     geom_line(aes(y=allCases), color="green", size=1.5, alpha=0.5) +
     geom_line(aes(y=fpCases),color="red", size=1.5, alpha=0.5) +
     xlab("Dates") + ylab("Cases") +
-    theme_minimal()
+    theme_bw()
 }
 
-CFR_All_ByAge=colSums(deathdat[2:20])/colSums(casedat[2:20])
+CFR_All_ByAge=colSums(deathdat[2:ncol(deathdat)])/colSums(casedat[2:ncol(casedat)])
 
 
 compartment=TRUE
@@ -773,15 +785,15 @@ if(compartment){
   #  Follow infections through ILI (Case) - SARI (Hospital) - Crit (ICU) - CritRecov (Hospital)- Deaths
 
   #  Zero dataframes.
-  #  Follow these cases to the end of the CDFs]
-  lengthofdata=  length(CASE$date)#
+  #  Follow these cases to the end of the CDFs
+  lengthofdata =  length(CASE$date)
   lengthofspread = length(ILIToRecovery)
 
   #extend ILI longer than deathdat to allow for predictions (eventually)
-  ILI<-deathdat
+  ILI <- deathdat
   for (i in lengthofdata:(lengthofdata+lengthofspread) ){
     ILI[i,(2:20)] = 0.0
-    ILI[i,1] =ILI$date[1]+i-1
+    ILI[i,1] = ILI$date[1]+i-1
   }
   cols <- names(ILI)[2:ncol(ILI)]
   ILI[cols] <-  0.0
@@ -820,7 +832,7 @@ if(compartment){
   # Current values will typically be negative, as they are sums of people leaving the compartment
   # Nobody changes age band.  Vectorize over distributions
 
-  #Age dependent transition probabilities a->ILI b->SARI c->Death
+  # Age dependent transition probabilities a->ILI b->SARI c->Death
   # apow+bpow+cpow=1 gives a fit to death data, not accounting for variant & vaccination effect
   # bpow/bfac conditions the hospital admissions by age Distribution is Approx U65=65-85=2 * 85+
   apow = 0.15
@@ -923,7 +935,7 @@ if(interactive()){
   lines(rowSums(SARI[2:20]+CRIT[2:20]+CRITREC[2:20]))
 }
 
-#  Smoothcasedat
+# Smoothcasedat
 smoothcases=smooth.spline(comdat$allCases, df=20)
 
 # Create a vector to hold the results for various R-numbers
@@ -934,7 +946,7 @@ dfR <- data.frame(x=1.0:length(comdat$date),
                   p35=ninit,  p40=ninit,  p45=ninit,  p50=ninit,  p55=ninit,  p60=ninit,  p65=ninit,
                   p70=ninit,  p75=ninit,  p80=ninit,  p85=ninit,  p90=ninit, x05=ninit, x15=ninit,
                   x25=ninit, x45=ninit, x65=ninit, x75=ninit, regions=ninit, smoothcasesR=ninit)
-#  #Ito, Stratanovitch and exponential calculus
+# Ito, Stratanovitch and exponential calculus
 # rawR averages cases over previous genTime days - assumes genTime is the same as infectious period
 
 # Check if there are any zero cases in the data
@@ -1074,9 +1086,6 @@ rat$smoothNI<-smooth.spline(rat$NI,df=spdf,w=sqrt(regcases$NI))$y
 rat$smoothEngland<-smooth.spline(rat$England,df=spdf,w=sqrt(regcases$England))$y
 smoothweightR$date<-comdat$date
 smoothweightRfp$date<-dfR$date
-
-
-
 
 smoothR1<-smooth.spline(dfR$bylogR[1:(lock1-1)],df=lock1/14)
 smoothR1$date<-dfR$date[1:lock1-1]
@@ -1367,9 +1376,9 @@ pdfpo=FALSE
 dfR[,c(2,9:27)]%>% filter(startplot < date & date < endplot) %>%
   pivot_longer(!date,names_to = "Age", values_to="R") %>%
   ggplot(aes(x=date, y=R, colour=Age)) +
-  coord_cartesian(ylim=c(0.5,1.9))+ geom_smooth(formula= y ~ x, method = "loess", span=0.3) +
+  coord_cartesian(ylim=c(0.5,1.9))+ geom_smooth(formula = y ~ x, method = "loess", span=0.3) +
   guides(color = "none") + facet_wrap(vars(Age)) +
-  theme(axis.text.x=element_text(angle=90,hjust=1)) +xlab("Date")
+  theme(axis.text.x=element_text(angle=90,hjust=1)) + xlab("Date")
 
 
 
@@ -1527,56 +1536,58 @@ Predict$SmoothRlog=Predict$SmoothRlog*sum(comdat$allCases)/sum(Predict$SmoothRlo
 Predict$MeanR=Predict$MeanR*sum(comdat$allCases)/sum(Predict$MeanR)
 
 if(interactive()){
+
   sum(Predict$MeanR)
   sum(Predict$SmoothRlog)
   sum(Predict$SmoothRito)
   sum(Predict$smoothcasesR)
+
+  plot(comdat$allCases,x=Predict$date,xlab="Date",ylab="Cases backdeduced from R"
+       ,xlim=c(Predict$date[(startpred+10)],Predict$date[350]))
+  lines(Predict$c,x=Predict$date, col="black",lwd=2)
+  lines(Predict$SmoothRlog,x=Predict$date, col="blue",lwd=2)
+  lines(Predict$SmoothRito,x=Predict$date, col="violet",lwd=2)
+  lines(Predict$MeanR,x=Predict$date, col="green",lwd=2)
+  lines(Predict$smoothcasesR,x=Predict$date, col="red",lwd=2)
+
+  dfR$meanR=meanR
+  plot(dfR$bylogR,x=dfR$date,xlab="",ylab="R"
+       ,xlim=c(dfR$date[(startpred)],dfR$date[350]),ylim=c(-1,3))
+  lines(dfR$smoothRlog,x=dfR$date, col="blue",lwd=2)
+  lines(dfR$smoothRito,x=dfR$date, col="violet",lwd=2)
+  lines(dfR$meanR,x=dfR$date, col="green",lwd=2)
+  lines(dfR$smoothcasesR,x=dfR$date, col="red",lwd=2)
+
+  # ggplot version of the same graph
+  tibble(date=comdat$date,c=Predict$c,
+         smoothcasesR=Predict$smoothcasesR,
+         SmoothRlog=Predict$SmoothRlog,
+         SmoothRito=Predict$SmoothRito,
+         MeanR=Predict$MeanR) ->tmpdat
+  ggplot(comdat,aes(x=date)) + geom_point(aes(y=allCases),alpha=0.5) +
+    geom_line(data=tmpdat, aes(x=date,y=c),colour="black",alpha=0.75) +
+    geom_line(data=tmpdat, aes(x=date,y=SmoothRlog),colour="blue",alpha=0.75) +
+    geom_line(data=tmpdat, aes(x=date,y=SmoothRito),colour="violet",alpha=0.75) +
+    geom_line(data=tmpdat, aes(x=date,y=MeanR),colour="green",alpha=0.75) +
+    geom_line(data=tmpdat, aes(x=date,y=smoothcasesR),colour="red",alpha=0.75) +
+    xlab("Date") + ylab("Cases backdeduced from R") + theme_bw()
+
+  tibble(date=comdat$date,c=Predict$c,
+         smoothcasesR=dfR$smoothcasesR,
+         SmoothRlog=dfR$smoothRlog,
+         SmoothRito=dfR$smoothRito,
+         bylogR=dfR$bylogR,
+         MeanR=mean(dfR$bylogR) )->tmpdat
+  ggplot(comdat,aes(x=date)) +
+    geom_point(data=tmpdat, aes(x=date,y=bylogR),colour="black",alpha=0.75) +
+    geom_line(data=tmpdat, aes(x=date,y=SmoothRlog),colour="blue",alpha=0.75) +
+    geom_line(data=tmpdat, aes(x=date,y=SmoothRito),colour="violet",alpha=0.75) +
+    geom_line(data=tmpdat, aes(x=date,y=MeanR),colour="green",alpha=0.75) +
+    geom_line(data=tmpdat, aes(x=date,y=smoothcasesR),colour="red",alpha=0.75) +
+    xlab("Date") + ylab("R") + theme_bw()
+  rm(tmpdat)
+
 }
-
-plot(comdat$allCases,x=Predict$date,xlab="Date",ylab="Cases backdeduced from R"
-     ,xlim=c(Predict$date[(startpred+10)],Predict$date[350]))
-lines(Predict$c,x=Predict$date, col="black",lwd=2)
-lines(Predict$SmoothRlog,x=Predict$date, col="blue",lwd=2)
-lines(Predict$SmoothRito,x=Predict$date, col="violet",lwd=2)
-lines(Predict$MeanR,x=Predict$date, col="green",lwd=2)
-lines(Predict$smoothcasesR,x=Predict$date, col="red",lwd=2)
-
-dfR$meanR=meanR
-plot(dfR$bylogR,x=dfR$date,xlab="",ylab="R"
-     ,xlim=c(dfR$date[(startpred)],dfR$date[350]),ylim=c(-1,3))
-lines(dfR$smoothRlog,x=dfR$date, col="blue",lwd=2)
-lines(dfR$smoothRito,x=dfR$date, col="violet",lwd=2)
-lines(dfR$meanR,x=dfR$date, col="green",lwd=2)
-lines(dfR$smoothcasesR,x=dfR$date, col="red",lwd=2)
-
-# ggplot version of the same graph
-tibble(date=comdat$date,c=Predict$c,
-       smoothcasesR=Predict$smoothcasesR,
-       SmoothRlog=Predict$SmoothRlog,
-       SmoothRito=Predict$SmoothRito,
-       MeanR=Predict$MeanR) ->tmpdat
-ggplot(comdat,aes(x=date)) + geom_point(aes(y=allCases),alpha=0.5) +
-  geom_line(data=tmpdat, aes(x=date,y=c),colour="black",alpha=0.75) +
-  geom_line(data=tmpdat, aes(x=date,y=SmoothRlog),colour="blue",alpha=0.75) +
-  geom_line(data=tmpdat, aes(x=date,y=SmoothRito),colour="violet",alpha=0.75) +
-  geom_line(data=tmpdat, aes(x=date,y=MeanR),colour="green",alpha=0.75) +
-  geom_line(data=tmpdat, aes(x=date,y=smoothcasesR),colour="red",alpha=0.75) +
-  xlab("Date") + ylab("Cases backdeduced from R")
-
-tibble(date=comdat$date,c=Predict$c,
-       smoothcasesR=dfR$smoothcasesR,
-       SmoothRlog=dfR$smoothRlog,
-       SmoothRito=dfR$smoothRito,
-       bylogR=dfR$bylogR,
-       MeanR=mean(dfR$bylogR) )->tmpdat
-ggplot(comdat,aes(x=date)) +
-  geom_point(data=tmpdat, aes(x=date,y=bylogR),colour="black",alpha=0.75) +
-  geom_line(data=tmpdat, aes(x=date,y=SmoothRlog),colour="blue",alpha=0.75) +
-  geom_line(data=tmpdat, aes(x=date,y=SmoothRito),colour="violet",alpha=0.75) +
-  geom_line(data=tmpdat, aes(x=date,y=MeanR),colour="green",alpha=0.75) +
-  geom_line(data=tmpdat, aes(x=date,y=smoothcasesR),colour="red",alpha=0.75) +
-  xlab("Date") + ylab("R")
-rm(tmpdat)
 
 # Load code to function to output to the web-ui interface
 # From stackoverflow: 6456501
@@ -1927,6 +1938,8 @@ if(compartment){
   region="England"
   R_BestGuess=R_England_BestGuess
   #  For loop over time, predCASE using R numbers
+  lengthofdata <- nrow(casedat)
+  agerange <- (2:ncol(ILI))
   predCASE<-ILI[lengthofdata,(1:20)]
   predCASE[1,(2:20)]<-CASE[lengthofdata,(2:20)] #  Growth rate by age group
   predCASE[1,1]=enddate
@@ -1989,7 +2002,7 @@ if(compartment){
     # R is the same in all age groups
 
     if(R_BestGuess > 1.0) {R_BestGuess=(R_BestGuess-1)*0.95+1.0}
-   
+
     predCASE[(ipred+1),(2:20)]<-predCASE[ipred,(2:20)]*exp((R_BestGuess-1)/genTime)
     predCASE[ipred+1,1]<-startdate+iday
     ipred=ipred+1
@@ -1997,7 +2010,7 @@ if(compartment){
   }
 }
 
-#CrystalCast output - use CC.R
+# CrystalCast output - use CC.R
 
 #Monitoring plots
 startplot=startdate+3
