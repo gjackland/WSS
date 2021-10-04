@@ -34,7 +34,7 @@ CC <- data.frame(
   "Month of Value" = month(enddate-2),
   "Year of Value" = year(enddate-2),
   AgeBand = ageband,
-  Geography = region,
+  Geography = "Scotland",
   ValueType = valuetype,
   Value = R_Scotland_BestGuess,
   "Quantile 0.05" = R_Scotland_Quant[1],
@@ -505,11 +505,10 @@ for (d in 4:(length(rat$date)-3)){
 
 today <- today()
 ageband <-  "All"
-region="Scotland"
 CCdate$Scenario="MTP"
 CCdate$Geography=region
 CCdate$ValueType="hospital_inc"
-#  Log. Errors from fluctuations time 4 for uncertainty
+#  Log. Errors from fluctuations time 4 for methodological uncertainty
 #  adjust for recent discrepancy
 
 
@@ -541,5 +540,5 @@ for (d in 8:(nrow(DEATH)-22)){
   CC <- rbind(CC, CCdate)
 }
 
-write.xlsx(CC, file = "Data/WSS_CC.xlsx", sheetName = "WSS", rowNames = FALSE)
+write.xlsx(CC, file = "Data/jnk.xlsx", sheetName = "WSS", rowNames = FALSE)
 
