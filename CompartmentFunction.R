@@ -6,50 +6,9 @@
 # will only be made to copies of the data (R passes by value) and will not
 # propagate to the data passed in.
 
-# Call the function
-out <- Compartment(casedat, deathdat, covidsimAge, RawCFR, comdat)
-
-# Unpack the values returned
-DEATH <- out$DEATH
-RECOV <- out$RECOV
-MILD <- out$MILD
-oldMILD <- out$oldMILD
-newMILD <- out$newMILD
-ILI <- out$ILI
-oldILI <- out$oldILI
-newILI <- out$newILI
-SARI <- out$SARI
-oldSARI <-  out$oldSARI
-newSARI <- out$newSARI
-CRIT <- out$CRIT
-oldCRIT <- out$oldCRIT
-newCRIT <- out$newCRIT
-CRITREC <- out$CRITREC
-oldCRITREC <- out$oldCRITREC
-newCRITREC <- out$newCRITREC
-CASE <- out$CASE
-pCtoD <- out$pCtoD
-pItoS <- out$pItoS
-pStoC <-  out$pStoC
-pStoD <- out$pStoD
-pTtoI <-  out$pTtoI
-MildToRecovery <-  out$MildToRecovery
-xday <- out$xday
-vacCFR <- out$vacCFR
-ILIToSARI <-  out$ILIToSARI
-ILIToRecovery <- out$ILIToRecovery
-SARIToCritical <- out$SARIToCritical
-SARIToDeath <- out$SARIToDeath
-SARIToRecovery <-  out$SARIToRecovery
-CriticalToDeath <- out$CriticalToDeath
-CriticalToCritRecov <- out$CriticalToCritRecov
-
-# Remove the list construct
-rm(out)
-
 # Function Definition - naming function variables to ensure it is not taking
 # values from the calling space
-Compartment <- function(cases, deaths, csimAge, rCFR, cdat){
+Compartment <- function(cases,  csimAge, rCFR, cdat){
 
   # Create a list to output various data frames
   out <- list()
@@ -100,8 +59,8 @@ Compartment <- function(cases, deaths, csimAge, rCFR, cdat){
   lengthofdata <- nrow(CASE)
   lengthofspread <- length(ILIToRecovery)
 
-  #extend ILI longer than deaths to allow for predictions (eventually)
-  ILI <- deaths
+  #extend ILI longer than cases to allow for predictions (eventually)
+  ILI <- cases
   for (i in lengthofdata:(lengthofdata+lengthofspread) ){
     ILI[i,(2:ncol(ILI))] <-  0.0
     ILI[i,1] <- ILI$date[1]+i-1

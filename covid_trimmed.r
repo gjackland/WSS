@@ -28,7 +28,7 @@ library(lubridate, warn.conflicts = FALSE, quietly = TRUE)
 library(zoo, warn.conflicts = FALSE, quietly = TRUE)
 library(RColorBrewer, warn.conflicts = FALSE, quietly = TRUE)
 
-source(SampleCompartmentFunction.R)
+source("CompartmentFunction.R")
 
 # Set the working directory to be the same as to where the script is run from.
 setwd(".")
@@ -746,7 +746,7 @@ CFR_All_ByAge=colSums(deathdat[2:ncol(deathdat)])/colSums(casedat[2:ncol(casedat
 
 
 #  Compartment model now done with a function
-out <- Compartment(casedat, deathdat, covidsimAge, RawCFR, comdat)
+out <- Compartment(casedat,  covidsimAge, RawCFR, comdat)
 # Unpack the data
 
 # Unpack the values returned
@@ -765,7 +765,8 @@ CRIT <- out$CRIT
 oldCRIT <- out$oldCRIT
 newCRIT <- out$newCRIT
 CRITREC <- out$CRITREC
-newCRITREC <- out$CRITREC
+newCRITREC <- out$newCRITREC
+oldCRITREC <- out$oldCRITREC
 CASE <- out$CASE
 pCtoD <- out$pCtoD
 pItoS <- out$pItoS
@@ -782,6 +783,7 @@ SARIToDeath <- out$SARIToDeath
 SARIToRecovery <-  out$SARIToRecovery
 CriticalToDeath <- out$CriticalToDeath
 CriticalToCritRecov <- out$CriticalToCritRecov
+CritRecovToRecov <- out$CritRecovToRecov
 # Remove the list construct
 rm(out)
 
