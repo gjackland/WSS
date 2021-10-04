@@ -1,5 +1,5 @@
 # Try to ensure data encapsulation - do not assume any values for parameters
-# that not explicitly passed into the function. Also, do not assume any values
+# that not explicitly passed into the function. Also, do not assume that any values
 # that are set in the function will be available in the space from where the
 # function is called from. In order to pass back multiple data frames a list
 # will be used to output multiple values. Modifications to the data passed in
@@ -22,9 +22,11 @@ SARI <- out$SARI
 oldSARI <-  out$oldSARI
 newSARI <- out$newSARI
 CRIT <- out$CRIT
+oldCRIT <- out$oldCRIT
 newCRIT <- out$newCRIT
 CRITREC <- out$CRITREC
-newCRITREC <- out$CRITREC
+oldCRITREC <- out$oldCRITREC
+newCRITREC <- out$newCRITREC
 CASE <- out$CASE
 pCtoD <- out$pCtoD
 pItoS <- out$pItoS
@@ -245,8 +247,10 @@ Compartment <- function(cases, deaths, csimAge, rCFR, cdat){
   out$oldSARI <- oldSARI
   out$newSARI <- newSARI
   out$CRIT <- CRIT
+  out$oldCRIT <- oldCRIT
   out$newCRIT <- newCRIT
   out$CRITREC <- CRITREC
+  out$oldCRITREC <- oldCRITREC
   out$newCRITREC <- newCRITREC
   out$CASE <-  CASE
   out$pCtoD <- pCtoD
@@ -264,7 +268,7 @@ Compartment <- function(cases, deaths, csimAge, rCFR, cdat){
   out$SARIToRecovery <-  SARIToRecovery
   out$CriticalToDeath <-  CriticalToDeath
   out$CriticalToCritRecov <-  CriticalToCritRecov
-
+  out$CritRecovToRecov <- CritRecovToRecov
   return(out)
 
 }# End of compartment function
