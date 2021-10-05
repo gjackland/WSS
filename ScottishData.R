@@ -351,6 +351,7 @@ pckg <- package_show("covid-19-wider-impacts-deaths", as ="table")
 #  CASE is the input cases which get WSS'ed.  
 # CASE=casedat produces estimates for UK, this already happens at the end of the main code.  CASE=scotage is for Scotland
 source("CompartmentFunction.R")
+
 casedat=scotage
 deathdat=scotdeath
 R_BestGuess=R_Scotland_BestGuess

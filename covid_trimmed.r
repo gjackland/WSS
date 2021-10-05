@@ -28,8 +28,8 @@ library(lubridate, warn.conflicts = FALSE, quietly = TRUE)
 library(zoo, warn.conflicts = FALSE, quietly = TRUE)
 library(RColorBrewer, warn.conflicts = FALSE, quietly = TRUE)
 
-source("CompartmentFunction.R")
 
+source("CompartmentFunction.R")
 # Set the working directory to be the same as to where the script is run from.
 setwd(".")
 
