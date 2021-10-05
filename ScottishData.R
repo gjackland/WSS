@@ -271,13 +271,15 @@ scotagedat[,c(1,3,5,7,8, 10,11)] %>% filter(Sex=="Total") %>% filter(Date>=cased
 jnk %>% filter(AgeGroup == "0 to 14") -> jnk2
 
 #  Scottish data is in broader age groups.  To be compatible with the code,
-#  subdivide it (evenly)  into 5 year bands.   
+#  subdivide it  into 5 year bands.  Use the UK casedat & deathdat to set 
+#  up correct array sizes, and the demographics
 
-
-sum24=sum(casedat[2:4])
 
 scotage <-casedat
 scotdeath <-deathdat
+
+#  Fractions in each 5 year age group same as in England (casedat)
+sum24=sum(casedat[2:4])
 
 scotage$'05_09' <-jnk2$DailyPositive*sum(casedat$`05_09`)/sum24
 scotage$`00_04` <- jnk2$DailyPositive*sum(casedat$`00_04`)/sum24
@@ -335,8 +337,8 @@ sum24=sum(casedat[19:20])
 sumRIP=sum(deathdat[19:20])
 scotage$`85_89` <- jnk2$DailyPositive*sum(casedat$`85_89`)/sum24
 scotage$`90+` <- jnk2$DailyPositive*sum(casedat$`90+`)/sum24
-scotdeath$`85_89` <- jnk2$DailyDeaths*sum(casedat$`85_89`)/sumRIP
-scotdeath$`90+` <- jnk2$DailyDeaths*sum(casedat$`90+`)/sumRIP
+scotdeath$`85_89` <- jnk2$DailyDeaths*sum(deathdat$`85_89`)/sumRIP
+scotdeath$`90+` <- jnk2$DailyDeaths*sum(deathdat$`90+`)/sumRIP
 rm(sum24,sumRIP,jnk,jnk2)
 scotage[is.na(scotage)] <- 0.01
 scotage[scotage==Inf] <- 0.01
@@ -352,12 +354,10 @@ pckg <- package_show("covid-19-wider-impacts-deaths", as ="table")
 # CASE=casedat produces estimates for UK, this already happens at the end of the main code.  CASE=scotage is for Scotland
 source("CompartmentFunction.R")
 
-casedat=scotage
-deathdat=scotdeath
 R_BestGuess=R_Scotland_BestGuess
 region="Scotland"
 Hospital<-scotHospital
-RawCFR=colSums(deathdat[2:20])/colSums(CASE[2:20])
+RawCFR=colSums(scotdeath[2:20])/colSums(scotage[2:20])
 
 
 
