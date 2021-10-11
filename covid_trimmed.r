@@ -1535,7 +1535,7 @@ if(CrystalCast){
 #####  Figures and analysis for https://www.medrxiv.org/content/10.1101/2021.04.14.21255385v1
 # Date not encapuslated and broken because of hardcoded dates
 # Nothing should be returned or changed by this analysis
-medout<-MedrxivPaper()
+if(FALSE) medout<-MedrxivPaper()
 
 
 ################################################################
@@ -1641,7 +1641,7 @@ lines(rowSums(newMILD[11:20]+newILI[11:20]),col="red",x=newMILD$date,type="l",xl
 
 
 plot(HospitalData$covidOccupiedMVBeds,x=HospitalData$date,ylab="ICU Occupation",xlab="Date",xlim=c(startplot,endplot))
-lines(rowSums(CRIT[2:20]),col="blue",x=CRIT$date)
+lines(rowSums(CRIT[2:20]*0.5),col="blue",x=CRIT$date)
 
 plot(rowSums(DEATH[2:20]),col="blue",x=DEATH$date, type="l",ylab="Deaths"
      ,xlab="Date",xlim=c(startplot,endplot-11))

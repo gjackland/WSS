@@ -473,51 +473,86 @@ for (iday in ((lengthofdata+1):(lengthofdata+predtime))){
   ipred=ipred+1
   # End of compartment section
 }
-
-#CrystalCast output - use CC.R
-
+today <- today()
+#CrystalCast output - use CC.R format
+CCScot <- data.frame(
+  Group = "Edinburgh",
+  Model = "WSS",
+  Scenario = "MTP",
+  ModelType = "Cases",
+  Version = "0.1",
+  "Creation Day" = day(today),
+  "Creation Month" = month(today),
+  "Creation Year" = year(today),
+  "Day of Value" = day(enddate-2),
+  "Month of Value" = month(enddate-2),
+  "Year of Value" = year(enddate-2),
+  AgeBand = "All",
+  Geography = "Scotland",
+  ValueType = "R",
+  Value = R_Scotland_BestGuess,
+  "Quantile 0.05" = R_Scotland_Quant[1],
+  "Quantile 0.1" = "",
+  "Quantile 0.15" = "",
+  "Quantile 0.2" = "",
+  "Quantile 0.25" = R_Scotland_Quant[2],
+  "Quantile 0.3" = "",
+  "Quantile 0.35" = "",
+  "Quantile 0.4" = "",
+  "Quantile 0.45" = "",
+  "Quantile 0.5" = R_Scotland_Quant[3],
+  "Quantile 0.55" = "",
+  "Quantile 0.6" = "",
+  "Quantile 0.65" = "",
+  "Quantile 0.7" = "",
+  "Quantile 0.75" = R_Scotland_Quant[4],
+  "Quantile 0.8" = "",
+  "Quantile 0.85" = "",
+  "Quantile 0.9" = "",
+  "Quantile 0.95" = R_Scotland_Quant[5],
+  check.names = FALSE
+)
 
 #  Medium term projections
 
 
 today <- today()
 ageband <-  "All"
-CCdate$Scenario="MTP"
-CCdate$Geography=region
-CCdate$ValueType="hospital_inc"
+CCScot$Scenario="MTP"
+CCScot$ValueType="hospital_inc"
 #  Log. Errors from fluctuations time 4 for methodological uncertainty
 #  adjust for recent discrepancy
 
 
 for (d in 8:(nrow(newSARI)-22)){
-  CCdate$Value = sum(newSARI[d,2:20])
-  CCdate$"Quantile 0.05"=max(0,CCdate$Value*(1-12*sqrt(sum(newSARI[(d-6):d,2:20])/7)/CCdate$Value))
-  CCdate$"Quantile 0.25"=max(0,CCdate$Value*(1-4*sqrt(sum(newSARI[(d-6):d,2:20])/7)/CCdate$Value))
-  CCdate$"Quantile 0.5"=CCdate$Value
-  CCdate$"Quantile 0.75"=CCdate$Value*(1+4*sqrt(sum(newSARI[(d-6):d,2:20])/7)/CCdate$Value)
-  CCdate$"Quantile 0.95"=CCdate$Value*(1+12*sqrt(sum(newSARI[(d-7):d,2:20])/7)/CCdate$Value)
-  CCdate$"Day of Value" = day(newSARI$date[d])
-  CCdate$"Month of Value" = month(newSARI$date[d])
-  CCdate$"Year of Value" = year(newSARI$date[d])
+  CCScot$Value = sum(newSARI[d,2:20])
+  CCScot$"Quantile 0.05"=max(0,CCScot$Value*(1-12*sqrt(sum(newSARI[(d-6):d,2:20])/7)/CCScot$Value))
+  CCScot$"Quantile 0.25"=max(0,CCScot$Value*(1-4*sqrt(sum(newSARI[(d-6):d,2:20])/7)/CCScot$Value))
+  CCScot$"Quantile 0.5"=CCScot$Value
+  CCScot$"Quantile 0.75"=CCScot$Value*(1+4*sqrt(sum(newSARI[(d-6):d,2:20])/7)/CCScot$Value)
+  CCScot$"Quantile 0.95"=CCScot$Value*(1+12*sqrt(sum(newSARI[(d-7):d,2:20])/7)/CCScot$Value)
+  CCScot$"Day of Value" = day(newSARI$date[d])
+  CCScot$"Month of Value" = month(newSARI$date[d])
+  CCScot$"Year of Value" = year(newSARI$date[d])
   # Add the new row
-  CC <- rbind(CC, CCdate)
+  CC <- rbind(CC, CCScot)
 }
-CCdate$ValueType="death_inc_line"
+CCScot$ValueType="death_inc_line"
 for (d in 8:(nrow(DEATH)-22)){
-  CCdate$Value = sum(DEATH[d,2:20])
-  CCdate$"Quantile 0.05"=max(0,CCdate$Value*(1-12*sqrt(sum(DEATH[(d-6):d,2:20])/7)/CCdate$Value))
-  CCdate$"Quantile 0.25"=max(0,CCdate$Value*(1-4*sqrt(sum(DEATH[(d-6):d,2:20])/7)/CCdate$Value))
-  CCdate$"Quantile 0.5"=CCdate$Value
-  CCdate$"Quantile 0.75"=CCdate$Value*(1+4*sqrt(sum(DEATH[(d-6):d,2:20])/7)/CCdate$Value)
-  CCdate$"Quantile 0.95"=CCdate$Value*(1+12*sqrt(sum(DEATH[(d-7):d,2:20])/7)/CCdate$Value)
-  CCdate$"Day of Value" = day(DEATH$date[d])
-  CCdate$"Month of Value" = month(DEATH$date[d])
-  CCdate$"Year of Value" = year(DEATH$date[d])
-  # Add the new row
-  CC <- rbind(CC, CCdate)
+  CCScot$Value = sum(DEATH[d,2:20])
+  CCScot$"Quantile 0.05"=max(0,CCScot$Value*(1-12*sqrt(sum(DEATH[(d-6):d,2:20])/7)/CCScot$Value))
+  CCScot$"Quantile 0.25"=max(0,CCScot$Value*(1-4*sqrt(sum(DEATH[(d-6):d,2:20])/7)/CCScot$Value))
+  CCScot$"Quantile 0.5"=CCScot$Value
+  CCScot$"Quantile 0.75"=CCScot$Value*(1+4*sqrt(sum(DEATH[(d-6):d,2:20])/7)/CCScot$Value)
+  CCScot$"Quantile 0.95"=CCScot$Value*(1+12*sqrt(sum(DEATH[(d-7):d,2:20])/7)/CCScot$Value)
+  CCScot$"Day of Value" = day(DEATH$date[d])
+  CCScot$"Month of Value" = month(DEATH$date[d])
+  CCScot$"Year of Value" = year(DEATH$date[d])
+  # Add the new row to CC
+  CC <- rbind(CC, CCScot)
 }
 #  Crystalcast format output  
-write.xlsx(CC, file = "Data/compartment.xlsx", sheetName = "WSS", rowNames = FALSE)
+write.xlsx(CCScot, file = "Data/compartment_scot.xlsx", sheetName = "WSS", rowNames = FALSE)
 
 
 
