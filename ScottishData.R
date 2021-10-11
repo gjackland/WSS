@@ -4,7 +4,6 @@ library(readr, warn.conflicts = FALSE, quietly = TRUE)
 library(dplyr, warn.conflicts = FALSE, quietly = TRUE)
 library(tidyr, warn.conflicts = FALSE, quietly = TRUE)
 
-rm(scotage)
 # Scottish regions --------------------------------------------------------
 
 # List from https://en.wikipedia.org/wiki/Local_government_in_Scotland
@@ -477,9 +476,9 @@ for (iday in ((lengthofdata+1):(lengthofdata+predtime))){
 #CrystalCast output - use CC.R
 
 
-#  Medium term projections
+#  Medium term projections add to CC.R if already run
 
-
+if(exists(CC)){
 today <- today()
 ageband <-  "All"
 CCdate$Scenario="MTP"
@@ -518,7 +517,7 @@ for (d in 8:(nrow(DEATH)-22)){
 }
 #  Crystalcast format output  
 write.xlsx(CC, file = "Data/compartment.xlsx", sheetName = "WSS", rowNames = FALSE)
-
+}
 
 
 
@@ -531,12 +530,13 @@ points(Hospital$newAdmissions,x=Hospital$Date,ylab="Scottish Hospital Cases",xla
 
 plot(Hospital$newAdmissions,x=Hospital$Date,ylab="Scottish Hospital Cases",xlab="Date",xlim=c(Hospital$Date[1],(Hospital$Date[350]+48)))
 lines(rowSums(newSARI[2:20]),x=SARI$date,col='red')
-plot(rowSums(CASE[2:20]),x=deathdat$date,ylab="Cases",xlab="Date")
+plot(rowSums(CASE[2:20]),x=CASE$date,ylab="Cases",xlab="Date")
 lines(rowSums(newMILD[2:20]+newILI[2:20]),col="red",x=newMILD$date)
 
-plot(Hospital$ICUAdmissions,x=deathdat$date,ylab="ICU Occupation",xlab="Date")
-lines(rowSums(newCRIT[2:20]),col="blue",x=CRIT$date)
+
+plot(Hospital$ICUAdmissions,x=deathdat$date,ylab="ICU Admissions",xlab="Date")
+lines(rowSums(newCRIT[2:20]),col="blue",x=newCRIT$date)
 
 plot(rowSums(DEATH[2:20]),col="blue",x=DEATH$date,type="l",
      ylab="Deaths",xlab="Date")
-points(rowSums(deathdat[2:20]),x=deathdat$date,ylab="Deaths",xlab="Date")
+points(rowSums(scotdeath[2:20]),x=scotdeath$date,ylab="Deaths",xlab="Date")

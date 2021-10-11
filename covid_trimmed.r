@@ -1535,7 +1535,7 @@ if(CrystalCast){
 #####  Figures and analysis for https://www.medrxiv.org/content/10.1101/2021.04.14.21255385v1
 # Date not encapuslated and broken because of hardcoded dates
 # Nothing should be returned or changed by this analysis
-medout<-MedrxivPaper()
+if(FALSE){medout<-MedrxivPaper()}
 
 
 ################################################################
