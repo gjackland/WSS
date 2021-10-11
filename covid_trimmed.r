@@ -1534,15 +1534,18 @@ if(CrystalCast){
 
 #####  Figures and analysis for https://www.medrxiv.org/content/10.1101/2021.04.14.21255385v1
 # Date not encapuslated and broken because of hardcoded dates
-# Nothing should be returned or changed by this analysis
-if(FALSE) medout<-MedrxivPaper()
+#othing should be returned or changed by this analysis
+
+
+if(FALSE){medout<-MedrxivPaper()}
+
 
 
 ################################################################
 ###  Finally, Use all this to make predictions for England (Scotland & Regions in separate compartment.R code)
 ###Assume that R and lethality are constants
 
-{
+
   predtime = 28
   region="England"
   R_BestGuess=R_England_BestGuess
@@ -1617,7 +1620,7 @@ if(FALSE) medout<-MedrxivPaper()
     ipred=ipred+1
     # End of compartment section
   }
-}
+
 
 # CrystalCast output - use CC.R
 
