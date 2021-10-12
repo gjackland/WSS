@@ -31,6 +31,8 @@ library(RColorBrewer, warn.conflicts = FALSE, quietly = TRUE)
 
 source("CompartmentFunction.R")
 source("medrxiv.R")
+source("Predictions.R")
+source("age_pdfplot.R")
 
 # Set the working directory to be the same as to where the script is run from.
 setwd(".")
@@ -490,7 +492,7 @@ coltypes <- cols(
 # Read in the data - this data is obtained by a different script.
 Rest <- read_csv(file="data/R_estimate.csv", col_types = coltypes)
 
-# Scottish Daily Case Trends By Health Board
+# Scottish Daily Case Trends By Health Board moved to ScottishData
 #
 # See: https://www.opendata.nhs.scot/dataset/covid-19-in-scotland/resource/2dd8534b-0a6f-4744-9253-9565d62f96c2
 #
@@ -748,46 +750,45 @@ CFR_All_ByAge=colSums(deathdat[2:ncol(deathdat)])/colSums(casedat[2:ncol(casedat
 
 
 #  Compartment model now done with a function
-out <- Compartment(casedat,  covidsimAge, RawCFR, comdat)
+comp <- Compartment(casedat,  covidsimAge, RawCFR, comdat)
 # Unpack the data
 
 # Unpack the values returned
-DEATH <- out$DEATH
-RECOV <- out$RECOV
-MILD <- out$MILD
-oldMILD <- out$oldMILD
-newMILD <- out$newMILD
-ILI <- out$ILI
-oldILI <- out$oldILI
-newILI <- out$newILI
-SARI <- out$SARI
-oldSARI <-  out$oldSARI
-newSARI <- out$newSARI
-CRIT <- out$CRIT
-oldCRIT <- out$oldCRIT
-newCRIT <- out$newCRIT
-CRITREC <- out$CRITREC
-newCRITREC <- out$newCRITREC
-oldCRITREC <- out$oldCRITREC
-CASE <- out$CASE
-pCtoD <- out$pCtoD
-pItoS <- out$pItoS
-pStoC <-  out$pStoC
-pStoD <- out$pStoD
-pTtoI <-  out$pTtoI
-MildToRecovery <-  out$MildToRecovery
-xday <- out$xday
-vacCFR <- out$vacCFR
-ILIToSARI <-  out$ILIToSARI
-ILIToRecovery <- out$ILIToRecovery
-SARIToCritical <- out$SARIToCritical
-SARIToDeath <- out$SARIToDeath
-SARIToRecovery <-  out$SARIToRecovery
-CriticalToDeath <- out$CriticalToDeath
-CriticalToCritRecov <- out$CriticalToCritRecov
-CritRecovToRecov <- out$CritRecovToRecov
+DEATH <- comp$DEATH
+RECOV <- comp$RECOV
+MILD <- comp$MILD
+oldMILD <- comp$oldMILD
+newMILD <- comp$newMILD
+ILI <- comp$ILI
+oldILI <- comp$oldILI
+newILI <- comp$newILI
+SARI <- comp$SARI
+oldSARI <-  comp$oldSARI
+newSARI <- comp$newSARI
+CRIT <- comp$CRIT
+oldCRIT <- comp$oldCRIT
+newCRIT <- comp$newCRIT
+CRITREC <- comp$CRITREC
+newCRITREC <- comp$newCRITREC
+oldCRITREC <- comp$oldCRITREC
+CASE <- comp$CASE
+pCtoD <- comp$pCtoD
+pItoS <- comp$pItoS
+pStoC <-  comp$pStoC
+pStoD <- comp$pStoD
+pTtoI <-  comp$pTtoI
+MildToRecovery <-  comp$MildToRecovery
+xday <- comp$xday
+vacCFR <- comp$vacCFR
+ILIToSARI <-  comp$ILIToSARI
+ILIToRecovery <- comp$ILIToRecovery
+SARIToCritical <- comp$SARIToCritical
+SARIToDeath <- comp$SARIToDeath
+SARIToRecovery <-  comp$SARIToRecovery
+CriticalToDeath <- comp$CriticalToDeath
+CriticalToCritRecov <- comp$CriticalToCritRecov
+CritRecovToRecov <- comp$CritRecovToRecov
 # Remove the list construct
-rm(out)
 
 
 # End of compartment section
@@ -795,13 +796,13 @@ rm(out)
 # Monitoring plots
 if(interactive()){
   plot(rowSums(deathdat[2:20]))
-  lines(rowSums(DEATH[2:20]),col="blue")
+  lines(rowSums(comp$DEATH[2:20]),col="blue")
   plot(HospitalData$covidOccupiedMVBeds)
-  lines(rowSums(CRIT[2:20]),col="blue")
+  lines(rowSums(comp$CRIT[2:20]),col="blue")
   plot(HospitalData$newAdmissions)
-  lines(rowSums(newSARI[2:20]),col="blue")
+  lines(rowSums(comp$newSARI[2:20]),col="blue")
   plot(HospitalData$hospitalCases)
-  lines(rowSums(SARI[2:20]+CRIT[2:20]+CRITREC[2:20]))
+  lines(rowSums(comp$SARI[2:20]+comp$CRIT[2:20]+comp$CRITREC[2:20]))
 }
 
 # Smoothcasedat
@@ -819,11 +820,11 @@ dfR <- data.frame(x=1.0:length(comdat$date),
 # rawR averages cases over previous genTime days - assumes genTime is the same as infectious period
 
 # Check if there are any zero cases in the data
-if(any(CASE==0)){
-  for(name in names(CASE)){
-    if(any(CASE[name]==0)){
+if(any(comp$CASE==0)){
+  for(name in names(comp$CASE)){
+    if(any(comp$CASE[name]==0)){
       warning("Zero values found for ",name," for the date(s) ",
-              paste(CASE[["date"]][which(CASE[name]==0)],collapse = ", "),".")
+              paste(comp$CASE[["date"]][which(comp$CASE[name]==0)],collapse = ", "),".")
     }
   }
 }
@@ -1249,122 +1250,11 @@ dfR[,c(2,9:27)]%>% filter(startplot < date & date < endplot) %>%
   guides(color = "none") + facet_wrap(vars(Age)) +
   theme(axis.text.x=element_text(angle=90,hjust=1)) + xlab("Date")
 
+#  Function to generate plots of R by age
 
+if(interactive()&pdfpo){age_pdfplot(dfR,Rest,sagedelay,comdat,spdf)}
 
-if(pdfpo){
-
-if(interactive()){
-  pdf(file = 'p05.pdf')
-  plot(smooth.spline(dfR$p05,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number, 05-09",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),xlim=plotdate,cex.lab=1.6, cex.axis=1.6, cex.main=1.6, cex.sub=1.6)
-  lines(y=Rest$England_LowerBound,x=Rest$Date-sagedelay)
-  lines(y=Rest$England_UpperBound,x=Rest$Date-sagedelay)
-  lines(predict(loess(p05 ~ x, data=dfR,span=lospan)),col='red',x=dfR$date)
-  invisible(dev.off())
-  pdf(file = 'p10.pdf')
-  plot(smooth.spline(dfR$p10,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number, 10-14",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),xlim=plotdate,cex.lab=1.6, cex.axis=1.6, cex.main=1.6, cex.sub=1.6)
-  lines(y=Rest$England_LowerBound,x=Rest$Date-sagedelay)
-  lines(y=Rest$England_UpperBound,x=Rest$Date-sagedelay)
-  lines(predict(loess(p10 ~ x, data=dfR,span=lospan)),col='red',x=dfR$date)
-  invisible(dev.off())
-  pdf(file = 'p15.pdf')
-  plot(smooth.spline(dfR$p15,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number, 15-19",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),xlim=plotdate,cex.lab=1.6, cex.axis=1.6, cex.main=1.6, cex.sub=1.6)
-  lines(y=Rest$England_LowerBound,x=Rest$Date-sagedelay)
-  lines(y=Rest$England_UpperBound,x=Rest$Date-sagedelay)
-  lines(predict(loess(p15 ~ x, data=dfR,span=lospan)),col='red',x=dfR$date)
-  invisible(dev.off())
-  pdf(file = 'p20.pdf')
-  plot(smooth.spline(dfR$p20,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number, 20-24",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),xlim=plotdate,cex.lab=1.6, cex.axis=1.6, cex.main=1.6, cex.sub=1.6)
-  lines(y=Rest$England_LowerBound,x=Rest$Date-sagedelay)
-  lines(y=Rest$England_UpperBound,x=Rest$Date-sagedelay)
-  lines(predict(loess(p20 ~ x, data=dfR,span=lospan)),col='red',x=dfR$date)
-  invisible(dev.off())
-  pdf(file = 'p25.pdf')
-  plot(smooth.spline(dfR$p25,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number, 25-29",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),xlim=plotdate,cex.lab=1.6, cex.axis=1.6, cex.main=1.6, cex.sub=1.6)
-  lines(y=Rest$England_LowerBound,x=Rest$Date-sagedelay)
-  lines(y=Rest$England_UpperBound,x=Rest$Date-sagedelay)
-  lines(predict(loess(p25 ~ x, data=dfR,span=lospan)),col='red',x=dfR$date)
-  invisible(dev.off())
-  pdf(file = 'p30.pdf')
-  plot(smooth.spline(dfR$p30,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number, 30-34",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),xlim=plotdate,cex.lab=1.6, cex.axis=1.6, cex.main=1.6, cex.sub=1.6)
-  lines(y=Rest$England_LowerBound,x=Rest$Date-sagedelay)
-  lines(y=Rest$England_UpperBound,x=Rest$Date-sagedelay)
-  lines(predict(loess(p30 ~ x, data=dfR,span=lospan)),col='red',x=dfR$date)
-  invisible(dev.off())
-  pdf(file = 'p35.pdf')
-  plot(smooth.spline(dfR$p35,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number, 35-39",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),xlim=plotdate,cex.lab=1.6, cex.axis=1.6, cex.main=1.6, cex.sub=1.6)
-  lines(y=Rest$England_LowerBound,x=Rest$Date-sagedelay)
-  lines(y=Rest$England_UpperBound,x=Rest$Date-sagedelay)
-  lines(predict(loess(p35 ~ x, data=dfR,span=lospan)),col='red',x=dfR$date)
-  invisible(dev.off())
-  pdf(file = 'p40.pdf')
-  plot(smooth.spline(dfR$p40,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number, 40-44",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),xlim=plotdate,cex.lab=1.6, cex.axis=1.6, cex.main=1.6, cex.sub=1.6)
-  lines(y=Rest$England_LowerBound,x=Rest$Date-sagedelay)
-  lines(y=Rest$England_UpperBound,x=Rest$Date-sagedelay)
-  lines(predict(loess(p40 ~ x, data=dfR,span=lospan)),col='red',x=dfR$date)
-  invisible(dev.off())
-  pdf(file = 'p45.pdf')
-  plot(smooth.spline(dfR$p45,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number, 45-49",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),xlim=plotdate,cex.lab=1.6, cex.axis=1.6, cex.main=1.6, cex.sub=1.6)
-  lines(y=Rest$England_LowerBound,x=Rest$Date-sagedelay)
-  lines(y=Rest$England_UpperBound,x=Rest$Date-sagedelay)
-  lines(predict(loess(p45 ~ x, data=dfR,span=lospan)),col='red',x=dfR$date)
-  invisible(dev.off())
-  pdf(file = 'p50.pdf')
-  plot(smooth.spline(dfR$p50,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number, 50-54",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),xlim=plotdate,cex.lab=1.6, cex.axis=1.6, cex.main=1.6, cex.sub=1.6)
-  lines(y=Rest$England_LowerBound,x=Rest$Date-sagedelay)
-  lines(y=Rest$England_UpperBound,x=Rest$Date-sagedelay)
-  lines(predict(loess(p50 ~ x, data=dfR,span=lospan)),col='red',x=dfR$date)
-  invisible(dev.off())
-  pdf(file = 'p55.pdf')
-  plot(smooth.spline(dfR$p55,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number, 55-59",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),xlim=plotdate,cex.lab=1.6, cex.axis=1.6, cex.main=1.6, cex.sub=1.6)
-  lines(y=Rest$England_LowerBound,x=Rest$Date-sagedelay)
-  lines(y=Rest$England_UpperBound,x=Rest$Date-sagedelay)
-  lines(predict(loess(p55 ~ x, data=dfR,span=lospan)),col='red',x=dfR$date)
-  invisible(dev.off())
-  pdf(file = 'p60.pdf')
-  plot(smooth.spline(dfR$p60,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number, 60-64",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),xlim=plotdate,cex.lab=1.6, cex.axis=1.6, cex.main=1.6, cex.sub=1.6)
-  lines(y=Rest$England_LowerBound,x=Rest$Date-sagedelay)
-  lines(y=Rest$England_UpperBound,x=Rest$Date-sagedelay)
-  lines(predict(loess(p60 ~ x, data=dfR,span=lospan)),col='red',x=dfR$date)
-  invisible(dev.off())
-  pdf(file = 'p65.pdf')
-  plot(smooth.spline(dfR$p65,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number, 65-69",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),xlim=plotdate,cex.lab=1.6, cex.axis=1.6, cex.main=1.6, cex.sub=1.6)
-  lines(y=Rest$England_LowerBound,x=Rest$Date-sagedelay)
-  lines(y=Rest$England_UpperBound,x=Rest$Date-sagedelay)
-  lines(predict(loess(p65 ~ x, data=dfR,span=lospan)),col='red',x=dfR$date)
-  invisible(dev.off())
-  pdf(file = 'p70.pdf')
-  plot(smooth.spline(dfR$p70,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number, 70-74",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),xlim=plotdate,cex.lab=1.6, cex.axis=1.6, cex.main=1.6, cex.sub=1.6)
-  lines(y=Rest$England_LowerBound,x=Rest$Date-sagedelay)
-  lines(y=Rest$England_UpperBound,x=Rest$Date-sagedelay)
-  lines(predict(loess(p70 ~ x, data=dfR,span=lospan)),col='red',x=dfR$date)
-  invisible(dev.off())
-  pdf(file = 'p75.pdf')
-  plot(smooth.spline(dfR$p75,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number, 75-79",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),xlim=plotdate,cex.lab=1.6, cex.axis=1.6, cex.main=1.6, cex.sub=1.6)
-  lines(y=Rest$England_LowerBound,x=Rest$Date-sagedelay)
-  lines(Rest$England_UpperBound,col="red",x=Rest$Date-sagedelay)
-  lines(predict(loess(p75 ~ x, data=dfR,span=lospan)),col='red',x=dfR$date)
-  invisible(dev.off())
-  pdf(file = 'p80.pdf')
-  plot(smooth.spline(dfR$p80,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number, 80-85",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),xlim=plotdate,cex.lab=1.6, cex.axis=1.6, cex.main=1.6, cex.sub=1.6)
-  lines(y=Rest$England_LowerBound,x=Rest$Date-sagedelay)
-  lines(y=Rest$England_UpperBound,x=Rest$Date-sagedelay)
-  lines(predict(loess(p80 ~ x, data=dfR,span=lospan)),col='red',x=dfR$date)
-  invisible(dev.off())
-  pdf(file = 'p85.pdf')
-  plot(smooth.spline(dfR$p85,df=spdf,w=sqrt(comdat$allCases))$y,ylab="R-number, 85-89",xlab="Date",x=dfR$date,ylim=c(0.6,1.4),xlim=plotdate,cex.lab=1.6, cex.axis=1.6, cex.main=1.6, cex.sub=1.6)
-  lines(y=Rest$England_LowerBound,x=Rest$Date-sagedelay)
-  lines(y=Rest$England_UpperBound,x=Rest$Date-sagedelay)
-  lines(predict(loess(p85 ~ x, data=dfR,span=lospan)),col='red',x=dfR$date)
-  invisible(dev.off())
-  pdf(file = 'p90.pdf')
-  plot(smooth.spline(na.omit(dfR$p90),df=spdf,w=sqrt(comdat$allCases[!is.na(dfR$p90)]))$y,ylab="R-number, 90+",xlab="Date",
-       x=dfR$date[!is.na(dfR$p90)],ylim=c(0.6,1.4),xlim=plotdate,cex.lab=1.6, cex.axis=1.6, cex.main=1.6, cex.sub=1.6)
-  lines(y=Rest$England_LowerBound[!is.na(dfR$p90)],x=Rest$Date[!is.na(dfR$p90)]-sagedelay)
-  lines(y=Rest$England_UpperBound[!is.na(dfR$p90)],x=Rest$Date[!is.na(dfR$p90)]-sagedelay)
-  lines(predict(loess(p90 ~ x, data=dfR[!is.na(dfR$p90),],span=lospan)),col='red',x=dfR$date[!is.na(dfR$p90)])
-  invisible(dev.off())
-}
-}
+ 
 
 # Reverse Engineer cases from R-number - requires stratonovich calculus to get reversibility
 # Initializations
@@ -1544,109 +1434,37 @@ if(FALSE){medout<-MedrxivPaper()}
 ################################################################
 ###  Finally, Use all this to make predictions for England (Scotland & Regions in separate compartment.R code)
 ###Assume that R and lethality are constants
+predtime = 28
+region="England"
 
+if(TRUE){ comp<-Predictions(comp,R_England_BestGuess)}
 
-  predtime = 28
-  region="England"
-  R_BestGuess=R_England_BestGuess
-  #  For loop over time, predCASE using R numbers
-  lengthofdata <- nrow(casedat)
-  agerange <- (2:ncol(ILI))
-  predCASE<-ILI[lengthofdata,(1:20)]
-  predCASE[1,(2:20)]<-CASE[lengthofdata,(2:20)] #  Growth rate by age group
-  predCASE[1,1]=enddate
+#  Compartment predictions removed to Predictions.R
 
-  ipred=1
-  for (iday in ((lengthofdata+1):(lengthofdata+predtime))){
-    #  Proportions become variant dependent.  ILI is case driven, so extra infectivity is automatic
-    # from the data. ILI->SARI increases with variant.  CRIT is an NHS decision, not favoured for very old
-    #  Need to increase CFR without exceeding 1.  Note inverse lethality isnt a simple % as CFR cant be >1
-    #  Will have negative people  trouble if CFR>1
-
-    newMILD[iday,agerange]=predCASE[ipred,agerange]*(1.0-pTtoI)+newMILD[iday,agerange]
-    newILI[iday,agerange]=predCASE[ipred,agerange]*  pTtoI    +newILI[iday,agerange]
-
-
-    #  vectorize
-    MtoR=outer(as.numeric(newMILD[iday,agerange]),MildToRecovery,FUN="*")
-    oldMILD[(iday:xday),agerange]=oldMILD[(iday:xday),agerange]+MtoR
-    for (iage in agerange){
-      # All todays new MILDs will all leave to REC across distribution
-
-
-      # ILI will go to SA/RI and REC   Vaccination frozen on last day, not predicted
-      ItoS = as.numeric(newILI[iday,iage] * pItoS[iage-1] * (1.0-vacdat[lengthofdata,iage]*vacCFR)) *ILIToSARI  #  ItoS = as.numeric(newILI[iday,iage] *  pItoS[iage-1])     *ILIToSARI
-      ItoR = as.numeric(newILI[iday,iage] *(1.0-pItoS[iage-1])) *ILIToRecovery
-      newSARI[(iday:xday),iage]=newSARI[(iday:xday),iage]+ItoS
-      oldILI[(iday:xday),iage]=oldILI[(iday:xday),iage]+ItoR+ItoS
-      # SARI will go to REC, DEATH, CRIT
-      StoC = as.numeric(newSARI[iday,iage] *pStoC[iage-1]) *SARIToCritical
-      StoD = as.numeric(newSARI[iday,iage] *pStoD[iage-1])      *SARIToDeath
-      StoR = as.numeric(newSARI[iday,iage] *(1.0-pStoC[iage-1]-pStoD[iage-1]) )*SARIToRecovery
-      newCRIT[(iday:xday),iage]=newCRIT[(iday:xday),iage]+StoC
-      oldSARI[(iday:xday),iage]=oldSARI[(iday:xday),iage]+StoR+StoC+StoD
-
-      # CRIT  goes to CRITREC DEATH
-      CtoD = as.numeric(newCRIT[iday,iage]*pCtoD[(iage-1)]) *CriticalToDeath
-      CtoCR = as.numeric(newCRIT[iday,iage]*(1.0-pCtoD[(iage-1)])) *CriticalToCritRecov
-      newCRITREC[(iday:xday),iage]=newCRITREC[(iday:xday),iage]+CtoCR
-      oldCRIT[(iday:xday),iage]=oldCRIT[(iday:xday),iage]+CtoD+CtoCR
-
-      # CRITREC goes to RECOV
-      CRtoR = as.numeric(newCRITREC[iday,iage]) *CritRecovToRecov
-      oldCRITREC[(iday:xday),iage]=oldCRITREC[(iday:xday),iage]+CRtoR
-      # DEATH and RECOV are cumulative, again anticipating where "new" will end up.
-      DEATH[(iday:xday),iage]=DEATH[(iday:xday),iage]+CtoD+StoD
-      RECOV[(iday:xday),iage]=RECOV[(iday:xday),iage]+StoR+ItoR+MtoR+CRtoR
-    }
-    # Finally, vectorize & update todays totals: New cases + transfers from other compartments -
-    # transfers to other compartments + leftover from yesterday
-    MILD[iday,agerange]=MILD[iday,agerange]+newMILD[iday,agerange]-oldMILD[iday,agerange]+MILD[(iday-1),agerange]
-    ILI[iday,agerange]=ILI[iday,agerange]+newILI[iday,agerange]-oldILI[iday,agerange]+ILI[(iday-1),agerange]
-    SARI[iday,agerange]=SARI[iday,agerange]+newSARI[iday,agerange]-oldSARI[iday,agerange]+SARI[(iday-1),agerange]
-    CRIT[iday,agerange]=CRIT[iday,agerange]+newCRIT[iday,agerange]-oldCRIT[iday,agerange]+CRIT[(iday-1),agerange]
-    CRITREC[iday,agerange]=CRITREC[iday,agerange]+newCRITREC[iday,agerange]-oldCRITREC[iday,agerange]+CRITREC[(iday-1),agerange]
-    #
-    ##  Finally, estimate cases for tomorrow.  This uses an R value calculated above, but for CrystalCast purposes from
-    ##  we can use MLP Rx.x as an input here
-
-    # R decays back to 1 with growth rate down 5% a day
-    # R is the same in all age groups
-
-    if(R_BestGuess > 1.0) {R_BestGuess=(R_BestGuess-1)*0.95+1.0}
-
-    predCASE[(ipred+1),(2:20)]<-predCASE[ipred,(2:20)]*exp((R_BestGuess-1)/genTime)
-    predCASE[ipred+1,1]<-startdate+iday
-    ipred=ipred+1
-    # End of compartment section
-  }
-
-
-# CrystalCast output - use CC.R
 
 #Monitoring plots
 startplot=startdate+3
-endplot=startdate+lengthofdata+predtime-3
-rbind(CASE,predCASE)->plotCASE
-plot(rowSums(plotCASE[2:20]),x=plotCASE$date,xlim=c(startplot,endplot))
+endplot=startdate+nrow(comp$CASE)+predtime-3
+
+plot(rowSums(comp$CASE[2:20]),x=comp$CASE$date,xlim=c(startplot,endplot))
 
 plot(HospitalData$newAdmissions,x=HospitalData$date, ylab="Hospital Admission",xlab="Date",xlim=c(startplot,endplot-11
                                                                                                 ))
-lines(rowSums(newSARI[2:20]),x=newSARI$date,col="blue")
+lines(rowSums(comp$newSARI[2:20]),x=comp$newSARI$date,col="blue")
 
 plot(HospitalData$hospitalCases,x=HospitalData$date,ylab="Hospital Cases",xlab="Date",xlim=c((startplot),endplot))
-lines(rowSums(SARI[2:20]+CRIT[2:20]+CRITREC[2:20]),x=SARI$date,col='red')
+lines(rowSums(comp$SARI[2:20]+comp$CRIT[2:20]+comp$CRITREC[2:20]),x=comp$SARI$date,col='red')
 
-plot(rowSums(newMILD[2:20]+newILI[2:20]),xlim=c((startplot),endplot),col="blue",x=newMILD$date,type="l",xlab="Date",ylab="Cases")
-points(rowSums(CASE[2:20]),x=deathdat$date)
-lines(rowSums(newMILD[2:10]+newILI[2:10]),col="green",x=newMILD$date,type="l",xlab="Date",ylab="Cases")
-lines(rowSums(newMILD[11:20]+newILI[11:20]),col="red",x=newMILD$date,type="l",xlab="Date",ylab="Cases")
+plot(rowSums(comp$newMILD[2:20]+comp$newILI[2:20]),xlim=c((startplot),endplot),col="blue",x=comp$newMILD$date,type="l",xlab="Date",ylab="Cases")
+points(rowSums(comp$CASE[2:20]),x=comp$CASE$date)
+lines(rowSums(comp$newMILD[2:10]+comp$newILI[2:10]),col="green",x=comp$newMILD$date,type="l",xlab="Date",ylab="Cases")
+lines(rowSums(comp$newMILD[11:20]+comp$newILI[11:20]),col="red",x=comp$newMILD$date,type="l",xlab="Date",ylab="Cases")
 
 
 plot(HospitalData$covidOccupiedMVBeds,x=HospitalData$date,ylab="ICU Occupation",xlab="Date",xlim=c(startplot,endplot))
-lines(rowSums(CRIT[2:20]*0.5),col="blue",x=CRIT$date)
+lines(rowSums(comp$CRIT[2:20]*0.5),col="blue",x=comp$CRIT$date)
 
-plot(rowSums(DEATH[2:20]),col="blue",x=DEATH$date, type="l",ylab="Deaths"
+plot(rowSums(comp$DEATH[2:20]),col="blue",x=comp$DEATH$date, type="l",ylab="Deaths"
      ,xlab="Date",xlim=c(startplot,endplot-11))
 points(rowSums(deathdat[2:20]),x=deathdat$date)
 

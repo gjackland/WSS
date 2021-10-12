@@ -359,9 +359,10 @@ Hospital<-scotHospital
 RawCFR=colSums(scotdeath[2:20])/colSums(scotage[2:20])
 
 
-
+#  Full Epidemic model
 out <- Compartment(scotage, covidsimAge, RawCFR, comdat)
-
+#  28 day Projections
+comp<-Predictions(out,R_Scotland_BestGuess)
 # Unpack the values returned
 DEATH <- out$DEATH
 RECOV <- out$RECOV
@@ -398,80 +399,6 @@ CriticalToDeath <- out$CriticalToDeath
 CriticalToCritRecov <- out$CriticalToCritRecov
 CritRecovToRecov <- out$CritRecovToRecov
 
-
-# End of historical compartment section
-
-predtime = 28
-
-#  For loop over time, predCASE using R numbers
-predCASE<-ILI[lengthofdata,(1:20)]
-predCASE[1,(2:20)]<-CASE[lengthofdata,(2:20)] #  Growth rate by age group
-predCASE[1,1]=CASE$date[nrow(CASE)]
-
-ipred=1 #  Counter for date prediction
-startdate=CASE$date[nrow(CASE)]
-for (iday in ((lengthofdata+1):(lengthofdata+predtime))){
-  
-  # R decays back to 1 with growth rate down 5% a day or back up at 5%
-  # R is the same in all age groups
-  if(R_BestGuess > 1.0){R_BestGuess=(R_BestGuess-1)*0.95+1.0}
-  if(R_BestGuess < 1.0){R_BestGuess=(R_BestGuess-1)*0.95+1.0}
-  #  Proportions become variant dependent.  ILI is case driven, so extra infectivity is automatic
-  # from the data. ILI->SARI increases with variant.  CRIT is an NHS decision, not favoured for very old
-  #  Need to increase CFR without exceeding 1.  Note inverse lethality isnt a simple % as CFR cant be >1
-  #  Will have negative people  trouble if CFR>1
-  
-  newMILD[iday,agerange]=predCASE[ipred,agerange]*(1.0-pTtoI)+newMILD[iday,agerange]
-  newILI[iday,agerange]=predCASE[ipred,agerange]*  pTtoI    +newILI[iday,agerange]
-  
-  
-  #  vectorize
-  MtoR=outer(as.numeric(newMILD[iday,agerange]),MildToRecovery,FUN="*")
-  oldMILD[(iday:xday),agerange]=oldMILD[(iday:xday),agerange]+MtoR
-  for (iage in agerange){
-    # All todays new MILDs will all leave to REC across distribution
-    
-    
-    # ILI will go to SA/RI and REC   Vaccination frozen on last day, not predicted
-    ItoS = as.numeric(newILI[iday,iage] * pItoS[iage-1] * (1.0-vacdat[lengthofdata,iage]*vacCFR)) *ILIToSARI  #  ItoS = as.numeric(newILI[iday,iage] *  pItoS[iage-1])     *ILIToSARI
-    ItoR = as.numeric(newILI[iday,iage] *(1.0-pItoS[iage-1])) *ILIToRecovery
-    newSARI[(iday:xday),iage]=newSARI[(iday:xday),iage]+ItoS
-    oldILI[(iday:xday),iage]=oldILI[(iday:xday),iage]+ItoR+ItoS
-    # SARI will go to REC, DEATH, CRIT
-    StoC = as.numeric(newSARI[iday,iage] *pStoC[iage-1]) *SARIToCritical
-    StoD = as.numeric(newSARI[iday,iage] *pStoD[iage-1])      *SARIToDeath
-    StoR = as.numeric(newSARI[iday,iage] *(1.0-pStoC[iage-1]-pStoD[iage-1]) )*SARIToRecovery
-    newCRIT[(iday:xday),iage]=newCRIT[(iday:xday),iage]+StoC
-    oldSARI[(iday:xday),iage]=oldSARI[(iday:xday),iage]+StoR+StoC+StoD
-    
-    # CRIT  goes to CRITREC DEATH
-    CtoD = as.numeric(newCRIT[iday,iage]*pCtoD[(iage-1)]) *CriticalToDeath
-    CtoCR = as.numeric(newCRIT[iday,iage]*(1.0-pCtoD[(iage-1)])) *CriticalToCritRecov
-    newCRITREC[(iday:xday),iage]=newCRITREC[(iday:xday),iage]+CtoCR
-    oldCRIT[(iday:xday),iage]=oldCRIT[(iday:xday),iage]+CtoD+CtoCR
-    
-    # CRITREC goes to RECOV
-    CRtoR = as.numeric(newCRITREC[iday,iage]) *CritRecovToRecov
-    oldCRITREC[(iday:xday),iage]=oldCRITREC[(iday:xday),iage]+CRtoR
-    # DEATH and RECOV are cumulative, again anticipating where "new" will end up.
-    DEATH[(iday:xday),iage]=DEATH[(iday:xday),iage]+CtoD+StoD
-    RECOV[(iday:xday),iage]=RECOV[(iday:xday),iage]+StoR+ItoR+MtoR+CRtoR
-  }
-  # Finally, vectorize & update todays totals: New cases + transfers from other compartments -
-  # transfers to other compartments + leftover from yesterday
-  MILD[iday,agerange]=MILD[iday,agerange]+newMILD[iday,agerange]-oldMILD[iday,agerange]+MILD[(iday-1),agerange]
-  ILI[iday,agerange]=ILI[iday,agerange]+newILI[iday,agerange]-oldILI[iday,agerange]+ILI[(iday-1),agerange]
-  SARI[iday,agerange]=SARI[iday,agerange]+newSARI[iday,agerange]-oldSARI[iday,agerange]+SARI[(iday-1),agerange]
-  CRIT[iday,agerange]=CRIT[iday,agerange]+newCRIT[iday,agerange]-oldCRIT[iday,agerange]+CRIT[(iday-1),agerange]
-  CRITREC[iday,agerange]=CRITREC[iday,agerange]+newCRITREC[iday,agerange]-oldCRITREC[iday,agerange]+CRITREC[(iday-1),agerange]
-  #
-  ##  Finally, estimate cases for tomorrow.  This uses an R value calculated above, but for CrystalCast purposes from
-  ##  we can use MLP Rx.x as an input here
-  predCASE[(ipred+1),(2:20)]<-predCASE[ipred,(2:20)]*exp((R_BestGuess-1.0)/genTime)
-  predCASE[ipred+1,1]<-startdate+ipred
-  ipred=ipred+1
-  # End of compartment section
-}
 today <- today()
 #CrystalCast output - use CC.R format
 CCScot <- data.frame(
