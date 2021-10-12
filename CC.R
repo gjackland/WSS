@@ -540,5 +540,5 @@ for (d in 8:(nrow(DEATH)-22)){
   CC <- rbind(CC, CCdate)
 }
 
-write.xlsx(CC, file = "Data/jnk.xlsx", sheetName = "WSS", rowNames = FALSE)
-
+#  Crystalcast format output  
+write.xlsx(CC, file = paste("Data/compartment",today,"eng.xlsx"), sheetName = "WSS", rowNames = FALSE)

@@ -514,7 +514,7 @@ CCScot <- data.frame(
 
 #  Medium term projections add to CC.R if already run
 
-if(exists(CC)){
+if(exists("CC")){
 today <- today()
 ageband <-  "All"
 CCScot$Scenario="MTP"
@@ -550,11 +550,9 @@ for (d in 8:(nrow(DEATH)-22)){
   # Add the new row to CC
   CC <- rbind(CC, CCScot)
 }
+}
 #  Crystalcast format output  
-write.xlsx(CCScot, file = "Data/compartment_scot.xlsx", sheetName = "WSS", rowNames = FALSE)
-
-
-
+write.xlsx(CC, file = paste("Data/compartment",today,"scot.xlsx"), sheetName = "WSS", rowNames = FALSE)
 
 
 rbind(CASE,predCASE)->plotCASE
@@ -573,6 +571,5 @@ lines(rowSums(newMILD[2:20]+newILI[2:20]),col="red",x=newMILD$date)
 plot(Hospital$ICUAdmissions,x=deathdat$date,ylab="ICU Admissions",xlab="Date")
 lines(rowSums(newCRIT[2:20]),col="blue",x=newCRIT$date)
 
-plot(rowSums(DEATH[2:20]),col="blue",x=DEATH$date,type="l",
-     ylab="Deaths",xlab="Date")
+plot(rowSums(DEATH[2:20]),col="blue",x=DEATH$date,type="l", ylab="Deaths",xlab="Date")
 points(rowSums(scotdeath[2:20]),x=scotdeath$date,ylab="Deaths",xlab="Date")
