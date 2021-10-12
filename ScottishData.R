@@ -552,7 +552,7 @@ for (d in 8:(nrow(DEATH)-22)){
 }
 }
 #  Crystalcast format output  
-write.xlsx(CC, file = paste("Data/compartment",today,"scot.xlsx"), sheetName = "WSS", rowNames = FALSE)
+write.xlsx(CC, file = paste("Data/compartment",today,"all.xlsx"), sheetName = "WSS", rowNames = FALSE)
 
 
 rbind(CASE,predCASE)->plotCASE
@@ -568,8 +568,8 @@ plot(rowSums(CASE[2:20]),x=CASE$date,ylab="Cases",xlab="Date")
 lines(rowSums(newMILD[2:20]+newILI[2:20]),col="red",x=newMILD$date)
 
 
-plot(Hospital$ICUAdmissions,x=deathdat$date,ylab="ICU Admissions",xlab="Date")
+plot(Hospital$ICUAdmissions,x=deathdat$date,ylab="ICU Admissions",xlab="Date",las=2)
 lines(rowSums(newCRIT[2:20]),col="blue",x=newCRIT$date)
 
-plot(rowSums(DEATH[2:20]),col="blue",x=DEATH$date,type="l", ylab="Deaths",xlab="Date")
+plot(rowSums(DEATH[2:20]),col="blue",x=DEATH$date,type="l", ylab="Deaths",xlab="Date",las=2)
 points(rowSums(scotdeath[2:20]),x=scotdeath$date,ylab="Deaths",xlab="Date")
