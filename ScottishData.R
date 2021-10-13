@@ -3,7 +3,8 @@
 library(readr, warn.conflicts = FALSE, quietly = TRUE)
 library(dplyr, warn.conflicts = FALSE, quietly = TRUE)
 library(tidyr, warn.conflicts = FALSE, quietly = TRUE)
-
+source("Weekend.R")
+source("CompartmentFunction.R")
 # Scottish regions --------------------------------------------------------
 
 # List from https://en.wikipedia.org/wiki/Local_government_in_Scotland
@@ -273,7 +274,7 @@ jnk %>% filter(AgeGroup == "0 to 14") -> jnk2
 #  subdivide it  into 5 year bands.  Use the UK casedat & deathdat to set 
 #  up correct array sizes, and the demographics
 
-
+jnk2$DailyPositive<-Weekend(jnk2$DailyPositive)
 scotage <-casedat
 scotdeath <-deathdat
 
@@ -287,29 +288,31 @@ scotdeath$'05_09' <-jnk2$DailyDeaths *sum(casedat$`05_09`)/sum24
 scotdeath$`00_04` <- jnk2$DailyDeaths*sum(casedat$`00_04`)/sum24
 scotdeath$`10_14` <- jnk2$DailyDeaths*sum(casedat$`10_14`)/sum24
 jnk %>% filter(AgeGroup == "15 to 19") -> jnk2
-scotage$`15_19` <- jnk2$DailyPositive
+scotage$`15_19` <- Weekend(jnk2$DailyPositive)
 scotdeath$`15_19` <- jnk2$DailyDeaths
 jnk %>% filter(AgeGroup == "20 to 24") -> jnk2
-scotage$`20_24` <- jnk2$DailyPositive
+scotage$`20_24` <- Weekend(jnk2$DailyPositive)
 scotdeath$`20_24` <- jnk2$DailyDeaths
 jnk %>% filter(AgeGroup == "25 to 44") -> jnk2
+temp <- Weekend(jnk2$DailyPositive)
 sum24=sum(casedat[7:10])
-scotage$`25_29` <- jnk2$DailyPositive*sum(casedat$`25_29`)/sum24
-scotage$`30_34` <- jnk2$DailyPositive*sum(casedat$`30_34`)/sum24
-scotage$`35_39` <- jnk2$DailyPositive*sum(casedat$`35_39`)/sum24
-scotage$`40_44` <- jnk2$DailyPositive*sum(casedat$`40_44`)/sum24
+scotage$`25_29` <- temp*sum(casedat$`25_29`)/sum24
+scotage$`30_34` <- temp*sum(casedat$`30_34`)/sum24
+scotage$`35_39` <- temp*sum(casedat$`35_39`)/sum24
+scotage$`40_44` <- temp*sum(casedat$`40_44`)/sum24
 scotdeath$`25_29` <- jnk2$DailyDeaths*sum(casedat$`25_29`)/sum24
 scotdeath$`30_34` <- jnk2$DailyDeaths*sum(casedat$`30_34`)/sum24
 scotdeath$`35_39` <- jnk2$DailyDeaths*sum(casedat$`35_39`)/sum24
 scotdeath$`40_44` <- jnk2$DailyDeaths*sum(casedat$`40_44`)/sum24
 jnk %>% filter(AgeGroup == "45 to 64") -> jnk2
 
+temp <- Weekend(jnk2$DailyPositive)
 sum24=sum(casedat[11:14])
 
-scotage$`45_49` <- jnk2$DailyPositive*sum(casedat$`45_49`)/sum24
-scotage$`50_54` <- jnk2$DailyPositive*sum(casedat$`50_54`)/sum24
-scotage$`55_59` <- jnk2$DailyPositive*sum(casedat$`55_59`)/sum24
-scotage$`60_64` <- jnk2$DailyPositive*sum(casedat$`60_64`)/sum24
+scotage$`45_49` <- temp*sum(casedat$`45_49`)/sum24
+scotage$`50_54` <- temp*sum(casedat$`50_54`)/sum24
+scotage$`55_59` <- temp*sum(casedat$`55_59`)/sum24
+scotage$`60_64` <- temp*sum(casedat$`60_64`)/sum24
 
 scotdeath$`45_49` <- jnk2$DailyDeaths*sum(casedat$`45_49`)/sum24
 scotdeath$`50_54` <- jnk2$DailyDeaths*sum(casedat$`50_54`)/sum24
@@ -320,25 +323,28 @@ scotdeath$`60_64` <- jnk2$DailyDeaths*sum(casedat$`60_64`)/sum24
 jnk %>% filter(AgeGroup == "65 to 74") -> jnk2
 sum24=sum(casedat[15:16])
 sumRIP=sum(deathdat[15:16])
-scotage$`65_69` <- jnk2$DailyPositive*sum(casedat$`65_69`)/sum24
-scotage$`70_74` <- jnk2$DailyPositive*sum(casedat$`70_74`)/sum24
+temp <- Weekend(jnk2$DailyPositive)
+scotage$`65_69` <- temp*sum(casedat$`65_69`)/sum24
+scotage$`70_74` <- temp*sum(casedat$`70_74`)/sum24
 scotdeath$`65_69` <- jnk2$DailyDeaths*sum(deathdat$`65_69`)/sumRIP
 scotdeath$`70_74` <- jnk2$DailyDeaths*sum(deathdat$`70_74`)/sumRIP
 jnk %>% filter(AgeGroup == "75 to 84") -> jnk2
+temp <- Weekend(jnk2$DailyPositive)
 sum24=sum(casedat[17:18])
 sumRIP=sum(deathdat[17:18])
-scotage$`75_79` <- jnk2$DailyPositive*sum(casedat$`75_79`)/sum24
-scotage$`80_84` <- jnk2$DailyPositive*sum(casedat$`80_84`)/sum24
+scotage$`75_79` <- temp*sum(casedat$`75_79`)/sum24
+scotage$`80_84` <- temp*sum(casedat$`80_84`)/sum24
 scotdeath$`75_79` <- jnk2$DailyDeaths*sum(deathdat$`75_79`)/sumRIP
 scotdeath$`80_84` <- jnk2$DailyDeaths*sum(deathdat$`80_84`)/sumRIP
 jnk %>% filter(AgeGroup == "85plus") -> jnk2
 sum24=sum(casedat[19:20])
 sumRIP=sum(deathdat[19:20])
-scotage$`85_89` <- jnk2$DailyPositive*sum(casedat$`85_89`)/sum24
-scotage$`90+` <- jnk2$DailyPositive*sum(casedat$`90+`)/sum24
+temp <- Weekend(jnk2$DailyPositive)
+scotage$`85_89` <- temp*sum(casedat$`85_89`)/sum24
+scotage$`90+` <- temp*sum(casedat$`90+`)/sum24
 scotdeath$`85_89` <- jnk2$DailyDeaths*sum(deathdat$`85_89`)/sumRIP
 scotdeath$`90+` <- jnk2$DailyDeaths*sum(deathdat$`90+`)/sumRIP
-rm(sum24,sumRIP,jnk,jnk2)
+rm(sum24,sumRIP,jnk,jnk2,temp)
 scotage[is.na(scotage)] <- 0.01
 scotage[scotage==Inf] <- 0.01
 scotage[scotage==-Inf] <- 0.01
@@ -347,11 +353,12 @@ scotdeath[scotdeath==Inf] <- 0.01
 scotdeath[scotdeath==-Inf] <- 0.01
 pckg <- package_show("covid-19-wider-impacts-deaths", as ="table")
 
+
 #  Compartment section from WSS.
 #  Set CASE to the appropriate region
 #  CASE is the input cases which get WSS'ed.  
 # CASE=casedat produces estimates for UK, this already happens at the end of the main code.  CASE=scotage is for Scotland
-source("CompartmentFunction.R")
+
 
 R_BestGuess=R_Scotland_BestGuess
 region="Scotland"

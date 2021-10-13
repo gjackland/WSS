@@ -33,6 +33,7 @@ source("CompartmentFunction.R")
 source("medrxiv.R")
 source("Predictions.R")
 source("age_pdfplot.R")
+source("Weekend.R")
 
 # Set the working directory to be the same as to where the script is run from.
 setwd(".")
@@ -608,7 +609,7 @@ if(enddate == (Sys.Date()-1)){
 }
 
 # Add variant data to comdat  Kentfac tells us how much more virulent the variant is
-# Numbers are fitted to death and hospitalistaion data
+# Numbers are fitted to death and hospitalisation data
 comdat$Kent <- 0.0
 comdat$India <- 0.0
 Kentfac <- 0.6
@@ -643,8 +644,14 @@ scotdat <- na.locf(scotdat)
 # Get mean age-related CFR across the whole pandemic
 RawCFR=colSums(deathdat[2:ncol(deathdat)])/colSums(casedat[2:ncol(casedat)])
 
+
+
 # Remove weekend effect, assuming each weekday has same number of cases over the
-# epidemic, and national averages hold regionally.
+# epidemic, and national averages hold regionally.  Also, smooth data through Xmas.
+#  Pulled out comdat & scotdat to a function. Regions need to deal with tibble 
+comdat$allCases <- Weekend(comdat$allCases)
+scotdat$allCases <- Weekend(scotdat$allCases)
+
 days <-1:7
 weeks<-as.integer(length(comdat$allCases)/7)-1
 
@@ -656,27 +663,16 @@ for(i in 1:weeks){
 casetot <- sum(days)
 days <- 7*days/casetot
 
-# Rescale comdat and regcases
+# Rescale  regcases
 for(i in 1:nrow(comdat)){
-  indexday <- (i-1)%%7+1
-  comdat$allCases[i] <- comdat$allCases[i]/days[indexday]
-  scotdat$allCases[i] <- scotdat$allCases[i]/days[indexday]
+  indexday <- (i-1)%%7+1  
+#  cdat[i] <- cdat[i]/days[indexday]
   for (area in 2:length(regcases)){
     regcases[i,area] <- regcases[i,area]/days[indexday]
   }
+
 }
 
-# Fix Xmas anomaly over XMdays=12 days in comdat, regcases by linear fit
-Xmasav <- sum(comdat$allCases[XMstart:XMend])/XMdays
-Xmasgrad <- comdat$allCases[XMend]-comdat$allCases[XMstart]
-for (i in XMstart:XMend){
-  comdat$allCases[i]=Xmasav-Xmasgrad*(((XMend+XMstart)/2)-i)/XMdays
-}
-Xmasav <- sum(scotdat$allCases[XMstart:XMend])/XMdays
-Xmasgrad <- scotdat$allCases[XMend]-scotdat$allCases[XMstart]
-for (i in XMstart:XMend){
-  scotdat$allCases[i] <- Xmasav-Xmasgrad*(((XMend+XMstart)/2)-i)/XMdays
-}
 
 # Fix Xmas anomaly in regions
 for (area in 2:length(regcases)){
