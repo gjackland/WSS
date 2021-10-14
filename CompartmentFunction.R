@@ -8,7 +8,8 @@
 
 # Function Definition - naming function variables to ensure it is not taking
 # values from the calling space
-Compartment <- function(cases,  csimAge, rCFR, cdat){
+# Inherits vacdat from covid_trimmed
+Compartment <- function(cases,  csimAge, rCFR, cdat, startc, endc){
 
   # Create a list to output various data frames
   out <- list()
@@ -111,7 +112,7 @@ Compartment <- function(cases,  csimAge, rCFR, cdat){
   afac <- 1.0
   bfac <- 1.2
   cfac <- 1.0/afac/bfac
-  for (iday in (2:lengthofdata)){
+  for (iday in (startc:endc)){
     pTtoI <- afac*rCFR^apow*sqrt(cdat$lethality[iday])
     pItoS <- bfac*rCFR^bpow*sqrt(cdat$lethality[iday])
     pStoD <- cfac*rCFR^cpow*sqrt(cdat$lethality[iday])
@@ -133,14 +134,7 @@ Compartment <- function(cases,  csimAge, rCFR, cdat){
     # Note inverse lethality isnt a simple % as CFR cant be >1
     # Will have negative people  trouble if CFR>1
 
-
-    # Inter-compartment probability differs from covidsim's idea of totals ending their illness
-    # in that compartment  prior to RECOV/DEATH
-
-    #    pItoS= (Prop_Critical_ByAge+Prop_SARI_ByAge )*cdat$lethality[iday]  /
-    #        (  (Prop_Critical_ByAge+Prop_SARI_ByAge )*cdat$lethality[iday] +Prop_ILI_ByAge )
-
-    xday <- iday+length(SARIToCritical)-1
+  xday <- iday+length(SARIToCritical)-1
     agerange <- (2:ncol(ILI))
     ageminus <- agerange-1
 
@@ -231,3 +225,4 @@ Compartment <- function(cases,  csimAge, rCFR, cdat){
   return(out)
 
 }# End of compartment function
+

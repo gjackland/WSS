@@ -148,11 +148,6 @@ enddate <-  Sys.Date()-5
 genTime <- 5
 #  Dates for the plots
 plotdate <- as.Date(c("2020-09-22",as.character(enddate)))
-# Date of Christmas Eve
-XMas <- as.Date("2020/12/24")
-XMstart <- as.integer(XMas-startdate)
-XMdays <- 12
-XMend <- XMstart+11
 # Wanted to plot a Smooth spline discontinuous at
 # UK lockdown Oct 31 (day 98) -Dec 2  (day 130) Jan 6 (day 165)  (day 1 = July 25)
 lock1 <- as.integer(as.Date("2020/10/31")-startdate)
@@ -205,7 +200,7 @@ comdat <- comdat %>%  select(date,
 
 newurl="https://api.coronavirus.data.gov.uk/v2/data?areaType=nation&areaCode=E92000001&metric=cumAdmissions&metric=hospitalCases&metric=newAdmissions&format=csv"
 
-# Explicitly define the types for the columns
+# Explicitly define the types for the columns  Need to repeat call because??? data download restriction
 coltypes <- cols(col_character(), col_character(),col_character(),
                  col_date(format="%Y-%m-%d"), 
                  col_integer(),  col_integer(), col_integer())
@@ -261,11 +256,11 @@ casedat <-  read_csv(file = ageurl, col_types = coltypes)
 # 60+ and 00_59 columns, filter dates to be between the start and end
 # dates and order the output by date
 casedat <- casedat %>%
-           select(date = date, age = age, values = cases) %>%
-           pivot_wider(id_cols = date, names_from = age, values_from = values) %>%
-           select(-unassigned, -"60+", -"00_59") %>%
-           filter(date >= startdate & date <= enddate) %>%
-           arrange(date)
+  select(date = date, age = age, values = cases) %>%
+  pivot_wider(id_cols = date, names_from = age, values_from = values) %>%
+  select(-unassigned, -"60+", -"00_59") %>%
+  filter(date >= startdate & date <= enddate) %>%
+  arrange(date)
 
 vacdate="2020-12-08"
 # vaccination by age
@@ -596,10 +591,10 @@ coltypes <-  cols(
 # Get the hospital data
 d <- read_csv(HospitalUrl, col_types = coltypes)
 
-HospitalData <- tibble()
-HospitalData <- rev( bind_rows(HospitalData,d) )
+UKHospitalData <- tibble()
+UKHospitalData <- rev( bind_rows(UKHospitalData,d) )
 
-HospitalData  <-  HospitalData %>%
+UKHospitalData  <-  UKHospitalData %>%
                   filter(date >= startdate & date <= enddate ) %>%
                   arrange(date)
 
@@ -658,7 +653,7 @@ comdat$Kent<-comdat$Kent-comdat$India
 comdat$lethality<-1.0+ Kentfac*comdat$Kent + Indiafac*comdat$India
 
 # Fix missing data to constant values
-HospitalData <- na.locf(HospitalData)
+UKHospitalData <- na.locf(UKHospitalData)
 casedat <- na.locf(casedat)
 comdat <- na.locf(comdat)
 regcases <- na.locf(regcases)
@@ -676,6 +671,9 @@ comdat$allCases <- Weekend(comdat$allCases)
 scotdat$allCases <- Weekend(scotdat$allCases)
 for (area in 2:length(regcases)){
   regcases[area]<-Weekend(regcases %>% pull(area)) 
+}
+for (iage in 2:length(casedat)){
+  casedat[iage]<-Weekend(casedat %>% pull(iage)) 
 }
 
 # Build CrystalCast agegroups
@@ -723,46 +721,12 @@ if(interactive()){
 CFR_All_ByAge=colSums(deathdat[2:ncol(deathdat)])/colSums(casedat[2:ncol(casedat)])
 
 
-#  Compartment model now done with a function
-comp <- Compartment(casedat,  covidsimAge, RawCFR, comdat)
-# Unpack the data
+#  Compartment model now done with a function.  Last two inputs are indices giving date range
+#  The compartments will not be correct until the cases have time to filter through all sections, which may be several months for, e.g oldCRITREC
+comp <- Compartment(casedat,  covidsimAge, RawCFR, comdat, 200,nrow(casedat))
 
-# Unpack the values returned
-DEATH <- comp$DEATH
-RECOV <- comp$RECOV
-MILD <- comp$MILD
-oldMILD <- comp$oldMILD
-newMILD <- comp$newMILD
-ILI <- comp$ILI
-oldILI <- comp$oldILI
-newILI <- comp$newILI
-SARI <- comp$SARI
-oldSARI <-  comp$oldSARI
-newSARI <- comp$newSARI
-CRIT <- comp$CRIT
-oldCRIT <- comp$oldCRIT
-newCRIT <- comp$newCRIT
-CRITREC <- comp$CRITREC
-newCRITREC <- comp$newCRITREC
-oldCRITREC <- comp$oldCRITREC
-CASE <- comp$CASE
-pCtoD <- comp$pCtoD
-pItoS <- comp$pItoS
-pStoC <-  comp$pStoC
-pStoD <- comp$pStoD
-pTtoI <-  comp$pTtoI
-MildToRecovery <-  comp$MildToRecovery
-xday <- comp$xday
-vacCFR <- comp$vacCFR
-ILIToSARI <-  comp$ILIToSARI
-ILIToRecovery <- comp$ILIToRecovery
-SARIToCritical <- comp$SARIToCritical
-SARIToDeath <- comp$SARIToDeath
-SARIToRecovery <-  comp$SARIToRecovery
-CriticalToDeath <- comp$CriticalToDeath
-CriticalToCritRecov <- comp$CriticalToCritRecov
-CritRecovToRecov <- comp$CritRecovToRecov
-# Remove the list construct
+
+# Do not unpack the values returned, access compartment quantities via comp$ list construct
 
 
 # End of compartment section
@@ -771,11 +735,11 @@ CritRecovToRecov <- comp$CritRecovToRecov
 if(interactive()){
   plot(rowSums(deathdat[2:20]))
   lines(rowSums(comp$DEATH[2:20]),col="blue")
-  plot(HospitalData$covidOccupiedMVBeds)
+  plot(UKHospitalData$covidOccupiedMVBeds)
   lines(rowSums(comp$CRIT[2:20]),col="blue")
-  plot(HospitalData$newAdmissions)
+  plot(UKHospitalData$newAdmissions)
   lines(rowSums(comp$newSARI[2:20]),col="blue")
-  plot(HospitalData$hospitalCases)
+  plot(UKHospitalData$hospitalCases)
   lines(rowSums(comp$SARI[2:20]+comp$CRIT[2:20]+comp$CRITREC[2:20]))
 }
 
@@ -1355,16 +1319,16 @@ t0 <-  min(dfR$date)
 days <- as.integer(dfR$date - t0)
 
 # Labels are optional
-myCritRecov <- as.integer(rowSums(CRITREC[2:20]))
-myCritical <- as.integer(rowSums(CRIT[2:20]))
-myILI <- as.integer(rowSums(ILI[2:20]))
-myMild <- as.integer(rowSums(MILD[2:20]))
-mySARI <-  as.integer(rowSums(ILI[2:20]))
-mynewCritRecov <- as.integer(rowSums(newCRITREC[2:20]))
-mynewCritical <- as.integer(rowSums(newCRIT[2:20]))
-mynewILI <- as.integer(rowSums(newILI[2:20]))
-mynewMild <- as.integer(rowSums(newMILD[2:20]))
-mynewSARI <-  as.integer(rowSums(newILI[2:20]))
+myCritRecov <- as.integer(rowSums(comp$CRITREC[2:20]))
+myCritical <- as.integer(rowSums(comp$CRIT[2:20]))
+myILI <- as.integer(rowSums(comp$ILI[2:20]))
+myMild <- as.integer(rowSums(comp$MILD[2:20]))
+mySARI <-  as.integer(rowSums(comp$SARI[2:20]))
+mynewCritRecov <- as.integer(rowSums(comp$newCRITREC[2:20]))
+mynewCritical <- as.integer(rowSums(comp$newCRIT[2:20]))
+mynewILI <- as.integer(rowSums(comp$newILI[2:20]))
+mynewMild <- as.integer(rowSums(comp$newMILD[2:20]))
+mynewSARI <-  as.integer(rowSums(comp$newSARI[2:20]))
 outputJSON(myt0 = t0,
            mydaysarray = days,
            myregion = UI_region,
@@ -1379,13 +1343,13 @@ outputJSON(myt0 = t0,
            myILI = myILI,
            myMild = myMild,
            myR = dfR$piecewise,
-           mySARI = as.integer(rowSums(SARI[2:20])),
+           mySARI = as.integer(rowSums(comp$SARI[2:20])),
            mycumCritRecov = cumsum(mynewCritRecov),
            mycumCritical = cumsum(mynewCritical),
            mycumILI = cumsum(mynewILI),
            mycumMild = cumsum(mynewMild),
            mycumSARI = cumsum(mynewSARI),
-           myincDeath = as.integer(rowSums(DEATH[2:20]))
+           myincDeath = as.integer(rowSums(comp$DEATH[2:20]))
 )
 CrystalCast=TRUE
 if(CrystalCast){
@@ -1398,7 +1362,7 @@ if(CrystalCast){
 
 #####  Figures and analysis for https://www.medrxiv.org/content/10.1101/2021.04.14.21255385v1
 # Date not encapuslated and broken because of hardcoded dates
-#othing should be returned or changed by this analysis
+#Nothing should be returned or changed by this analysis
 
 
 if(FALSE){medout<-MedrxivPaper()}
@@ -1411,22 +1375,25 @@ if(FALSE){medout<-MedrxivPaper()}
 predtime = 28
 region="England"
 
-if(TRUE){ comp<-Predictions(comp,R_England_BestGuess)}
+compMTP<-Predictions(comp,R_England_BestGuess)
 
 #  Compartment predictions removed to Predictions.R
+#  Replicated the data because repeated calls to Predictions would increment comp
+sum(comdat$allCases)
+sum(comp$CASE[2:20])
 
 
 #Monitoring plots
 startplot=startdate+3
-endplot=startdate+nrow(comp$CASE)+predtime-3
+endplot=startdate+nrow(compMTP$CASE)+predtime-3
 
-plot(rowSums(comp$CASE[2:20]),x=comp$CASE$date,xlim=c(startplot,endplot))
+plot(rowSums(compMTP$CASE[2:20]),x=compMTP$CASE$date,xlim=c(startplot,endplot))
 
-plot(HospitalData$newAdmissions,x=HospitalData$date, ylab="Hospital Admission",xlab="Date",xlim=c(startplot,endplot-11
+plot(UKHospitalData$newAdmissions,x=UKHospitalData$date, ylab="Hospital Admission",xlab="Date",xlim=c(startplot,endplot-11
                                                                                                 ))
-lines(rowSums(comp$newSARI[2:20]),x=comp$newSARI$date,col="blue")
+lines(rowSums(compMTP$newSARI[2:20]),x=compMTP$newSARI$date,col="blue")
 
-plot(HospitalData$hospitalCases,x=HospitalData$date,ylab="Hospital Cases",xlab="Date",xlim=c((startplot),endplot))
+plot(UKHospitalData$hospitalCases,x=UKHospitalData$date,ylab="Hospital Cases",xlab="Date",xlim=c((startplot),endplot))
 lines(rowSums(comp$SARI[2:20]+comp$CRIT[2:20]+comp$CRITREC[2:20]),x=comp$SARI$date,col='red')
 
 plot(rowSums(comp$newMILD[2:20]+comp$newILI[2:20]),xlim=c((startplot),endplot),col="blue",x=comp$newMILD$date,type="l",xlab="Date",ylab="Cases")
@@ -1435,7 +1402,7 @@ lines(rowSums(comp$newMILD[2:10]+comp$newILI[2:10]),col="green",x=comp$newMILD$d
 lines(rowSums(comp$newMILD[11:20]+comp$newILI[11:20]),col="red",x=comp$newMILD$date,type="l",xlab="Date",ylab="Cases")
 
 
-plot(HospitalData$covidOccupiedMVBeds,x=HospitalData$date,ylab="ICU Occupation",xlab="Date",xlim=c(startplot,endplot))
+plot(UKHospitalData$covidOccupiedMVBeds,x=UKHospitalData$date,ylab="ICU Occupation",xlab="Date",xlim=c(startplot,endplot))
 lines(rowSums(comp$CRIT[2:20]*0.5),col="blue",x=comp$CRIT$date)
 
 plot(rowSums(comp$DEATH[2:20]),col="blue",x=comp$DEATH$date, type="l",ylab="Deaths"

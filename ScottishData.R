@@ -367,7 +367,7 @@ RawCFR=colSums(scotdeath[2:20])/colSums(scotage[2:20])
 
 
 #  Full Epidemic model
-out <- Compartment(scotage, covidsimAge, RawCFR, comdat)
+out <- Compartment(scotage, covidsimAge, RawCFR, comdat,scotage$date[1],scotage$date[nrow(scotage)])
 #  28 day Projections
 comp<-Predictions(out,R_Scotland_BestGuess)
 # Unpack the values returned
