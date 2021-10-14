@@ -169,7 +169,7 @@ unlock3 <- unlock3+test_delay
 
 sagedelay <- 16 # Delay in producing R-number, for plots
 
-# Total cases, deaths, tests
+# Total cases, deaths, tests England
 casesurl <- paste0(baseurl,
                    "areaType=nation&",
                    "areaCode=E92000001&",
@@ -177,6 +177,7 @@ casesurl <- paste0(baseurl,
                    "metric=newDeaths28DaysByDeathDate&",
                    "metric=newPCRTestsByPublishDate&",
                    "metric=newPeopleVaccinatedFirstDoseByVaccinationDate&",
+                   "metric=covidOccupiedMVBeds&",
                    "format=csv")
 
 # Explicitly define the types for the columns
@@ -187,6 +188,8 @@ coltypes <- cols(col_character(), col_character(),col_character(),
 # Read the cases, deaths and tests data
 comdat <-  read_csv(file = casesurl, col_types = coltypes)
 
+
+
 # Transform the data
 comdat <- comdat %>%  select(date,
                              allCases = newCasesBySpecimenDate,
@@ -194,12 +197,32 @@ comdat <- comdat %>%  select(date,
                              tests = newPCRTestsByPublishDate,
                              inputCases = newCasesBySpecimenDate,
                              fpCases = newCasesBySpecimenDate,
-                             vaccines=newPeopleVaccinatedFirstDoseByVaccinationDate)%>%
+                             vaccines=newPeopleVaccinatedFirstDoseByVaccinationDate,
+                             MVBeds=covidOccupiedMVBeds)%>%
   filter(date >= startdate &
            date <= enddate ) %>%
   arrange(date)
 
+newurl="https://api.coronavirus.data.gov.uk/v2/data?areaType=nation&areaCode=E92000001&metric=cumAdmissions&metric=hospitalCases&metric=newAdmissions&format=csv"
+
+# Explicitly define the types for the columns
+coltypes <- cols(col_character(), col_character(),col_character(),
+                 col_date(format="%Y-%m-%d"), 
+                 col_integer(),  col_integer(), col_integer())
+
+
+tempdata<-read_csv(file = newurl, col_types = coltypes)
+
+tempdata <-  tempdata %>%  select(date,
+                            admissions = newAdmissions,
+                             hospital = hospitalCases,
+                             )%>%
+  filter(date >= startdate & date <= enddate ) %>%   arrange(date)
+  
+comdat<-  cbind(comdat,tempdata[2:3])
+rm(tempdata)
 # All UK cases (to estimate pre-Sept England Cases)
+
 ukcaseurl <- paste0(baseurl,
                     "areaType=overview&",
                     "metric=newPCRTestsByPublishDate&",
