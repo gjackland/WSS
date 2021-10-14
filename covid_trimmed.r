@@ -651,55 +651,10 @@ RawCFR=colSums(deathdat[2:ncol(deathdat)])/colSums(casedat[2:ncol(casedat)])
 #  Pulled out comdat & scotdat to a function. Regions need to deal with tibble 
 comdat$allCases <- Weekend(comdat$allCases)
 scotdat$allCases <- Weekend(scotdat$allCases)
-
-days <-1:7
-weeks<-as.integer(length(comdat$allCases)/7)-1
-
-for(i in 1:weeks){
-  for(j in 1:7){
-    days[j]<-days[j]+comdat$allCases[7*i+j]
-  }
-}
-casetot <- sum(days)
-days <- 7*days/casetot
-
-# Rescale  regcases
-for(i in 1:nrow(comdat)){
-  indexday <- (i-1)%%7+1  
-#  cdat[i] <- cdat[i]/days[indexday]
-  for (area in 2:length(regcases)){
-    regcases[i,area] <- regcases[i,area]/days[indexday]
-  }
-
-}
-
-
-# Fix Xmas anomaly in regions
 for (area in 2:length(regcases)){
-  Xmasav <- sum(regcases[XMstart:XMend,area])/XMdays
-  Xmasgrad <- regcases[XMend,area]-regcases[XMstart,area]
-  for (i in XMstart:XMend){
-    regcases[i,area]<-Xmasav-Xmasgrad*(((XMend+XMstart)/2)-i)/XMdays
-  }
+  regcases[area]<-Weekend(regcases %>% pull(area)) 
 }
 
-
-for (i in 2:ncol(casedat)) {
-  for (j in 1:nrow(casedat)) {
-    indexday <- (j-1)%%7+1
-    casedat[j,i] <- as.integer(casedat[j,i]/days[indexday])
-  }
-}
-
-# Fix Xmas and weekend anomaly in age data
-for (iage in 2:ncol(casedat) ){
-  Xmasav <- sum(casedat[XMstart:XMend,iage])/XMdays
-  Xmasgrad <- casedat[XMend,iage]-casedat[XMstart,iage]
-  for (i in XMstart:XMend){
-    casedat[i,iage] <- as.integer(Xmasav-Xmasgrad*(((XMend+XMstart)/2)-i)/XMdays)
-  }
-}
-rm(Xmasav,Xmasgrad,weeks,i,j,indexday)
 # Build CrystalCast agegroups
 xcastage <-casedat %>% select(`00_04`)
 xcastage$'05_14' <-casedat$`05_09`+casedat$`10_14`
