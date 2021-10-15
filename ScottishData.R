@@ -5,6 +5,7 @@ library(dplyr, warn.conflicts = FALSE, quietly = TRUE)
 library(tidyr, warn.conflicts = FALSE, quietly = TRUE)
 source("Weekend.R")
 source("CompartmentFunction.R")
+source("CC_write.R")
 # Scottish regions --------------------------------------------------------
 
 # List from https://en.wikipedia.org/wiki/Local_government_in_Scotland
@@ -366,144 +367,30 @@ Hospital<-scotHospital
 RawCFR=colSums(scotdeath[2:20])/colSums(scotage[2:20])
 
 
-#  Full Epidemic model
-out <- Compartment(scotage, covidsimAge, RawCFR, comdat,scotage$date[1],scotage$date[nrow(scotage)])
+#  Full Epidemic model.
+comp <- Compartment(scotage, covidsimAge, RawCFR, comdat,2,nrow(scotage))
 #  28 day Projections
-comp<-Predictions(out,R_Scotland_BestGuess)
-# Unpack the values returned
-DEATH <- out$DEATH
-RECOV <- out$RECOV
-MILD <- out$MILD
-oldMILD <- out$oldMILD
-newMILD <- out$newMILD
-ILI <- out$ILI
-oldILI <- out$oldILI
-newILI <- out$newILI
-SARI <- out$SARI
-oldSARI <-  out$oldSARI
-newSARI <- out$newSARI
-CRIT <- out$CRIT
-oldCRIT <- out$oldCRIT
-newCRIT <- out$newCRIT
-CRITREC <- out$CRITREC
-newCRITREC <- out$newCRITREC
-oldCRITREC <- out$oldCRITREC
-CASE <- out$CASE
-pCtoD <- out$pCtoD
-pItoS <- out$pItoS
-pStoC <-  out$pStoC
-pStoD <- out$pStoD
-pTtoI <-  out$pTtoI
-MildToRecovery <-  out$MildToRecovery
-xday <- out$xday
-vacCFR <- out$vacCFR
-ILIToSARI <-  out$ILIToSARI
-ILIToRecovery <- out$ILIToRecovery
-SARIToCritical <- out$SARIToCritical
-SARIToDeath <- out$SARIToDeath
-SARIToRecovery <-  out$SARIToRecovery
-CriticalToDeath <- out$CriticalToDeath
-CriticalToCritRecov <- out$CriticalToCritRecov
-CritRecovToRecov <- out$CritRecovToRecov
-
-today <- today()
-#CrystalCast output - use CC.R format
-CCScot <- data.frame(
-  Group = "Edinburgh",
-  Model = "WSS",
-  Scenario = "MTP",
-  ModelType = "Cases",
-  Version = "0.1",
-  "Creation Day" = day(today),
-  "Creation Month" = month(today),
-  "Creation Year" = year(today),
-  "Day of Value" = day(enddate-2),
-  "Month of Value" = month(enddate-2),
-  "Year of Value" = year(enddate-2),
-  AgeBand = "All",
-  Geography = "Scotland",
-  ValueType = "R",
-  Value = R_Scotland_BestGuess,
-  "Quantile 0.05" = R_Scotland_Quant[1],
-  "Quantile 0.1" = "",
-  "Quantile 0.15" = "",
-  "Quantile 0.2" = "",
-  "Quantile 0.25" = R_Scotland_Quant[2],
-  "Quantile 0.3" = "",
-  "Quantile 0.35" = "",
-  "Quantile 0.4" = "",
-  "Quantile 0.45" = "",
-  "Quantile 0.5" = R_Scotland_Quant[3],
-  "Quantile 0.55" = "",
-  "Quantile 0.6" = "",
-  "Quantile 0.65" = "",
-  "Quantile 0.7" = "",
-  "Quantile 0.75" = R_Scotland_Quant[4],
-  "Quantile 0.8" = "",
-  "Quantile 0.85" = "",
-  "Quantile 0.9" = "",
-  "Quantile 0.95" = R_Scotland_Quant[5],
-  check.names = FALSE
-)
-
-#  Medium term projections add to CC.R if already run
-
-if(exists("CC")){
-today <- today()
-ageband <-  "All"
-CCScot$Scenario="MTP"
-CCScot$ValueType="hospital_inc"
-#  Log. Errors from fluctuations time 4 for methodological uncertainty
-#  adjust for recent discrepancy
-
-
-for (d in 8:(nrow(newSARI)-22)){
-  CCScot$Value = sum(newSARI[d,2:20])
-  CCScot$"Quantile 0.05"=max(0,CCScot$Value*(1-12*sqrt(sum(newSARI[(d-6):d,2:20])/7)/CCScot$Value))
-  CCScot$"Quantile 0.25"=max(0,CCScot$Value*(1-4*sqrt(sum(newSARI[(d-6):d,2:20])/7)/CCScot$Value))
-  CCScot$"Quantile 0.5"=CCScot$Value
-  CCScot$"Quantile 0.75"=CCScot$Value*(1+4*sqrt(sum(newSARI[(d-6):d,2:20])/7)/CCScot$Value)
-  CCScot$"Quantile 0.95"=CCScot$Value*(1+12*sqrt(sum(newSARI[(d-7):d,2:20])/7)/CCScot$Value)
-  CCScot$"Day of Value" = day(newSARI$date[d])
-  CCScot$"Month of Value" = month(newSARI$date[d])
-  CCScot$"Year of Value" = year(newSARI$date[d])
-  # Add the new row
-  CC <- rbind(CC, CCScot)
-}
-CCScot$ValueType="death_inc_line"
-for (d in 8:(nrow(DEATH)-22)){
-  CCScot$Value = sum(DEATH[d,2:20])
-  CCScot$"Quantile 0.05"=max(0,CCScot$Value*(1-12*sqrt(sum(DEATH[(d-6):d,2:20])/7)/CCScot$Value))
-  CCScot$"Quantile 0.25"=max(0,CCScot$Value*(1-4*sqrt(sum(DEATH[(d-6):d,2:20])/7)/CCScot$Value))
-  CCScot$"Quantile 0.5"=CCScot$Value
-  CCScot$"Quantile 0.75"=CCScot$Value*(1+4*sqrt(sum(DEATH[(d-6):d,2:20])/7)/CCScot$Value)
-  CCScot$"Quantile 0.95"=CCScot$Value*(1+12*sqrt(sum(DEATH[(d-7):d,2:20])/7)/CCScot$Value)
-  CCScot$"Day of Value" = day(DEATH$date[d])
-  CCScot$"Month of Value" = month(DEATH$date[d])
-  CCScot$"Year of Value" = year(DEATH$date[d])
-  # Add the new row to CC
-  CC <- rbind(CC, CCScot)
-}
-}
+scotcomp<-Predictions(comp,R_Scotland_BestGuess)
+CC_write(scotcomp,"Scotland")
 #  Crystalcast format output  
-write.xlsx(CC, file = paste("Data/compartment",today,"all.xlsx"), sheetName = "WSS", rowNames = FALSE)
+#write.xlsx(CC, file = paste("Data/compartment",today,"all.xlsx"), sheetName = "WSS", rowNames = FALSE)
 
 
-rbind(CASE,predCASE)->plotCASE
+rbind(scotcomp$CASE,scotcomp$predCASE)->plotCASE
 plot(rowSums(plotCASE[2:20]),x=plotCASE$date)
 #Monitoring plots
 
-plot(rowSums(newSARI[2:20]),col="blue",x=SARI$date, type='l',xlim=c(Hospital$Date[1],(enddate+predtime)))
+plot(rowSums(scotcomp$newSARI[2:20]),col="blue",x=scotcomp$SARI$date, type='l',xlim=c(Hospital$Date[1],(enddate+predtime)))
 points(Hospital$newAdmissions,x=Hospital$Date,ylab="Scottish Hospital Cases",xlab="Date")
 
 plot(Hospital$newAdmissions,x=Hospital$Date,ylab="Scottish Hospital Cases",xlab="Date",xlim=c(Hospital$Date[1],(Hospital$Date[350]+48)))
-lines(rowSums(newSARI[2:20]),x=SARI$date,col='red')
-plot(rowSums(CASE[2:20]),x=CASE$date,ylab="Cases",xlab="Date")
-lines(rowSums(newMILD[2:20]+newILI[2:20]),col="red",x=newMILD$date)
+lines(rowSums(scotcomp$newSARI[2:20]),x=scotcomp$SARI$date,col='red')
+plot(rowSums(scotcomp$CASE[2:20]),x=scotcomp$CASE$date,ylab="Cases",xlab="Date")
+lines(rowSums(scotcomp$newMILD[2:20]+scotcomp$newILI[2:20]),col="red",x=scotcomp$newMILD$date)
 
 
 plot(Hospital$ICUAdmissions,x=deathdat$date,ylab="ICU Admissions",xlab="Date",las=2)
-lines(rowSums(newCRIT[2:20]),col="blue",x=newCRIT$date)
+lines(rowSums(scotcomp$newCRIT[2:20]),col="blue",x=scotcomp$newCRIT$date)
 
-plot(rowSums(DEATH[2:20]),col="blue",x=DEATH$date,type="l", ylab="Deaths",xlab="Date",las=2)
+plot(rowSums(scotcomp$DEATH[2:20]),col="blue",x=scotcomp$DEATH$date,type="l", ylab="Deaths",xlab="Date",las=2)
 points(rowSums(scotdeath[2:20]),x=scotdeath$date,ylab="Deaths",xlab="Date")

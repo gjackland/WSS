@@ -108,9 +108,9 @@ for (d in 8:(nrow(CCcomp$CASE)-22)){
   # Add the new row
   CC <- rbind(CC, CCtmp)
 }
-#  Missing prevalence covers discrepancy between ONS and case data  Calculated separately, in ons_prev.R
-CCtmp$ValueType="prevalence"
+#  Missing prevalence covers discrepancy between ONS and case data
 Missing_prevalence=1.1
+CCtmp$ValueType="prevalence"
 PREV<-CCcomp$ILI[2:20]+CCcomp$SARI[2:20]+CCcomp$CRIT[2:20]+CCcomp$MILD[2:20]
 PREV=PREV*Missing_prevalence
 for (d in 8:(nrow(PREV)-22)){
