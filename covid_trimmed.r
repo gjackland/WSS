@@ -143,7 +143,7 @@ startdate <- as.Date("2020/08/09") #as.Date("2020/08/09")
 
 # Lose only the last day of data - use tail correction for reporting delay
 # Weekend data can be sketchy Extend the enddate if run on Monday morning
-enddate <-  Sys.Date()-5
+enddate <-  Sys.Date()-6
 # Set the generation time
 genTime <- 5
 #  Dates for the plots
@@ -1405,7 +1405,7 @@ lines(rowSums(comp$newMILD[11:20]+comp$newILI[11:20]),col="red",x=comp$newMILD$d
 plot(UKHospitalData$covidOccupiedMVBeds,x=UKHospitalData$date,ylab="ICU Occupation",xlab="Date",xlim=c(startplot,endplot))
 lines(rowSums(comp$CRIT[2:20]*0.5),col="blue",x=comp$CRIT$date)
 
-plot(rowSums(comp$DEATH[2:20]),col="blue",x=comp$DEATH$date, type="l",ylab="Deaths"
+plot(rowSums(compMTP$DEATH[2:20]),col="blue",x=compMTP$DEATH$date, type="l",ylab="Deaths"
      ,xlab="Date",xlim=c(startplot,endplot-11))
 points(rowSums(deathdat[2:20]),x=deathdat$date)
 

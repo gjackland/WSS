@@ -551,30 +551,45 @@ CCdate$ValueType="hospital_inc"
 #  adjust for recent discrepancy
 
 
-for (d in 8:(nrow(newSARI)-22)){
-  CCdate$Value = sum(newSARI[d,2:20])
-  CCdate$"Quantile 0.05"=max(0,CCdate$Value*(1-12*sqrt(sum(newSARI[(d-6):d,2:20])/7)/CCdate$Value))
-  CCdate$"Quantile 0.25"=max(0,CCdate$Value*(1-4*sqrt(sum(newSARI[(d-6):d,2:20])/7)/CCdate$Value))
+for (d in 8:(nrow(comp$newSARI)-22)){
+  CCdate$Value = sum(comp$newSARI[d,2:20])
+  CCdate$"Quantile 0.05"=max(0,CCdate$Value*(1-12*sqrt(sum(comp$newSARI[(d-6):d,2:20])/7)/CCdate$Value))
+  CCdate$"Quantile 0.25"=max(0,CCdate$Value*(1-4*sqrt(sum(comp$newSARI[(d-6):d,2:20])/7)/CCdate$Value))
   CCdate$"Quantile 0.5"=CCdate$Value
-  CCdate$"Quantile 0.75"=CCdate$Value*(1+4*sqrt(sum(newSARI[(d-6):d,2:20])/7)/CCdate$Value)
-  CCdate$"Quantile 0.95"=CCdate$Value*(1+12*sqrt(sum(newSARI[(d-7):d,2:20])/7)/CCdate$Value)
-  CCdate$"Day of Value" = day(newSARI$date[d])
-  CCdate$"Month of Value" = month(newSARI$date[d])
-  CCdate$"Year of Value" = year(newSARI$date[d])
+  CCdate$"Quantile 0.75"=CCdate$Value*(1+4*sqrt(sum(comp$newSARI[(d-6):d,2:20])/7)/CCdate$Value)
+  CCdate$"Quantile 0.95"=CCdate$Value*(1+12*sqrt(sum(comp$newSARI[(d-7):d,2:20])/7)/CCdate$Value)
+  CCdate$"Day of Value" = day(comp$newSARI$date[d])
+  CCdate$"Month of Value" = month(comp$newSARI$date[d])
+  CCdate$"Year of Value" = year(comp$newSARI$date[d])
   # Add the new row
   CC <- rbind(CC, CCdate)
 }
 CCdate$ValueType="death_inc_line"
-for (d in 8:(nrow(DEATH)-22)){
-  CCdate$Value = sum(DEATH[d,2:20])
-  CCdate$"Quantile 0.05"=max(0,CCdate$Value*(1-12*sqrt(sum(DEATH[(d-6):d,2:20])/7)/CCdate$Value))
-  CCdate$"Quantile 0.25"=max(0,CCdate$Value*(1-4*sqrt(sum(DEATH[(d-6):d,2:20])/7)/CCdate$Value))
+for (d in 8:(nrow(comp$DEATH)-22)){
+  CCdate$Value = sum(comp$DEATH[d,2:20])
+  CCdate$"Quantile 0.05"=max(0,CCdate$Value*(1-12*sqrt(sum(comp$DEATH[(d-6):d,2:20])/7)/CCdate$Value))
+  CCdate$"Quantile 0.25"=max(0,CCdate$Value*(1-4*sqrt(sum(comp$DEATH[(d-6):d,2:20])/7)/CCdate$Value))
   CCdate$"Quantile 0.5"=CCdate$Value
-  CCdate$"Quantile 0.75"=CCdate$Value*(1+4*sqrt(sum(DEATH[(d-6):d,2:20])/7)/CCdate$Value)
-  CCdate$"Quantile 0.95"=CCdate$Value*(1+12*sqrt(sum(DEATH[(d-7):d,2:20])/7)/CCdate$Value)
-  CCdate$"Day of Value" = day(DEATH$date[d])
-  CCdate$"Month of Value" = month(DEATH$date[d])
-  CCdate$"Year of Value" = year(DEATH$date[d])
+  CCdate$"Quantile 0.75"=CCdate$Value*(1+4*sqrt(sum(comp$DEATH[(d-6):d,2:20])/7)/CCdate$Value)
+  CCdate$"Quantile 0.95"=CCdate$Value*(1+12*sqrt(sum(comp$DEATH[(d-7):d,2:20])/7)/CCdate$Value)
+  CCdate$"Day of Value" = day(comp$DEATH$date[d])
+  CCdate$"Month of Value" = month(comp$DEATH$date[d])
+  CCdate$"Year of Value" = year(comp$DEATH$date[d])
+  # Add the new row
+  CC <- rbind(CC, CCdate)
+}
+#  Check with ONS CCdate$ValueType="prevalence"
+CCdate$ValueType="incidence"
+for (d in 8:(nrow(comp$CASE)-22)){
+  CCdate$Value = sum(comp$CASE[d,2:20])
+  CCdate$"Quantile 0.05"=max(0,CCdate$Value*(1-12*sqrt(sum(comp$CASE[(d-6):d,2:20])/7)/CCdate$Value))
+  CCdate$"Quantile 0.25"=max(0,CCdate$Value*(1-4*sqrt(sum(comp$CASE[(d-6):d,2:20])/7)/CCdate$Value))
+  CCdate$"Quantile 0.5"=CCdate$Value
+  CCdate$"Quantile 0.75"=CCdate$Value*(1+4*sqrt(sum(comp$CASE[(d-6):d,2:20])/7)/CCdate$Value)
+  CCdate$"Quantile 0.95"=CCdate$Value*(1+12*sqrt(sum(comp$CASE[(d-7):d,2:20])/7)/CCdate$Value)
+  CCdate$"Day of Value" = day(comp$CASE$date[d])
+  CCdate$"Month of Value" = month(comp$CASE$date[d])
+  CCdate$"Year of Value" = year(comp$CASE$date[d])
   # Add the new row
   CC <- rbind(CC, CCdate)
 }
