@@ -34,6 +34,7 @@ source("medrxiv.R")
 source("Predictions.R")
 source("age_pdfplot.R")
 source("Weekend.R")
+source("CC_write.R")
 
 # Set the working directory to be the same as to where the script is run from.
 setwd(".")
@@ -143,7 +144,7 @@ startdate <- as.Date("2020/08/09") #as.Date("2020/08/09")
 
 # Lose only the last day of data - use tail correction for reporting delay
 # Weekend data can be sketchy Extend the enddate if run on Monday morning
-enddate <-  Sys.Date()-6
+enddate <-  Sys.Date()-5
 # Set the generation time
 genTime <- 5
 #  Dates for the plots
@@ -723,7 +724,7 @@ CFR_All_ByAge=colSums(deathdat[2:ncol(deathdat)])/colSums(casedat[2:ncol(casedat
 
 #  Compartment model now done with a function.  Last two inputs are indices giving date range
 #  The compartments will not be correct until the cases have time to filter through all sections, which may be several months for, e.g oldCRITREC
-comp <- Compartment(casedat,  covidsimAge, RawCFR, comdat, 200,nrow(casedat))
+comp <- Compartment(casedat,  covidsimAge, RawCFR, comdat, 2,nrow(casedat))
 
 
 # Do not unpack the values returned, access compartment quantities via comp$ list construct
@@ -959,6 +960,7 @@ filteredR <-append(
   append(tail(predict(loess(bylogR ~ x, data=dfR,weight=comdat$allCases,span=s3))),
          tail(predict(loess(bylogR ~ x, data=dfR,weight=comdat$allCases,span=s4))))
 )
+
 R_England_BestGuess<- mean(filteredR)
 R_England_Quant <-unname(quantile(filteredR, probs=c(0.05,0.25,0.5,0.75,0.95)))
 
@@ -1386,7 +1388,8 @@ sum(comp$CASE[2:20])
 #Monitoring plots
 startplot=startdate+3
 endplot=startdate+nrow(compMTP$CASE)+predtime-3
-
+PREV<-comp$ILI[2:20]+comp$SARI[2:20]+comp$CRIT[2:20]+comp$MILD[2:20]
+lines(rowSums(PREV))
 plot(rowSums(compMTP$CASE[2:20]),x=compMTP$CASE$date,xlim=c(startplot,endplot))
 
 plot(UKHospitalData$newAdmissions,x=UKHospitalData$date, ylab="Hospital Admission",xlab="Date",xlim=c(startplot,endplot-11

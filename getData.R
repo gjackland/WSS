@@ -75,7 +75,7 @@ democols <- cols(
 )
 
 # tibble for death demographics
-AgeDeathDemograhics <- tibble()
+AgeDeathDemographics <- tibble()
 
 # Loop round the regions
 for(region in names(regions)){
@@ -90,11 +90,11 @@ for(region in names(regions)){
     d <- read_csv(url1,col_types = democols)
 
     # Append data to tibble
-    AgeDeathDemograhics <- bind_rows(AgeDeathDemograhics,d)
+    AgeDeathDemographics <- bind_rows(AgeDeathDemographics,d)
 }
 
 # Write data to a file
-write_csv(AgeDeathDemograhics,"data/AgeDeathDemographics.csv")
+write_csv(AgeDeathDemographics,"data/AgeDeathDemographics.csv")
 
 # Get hospital data
 HospitalURL <- function(reg){
