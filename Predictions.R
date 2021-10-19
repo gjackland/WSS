@@ -48,7 +48,7 @@ Predictions <- function(input,R_BestGuess){
   #   actual data retained in casedat
   predCASE<-CASE[lengthofdata,(1:20)]
   predCASE[1,(2:20)]<-CASE[lengthofdata,(2:20)] #  Growth rate by age group
-  predCASE[1,1]=enddateP+1
+  predCASE[1,1]=enddateP
   ipred=1
   for (iday in ((lengthofdata+1):(lengthofdata+predtime))){
     #  Proportions become variant dependent.  ILI is case driven, so extra infectivity is automatic
@@ -109,10 +109,11 @@ Predictions <- function(input,R_BestGuess){
     if(R_BestGuess > 1.4) {R_BestGuess=(R_BestGuess-1)*0.95+1.0}
     R_BestGuess=(R_BestGuess-1)*0.95+1.0
     predCASE[(ipred+1),(2:20)]<-predCASE[ipred,(2:20)]*exp((R_BestGuess-1)/genTime)
-    predCASE[ipred+1,1]<-enddateP+1+ipred 
-    ipred=ipred+1
+    predCASE[ipred+1,1]<-enddateP+ipred 
+    ipred=ipred+1 
   }
-  
+  # Remove the redundant first column
+  predCASE <- predCASE[-c(1),]
 
   # Pack anything that you want to use - anything not returned will not have a
   # value in the calling space.
