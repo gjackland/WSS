@@ -2,6 +2,7 @@ source("CC_write.R")
 source("CompartmentFunction.R")
 source("Predictions.R")
 
+
 getData <- function(dftmp) {for(reg in 1:9){
   out <- dftmp %>%
     select(date = date, age = age, values = cases) %>%
@@ -150,3 +151,4 @@ CC_write(predlondon,"London")
 CC_write(predSW,"South West")
 CC_write(predSE,"South East")
 CC_write(predEE,"East of England")
+

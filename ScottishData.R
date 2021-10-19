@@ -7,6 +7,7 @@ source("Weekend.R")
 source("CompartmentFunction.R")
 source("CC_write.R")
 source("Predictions.R")
+
 # Scottish regions --------------------------------------------------------
 
 # List from https://en.wikipedia.org/wiki/Local_government_in_Scotland
@@ -374,18 +375,14 @@ comp <- Compartment(scotage, covidsimAge, RawCFR, comdat,2,nrow(scotage))
 #  28 day Projections
 scotcomp<-Predictions(comp,R_Scotland_BestGuess)
 
-
-
 CC_write(scotcomp,"Scotland")
 #  Crystalcast format output  
 #write.xlsx(CC, file = paste("Data/compartment",today,"all.xlsx"), sheetName = "WSS", rowNames = FALSE)
 
 
-
+rbind(scotcomp$CASE,scotcomp$predCASE)->plotCASE
+plot(rowSums(plotCASE[2:20]),x=plotCASE$date)
 #Monitoring plots
-
-plot(rowSums(scotcomp$CASE[2:20]),col="blue",x=scotcomp$CASE$date, type='l',xlim=c(Hospital$Date[1],(enddate+predtime)))
-points(Hospital$newAdmissions,x=Hospital$Date,ylab="Scottish Hospital Cases",xlab="Date")
 
 plot(rowSums(scotcomp$newSARI[2:20]),col="blue",x=scotcomp$SARI$date, type='l',xlim=c(Hospital$Date[1],(enddate+predtime)))
 points(Hospital$newAdmissions,x=Hospital$Date,ylab="Scottish Hospital Cases",xlab="Date")

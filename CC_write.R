@@ -5,7 +5,9 @@
 
 CC_write <- function(CCcomp,region){
 # Initiate variables
+
 startwrite=200  
+
 group <- "Edinburgh"
 model <-  "WSS"
 scenario <- "NowCast"
@@ -19,7 +21,9 @@ valuetype <- "R"
 # Load packages  - Without java dependency 
 library(openxlsx)
 library(lubridate)
+
 #  Initiate CC with Scotland default - overwrite later
+
   CC <- data.frame(
     Group = group,
     Model = model,
@@ -82,6 +86,7 @@ for (d in startwrite:(nrow(CCcomp$newSARI)-22)){
   CC <- rbind(CC, CCtmp)
 }
 CCtmp$ValueType="death_inc_line"
+
 for (d in startwrite:(nrow(CCcomp$DEATH)-22)){
   CCtmp$Value = sum(CCcomp$DEATH[d,2:20])
   CCtmp$"Quantile 0.05"=max(0,CCtmp$Value*(1-12*sqrt(sum(CCcomp$DEATH[(d-6):d,2:20])/7)/CCtmp$Value))
@@ -104,9 +109,9 @@ for (d in startwrite:(nrow(CCcomp$CASE)-22)){
   CCtmp$"Quantile 0.5"=CCtmp$Value
   CCtmp$"Quantile 0.75"=CCtmp$Value*(1+4*sqrt(sum(CCcomp$CASE[(d-6):d,2:20])/7)/CCtmp$Value)
   CCtmp$"Quantile 0.95"=CCtmp$Value*(1+12*sqrt(sum(CCcomp$CASE[(d-7):d,2:20])/7)/CCtmp$Value)
-  CCtmp$"Day of Value" = day(CCcomp$ILI$date[d])
-  CCtmp$"Month of Value" = month(CCcomp$ILI$date[d])
-  CCtmp$"Year of Value" = year(CCcomp$ILI$date[d])
+  CCtmp$"Day of Value" = day(CCcomp$CASE$date[d])
+  CCtmp$"Month of Value" = month(CCcomp$CASE$date[d])
+  CCtmp$"Year of Value" = year(CCcomp$CASE$date[d])
   # Add the new row
   CC <- rbind(CC, CCtmp)
 }
@@ -129,7 +134,9 @@ for (d in startwrite:(nrow(PREV)-22)){
   CC <- rbind(CC, CCtmp)
 }
 #  Crystalcast format output  
+
 write.xlsx(CC, file = paste("data/CCcompartment",today(),region,".xlsx"), 
          overwrite = TRUE,  sheetName = region, rowNames = FALSE)
+
 }
 
