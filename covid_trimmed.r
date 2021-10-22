@@ -203,7 +203,7 @@ newurl="https://api.coronavirus.data.gov.uk/v2/data?areaType=nation&areaCode=E92
 
 # Explicitly define the types for the columns  Need to repeat call because??? data download restriction
 coltypes <- cols(col_character(), col_character(),col_character(),
-                 col_date(format="%Y-%m-%d"), 
+                 col_date(format="%Y-%m-%d"),
                  col_integer(),  col_integer(), col_integer())
 
 
@@ -214,7 +214,7 @@ tempdata <-  tempdata %>%  select(date,
                              hospital = hospitalCases,
                              )%>%
   filter(date >= startdate & date <= enddate ) %>%   arrange(date)
-  
+
 comdat<-  cbind(comdat,tempdata[2:3])
 rm(tempdata)
 # All UK cases (to estimate pre-Sept England Cases)
@@ -316,6 +316,7 @@ deathurl <- paste0(baseurl,
                    "areaCode=E92000001&",
                    "metric=newDeaths28DaysByDeathDateAgeDemographics&",
                    "format=csv")
+
 # Explicitly define the types for the columns
 coltypes <- cols(areaCode=col_character(), areaName=col_character(),areaType=col_character(),
                  date=col_date(format="%Y-%m-%d"),age=col_character(),
@@ -667,14 +668,14 @@ RawCFR=colSums(deathdat[2:ncol(deathdat)])/colSums(casedat[2:ncol(casedat)])
 
 # Remove weekend effect, assuming each weekday has same number of cases over the
 # epidemic, and national averages hold regionally.  Also, smooth data through Xmas.
-#  Pulled out comdat & scotdat to a function. Regions need to deal with tibble 
+#  Pulled out comdat & scotdat to a function. Regions need to deal with tibble
 comdat$allCases <- Weekend(comdat$allCases)
 scotdat$allCases <- Weekend(scotdat$allCases)
 for (area in 2:length(regcases)){
-  regcases[area]<-Weekend(regcases %>% pull(area)) 
+  regcases[area]<-Weekend(regcases %>% pull(area))
 }
 for (iage in 2:length(casedat)){
-  casedat[iage]<-Weekend(casedat %>% pull(iage)) 
+  casedat[iage]<-Weekend(casedat %>% pull(iage))
 }
 
 # Build CrystalCast agegroups
@@ -742,6 +743,53 @@ if(interactive()){
   lines(rowSums(comp$newSARI[2:20]),col="blue")
   plot(UKHospitalData$hospitalCases)
   lines(rowSums(comp$SARI[2:20]+comp$CRIT[2:20]+comp$CRITREC[2:20]))
+
+  # Diagnostic plots in ggplot format
+  deathdat %>% rowwise()                               %>%
+               mutate(totdeath = sum(c_across(2:20)))  %>%
+               select(date,totdeath)                   %>%
+               left_join(comp$DEATH, by="date")        %>%
+               mutate(totDEATH = sum(c_across(3:21)))  %>%
+               select(date,totdeath, totDEATH)         %>%
+               ggplot(aes(x = date, y = totdeath)) + geom_point(alpha = 0.25) +
+               geom_line(aes(x = date, y = totDEATH), colour = "blue") +
+               theme_bw() + ylab("Total Deaths") + xlab("Date")
+
+  UKHospitalData %>% select(date, beds = covidOccupiedMVBeds) %>%
+                     left_join(comp$CRIT, by = "date")        %>%
+                     rowwise()                                %>%
+                     mutate(totCrit = sum(c_across(3:21)))    %>%
+                     select(date, beds, totCrit)              %>%
+                     ggplot(aes(x = date, y = beds)) + geom_point(alpha = 0.25) +
+                     geom_line(aes(x = date, y = totCrit), colour = "blue") +
+                     theme_bw() + ylab("Occupied beds") + xlab("Date")
+
+  UKHospitalData %>% select(date, newAdmissions)                 %>%
+                     left_join(comp$newSARI, by ="date")         %>%
+                     rowwise()                                   %>%
+                     mutate(totnewSARI = sum(c_across(3:21)))    %>%
+                     select(date, newAdmissions, totnewSARI)     %>%
+                     ggplot(aes(x = date, y = newAdmissions)) +
+                     geom_point(alpha = 0.2) +
+                     geom_line(aes(x = date, y = totnewSARI), colour = "blue") +
+                     theme_bw() + ylab("New Admissions") + xlab("Date")
+
+  UKHospitalData %>% select(date, hospitalCases)                  %>%
+                     left_join(comp$SARI, by = "date")            %>%
+                     rowwise()                                    %>%
+                     mutate(totSARI = sum(c_across(3:21)))        %>%
+                     select(date, hospitalCases, totSARI)         %>%
+                     left_join(comp$CRIT, by = "date")            %>%
+                     rowwise()                                    %>%
+                     mutate(totSariCrit = sum(c_across(3:22)))    %>%
+                     select(date, hospitalCases, totSariCrit)     %>%
+                     left_join(comp$CRITREC, by = "date")         %>%
+                     rowwise()                                    %>%
+                     mutate(totSariCritRec = sum(c_across(3:22))) %>%
+                     ggplot(aes(x = date, y = hospitalCases)) +
+                     geom_point(alpha = 0.2) +
+                     geom_line(aes(x = date, y = totSariCritRec), colour = "blue") +
+                      theme_bw() + ylab("Hospital cases") + xlab("Date")
 }
 
 # Smoothcasedat
@@ -1194,7 +1242,7 @@ dfR[,c(2,9:27)]%>% filter(startplot < date & date < endplot) %>%
 
 if(interactive()&pdfpo){age_pdfplot(dfR,Rest,sagedelay,comdat,spdf)}
 
- 
+
 
 # Reverse Engineer cases from R-number - requires stratonovich calculus to get reversibility
 # Initializations
