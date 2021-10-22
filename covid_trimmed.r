@@ -789,11 +789,11 @@ if(interactive()){
                      ggplot(aes(x = date, y = hospitalCases)) +
                      geom_point(alpha = 0.2) +
                      geom_line(aes(x = date, y = totSariCritRec), colour = "blue") +
-                      theme_bw() + ylab("Hospital cases") + xlab("Date")
+                     theme_bw() + ylab("Hospital cases") + xlab("Date")
 }
 
 # Smoothcasedat
-smoothcases=smooth.spline(comdat$allCases, df=20)
+smoothcases <- smooth.spline(comdat$allCases, df = 20)
 
 # Create a vector to hold the results for various R-numbers
 ninit <- as.numeric(1:nrow(comdat))/as.numeric(1:nrow(comdat))
@@ -817,12 +817,13 @@ if(any(comp$CASE==0)){
 }
 rat <- regcases
 for(i in (2:nrow(regcases))    ){
-  rat[i,2:ncol(regcases)] <- 1+log(regcases[i,2:ncol(regcases)]/regcases[(i-1),2:ncol(regcases)])*genTime
+  rat[i, 2:ncol(regcases)] <- 1 + log(regcases[i, 2:ncol(regcases)]/regcases[(i-1), 2:ncol(regcases)])*genTime
 }
-# Rest first row to 1, because there's no data
+
+# Reset first row to 1, because there's no data
 # Fix R=1 not NaN or Inf when previous cases are zero
 # Its not really defined.  This generates a warning which we can ignore
-rat[1,2:ncol(regcases)]<-1.0
+rat[1, 2:ncol(regcases)]<-1.0
 rat[is.na(rat)] <- 1.0
 rat[rat==Inf] <- 1.0
 rat[rat==-Inf] <- 1.0
@@ -856,9 +857,9 @@ if(interactive()){
 
 #  Generate R over all ages, with some options for the calculus  itoR is Ito, stratR is stratonovich, bylogR is harmonic Ito fpR includes false positive correction
 #  Avoid zero cases in R-calculation
-casedat[casedat==0]=1
+casedat[casedat == 0] <- 1
 
-for(i in ((genTime+1):length(dfR$itoR))    ){
+for(i in ((genTime+1):length(dfR$itoR))){
   dfR$itoR[i]=(1+(comdat$allCases[i]-comdat$allCases[i-1])*genTime/(comdat$allCases[i-1]))
   dfR$stratR[i]=1+ (comdat$allCases[i]-comdat$allCases[i-1])*genTime/mean(comdat$allCases[(i-1):i])
   dfR$fpR[i]=(1+(comdat$fpCases[i]-comdat$fpCases[i-1])*genTime/(comdat$fpCases[i-1]))
@@ -893,28 +894,29 @@ for(i in ((genTime+1):length(dfR$itoR))    ){
    dfR$smoothcasesR[i]=1+log(smoothcases$y[i]/smoothcases$y[i-1])*genTime
 }
 
-dfR$smoothRlog<-smooth.spline(dfR$bylogR,df=20,w=sqrt(comdat$allCases))$y
-dfR$smoothRito<-smooth.spline(dfR$itoR,df=20,w=sqrt(comdat$allCases))$y
-dfR$smoothRstrat<-smooth.spline(dfR$stratR,df=20,w=sqrt(comdat$allCases))$y
-dfR$smoothRegions<-smooth.spline(dfR$regions,df=20,w=sqrt(comdat$regions))$y
-dfR$loessR<-predict(loess(bylogR~x,data=dfR,span=0.25))
-dfR[is.na(dfR)]=1.0
-dfR[dfR==Inf]=1.0
-dfR[dfR==-Inf]=1.0
+dfR$smoothRlog <- smooth.spline(dfR$bylogR,df=20,w=sqrt(comdat$allCases))$y
+dfR$smoothRito <- smooth.spline(dfR$itoR,df=20,w=sqrt(comdat$allCases))$y
+dfR$smoothRstrat <- smooth.spline(dfR$stratR,df=20,w=sqrt(comdat$allCases))$y
+dfR$smoothRegions <- smooth.spline(dfR$regions,df=20,w=sqrt(comdat$regions))$y
+dfR$loessR <- predict(loess(bylogR~x,data=dfR,span=0.25))
+dfR[is.na(dfR)] <- 1.0
+dfR[dfR == Inf] <- 1.0
+dfR[dfR == -Inf] <- 1.0
 
 
 # Set day 1, for plotting purposes
-for (i in 3:nrow(dfR)){dfR[i,1]=dfR[i,2]}
+for (i in 3:nrow(dfR)){dfR[i,1] <- dfR[i,2]}
 
-for(i in 4:(length(dfR$weeklyR)-3)){
-    day1=i-3
-    day7=i+3
-    dfR$weeklyR[i]=sum(dfR$itoR[day1:day7])/7.0
+for(i in 4:(nrow(dfR)-3)){
+    day1 <- i-3
+    day7 <- i+3
+    dfR$weeklyR[i] <- sum(dfR$itoR[day1:day7])/7.0
 }
+
 # End effect
-dfR$weeklyR[length(dfR$weeklyR)]=1.0
-dfR$weeklyR[length(dfR$weeklyR)-1]=1.0
-dfR$weeklyR[length(dfR$weeklyR)-2]=1.0
+dfR$weeklyR[length(dfR$weeklyR)] <- 1.0
+dfR$weeklyR[length(dfR$weeklyR)-1] <- 1.0
+dfR$weeklyR[length(dfR$weeklyR)-2] <- 1.0
 
 # Plot various types of smoothing on the R data
 
