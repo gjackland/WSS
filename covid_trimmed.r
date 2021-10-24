@@ -203,7 +203,7 @@ newurl="https://api.coronavirus.data.gov.uk/v2/data?areaType=nation&areaCode=E92
 
 # Explicitly define the types for the columns  Need to repeat call because??? data download restriction
 coltypes <- cols(col_character(), col_character(),col_character(),
-                 col_date(format="%Y-%m-%d"), 
+                 col_date(format="%Y-%m-%d"),
                  col_integer(),  col_integer(), col_integer())
 
 
@@ -214,7 +214,7 @@ tempdata <-  tempdata %>%  select(date,
                              hospital = hospitalCases,
                              )%>%
   filter(date >= startdate & date <= enddate ) %>%   arrange(date)
-  
+
 comdat<-  cbind(comdat,tempdata[2:3])
 rm(tempdata)
 # All UK cases (to estimate pre-Sept England Cases)
@@ -316,6 +316,7 @@ deathurl <- paste0(baseurl,
                    "areaCode=E92000001&",
                    "metric=newDeaths28DaysByDeathDateAgeDemographics&",
                    "format=csv")
+
 # Explicitly define the types for the columns
 coltypes <- cols(areaCode=col_character(), areaName=col_character(),areaType=col_character(),
                  date=col_date(format="%Y-%m-%d"),age=col_character(),
@@ -667,14 +668,14 @@ RawCFR=colSums(deathdat[2:ncol(deathdat)])/colSums(casedat[2:ncol(casedat)])
 
 # Remove weekend effect, assuming each weekday has same number of cases over the
 # epidemic, and national averages hold regionally.  Also, smooth data through Xmas.
-#  Pulled out comdat & scotdat to a function. Regions need to deal with tibble 
+#  Pulled out comdat & scotdat to a function. Regions need to deal with tibble
 comdat$allCases <- Weekend(comdat$allCases)
 scotdat$allCases <- Weekend(scotdat$allCases)
 for (area in 2:length(regcases)){
-  regcases[area]<-Weekend(regcases %>% pull(area)) 
+  regcases[area]<-Weekend(regcases %>% pull(area))
 }
 for (iage in 2:length(casedat)){
-  casedat[iage]<-Weekend(casedat %>% pull(iage)) 
+  casedat[iage]<-Weekend(casedat %>% pull(iage))
 }
 
 # Build CrystalCast agegroups
@@ -742,10 +743,57 @@ if(interactive()){
   lines(rowSums(comp$newSARI[2:20]),col="blue")
   plot(UKHospitalData$hospitalCases)
   lines(rowSums(comp$SARI[2:20]+comp$CRIT[2:20]+comp$CRITREC[2:20]))
+
+  # Diagnostic plots in ggplot format
+  deathdat %>% rowwise()                               %>%
+               mutate(totdeath = sum(c_across(2:20)))  %>%
+               select(date,totdeath)                   %>%
+               left_join(comp$DEATH, by="date")        %>%
+               mutate(totDEATH = sum(c_across(3:21)))  %>%
+               select(date,totdeath, totDEATH)         %>%
+               ggplot(aes(x = date, y = totdeath)) + geom_point(alpha = 0.25) +
+               geom_line(aes(x = date, y = totDEATH), colour = "blue") +
+               theme_bw() + ylab("Total Deaths") + xlab("Date")
+
+  UKHospitalData %>% select(date, beds = covidOccupiedMVBeds) %>%
+                     left_join(comp$CRIT, by = "date")        %>%
+                     rowwise()                                %>%
+                     mutate(totCrit = sum(c_across(3:21)))    %>%
+                     select(date, beds, totCrit)              %>%
+                     ggplot(aes(x = date, y = beds)) + geom_point(alpha = 0.25) +
+                     geom_line(aes(x = date, y = totCrit), colour = "blue") +
+                     theme_bw() + ylab("Occupied beds") + xlab("Date")
+
+  UKHospitalData %>% select(date, newAdmissions)                 %>%
+                     left_join(comp$newSARI, by ="date")         %>%
+                     rowwise()                                   %>%
+                     mutate(totnewSARI = sum(c_across(3:21)))    %>%
+                     select(date, newAdmissions, totnewSARI)     %>%
+                     ggplot(aes(x = date, y = newAdmissions)) +
+                     geom_point(alpha = 0.2) +
+                     geom_line(aes(x = date, y = totnewSARI), colour = "blue") +
+                     theme_bw() + ylab("New Admissions") + xlab("Date")
+
+  UKHospitalData %>% select(date, hospitalCases)                  %>%
+                     left_join(comp$SARI, by = "date")            %>%
+                     rowwise()                                    %>%
+                     mutate(totSARI = sum(c_across(3:21)))        %>%
+                     select(date, hospitalCases, totSARI)         %>%
+                     left_join(comp$CRIT, by = "date")            %>%
+                     rowwise()                                    %>%
+                     mutate(totSariCrit = sum(c_across(3:22)))    %>%
+                     select(date, hospitalCases, totSariCrit)     %>%
+                     left_join(comp$CRITREC, by = "date")         %>%
+                     rowwise()                                    %>%
+                     mutate(totSariCritRec = sum(c_across(3:22))) %>%
+                     ggplot(aes(x = date, y = hospitalCases)) +
+                     geom_point(alpha = 0.2) +
+                     geom_line(aes(x = date, y = totSariCritRec), colour = "blue") +
+                     theme_bw() + ylab("Hospital cases") + xlab("Date")
 }
 
 # Smoothcasedat
-smoothcases=smooth.spline(comdat$allCases, df=20)
+smoothcases <- smooth.spline(comdat$allCases, df = 20)
 
 # Create a vector to hold the results for various R-numbers
 ninit <- as.numeric(1:nrow(comdat))/as.numeric(1:nrow(comdat))
@@ -769,12 +817,13 @@ if(any(comp$CASE==0)){
 }
 rat <- regcases
 for(i in (2:nrow(regcases))    ){
-  rat[i,2:ncol(regcases)] <- 1+log(regcases[i,2:ncol(regcases)]/regcases[(i-1),2:ncol(regcases)])*genTime
+  rat[i, 2:ncol(regcases)] <- 1 + log(regcases[i, 2:ncol(regcases)]/regcases[(i-1), 2:ncol(regcases)])*genTime
 }
-# Rest first row to 1, because there's no data
+
+# Reset first row to 1, because there's no data
 # Fix R=1 not NaN or Inf when previous cases are zero
 # Its not really defined.  This generates a warning which we can ignore
-rat[1,2:ncol(regcases)]<-1.0
+rat[1, 2:ncol(regcases)]<-1.0
 rat[is.na(rat)] <- 1.0
 rat[rat==Inf] <- 1.0
 rat[rat==-Inf] <- 1.0
@@ -808,9 +857,9 @@ if(interactive()){
 
 #  Generate R over all ages, with some options for the calculus  itoR is Ito, stratR is stratonovich, bylogR is harmonic Ito fpR includes false positive correction
 #  Avoid zero cases in R-calculation
-casedat[casedat==0]=1
+casedat[casedat == 0] <- 1
 
-for(i in ((genTime+1):length(dfR$itoR))    ){
+for(i in ((genTime+1):length(dfR$itoR))){
   dfR$itoR[i]=(1+(comdat$allCases[i]-comdat$allCases[i-1])*genTime/(comdat$allCases[i-1]))
   dfR$stratR[i]=1+ (comdat$allCases[i]-comdat$allCases[i-1])*genTime/mean(comdat$allCases[(i-1):i])
   dfR$fpR[i]=(1+(comdat$fpCases[i]-comdat$fpCases[i-1])*genTime/(comdat$fpCases[i-1]))
@@ -845,28 +894,29 @@ for(i in ((genTime+1):length(dfR$itoR))    ){
    dfR$smoothcasesR[i]=1+log(smoothcases$y[i]/smoothcases$y[i-1])*genTime
 }
 
-dfR$smoothRlog<-smooth.spline(dfR$bylogR,df=20,w=sqrt(comdat$allCases))$y
-dfR$smoothRito<-smooth.spline(dfR$itoR,df=20,w=sqrt(comdat$allCases))$y
-dfR$smoothRstrat<-smooth.spline(dfR$stratR,df=20,w=sqrt(comdat$allCases))$y
-dfR$smoothRegions<-smooth.spline(dfR$regions,df=20,w=sqrt(comdat$regions))$y
-dfR$loessR<-predict(loess(bylogR~x,data=dfR,span=0.25))
-dfR[is.na(dfR)]=1.0
-dfR[dfR==Inf]=1.0
-dfR[dfR==-Inf]=1.0
+dfR$smoothRlog <- smooth.spline(dfR$bylogR,df=20,w=sqrt(comdat$allCases))$y
+dfR$smoothRito <- smooth.spline(dfR$itoR,df=20,w=sqrt(comdat$allCases))$y
+dfR$smoothRstrat <- smooth.spline(dfR$stratR,df=20,w=sqrt(comdat$allCases))$y
+dfR$smoothRegions <- smooth.spline(dfR$regions,df=20,w=sqrt(comdat$regions))$y
+dfR$loessR <- predict(loess(bylogR~x,data=dfR,span=0.25))
+dfR[is.na(dfR)] <- 1.0
+dfR[dfR == Inf] <- 1.0
+dfR[dfR == -Inf] <- 1.0
 
 
 # Set day 1, for plotting purposes
-for (i in 3:nrow(dfR)){dfR[i,1]=dfR[i,2]}
+for (i in 3:nrow(dfR)){dfR[i,1] <- dfR[i,2]}
 
-for(i in 4:(length(dfR$weeklyR)-3)){
-    day1=i-3
-    day7=i+3
-    dfR$weeklyR[i]=sum(dfR$itoR[day1:day7])/7.0
+for(i in 4:(nrow(dfR)-3)){
+    day1 <- i-3
+    day7 <- i+3
+    dfR$weeklyR[i] <- sum(dfR$itoR[day1:day7])/7.0
 }
+
 # End effect
-dfR$weeklyR[length(dfR$weeklyR)]=1.0
-dfR$weeklyR[length(dfR$weeklyR)-1]=1.0
-dfR$weeklyR[length(dfR$weeklyR)-2]=1.0
+dfR$weeklyR[length(dfR$weeklyR)] <- 1.0
+dfR$weeklyR[length(dfR$weeklyR)-1] <- 1.0
+dfR$weeklyR[length(dfR$weeklyR)-2] <- 1.0
 
 # Plot various types of smoothing on the R data
 
@@ -1193,7 +1243,7 @@ dfR[,c(2,9:27)]%>% filter(startplot < date & date < endplot) %>%
 
 if(interactive()&pdfpo){age_pdfplot(dfR,Rest,sagedelay,comdat,spdf)}
 
- 
+
 
 # Reverse Engineer cases from R-number - requires stratonovich calculus to get reversibility
 # Initializations

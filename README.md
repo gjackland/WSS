@@ -1,5 +1,16 @@
 # WSS
-Weight scale and shift code for covid epidemic modelling
+Weight scale and shift code for covid epidemic modelling.
+
+The model takes CASES from https://coronavirus.data.gov.uk/ .  All predictions are based on a compartment model 
+moving people from CASE through hospitalization, ICU, to recovery or death.  Compartments are broken down by age region.
+
+R-numbers are calculated by differentiating the case data, after a little data processing to make this legit.  
+They reliably agree with "official" estimates published from SPI-M, but are available 16 days earlier.  
+
+Medium term projections are made by extending the CASE data with R-based prediction. 
+
+Parameterization is taken by fits to death/ICU/hospital data over the entire pandemic.  Parameters are (slowly) varying with variant and vaccination.
+Lockdowns etc are not included directly, because their effect is mainly in CASES.
 
 Model description and application is here...
 
