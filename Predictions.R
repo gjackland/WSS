@@ -1,6 +1,6 @@
 ##Assume that R and lethality are constants
 
-Predictions <- function(input,R_BestGuess){
+Predictions <- function(input,R_input){
   #Unpack input
   
   DEATH <- input$DEATH
@@ -106,9 +106,9 @@ Predictions <- function(input,R_BestGuess){
     # R decays back to 1 with growth rate down 5% a day, faster if larger
     # R is the same in all age groups
     
-    if(R_BestGuess > 1.4) {R_BestGuess=(R_BestGuess-1)*0.95+1.0}
-    R_BestGuess=(R_BestGuess-1)*0.95+1.0
-    predCASE[(ipred+1),(2:20)]<-predCASE[ipred,(2:20)]*exp((R_BestGuess-1)/genTime)
+    if(R_input > 1.4) {R_input=(R_input-1)*0.95+1.0}
+    R_input=(R_input-1)*0.95+1.0
+    predCASE[(ipred+1),(2:20)]<-predCASE[ipred,(2:20)]*exp((R_input-1)/genTime)
     predCASE[ipred+1,1]<-enddateP+ipred 
     ipred=ipred+1 
   }

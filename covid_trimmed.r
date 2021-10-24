@@ -961,7 +961,9 @@ filteredR <-append(
          tail(predict(loess(bylogR ~ x, data=dfR,weight=comdat$allCases,span=s4))))
 )
 
-R_England_BestGuess<- mean(filteredR)
+R_BestGuess<-list()
+R_BestGuess$England<- mean(filteredR)
+
 R_England_Quant <-unname(quantile(filteredR, probs=c(0.05,0.25,0.5,0.75,0.95)))
 
 filteredR <-append(
@@ -970,7 +972,7 @@ filteredR <-append(
   append(tail(predict(loess(Scotland ~ as.numeric(date), data=rat,span=s3))),
          tail(predict(loess(Scotland ~ as.numeric(date), data=rat,span=s4))))
 )
-R_Scotland_BestGuess <-mean(filteredR)
+R_BestGuess$Scotland <-mean(filteredR)
 R_Scotland_Quant <-unname(quantile(filteredR, probs=c(0.05,0.25,0.5,0.75,0.95)))
 
 rat$tmp=rat$London
@@ -981,7 +983,7 @@ filteredR <-append(
   append(tail(predict(loess(tmp ~ as.numeric(date), data=rat,weight=regcases$London,span=s3))),
          tail(predict(loess(tmp ~ as.numeric(date), data=rat,weight=regcases$London,span=s4))))
 )
-R_London_BestGuess <-mean(filteredR)
+R_BestGuess$London <-mean(filteredR)
 R_London_Quant <-unname(quantile(filteredR, probs=c(0.05,0.25,0.5,0.75,0.95)))
 
 rat$tmp=rat$Midlands
@@ -992,7 +994,7 @@ filteredR <-append(
   append(tail(predict(loess(tmp ~ as.numeric(date), data=rat,weight=regcases$Midlands,span=s3))),
          tail(predict(loess(tmp ~ as.numeric(date), data=rat,weight=regcases$Midlands,span=s4))))
 )
-R_Midlands_BestGuess <-mean(filteredR)
+R_BestGuess$Midlands <-mean(filteredR)
 R_Midlands_Quant <-unname(quantile(filteredR, probs=c(0.05,0.25,0.5,0.75,0.95)))
 
 rat$tmp = rat$`North West`
@@ -1004,7 +1006,7 @@ filteredR <-append(
          tail(predict(loess(tmp ~ as.numeric(date), data=rat,weight=regcases$`North West`,span=s4))))
 )
 
-R_NW_BestGuess <-mean(filteredR)
+R_BestGuess$NW <-mean(filteredR)
 R_NW_Quant <-unname(quantile(filteredR, probs=c(0.05,0.25,0.5,0.75,0.95)))
 
 rat$tmp = rat$NE_Yorks
@@ -1016,7 +1018,7 @@ filteredR <-append(
          tail(predict(loess(tmp ~ as.numeric(date), data=rat,weight=regcases$NE_Yorks,span=s4))))
 )
 
-R_NEY_BestGuess <-mean(filteredR)
+R_BestGuess$NEY <-mean(filteredR)
 R_NEY_Quant <-unname(quantile(filteredR, probs=c(0.05,0.25,0.5,0.75,0.95)))
 
 
@@ -1029,7 +1031,7 @@ filteredR <-append(
          tail(predict(loess(tmp ~ as.numeric(date), data=rat,weight=regcases$`East of England`,span=s4))))
 )
 
-R_EE_BestGuess <-mean(filteredR)
+R_BestGuess$EE <-mean(filteredR)
 R_EE_Quant <-unname(quantile(filteredR, probs=c(0.05,0.25,0.5,0.75,0.95)))
 
 
@@ -1042,22 +1044,19 @@ filteredR <-append(
   append(tail(predict(loess(tmp ~ as.numeric(date), data=rat,weight=regcases$`South East`,span=s3))),
          tail(predict(loess(tmp ~ as.numeric(date), data=rat,weight=regcases$`South East`,span=s4))))
 )
-
-R_SE_BestGuess <-mean(filteredR)
+R_BestGuess$SE <-mean(filteredR)
 R_SE_Quant <-unname(quantile(filteredR, probs=c(0.05,0.25,0.5,0.75,0.95)))
 
 
 
 rat$tmp <- rat$`South West`
-
 filteredR <-append(
   append(tail(predict(loess(tmp ~ as.numeric(date), data=rat,weight=regcases$`South West`,span=s1))),
          tail(predict(loess(tmp ~ as.numeric(date), data=rat,weight=regcases$`South West`,span=s2))) ) ,
   append(tail(predict(loess(tmp ~ as.numeric(date), data=rat,weight=regcases$`South West`,span=s3))),
          tail(predict(loess(tmp ~ as.numeric(date), data=rat,weight=regcases$`South West`,span=s4))))
 )
-
-R_SW_BestGuess <-mean(filteredR)
+R_BestGuess$SW <-mean(filteredR)
 R_SW_Quant <-unname(quantile(filteredR, probs=c(0.05,0.25,0.5,0.75,0.95)))
 
 
@@ -1068,7 +1067,7 @@ filteredR <-append(
   append(tail(predict(loess(tmp ~ as.numeric(date), data=rat,weight=regcases$Wales,span=s3))),
          tail(predict(loess(tmp ~ as.numeric(date), data=rat,weight=regcases$Wales,span=s4))))
 )
-R_Wales_BestGuess <-mean(filteredR)
+R_BestGuess$Wales <-mean(filteredR)
 R_Wales_Quant <-unname(quantile(filteredR, probs=c(0.05,0.25,0.5,0.75,0.95)))
 
 rat$tmp <-dfR$regions
@@ -1078,7 +1077,7 @@ filteredR <-append(
   append(tail(predict(loess(tmp ~ as.numeric(date),weight=regcases$England,  data=rat,span=s3))),
          tail(predict(loess(tmp ~ as.numeric(date),weight=regcases$England,  data=rat,span=s4))))
 )
-R_Regions_BestGuess <-mean(filteredR)
+R_BestGuess$Regions <-mean(filteredR)
 R_Regions_Quant <-unname(quantile(filteredR, probs=c(0.05,0.25,0.5,0.75,0.95)))
 
 filteredR <-append(
@@ -1088,7 +1087,7 @@ filteredR <-append(
          tail(predict(loess(NI ~ as.numeric(date),weight=regcases$NI,  data=rat,span=s4))))
 )
 
-R_NI_BestGuess <-mean(filteredR)
+R_BestGuess$NI <-mean(filteredR)
 R_NI_Quant <-unname(quantile(filteredR, probs=c(0.05,0.25,0.5,0.75,0.95)))
 
 #  Delete the tmp column
@@ -1359,7 +1358,7 @@ if(CrystalCast){
   date()
   date()
   "All,Scotland,R"
-  R_Scotland_BestGuess
+  R_BestGuess$Scotland
 }
 
 #####  Figures and analysis for https://www.medrxiv.org/content/10.1101/2021.04.14.21255385v1
@@ -1377,7 +1376,7 @@ if(FALSE){medout<-MedrxivPaper()}
 predtime = 28
 region="England"
 
-compMTP<-Predictions(comp,R_England_BestGuess)
+compMTP<-Predictions(comp,R_BestGuess$England)
 
 #  Compartment predictions removed to Predictions.R
 #  Replicated the data because repeated calls to Predictions would increment comp
@@ -1397,7 +1396,7 @@ plot(UKHospitalData$newAdmissions,x=UKHospitalData$date, ylab="Hospital Admissio
 lines(rowSums(compMTP$newSARI[2:20]),x=compMTP$newSARI$date,col="blue")
 
 plot(UKHospitalData$hospitalCases,x=UKHospitalData$date,ylab="Hospital Cases",xlab="Date",xlim=c((startplot),endplot))
-lines(rowSums(comp$SARI[2:20]+comp$CRIT[2:20]+comp$CRITREC[2:20]),x=comp$SARI$date,col='red')
+lines(rowSums(compMTP$SARI[2:20]+compMTP$CRIT[2:20]+compMTP$CRITREC[2:20]),x=compMTP$SARI$date,col='red')
 
 plot(rowSums(comp$newMILD[2:20]+comp$newILI[2:20]),xlim=c((startplot),endplot),col="blue",x=comp$newMILD$date,type="l",xlab="Date",ylab="Cases")
 points(rowSums(comp$CASE[2:20]),x=comp$CASE$date)
@@ -1406,7 +1405,7 @@ lines(rowSums(comp$newMILD[11:20]+comp$newILI[11:20]),col="red",x=comp$newMILD$d
 
 
 plot(UKHospitalData$covidOccupiedMVBeds,x=UKHospitalData$date,ylab="ICU Occupation",xlab="Date",xlim=c(startplot,endplot))
-lines(rowSums(comp$CRIT[2:20]*0.5),col="blue",x=comp$CRIT$date)
+lines(rowSums(comp$CRIT[2:20]),col="blue",x=comp$CRIT$date)
 
 plot(rowSums(compMTP$DEATH[2:20]),col="blue",x=compMTP$DEATH$date, type="l",ylab="Deaths"
      ,xlab="Date",xlim=c(startplot,endplot-11))
