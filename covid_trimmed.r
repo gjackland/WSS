@@ -998,7 +998,8 @@ lines(predict(loess(bylogR ~ x, data=dfR,span=0.1,weight=sqrt(comdat$allCases)))
 lines(predict(loess(bylogR ~ x, data=dfR,span=0.2,weight=sqrt(comdat$allCases))),col='blue',x=dfR$date,lwd=2)
 lines(predict(loess(bylogR ~ x, data=dfR,span=0.3,weight=sqrt(comdat$allCases))),col='violet',x=dfR$date,lwd=3)
 
-
+R_BestGuess<-list()
+R_Quant<-list()
 ### Smoothing Filters
 s1=0.05
 s2=0.1
@@ -1010,11 +1011,9 @@ filteredR <-append(
   append(tail(predict(loess(bylogR ~ x, data=dfR,weight=comdat$allCases,span=s3))),
          tail(predict(loess(bylogR ~ x, data=dfR,weight=comdat$allCases,span=s4))))
 )
-
-R_BestGuess<-list()
 R_BestGuess$England<- mean(filteredR)
 
-R_England_Quant <-unname(quantile(filteredR, probs=c(0.05,0.25,0.5,0.75,0.95)))
+R_Quant$England <-unname(quantile(filteredR, probs=c(0.05,0.25,0.5,0.75,0.95)))
 
 filteredR <-append(
   append(tail(predict(loess(Scotland ~ as.numeric(date), data=rat,span=s1))),
@@ -1023,7 +1022,7 @@ filteredR <-append(
          tail(predict(loess(Scotland ~ as.numeric(date), data=rat,span=s4))))
 )
 R_BestGuess$Scotland <-mean(filteredR)
-R_Scotland_Quant <-unname(quantile(filteredR, probs=c(0.05,0.25,0.5,0.75,0.95)))
+R_Quant$Scotland <-unname(quantile(filteredR, probs=c(0.05,0.25,0.5,0.75,0.95)))
 
 rat$tmp=rat$London
 
@@ -1034,7 +1033,7 @@ filteredR <-append(
          tail(predict(loess(tmp ~ as.numeric(date), data=rat,weight=regcases$London,span=s4))))
 )
 R_BestGuess$London <-mean(filteredR)
-R_London_Quant <-unname(quantile(filteredR, probs=c(0.05,0.25,0.5,0.75,0.95)))
+R_Quant$London <-unname(quantile(filteredR, probs=c(0.05,0.25,0.5,0.75,0.95)))
 
 rat$tmp=rat$Midlands
 
@@ -1045,7 +1044,7 @@ filteredR <-append(
          tail(predict(loess(tmp ~ as.numeric(date), data=rat,weight=regcases$Midlands,span=s4))))
 )
 R_BestGuess$Midlands <-mean(filteredR)
-R_Midlands_Quant <-unname(quantile(filteredR, probs=c(0.05,0.25,0.5,0.75,0.95)))
+R_Quant$Midlands <-unname(quantile(filteredR, probs=c(0.05,0.25,0.5,0.75,0.95)))
 
 rat$tmp = rat$`North West`
 
@@ -1057,7 +1056,7 @@ filteredR <-append(
 )
 
 R_BestGuess$NW <-mean(filteredR)
-R_NW_Quant <-unname(quantile(filteredR, probs=c(0.05,0.25,0.5,0.75,0.95)))
+R_Quant$NW <-unname(quantile(filteredR, probs=c(0.05,0.25,0.5,0.75,0.95)))
 
 rat$tmp = rat$NE_Yorks
 
@@ -1069,7 +1068,7 @@ filteredR <-append(
 )
 
 R_BestGuess$NEY <-mean(filteredR)
-R_NEY_Quant <-unname(quantile(filteredR, probs=c(0.05,0.25,0.5,0.75,0.95)))
+R_Quant$NEY <-unname(quantile(filteredR, probs=c(0.05,0.25,0.5,0.75,0.95)))
 
 
 rat$tmp = rat$`East of England`
@@ -1082,7 +1081,7 @@ filteredR <-append(
 )
 
 R_BestGuess$EE <-mean(filteredR)
-R_EE_Quant <-unname(quantile(filteredR, probs=c(0.05,0.25,0.5,0.75,0.95)))
+R_Quant$EE <-unname(quantile(filteredR, probs=c(0.05,0.25,0.5,0.75,0.95)))
 
 
 
@@ -1095,7 +1094,7 @@ filteredR <-append(
          tail(predict(loess(tmp ~ as.numeric(date), data=rat,weight=regcases$`South East`,span=s4))))
 )
 R_BestGuess$SE <-mean(filteredR)
-R_SE_Quant <-unname(quantile(filteredR, probs=c(0.05,0.25,0.5,0.75,0.95)))
+R_Quant$SE <-unname(quantile(filteredR, probs=c(0.05,0.25,0.5,0.75,0.95)))
 
 
 
@@ -1107,7 +1106,7 @@ filteredR <-append(
          tail(predict(loess(tmp ~ as.numeric(date), data=rat,weight=regcases$`South West`,span=s4))))
 )
 R_BestGuess$SW <-mean(filteredR)
-R_SW_Quant <-unname(quantile(filteredR, probs=c(0.05,0.25,0.5,0.75,0.95)))
+R_Quant$SW <-unname(quantile(filteredR, probs=c(0.05,0.25,0.5,0.75,0.95)))
 
 
 rat$tmp <- rat$Wales
@@ -1118,7 +1117,7 @@ filteredR <-append(
          tail(predict(loess(tmp ~ as.numeric(date), data=rat,weight=regcases$Wales,span=s4))))
 )
 R_BestGuess$Wales <-mean(filteredR)
-R_Wales_Quant <-unname(quantile(filteredR, probs=c(0.05,0.25,0.5,0.75,0.95)))
+R_Quant$Wales <-unname(quantile(filteredR, probs=c(0.05,0.25,0.5,0.75,0.95)))
 
 rat$tmp <-dfR$regions
 filteredR <-append(
@@ -1128,7 +1127,7 @@ filteredR <-append(
          tail(predict(loess(tmp ~ as.numeric(date),weight=regcases$England,  data=rat,span=s4))))
 )
 R_BestGuess$Regions <-mean(filteredR)
-R_Regions_Quant <-unname(quantile(filteredR, probs=c(0.05,0.25,0.5,0.75,0.95)))
+R_Quant$Regions <-unname(quantile(filteredR, probs=c(0.05,0.25,0.5,0.75,0.95)))
 
 filteredR <-append(
   append(tail(predict(loess(NI ~ as.numeric(date),weight=regcases$NI, data=rat,span=s1))),
@@ -1138,7 +1137,7 @@ filteredR <-append(
 )
 
 R_BestGuess$NI <-mean(filteredR)
-R_NI_Quant <-unname(quantile(filteredR, probs=c(0.05,0.25,0.5,0.75,0.95)))
+R_Quant$NI <-unname(quantile(filteredR, probs=c(0.05,0.25,0.5,0.75,0.95)))
 
 #  Delete the tmp column
 rat <- rat[,-which(names(rat)=="tmp")]
@@ -1153,8 +1152,8 @@ filteredR <-append(
          tail(predict(loess(p00 ~ as.numeric(date), data=dfR,span=s4))))
 )
 
-Growth_00_BestGuess <- mean(filteredR)
-Growth_00_Quant <-unname(quantile(filteredR, probs=c(0.05,0.25,0.5,0.75,0.95)))
+R_BestGuess$x00 <- mean(filteredR)
+R_Quant$x00 <-unname(quantile(filteredR, probs=c(0.05,0.25,0.5,0.75,0.95)))
 
 
 filteredR <-append(
@@ -1163,8 +1162,8 @@ filteredR <-append(
   append(tail(predict(loess(p05 ~ as.numeric(date), data=dfR,span=s3))),
          tail(predict(loess(p05 ~ as.numeric(date), data=dfR,span=s4))))
 )
-Growth_05_BestGuess <- mean(filteredR)
-Growth_05_Quant <-unname(quantile(filteredR, probs=c(0.05,0.25,0.5,0.75,0.95)))
+R_BestGuess$x05 <- mean(filteredR)
+R_Quant$x05 <-unname(quantile(filteredR, probs=c(0.05,0.25,0.5,0.75,0.95)))
 
 
 filteredR <-append(
@@ -1173,8 +1172,8 @@ filteredR <-append(
   append(tail(predict(loess(p15 ~ as.numeric(date), data=dfR,span=s3))),
          tail(predict(loess(p15 ~ as.numeric(date), data=dfR,span=s4))))
 )
-Growth_15_BestGuess <- mean(filteredR)
-Growth_15_Quant <-unname(quantile(filteredR, probs=c(0.05,0.25,0.5,0.75,0.95)))
+R_BestGuess$x15 <- mean(filteredR)
+R_Quant$x15 <-unname(quantile(filteredR, probs=c(0.05,0.25,0.5,0.75,0.95)))
 
 
 filteredR <-append(
@@ -1183,8 +1182,8 @@ filteredR <-append(
   append(tail(predict(loess(x25 ~ as.numeric(date), data=dfR,span=s3))),
          tail(predict(loess(x25 ~ as.numeric(date), data=dfR,span=s4))))
 )
-Growth_25_BestGuess <- mean(filteredR)
-Growth_25_Quant <-unname(quantile(filteredR, probs=c(0.05,0.25,0.5,0.75,0.95)))
+R_BestGuess$x25 <- mean(filteredR)
+R_Quant$x25 <-unname(quantile(filteredR, probs=c(0.05,0.25,0.5,0.75,0.95)))
 
 filteredR <-append(
   append(tail(predict(loess(x45 ~ as.numeric(date), data=dfR,span=s1))),
@@ -1192,8 +1191,8 @@ filteredR <-append(
   append(tail(predict(loess(x45 ~ as.numeric(date), data=dfR,span=s3))),
          tail(predict(loess(x45 ~ as.numeric(date), data=dfR,span=s4))))
 )
-Growth_45_BestGuess <- mean(filteredR)
-Growth_45_Quant <-unname(quantile(filteredR, probs=c(0.05,0.25,0.5,0.75,0.95)))
+R_BestGuess$x45 <- mean(filteredR)
+R_Quant$x45 <-unname(quantile(filteredR, probs=c(0.05,0.25,0.5,0.75,0.95)))
 
 
 filteredR <-append(
@@ -1202,8 +1201,8 @@ filteredR <-append(
   append(tail(predict(loess(x65 ~ as.numeric(date), data=dfR,span=s3))),
          tail(predict(loess(x65 ~ as.numeric(date), data=dfR,span=s4))))
 )
-Growth_65_BestGuess <- mean(filteredR)
-Growth_65_Quant <-unname(quantile(filteredR, probs=c(0.05,0.25,0.5,0.75,0.95)))
+R_BestGuess$x65 <- mean(filteredR)
+R_Quant$x65 <-unname(quantile(filteredR, probs=c(0.05,0.25,0.5,0.75,0.95)))
 
 
 
@@ -1213,8 +1212,8 @@ filteredR <-append(
   append(tail(predict(loess(x75 ~ as.numeric(date), data=dfR,span=s3))),
          tail(predict(loess(x75 ~ as.numeric(date), data=dfR,span=s4))))
 )
-Growth_75_BestGuess <- mean(filteredR)
-Growth_75_Quant <-unname(quantile(filteredR, probs=c(0.05,0.25,0.5,0.75,0.95)))
+R_BestGuess$x75 <- mean(filteredR)
+R_Quant$x75 <-unname(quantile(filteredR, probs=c(0.05,0.25,0.5,0.75,0.95)))
 
 rm(filteredR)
 
