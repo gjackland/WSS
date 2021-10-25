@@ -364,7 +364,7 @@ pckg <- package_show("covid-19-wider-impacts-deaths", as ="table")
 # CASE=casedat produces estimates for UK, this already happens at the end of the main code.  CASE=scotage is for Scotland
 
 
-R_BestGuess=R_Scotland_BestGuess
+
 region="Scotland"
 Hospital<-scotHospital
 RawCFR=colSums(scotdeath[2:20])/colSums(scotage[2:20])
@@ -373,7 +373,7 @@ RawCFR=colSums(scotdeath[2:20])/colSums(scotage[2:20])
 #  Full Epidemic model.
 comp <- Compartment(scotage, covidsimAge, RawCFR, comdat,2,nrow(scotage))
 #  28 day Projections
-scotcomp<-Predictions(comp,R_Scotland_BestGuess)
+scotcomp<-Predictions(comp,R_BestGuess$Scotland)
 
 CC_write(scotcomp,"Scotland")
 #  Crystalcast format output  

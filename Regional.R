@@ -110,13 +110,13 @@ NEY$date<-as.Date(NEY$date)
 #  Still use R from 7 regions...
 
 complondon<- Compartment(london,  covidsimAge, RawCFR, comdat,3,nrow(london))
-predlondon<-Predictions(complondon,R_London_BestGuess)
+predlondon<-Predictions(complondon,R_BestGuess$London)
 
 #compNE<- Compartment(NE,  covidsimAge, RawCFR, comdat,3,nrow(NE))
 #predNE<-Predictions(compNE,R_NEY_BestGuess)
 
 compNW<- Compartment(NW,  covidsimAge, RawCFR, comdat,3,nrow(NW))
-predNW<-Predictions(compNW,R_NW_BestGuess)
+predNW<-Predictions(compNW,R_BestGuess$NW)
 
 #compYH<- Compartment(YH,  covidsimAge, RawCFR, comdat,3,nrow(YH))
 #predYH<-Predictions(compYH,R_NEY_BestGuess)
@@ -128,19 +128,19 @@ predNW<-Predictions(compNW,R_NW_BestGuess)
 #predWM<-Predictions(compWM,R_Midlands_BestGuess)
 
 compEE<- Compartment(EE,  covidsimAge, RawCFR, comdat,3,nrow(EE))
-predEE<-Predictions(compEE,R_EE_BestGuess)
+predEE<-Predictions(compEE,R_BestGuess$EE)
 
 compSE<- Compartment(SE,  covidsimAge, RawCFR, comdat,3,nrow(SE))
-predSE<-Predictions(compSE,R_SE_BestGuess)
+predSE<-Predictions(compSE,R_BestGuess$SE)
 
 compSW<- Compartment(SW,  covidsimAge, RawCFR, comdat,3,nrow(SW))
-predSW<-Predictions(compSW,R_SW_BestGuess)
+predSW<-Predictions(compSW,R_BestGuess$SW)
 
 compMD<- Compartment(MD,  covidsimAge, RawCFR, comdat,3,nrow(MD))
-predMD<-Predictions(compMD,R_Midlands_BestGuess)
+predMD<-Predictions(compMD,R_BestGuess$Midlands)
 
 compNEY<- Compartment(NEY,  covidsimAge, RawCFR, comdat,3,nrow(NEY))
-predNEY<-Predictions(compNEY,R_NEY_BestGuess)
+predNEY<-Predictions(compNEY,R_BestGuess$NEY)
 
 rm(compSE,compSW,compMD,compNEY,compNW,compEE,complondon, SE, SW, EE, NEY, MD, london, NW)
 

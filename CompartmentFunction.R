@@ -93,7 +93,7 @@ Compartment <- function(cases,  csimAge, rCFR, cdat, startc, endc){
 
   #  csimAge has no date row, so need to use iage-1
 
-  MILD[1,(2:ncol(MILD))] <- CASE[1,(2:ncol(CASE))]*csimAge$Prop_Mild_ByAge
+  MILD[1,(2:ncol(MILD))] <- CASE[1,(2:ncol(CASE))]
   ILI[1,(2:ncol(ILI))] <- CASE[1,(2:ncol(CASE))]*csimAge$Prop_ILI_ByAge
   SARI[1,(2:ncol(SARI))] <- CASE[1,(2:ncol(CASE))]*csimAge$Prop_SARI_ByAge
   CRIT[1,(2:ncol(CRIT))] <- CASE[1,(2:ncol(CASE))]*csimAge$Prop_Critical_ByAge

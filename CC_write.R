@@ -39,7 +39,7 @@ library(lubridate)
     AgeBand = ageband,
     Geography = "Scotland",
     ValueType = valuetype,
-    Value = R_Scotland_BestGuess,
+    Value = R_BestGuess$Scotland,
     "Quantile 0.05" = R_Scotland_Quant[1],
     "Quantile 0.1" = "",
     "Quantile 0.15" = "",
