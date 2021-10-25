@@ -113,12 +113,15 @@ Compartment <- function(cases,  csimAge, rCFR, cdat, startc, endc){
   bfac <- 1.2
   cfac <- 1.0/afac/bfac
   for (iday in (startc:endc)){
-    pTtoI <- afac*rCFR^apow*sqrt(cdat$lethality[iday])
-    pItoS <- bfac*rCFR^bpow*sqrt(cdat$lethality[iday])
-    pStoD <- cfac*rCFR^cpow*sqrt(cdat$lethality[iday])
+# Update current vaccine/variant lethality if available    
+    if(!is.na(cdat$lethality[iday])){
+    sfac <- sqrt(cdat$lethality[iday])}
+    pTtoI <- afac*rCFR^apow*sfac
+    pItoS <- bfac*rCFR^bpow*sfac
+    pStoD <- cfac*rCFR^cpow*sfac
     #  Entry to ventilation still from covidsim
     pStoC <-  csimAge$Prop_Critical_ByAge /
-      ( csimAge$Prop_Critical_ByAge + csimAge$Prop_SARI_ByAge )#*cdat$lethality[iday]
+      ( csimAge$Prop_Critical_ByAge + csimAge$Prop_SARI_ByAge )
     # All routes to death are the same, vary by age
     pCtoD <- pStoD
     pCRtoD <- pStoD

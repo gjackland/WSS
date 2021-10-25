@@ -142,7 +142,7 @@ predMD<-Predictions(compMD,R_Midlands_BestGuess)
 compNEY<- Compartment(NEY,  covidsimAge, RawCFR, comdat,3,nrow(NEY))
 predNEY<-Predictions(compNEY,R_NEY_BestGuess)
 
-#rm(compSE,compSW,compMD,compNEY,compNW,compEE,complondon)
+rm(compSE,compSW,compMD,compNEY,compNW,compEE,complondon, SE, SW, EE, NEY, MD, london, NW)
 
 CC_write(predNW,"North West")
 CC_write(predNEY,"North East")
