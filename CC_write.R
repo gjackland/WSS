@@ -6,7 +6,7 @@
 CC_write <- function(CCcomp,region){
 # Initiate variables
 
-startwrite=200  
+startwrite=300  
 
 group <- "Edinburgh"
 model <-  "WSS"
@@ -135,8 +135,13 @@ for (d in startwrite:(nrow(PREV)-22)){
 }
 #  Crystalcast format output  
 
-write.xlsx(CC, file = paste("data/CCcompartment",today(),region,".xlsx"), 
+filename=paste("data/CCcompartment",today(),region,".xlsx")
+
+write.xlsx(CC, file = filename, 
          overwrite = TRUE,  sheetName = region, rowNames = FALSE)
 
-}
+wb <- loadWorkbook(filename)
+addWorksheet(wb,region)
+writeData(wb,region,CC)
+saveWorkbook(wb,filename,overwrite = TRUE)}
 

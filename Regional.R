@@ -3,16 +3,24 @@ source("CompartmentFunction.R")
 source("Predictions.R")
 
 
-getData <- function(dftmp) {for(reg in 1:9){
+getData <- function(dftmp) {
   out <- dftmp %>%
     select(date = date, age = age, values = cases) %>%
     pivot_wider(id_cols = date, names_from = age, values_from = values) %>%
     select(-unassigned, -"60+", -"00_59") %>%
     filter(date >= startdate & date <= enddate) %>%
     arrange(date)
+  return(out)
 }
-return(out)
-  }
+
+
+gethData <- function(dftmp) {
+  out <- dftmp %>%
+    select(date = date, saridat = hospitalCases, newsaridat = newAdmissions) %>%
+    filter(date >= startdate & date <= enddate) %>%
+    arrange(date)
+  return(out)
+}
 
 #  Do the regions, after a full run of covid_trimmed
 NEurl="https://api.coronavirus.data.gov.uk/v2/data?areaType=region&areaCode=E12000001&metric=newCasesBySpecimenDateAgeDemographics&format=csv"
@@ -60,6 +68,33 @@ MD=EM
 NEY=YH
 MD[2:20]=EM[2:20]+WM[2:20]
 NEY[2:20]=NE[2:20]+YH[2:20]
+
+#  Hospital data only available by 7 NHS regions.  obvs.
+
+SWhospurl="https://api.coronavirus.data.gov.uk/v2/data?areaType=nhsRegion&areaCode=E40000006&metric=hospitalCases&metric=newAdmissions&format=csv"
+EEhospurl="https://api.coronavirus.data.gov.uk/v2/data?areaType=nhsRegion&areaCode=E40000007&metric=hospitalCases&metric=newAdmissions&format=csv"
+londonhospurl="https://api.coronavirus.data.gov.uk/v2/data?areaType=nhsRegion&areaCode=E40000003&metric=hospitalCases&metric=newAdmissions&format=csv"
+MDhospurl="https://api.coronavirus.data.gov.uk/v2/data?areaType=nhsRegion&areaCode=E40000008&metric=hospitalCases&metric=newAdmissions&format=csv"
+SEhospurl="https://api.coronavirus.data.gov.uk/v2/data?areaType=nhsRegion&areaCode=E40000005&metric=hospitalCases&metric=newAdmissions&format=csv"
+NEYhospurl="https://api.coronavirus.data.gov.uk/v2/data?areaType=nhsRegion&areaCode=E40000009&metric=hospitalCases&metric=newAdmissions&format=csv"
+NWhospurl="https://api.coronavirus.data.gov.uk/v2/data?areaType=nhsRegion&areaCode=E40000010&metric=hospitalCases&metric=newAdmissions&format=csv"
+
+hNEY <-  read.csv(file=NEYhospurl)
+hNW <-  read.csv(file=NWhospurl)
+hMD <-  read.csv(file=MDhospurl)
+hEE <-  read.csv(file=EEhospurl)
+hlondon <-  read.csv(file=londonhospurl)
+hSE <-  read.csv(file=SEhospurl)
+hSW <-  read.csv(file=SWhospurl)
+
+hNEY<-gethData(hNEY)
+hNW<-gethData(hNW)
+hMD<-gethData(hMD)
+hEE<-gethData(hEE)
+hlondon<-gethData(hlondon)
+hSE<-gethData(hSE)
+hSW<-gethData(hSW)
+
 
 for (iage in 2:length(london)){
   london[iage]<-Weekend(london %>% pull(iage)) 

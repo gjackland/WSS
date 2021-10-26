@@ -595,4 +595,4 @@ for (d in 8:(nrow(comp$CASE)-22)){
 }
 
 #  Crystalcast format output  
-write.xlsx(CC, file = paste("Data/compartment",today,"eng.xlsx"), sheetName = "WSS", rowNames = FALSE)
+write.xlsx(CC, file = paste("Data/compartment",today,".xlsx"), sheetName = "WSS", rowNames = FALSE)
