@@ -6,7 +6,7 @@
 CC_write <- function(CCcomp,region,pop,R_region,Q_region){
 # Initiate variables
 
-startwrite=300  
+startwrite=200  
 
 group <- "Edinburgh"
 model <-  "WSS"
