@@ -637,6 +637,7 @@ coltypes <-  cols(
 )
 
 # Get the hospital data
+
 jnk <- read_csv(HospitalUrl, col_types = coltypes)
 Hospital<-list()
 Hospital$UK <- tibble()
@@ -646,13 +647,15 @@ Hospital$UK  <-  jnk%>%
                   arrange(date)
 na.locf(Hospital$UK)
 
+
 # Add the Welsh and Northern Ireland cases data
 regcases$Wales <- walesdat$allCases
 regcases$NI <- NIdat$allCases
 
+
 # Remove the no longer needed input data
 rm(ukcasedat,scotdailycases,scotdailycasesbyboard,jnk,coltypes,NIdat,walesdat)
-rm(HospitalUrl,deathurl,casesurl,scoturl,walesurl.NIurl,ageurl,baseurl,regurl,regurl2,ukcaseurl,vacurl)
+rm(HospitalUrl,deathurl,casesurl,scoturl,walesurl,NIurl,ageurl,baseurl,regurl,regurl2,ukcaseurl,vacurl)
 
 # Plot all cases against date: Used for the paper, uncomment to recreate
 if(interactive()){
@@ -781,8 +784,6 @@ comp <- Compartment(casedat,  covidsimAge, RawCFR, comdat, 2,nrow(casedat))
 
 # Monitoring plots
 if(interactive()){
-
-
   # Diagnostic plots in ggplot format
   deathdat %>% rowwise()                               %>%
                mutate(totdeath = sum(c_across(2:20)))  %>%
@@ -794,38 +795,38 @@ if(interactive()){
                geom_line(aes(x = date, y = totDEATH), colour = "blue") +
                theme_bw() + ylab("Total Deaths") + xlab("Date")
 
-  UKHospitalData %>% select(date, beds = covidOccupiedMVBeds) %>%
+  Hospital$UK %>% select(date, MVbeds = critdat) %>%
                      left_join(comp$CRIT, by = "date")        %>%
                      rowwise()                                %>%
                      mutate(totCrit = sum(c_across(3:21)))    %>%
-                     select(date, beds, totCrit)              %>%
-                     ggplot(aes(x = date, y = beds)) + geom_point(alpha = 0.25) +
+                     select(date, MVbeds, totCrit)              %>%
+                     ggplot(aes(x = date, y = MVbeds)) + geom_point(alpha = 0.25) +
                      geom_line(aes(x = date, y = totCrit), colour = "blue") +
-                     theme_bw() + ylab("Occupied beds") + xlab("Date")
+                     theme_bw() + ylab("Occupied MV beds") + xlab("Date")
 
-  UKHospitalData %>% select(date, newAdmissions)                 %>%
+  Hospital$UK %>% select(date, newsaridat)                 %>%
                      left_join(comp$newSARI, by ="date")         %>%
                      rowwise()                                   %>%
                      mutate(totnewSARI = sum(c_across(3:21)))    %>%
-                     select(date, newAdmissions, totnewSARI)     %>%
-                     ggplot(aes(x = date, y = newAdmissions)) +
+                     select(date, newsaridat, totnewSARI)     %>%
+                     ggplot(aes(x = date, y = newsaridat)) +
                      geom_point(alpha = 0.2) +
                      geom_line(aes(x = date, y = totnewSARI), colour = "blue") +
                      theme_bw() + ylab("New Admissions") + xlab("Date")
 
-  UKHospitalData %>% select(date, hospitalCases)                  %>%
+  Hospital$UK %>% select(date, saridat)                  %>%
                      left_join(comp$SARI, by = "date")            %>%
                      rowwise()                                    %>%
                      mutate(totSARI = sum(c_across(3:21)))        %>%
-                     select(date, hospitalCases, totSARI)         %>%
+                     select(date, saridat, totSARI)         %>%
                      left_join(comp$CRIT, by = "date")            %>%
                      rowwise()                                    %>%
                      mutate(totSariCrit = sum(c_across(3:22)))    %>%
-                     select(date, hospitalCases, totSariCrit)     %>%
+                     select(date, saridat, totSariCrit)     %>%
                      left_join(comp$CRITREC, by = "date")         %>%
                      rowwise()                                    %>%
                      mutate(totSariCritRec = sum(c_across(3:22))) %>%
-                     ggplot(aes(x = date, y = hospitalCases)) +
+                     ggplot(aes(x = date, y = saridat)) +
                      geom_point(alpha = 0.2) +
                      geom_line(aes(x = date, y = totSariCritRec), colour = "blue") +
                      theme_bw() + ylab("Hospital cases") + xlab("Date")
@@ -1492,7 +1493,7 @@ lines(rowSums(comp$newMILD[2:10]+comp$newILI[2:10]),col="green",x=comp$newMILD$d
 lines(rowSums(comp$newMILD[11:20]+comp$newILI[11:20]),col="red",x=comp$newMILD$date,type="l",xlab="Date",ylab="Cases")
 
 
-plot(UKHospitalData$covidOccupiedMVBeds,x=UKHospitalData$date,ylab="ICU Occupation",xlab="Date",xlim=c(startplot,endplot))
+plot(Hospital$UK$critdat,x=Hospital$UK$date,ylab="ICU Occupation",xlab="Date",xlim=c(startplot,endplot))
 lines(rowSums(comp$CRIT[2:20]),col="blue",x=comp$CRIT$date)
 
 plot(rowSums(compMTP$DEATH[2:20]),col="blue",x=compMTP$DEATH$date, type="l",ylab="Deaths"
