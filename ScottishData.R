@@ -223,9 +223,11 @@ scotdailycases %>% select(date=Date,board=HBName, cases=DailyPositive)  %>%
                    arrange(date) -> scotdailycasesbyboard
 
 # Hospital data
-scotdailycases %>% filter(HBName=="Scotland")->jnk
-jnk %>% select(1,20,22)  %>%  filter(Date>=casedat$date[1]) %>% filter(Date<=casedat$date[nrow(casedat)])->scotHospital
-names(scotHospital)[names(scotHospital) == 'HospitalAdmissions'] <- 'newAdmissions'
+scotdailycases %>% filter(HBName=="Scotland") %>%
+    select(date = Date, newcritdat = ICUAdmissions, newsaridat = HospitalAdmissions) %>%
+    filter(date >= startdate & date <= enddate) %>%
+    arrange(date) -> jnk
+Hospital$Scot$newcritdat<-jnk$newcritdat
 
 # Daily Case Trends By Age and Sex
 # See:
@@ -366,7 +368,7 @@ pckg <- package_show("covid-19-wider-impacts-deaths", as ="table")
 
 
 region="Scotland"
-Hospital<-scotHospital
+
 RawCFR=colSums(scotdeath[2:20])/colSums(scotage[2:20])
 
 
@@ -384,16 +386,16 @@ rbind(scotcomp$CASE,scotcomp$predCASE)->plotCASE
 plot(rowSums(plotCASE[2:20]),x=plotCASE$date)
 #Monitoring plots
 
-plot(rowSums(scotcomp$newSARI[2:20]),col="blue",x=scotcomp$SARI$date, type='l',xlim=c(Hospital$Date[1],(enddate+predtime)))
-points(Hospital$newAdmissions,x=Hospital$Date,ylab="Scottish Hospital Cases",xlab="Date")
+plot(rowSums(scotcomp$newSARI[2:20]),col="blue",x=scotcomp$SARI$date, type='l',xlim=c(as.Date(Hospital$Scot$date[1]),(enddate+predtime)))
+points(Hospital$Scot$newsari,x=Hospital$Scot$date,ylab="Scottish Hospital Cases",xlab="Date")
 
-plot(Hospital$newAdmissions,x=Hospital$Date,ylab="Scottish Hospital Cases",xlab="Date",xlim=c(Hospital$Date[1],(Hospital$Date[350]+48)))
+plot(Hospital$Scot$newsari,x=Hospital$Scot$date,ylab="Scottish Hospital Cases",xlab="Date",xlim=c(Hospital$Scot$date[1],(Hospital$Scot$date[350]+48)))
 lines(rowSums(scotcomp$newSARI[2:20]),x=scotcomp$SARI$date,col='red')
 plot(rowSums(scotcomp$CASE[2:20]),x=scotcomp$CASE$date,ylab="Cases",xlab="Date")
 lines(rowSums(scotcomp$newMILD[2:20]+scotcomp$newILI[2:20]),col="red",x=scotcomp$newMILD$date)
 
 
-plot(Hospital$ICUAdmissions,x=deathdat$date,ylab="ICU Admissions",xlab="Date",las=2)
+plot(Hospital$Scot$newcritdat,x=deathdat$date,ylab="ICU Admissions",xlab="Date",las=2)
 lines(rowSums(scotcomp$newCRIT[2:20]),col="blue",x=scotcomp$newCRIT$date)
 
 plot(rowSums(scotcomp$DEATH[2:20]),col="blue",x=scotcomp$DEATH$date,type="l", ylab="Deaths",xlab="Date",las=2)

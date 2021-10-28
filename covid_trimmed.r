@@ -86,7 +86,13 @@ population <- data.frame(
          409631,368181,328796,345781,264143,175374,111810,67807),
   "Scotland"=c(5475660,261674,292754,303417,
                280757,333740,370972,381258,357430,330569,337259,389238,
-               400834,360684,305248,289590,204947,143858,86413,45018)
+               400834,360684,305248,289590,204947,143858,86413,45018),
+  "Wales"=c(3174970, 160688, 180503, 187819, 173842, 200210, 
+  202513, 201034, 186338, 177662,183427, 215927,223724, 
+202578, 180391, 183716, 135819, 91798,55843, 31138 ),
+"NI"=c(1910623,116146,127557,129856,114652,111442,118998
+,126555,125362,120465,120391,130049,129139
+,112714,92622,82889,67237,44075,26191,14283)
 )
 population$MD<-population$EM+population$WM
 population$NEY<-population$Yorks+population$NE
@@ -453,7 +459,7 @@ NIurl <-  paste0(baseurl,
                  "format=csv")
 
 
-# Read in the Welsh deaths and case data
+# Read in the NI deaths and case data
 NIdat <-  read_csv(file = NIurl, col_types = coltypes)
 
 # Transform the data
@@ -631,18 +637,22 @@ coltypes <-  cols(
 )
 
 # Get the hospital data
-d <- read_csv(HospitalUrl, col_types = coltypes)
-
-UKHospitalData <- tibble()
-UKHospitalData <- rev( bind_rows(UKHospitalData,d) )
-
-UKHospitalData  <-  UKHospitalData %>%
+jnk <- read_csv(HospitalUrl, col_types = coltypes)
+Hospital<-list()
+Hospital$UK <- tibble()
+Hospital$UK  <-  jnk%>%
+                  select(date = date, saridat = hospitalCases, newsaridat = newAdmissions, critdat=covidOccupiedMVBeds) %>%
                   filter(date >= startdate & date <= enddate ) %>%
                   arrange(date)
+na.locf(Hospital$UK)
+
+# Add the Welsh and Northern Ireland cases data
+regcases$Wales <- walesdat$allCases
+regcases$NI <- NIdat$allCases
 
 # Remove the no longer needed input data
-rm(ukcasedat,scotdailycases,scotdailycasesbyboard,d,coltypes)
-rm(HospitalUrl,deathurl,casesurl,scoturl,walesurl,NIurl,ageurl,baseurl,regurl,regurl2,ukcaseurl,vacurl)
+rm(ukcasedat,scotdailycases,scotdailycasesbyboard,jnk,coltypes,NIdat,walesdat)
+rm(HospitalUrl,deathurl,casesurl,scoturl,walesurl.NIurl,ageurl,baseurl,regurl,regurl2,ukcaseurl,vacurl)
 
 # Plot all cases against date: Used for the paper, uncomment to recreate
 if(interactive()){
@@ -654,11 +664,7 @@ if(interactive()){
     xlab("Date") + ylab("All cases")
 }
 
-# Add the Welsh and Northern Ireland cases data
-regcases$Wales <- walesdat$allCases
-regcases$NI <- NIdat$allCases
-
-# Tail correction.  Assumes we read in all but the last row
+# Scotland ail correction.  Assumes we read in all but the last row
 if(enddate == (Sys.Date()-1)){
   scotdat$allCases[nrow(scotdat)]=scotdat$allCases[nrow(scotdat)]*1.05
   scotdat$allCases[nrow(scotdat)-1]=scotdat$allCases[nrow(scotdat)-1]*1.005
@@ -695,7 +701,7 @@ comdat$Kent<-comdat$Kent-comdat$India
 comdat$lethality<-1.0+ Kentfac*comdat$Kent + Indiafac*comdat$India
 
 # Fix missing data to constant values
-UKHospitalData <- na.locf(UKHospitalData)
+
 casedat <- na.locf(casedat)
 comdat <- na.locf(comdat)
 regcases <- na.locf(regcases)
@@ -775,14 +781,7 @@ comp <- Compartment(casedat,  covidsimAge, RawCFR, comdat, 2,nrow(casedat))
 
 # Monitoring plots
 if(interactive()){
-  plot(rowSums(deathdat[2:20]))
-  lines(rowSums(comp$DEATH[2:20]),col="blue")
-  plot(UKHospitalData$covidOccupiedMVBeds)
-  lines(rowSums(comp$CRIT[2:20]),col="blue")
-  plot(UKHospitalData$newAdmissions)
-  lines(rowSums(comp$newSARI[2:20]),col="blue")
-  plot(UKHospitalData$hospitalCases)
-  lines(rowSums(comp$SARI[2:20]+comp$CRIT[2:20]+comp$CRITREC[2:20]))
+
 
   # Diagnostic plots in ggplot format
   deathdat %>% rowwise()                               %>%
