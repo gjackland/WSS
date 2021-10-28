@@ -78,7 +78,9 @@ MDhospurl="https://api.coronavirus.data.gov.uk/v2/data?areaType=nhsRegion&areaCo
 SEhospurl="https://api.coronavirus.data.gov.uk/v2/data?areaType=nhsRegion&areaCode=E40000005&metric=hospitalCases&metric=newAdmissions&format=csv"
 NEYhospurl="https://api.coronavirus.data.gov.uk/v2/data?areaType=nhsRegion&areaCode=E40000009&metric=hospitalCases&metric=newAdmissions&format=csv"
 NWhospurl="https://api.coronavirus.data.gov.uk/v2/data?areaType=nhsRegion&areaCode=E40000010&metric=hospitalCases&metric=newAdmissions&format=csv"
-
+Scothospurl="https://api.coronavirus.data.gov.uk/v2/data?areaType=nation&areaCode=S92000003&metric=hospitalCases&metric=newAdmissions&format=csv"
+Waleshospurl="https://api.coronavirus.data.gov.uk/v2/data?areaType=nation&areaCode=W92000004&metric=hospitalCases&metric=newAdmissions&format=csv"
+NIhospurl="https://api.coronavirus.data.gov.uk/v2/data?areaType=nation&areaCode=N92000002&metric=hospitalCases&metric=newAdmissions&format=csv"
 hNEY <-  read.csv(file=NEYhospurl)
 hNW <-  read.csv(file=NWhospurl)
 hMD <-  read.csv(file=MDhospurl)
@@ -86,15 +88,19 @@ hEE <-  read.csv(file=EEhospurl)
 hlondon <-  read.csv(file=londonhospurl)
 hSE <-  read.csv(file=SEhospurl)
 hSW <-  read.csv(file=SWhospurl)
-
-hNEY<-gethData(hNEY)
-hNW<-gethData(hNW)
-hMD<-gethData(hMD)
-hEE<-gethData(hEE)
-hlondon<-gethData(hlondon)
-hSE<-gethData(hSE)
-hSW<-gethData(hSW)
-
+hScot <- read.csv(file=Scothospurl)
+hWal <- read.csv(file=Waleshospurl)
+hNI <- read.csv(file=NIhospurl)
+Hospital$NEY<-gethData(hNEY)
+Hospital$NW<-gethData(hNW)
+Hospital$MD<-gethData(hMD)
+Hospital$EE<-gethData(hEE)
+Hospital$london<-gethData(hlondon)
+Hospital$SE<-gethData(hSE)
+Hospital$SW<-gethData(hSW)
+Hospital$Scot<-gethData(hScot)
+Hospital$Wal<-gethData(hWal)
+Hospital$NI<-gethData(hNI)
 
 for (iage in 2:length(london)){
   london[iage]<-Weekend(london %>% pull(iage)) 
@@ -165,7 +171,8 @@ predMD<-Predictions(compMD,R_BestGuess$Midlands)
 compNEY<- Compartment(NEY,  covidsimAge, RawCFR, comdat,3,nrow(NEY))
 predNEY<-Predictions(compNEY,R_BestGuess$NEY)
 
-rm(compSE,compSW,compMD,compNEY,compNW,compEE,complondon, SE, SW, EE, NEY, MD, london, NW)
+rm(compSE,compSW,compMD,compNEY,compNW,compEE,complondon, 
+   SE, SW, EE, NEY, MD, london, NW, hSE, hSW, hEE, hNEY, hMD, hlondon, hNW)
 
 CC_write(predNW,"North West",population$NW[1],R_BestGuess$NW,R_Quant$NW)
 CC_write(predNEY,"North East",population$NEY[1],R_BestGuess$NEY,R_Quant$NEY)

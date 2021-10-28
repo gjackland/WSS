@@ -86,7 +86,13 @@ population <- data.frame(
          409631,368181,328796,345781,264143,175374,111810,67807),
   "Scotland"=c(5475660,261674,292754,303417,
                280757,333740,370972,381258,357430,330569,337259,389238,
-               400834,360684,305248,289590,204947,143858,86413,45018)
+               400834,360684,305248,289590,204947,143858,86413,45018),
+  "Wales"=c(3174970, 160688, 180503, 187819, 173842, 200210, 
+  202513, 201034, 186338, 177662,183427, 215927,223724, 
+202578, 180391, 183716, 135819, 91798,55843, 31138 ),
+"NI"=c(1910623,116146,127557,129856,114652,111442,118998
+,126555,125362,120465,120391,130049,129139
+,112714,92622,82889,67237,44075,26191,14283)
 )
 population$MD<-population$EM+population$WM
 population$NEY<-population$Yorks+population$NE
@@ -632,13 +638,16 @@ coltypes <-  cols(
 
 # Get the hospital data
 d <- read_csv(HospitalUrl, col_types = coltypes)
+Hospital<-list()
 
-UKHospitalData <- tibble()
-UKHospitalData <- rev( bind_rows(UKHospitalData,d) )
+Hospital$UK <- tibble()
+Hospital$UK <- rev( bind_rows(Hospital$UK,d) )
 
-UKHospitalData  <-  UKHospitalData %>%
+Hospital$UK  <-  Hospital$UK %>%
+                  select(date = date, saridat = hospitalCases, newsaridat = newAdmissions, critdat=covidOccupiedMVBeds) %>%
                   filter(date >= startdate & date <= enddate ) %>%
                   arrange(date)
+na.locf(Hospital$UK)
 
 # Remove the no longer needed input data
 rm(ukcasedat,scotdailycases,scotdailycasesbyboard,d,coltypes)
@@ -695,7 +704,7 @@ comdat$Kent<-comdat$Kent-comdat$India
 comdat$lethality<-1.0+ Kentfac*comdat$Kent + Indiafac*comdat$India
 
 # Fix missing data to constant values
-UKHospitalData <- na.locf(UKHospitalData)
+
 casedat <- na.locf(casedat)
 comdat <- na.locf(comdat)
 regcases <- na.locf(regcases)
