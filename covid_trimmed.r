@@ -1066,24 +1066,47 @@ if(interactive()){
               aes(x = x, y = y), colour = "green", size = 1.25) +
     geom_line(data = data.frame(x = dfR$date,
                                 y = predict(loess(bylogR ~ x, data = dfR, span = 0.3, weight = sqrt(comdat$allCases)))),
-              aes(x = x, y = y), colour = "red", size = 1.25) +ggtitle("R, England") +
+              aes(x = x, y = y), colour = "red", size = 1.25) + ggtitle("R, England") +
     theme(plot.title = element_text(hjust = 0.5))
+
+
+  plot(dfR$piecewise,x=smoothweightR$date,ylab="R-number",xlab="",
+       title("R, England"),ylim=c(0.6,1.4),xlim=plotdate,cex.lab=1.5, cex.axis=1.5, cex.main=1.5, cex.sub=1.6)
+  lines(Rest$England_LowerBound,x=(Rest$Date-sagedelay))
+  lines(y=Rest$England_UpperBound,x=Rest$Date-sagedelay)
+  lines(predict(loess(bylogR ~ x, data=dfR,span=0.05,weight=sqrt(comdat$allCases))),col='red',x=dfR$date,lwd=2)
+  lines(predict(loess(bylogR ~ x, data=dfR,span=0.1,weight=sqrt(comdat$allCases))),col='green',x=dfR$date,lwd=2)
+  lines(predict(loess(bylogR ~ x, data=dfR,span=0.2,weight=sqrt(comdat$allCases))),col='blue',x=dfR$date,lwd=2)
+  lines(predict(loess(bylogR ~ x, data=dfR,span=0.3,weight=sqrt(comdat$allCases))),col='violet',x=dfR$date,lwd=3)
+
+  # ggplot version of the same plot
+  dfR %>% ggplot(aes(x = date, y = piecewise)) + geom_point(alpha=0.5, na.rm = TRUE) +
+          theme_bw() + ylab("R-number") + xlab("Date") + ylim(0.6, 1.4) + ggtitle("R, England") +
+          theme(plot.title = element_text(hjust = 0.5)) +
+          geom_ribbon(data = Rest,
+                     aes(x = Date - sagedelay,
+                        ymin = England_LowerBound,
+                        ymax = England_UpperBound,
+                        fill = "red",
+                        colour = "black"), alpha = 0.05, inherit.aes = FALSE, show.legend = FALSE) +
+          geom_line(data = data.frame(x = dfR$date,
+                                      y = predict(loess(bylogR ~ x, data = dfR, span = 0.05, weight = sqrt(comdat$allCases)))),
+                    aes(x = x, y = y), inherit.aes = FALSE, colour = "red", size = 1) +
+          geom_line(data = data.frame(x = dfR$date,
+                                      y = predict(loess(bylogR ~ x, data = dfR, span = 0.1, weight = sqrt(comdat$allCases)))),
+                    aes(x = x, y = y), colour = "green", size = 1) +
+          geom_line(data = data.frame(x = dfR$date,
+                                     y = predict(loess(bylogR ~ x, data = dfR, span = 0.2, weight = sqrt(comdat$allCases)))),
+                    aes(x = x, y = y), colour = "blue", size = 1) +
+          geom_line(data = data.frame(x = dfR$date,
+                                y = predict(loess(bylogR ~ x, data = dfR, span = 0.3, weight = sqrt(comdat$allCases)))),
+              aes(x = x, y = y), colour = "violet", size = 1.25)
 
 } # End interactive session
 
 
-
-plot(dfR$piecewise,x=smoothweightR$date,ylab="R-number",xlab="",
-     title("R, England"),ylim=c(0.6,1.4),xlim=plotdate,cex.lab=1.5, cex.axis=1.5, cex.main=1.5, cex.sub=1.6)
-lines(Rest$England_LowerBound,x=(Rest$Date-sagedelay))
-lines(y=Rest$England_UpperBound,x=Rest$Date-sagedelay)
-lines(predict(loess(bylogR ~ x, data=dfR,span=0.05,weight=sqrt(comdat$allCases))),col='red',x=dfR$date,lwd=2)
-lines(predict(loess(bylogR ~ x, data=dfR,span=0.1,weight=sqrt(comdat$allCases))),col='green',x=dfR$date,lwd=2)
-lines(predict(loess(bylogR ~ x, data=dfR,span=0.2,weight=sqrt(comdat$allCases))),col='blue',x=dfR$date,lwd=2)
-lines(predict(loess(bylogR ~ x, data=dfR,span=0.3,weight=sqrt(comdat$allCases))),col='violet',x=dfR$date,lwd=3)
-
-R_BestGuess<-list()
-R_Quant<-list()
+R_BestGuess <- list()
+R_Quant <- list()
 ### Smoothing Filters
 s1=0.05
 s2=0.1
