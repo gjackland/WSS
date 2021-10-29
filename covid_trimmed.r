@@ -87,8 +87,8 @@ population <- data.frame(
   "Scotland"=c(5475660,261674,292754,303417,
                280757,333740,370972,381258,357430,330569,337259,389238,
                400834,360684,305248,289590,204947,143858,86413,45018),
-  "Wales"=c(3174970, 160688, 180503, 187819, 173842, 200210, 
-  202513, 201034, 186338, 177662,183427, 215927,223724, 
+  "Wales"=c(3174970, 160688, 180503, 187819, 173842, 200210,
+  202513, 201034, 186338, 177662,183427, 215927,223724,
 202578, 180391, 183716, 135819, 91798,55843, 31138 ),
 "NI"=c(1910623,116146,127557,129856,114652,111442,118998
 ,126555,125362,120465,120391,130049,129139
@@ -799,30 +799,30 @@ if(interactive()){
                      left_join(comp$CRIT, by = "date")        %>%
                      rowwise()                                %>%
                      mutate(totCrit = sum(c_across(3:21)))    %>%
-                     select(date, MVbeds, totCrit)              %>%
+                     select(date, MVbeds, totCrit)            %>%
                      ggplot(aes(x = date, y = MVbeds)) + geom_point(alpha = 0.25) +
                      geom_line(aes(x = date, y = totCrit), colour = "blue") +
                      theme_bw() + ylab("Occupied MV beds") + xlab("Date")
 
-  Hospital$UK %>% select(date, newsaridat)                 %>%
+  Hospital$UK %>% select(date, newsaridat)                       %>%
                      left_join(comp$newSARI, by ="date")         %>%
                      rowwise()                                   %>%
                      mutate(totnewSARI = sum(c_across(3:21)))    %>%
-                     select(date, newsaridat, totnewSARI)     %>%
+                     select(date, newsaridat, totnewSARI)        %>%
                      ggplot(aes(x = date, y = newsaridat)) +
                      geom_point(alpha = 0.2) +
                      geom_line(aes(x = date, y = totnewSARI), colour = "blue") +
                      theme_bw() + ylab("New Admissions") + xlab("Date")
 
-  Hospital$UK %>% select(date, saridat)                  %>%
+  Hospital$UK %>% select(date, saridat)                           %>%
                      left_join(comp$SARI, by = "date")            %>%
                      rowwise()                                    %>%
                      mutate(totSARI = sum(c_across(3:21)))        %>%
-                     select(date, saridat, totSARI)         %>%
+                     select(date, saridat, totSARI)               %>%
                      left_join(comp$CRIT, by = "date")            %>%
                      rowwise()                                    %>%
                      mutate(totSariCrit = sum(c_across(3:22)))    %>%
-                     select(date, saridat, totSariCrit)     %>%
+                     select(date, saridat, totSariCrit)           %>%
                      left_join(comp$CRITREC, by = "date")         %>%
                      rowwise()                                    %>%
                      mutate(totSariCritRec = sum(c_across(3:22))) %>%
@@ -863,7 +863,7 @@ for(i in (2:nrow(regcases))    ){
 # Reset first row to 1, because there's no data
 # Fix R=1 not NaN or Inf when previous cases are zero
 # Its not really defined.  This generates a warning which we can ignore
-rat[1, 2:ncol(regcases)]<-1.0
+rat[1, 2:ncol(regcases)] <- 1.0
 rat[is.na(rat)] <- 1.0
 rat[rat==Inf] <- 1.0
 rat[rat==-Inf] <- 1.0
@@ -964,15 +964,15 @@ dfR$weeklyR[length(dfR$weeklyR)-2] <- 1.0
 Govdat <- Rest[Rest$Date >= min(comdat$date) & Rest$Date <= max(comdat$date),]
 
 # Parameters for fitting splines and Loess
-nospl=8
-spdf=18
-lospan=0.3
+nospl <- 8
+spdf <- 18
+lospan <- 0.3
 
-smoothweightR<-smooth.spline(dfR$bylogR,df=spdf,w=sqrt(comdat$allCases))
-smoothweightRstrat<-smooth.spline(dfR$stratR,df=spdf,w=sqrt(comdat$allCases))
-smoothweightRito<-smooth.spline(dfR$itoR,df=spdf,w=sqrt(comdat$allCases))
-smoothweightRfp<-smooth.spline(dfR$fpR,df=spdf,w=sqrt(comdat$fpCases))
-rat$smoothScotland <-smooth.spline(rat$Scotland,df=spdf,w=sqrt(regcases$Scotland))$y
+smoothweightR <- smooth.spline(dfR$bylogR,df=spdf,w=sqrt(comdat$allCases))
+smoothweightRstrat <- smooth.spline(dfR$stratR,df=spdf,w=sqrt(comdat$allCases))
+smoothweightRito <- smooth.spline(dfR$itoR,df=spdf,w=sqrt(comdat$allCases))
+smoothweightRfp <- smooth.spline(dfR$fpR,df=spdf,w=sqrt(comdat$fpCases))
+rat$smoothScotland <- smooth.spline(rat$Scotland,df=spdf,w=sqrt(regcases$Scotland))$y
 rat$smoothNW <-smooth.spline(rat$`North West`,df=spdf,w=sqrt(regcases$`North West`))$y
 rat$smoothNEY <-smooth.spline(rat$NE_Yorks,df=spdf,w=sqrt(regcases$NE_Yorks))$y
 rat$smoothLondon <-smooth.spline(rat$London,df=spdf,w=sqrt(regcases$London))$y
@@ -1017,6 +1017,27 @@ plot(smoothweightR$y,ylab="Regional R-number",xlab="Date",x=dfR$date)
 for (i in 8:17){
   lines(smooth.spline(na.omit(dfR[i]),df=12)$y,col=i,x=dfR$date[!is.na(dfR[i])])
 }
+
+# ggplot graph - create a temporary tibble
+d <- tibble(x = dfR$date,
+            y = smooth.spline(na.omit(dfR[8]),df=12)$y,
+            type = rep(names(dfR)[8],nrow(dfR)))
+
+for(i in names(dfR)[9:17]){
+  d <- add_row(d,
+               x = dfR$date,
+               y = smooth.spline(na.omit(dfR[i]),df=12)$y,
+               type = rep(i, nrow(dfR)))
+}
+
+data.frame(x=dfR$date, y=smoothweightR$y) %>%
+  ggplot(aes(x, y)) + geom_point(alpha = 0.5) +
+  theme_bw()  + xlab("Date") + ylab("Regional R-number") +
+  geom_line(data=d,aes(x = x, y = y, colour = type) )
+
+# remove temporary tibble
+rm(d)
+
 
 plot(dfR$bylogR,x=smoothweightR$date,ylab="R-number",xlab="",
      title("R, England"),ylim=c(0.6,1.6),xlim=plotdate,cex.lab=1.6, cex.axis=1.6, cex.main=1.6, cex.sub=1.6)
