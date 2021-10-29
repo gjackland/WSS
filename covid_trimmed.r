@@ -1066,7 +1066,8 @@ if(interactive()){
               aes(x = x, y = y), colour = "green", size = 1.25) +
     geom_line(data = data.frame(x = dfR$date,
                                 y = predict(loess(bylogR ~ x, data = dfR, span = 0.3, weight = sqrt(comdat$allCases)))),
-              aes(x = x, y = y), colour = "red", size = 1.25)
+              aes(x = x, y = y), colour = "red", size = 1.25) +ggtitle("R, England") +
+    theme(plot.title = element_text(hjust = 0.5))
 
 } # End interactive session
 
