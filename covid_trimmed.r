@@ -1024,6 +1024,7 @@ if(interactive()){
               y = smooth.spline(na.omit(dfR[8]),df=12)$y,
               type = rep(names(dfR)[8],nrow(dfR)))
 
+  # Populate the tibble
   for(i in names(dfR)[9:17]){
     d <- add_row(d,
                  x = dfR$date,
@@ -1031,6 +1032,7 @@ if(interactive()){
                  type = rep(i, nrow(dfR)))
   }
 
+  # Generate the graph
   data.frame(x=dfR$date, y=smoothweightR$y) %>%
     ggplot(aes(x, y)) + geom_point(alpha = 0.5) +
     theme_bw()  + xlab("Date") + ylab("Regional R-number") +
