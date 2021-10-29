@@ -1011,44 +1011,65 @@ rm(smoothR1,smoothR2,smoothR3,smoothR4,smoothRend)
 #  Have to move the Official R data back by 16 days !
 
 #  All cases and Regions
+if(interactive()){
 
-plot(smoothweightR$y,ylab="Regional R-number",xlab="Date",x=dfR$date)
+  plot(smoothweightR$y,ylab="Regional R-number",xlab="Date",x=dfR$date)
 
-for (i in 8:17){
-  lines(smooth.spline(na.omit(dfR[i]),df=12)$y,col=i,x=dfR$date[!is.na(dfR[i])])
+  for (i in 8:17){
+    lines(smooth.spline(na.omit(dfR[i]),df=12)$y,col=i,x=dfR$date[!is.na(dfR[i])])
+  }
+
+  # ggplot graph - create a temporary tibble
+  d <- tibble(x = dfR$date,
+              y = smooth.spline(na.omit(dfR[8]),df=12)$y,
+              type = rep(names(dfR)[8],nrow(dfR)))
+
+  for(i in names(dfR)[9:17]){
+    d <- add_row(d,
+                 x = dfR$date,
+                 y = smooth.spline(na.omit(dfR[i]),df=12)$y,
+                 type = rep(i, nrow(dfR)))
+  }
+
+  data.frame(x=dfR$date, y=smoothweightR$y) %>%
+    ggplot(aes(x, y)) + geom_point(alpha = 0.5) +
+    theme_bw()  + xlab("Date") + ylab("Regional R-number") +
+    geom_line(data=d,aes(x = x, y = y, colour = type) )
+
+  # remove temporary tibble
+  rm(d)
+
+  plot(dfR$bylogR,x=smoothweightR$date,ylab="R-number",xlab="",
+       title("R, England"),ylim=c(0.6,1.6),xlim=plotdate,cex.lab=1.6, cex.axis=1.6, cex.main=1.6, cex.sub=1.6)
+  lines(Rest$England_LowerBound,x=Rest$Date-sagedelay,lwd=2)
+  lines(y=Rest$England_UpperBound,x=Rest$Date-sagedelay,lwd=2)
+  lines(dfR$piecewise,col="violet",lwd=3,x=dfR$date)
+  lines(smoothweightR$y,col="blue",lwd=3,x=dfR$date)
+  lines(predict(loess(itoR ~ x, data=dfR,span=0.3,weight=sqrt(comdat$allCases))),col='green',x=dfR$date,lwd=3)
+  #lines(predict(loess(itoR ~ x, data=dfR,span=0.3)),col='green',x=dfR$date)
+  lines(predict(loess(bylogR ~ x, data=dfR,span=0.3,weight=sqrt(comdat$allCases))),col='red',x=dfR$date,lwd=3)
+  #lines(predict(loess(bylogR ~ x, data=dfR,span=0.3)),col='red',x=dfR$date)
+
+  # ggplot version of the same plot
+  dfR %>% ggplot(aes(x = date, y = bylogR)) + geom_point(alpha=0.5, na.rm = TRUE) +
+    theme_bw() + ylab("R-number") + xlab("Date") + ylim(0.6, 1.6) +
+    geom_ribbon(data = Rest,
+                aes(x = Date - sagedelay,
+                    ymin = England_LowerBound,
+                    ymax = England_UpperBound,
+                    fill = "red",
+                    colour = "black"), alpha = 0.1, inherit.aes = FALSE, show.legend = FALSE) +
+    geom_line(data = dfR, aes(x = date, y = piecewise), colour = "violet", size = 1.25) +
+    geom_line(data = data.frame(x = dfR$date, y = smoothweightR$y), aes(x = x, y = y), colour = "blue", size = 1.25) +
+    geom_line(data = data.frame(x = dfR$date,
+                                y = predict(loess(itoR ~ x, data = dfR, span = 0.3, weight = sqrt(comdat$allCases)))),
+              aes(x = x, y = y), colour = "green", size = 1.25) +
+    geom_line(data = data.frame(x = dfR$date,
+                                y = predict(loess(bylogR ~ x, data = dfR, span = 0.3, weight = sqrt(comdat$allCases)))),
+              aes(x = x, y = y), colour = "red", size = 1.25)
 }
 
-# ggplot graph - create a temporary tibble
-d <- tibble(x = dfR$date,
-            y = smooth.spline(na.omit(dfR[8]),df=12)$y,
-            type = rep(names(dfR)[8],nrow(dfR)))
 
-for(i in names(dfR)[9:17]){
-  d <- add_row(d,
-               x = dfR$date,
-               y = smooth.spline(na.omit(dfR[i]),df=12)$y,
-               type = rep(i, nrow(dfR)))
-}
-
-data.frame(x=dfR$date, y=smoothweightR$y) %>%
-  ggplot(aes(x, y)) + geom_point(alpha = 0.5) +
-  theme_bw()  + xlab("Date") + ylab("Regional R-number") +
-  geom_line(data=d,aes(x = x, y = y, colour = type) )
-
-# remove temporary tibble
-rm(d)
-
-
-plot(dfR$bylogR,x=smoothweightR$date,ylab="R-number",xlab="",
-     title("R, England"),ylim=c(0.6,1.6),xlim=plotdate,cex.lab=1.6, cex.axis=1.6, cex.main=1.6, cex.sub=1.6)
-lines(Rest$England_LowerBound,x=Rest$Date-sagedelay,lwd=2)
-lines(y=Rest$England_UpperBound,x=Rest$Date-sagedelay,lwd=2)
-lines(dfR$piecewise,col="violet",lwd=3,x=dfR$date)
-lines(smoothweightR$y,col="blue",lwd=3,x=dfR$date)
-lines(predict(loess(itoR ~ x, data=dfR,span=0.3,weight=sqrt(comdat$allCases))),col='green',x=dfR$date,lwd=3)
-#lines(predict(loess(itoR ~ x, data=dfR,span=0.3)),col='green',x=dfR$date)
-lines(predict(loess(bylogR ~ x, data=dfR,span=0.3,weight=sqrt(comdat$allCases))),col='red',x=dfR$date,lwd=3)
-#lines(predict(loess(bylogR ~ x, data=dfR,span=0.3)),col='red',x=dfR$date)
 
 plot(dfR$piecewise,x=smoothweightR$date,ylab="R-number",xlab="",
      title("R, England"),ylim=c(0.6,1.4),xlim=plotdate,cex.lab=1.5, cex.axis=1.5, cex.main=1.5, cex.sub=1.6)
