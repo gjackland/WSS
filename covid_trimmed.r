@@ -1067,7 +1067,8 @@ if(interactive()){
     geom_line(data = data.frame(x = dfR$date,
                                 y = predict(loess(bylogR ~ x, data = dfR, span = 0.3, weight = sqrt(comdat$allCases)))),
               aes(x = x, y = y), colour = "red", size = 1.25)
-}
+
+} # End interactive session
 
 
 
