@@ -1034,7 +1034,7 @@ if(interactive()){
   data.frame(x=dfR$date, y=smoothweightR$y) %>%
     ggplot(aes(x, y)) + geom_point(alpha = 0.5) +
     theme_bw()  + xlab("Date") + ylab("Regional R-number") +
-    geom_line(data=d,aes(x = x, y = y, colour = type) )
+    geom_line(data=d,aes(x = x, y = y, colour = type, linetype = type) )
 
   # remove temporary tibble
   rm(d)
