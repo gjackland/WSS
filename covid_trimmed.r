@@ -1360,7 +1360,7 @@ if(interactive()){
 # Plot Regional R data vs Government  spdf is spline smoothing factor, lospan for loess
 
 #  various options to silence pdf writing
-pdfpo=FALSE
+pdfpo <- FALSE
 
 #  Plot age data
 dfR[,c(2,9:27)]%>% filter(startplot < date & date < endplot) %>%
@@ -1443,7 +1443,7 @@ if(interactive()){
          SmoothRlog=Predict$SmoothRlog,
          SmoothRito=Predict$SmoothRito,
          MeanR=Predict$MeanR) ->tmpdat
-  ggplot(comdat,aes(x=date)) + geom_point(aes(y=allCases),alpha=0.5) +
+  ggplot(comdat,aes(x=date)) + geom_point(aes(y=allCases),alpha=0.2) +
     geom_line(data=tmpdat, aes(x=date,y=c),colour="black",alpha=0.75) +
     geom_line(data=tmpdat, aes(x=date,y=SmoothRlog),colour="blue",alpha=0.75) +
     geom_line(data=tmpdat, aes(x=date,y=SmoothRito),colour="violet",alpha=0.75) +
@@ -1451,19 +1451,21 @@ if(interactive()){
     geom_line(data=tmpdat, aes(x=date,y=smoothcasesR),colour="red",alpha=0.75) +
     xlab("Date") + ylab("Cases backdeduced from R") + theme_bw()
 
-  tibble(date=comdat$date,c=Predict$c,
-         smoothcasesR=dfR$smoothcasesR,
-         SmoothRlog=dfR$smoothRlog,
-         SmoothRito=dfR$smoothRito,
-         bylogR=dfR$bylogR,
-         MeanR=mean(dfR$bylogR) )->tmpdat
-  ggplot(comdat,aes(x=date)) +
-    geom_point(data=tmpdat, aes(x=date,y=bylogR),colour="black",alpha=0.75) +
-    geom_line(data=tmpdat, aes(x=date,y=SmoothRlog),colour="blue",alpha=0.75) +
-    geom_line(data=tmpdat, aes(x=date,y=SmoothRito),colour="violet",alpha=0.75) +
-    geom_line(data=tmpdat, aes(x=date,y=MeanR),colour="green",alpha=0.75) +
-    geom_line(data=tmpdat, aes(x=date,y=smoothcasesR),colour="red",alpha=0.75) +
-    xlab("Date") + ylab("R") + theme_bw()
+  tibble(date=comdat$date,c = Predict$c,
+         smoothcasesR = dfR$smoothcasesR,
+         SmoothRlog = dfR$smoothRlog,
+         SmoothRito = dfR$smoothRito,
+         bylogR = dfR$bylogR,
+         MeanR = meanR )->tmpdat
+  ggplot(comdat, aes(x = date)) +
+    geom_point(data = tmpdat, aes(x = date, y = bylogR), colour = "black",alpha = 0.25, na.rm = TRUE) +
+    geom_line(data = tmpdat, aes(x = date, y = SmoothRlog), colour = "blue",alpha = 0.75, size = 1.25) +
+    geom_line(data = tmpdat, aes(x = date, y = SmoothRito), colour = "violet",alpha = 0.75, size = 1.25) +
+    geom_line(data = tmpdat, aes(x = date, y = MeanR), colour = "green",alpha = 0.75, size = 1.25) +
+    geom_line(data = tmpdat, aes(x = date, y = smoothcasesR), colour = "red", alpha = 0.75, size = 1.25) +
+    xlab("Date") + ylab("R") + theme_bw() + ylim(0.7, 1.4)
+
+  # Remove the temporary array
   rm(tmpdat)
 
 }
