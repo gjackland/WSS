@@ -1437,26 +1437,32 @@ if(interactive()){
   lines(dfR$meanR,x=dfR$date, col="green",lwd=2)
   lines(dfR$smoothcasesR,x=dfR$date, col="red",lwd=2)
 
-  # ggplot version of the same graph
-  tibble(date=comdat$date,c=Predict$c,
-         smoothcasesR=Predict$smoothcasesR,
-         SmoothRlog=Predict$SmoothRlog,
-         SmoothRito=Predict$SmoothRito,
-         MeanR=Predict$MeanR) ->tmpdat
-  ggplot(comdat,aes(x=date)) + geom_point(aes(y=allCases),alpha=0.2) +
-    geom_line(data=tmpdat, aes(x=date,y=c),colour="black",alpha=0.75) +
-    geom_line(data=tmpdat, aes(x=date,y=SmoothRlog),colour="blue",alpha=0.75) +
-    geom_line(data=tmpdat, aes(x=date,y=SmoothRito),colour="violet",alpha=0.75) +
-    geom_line(data=tmpdat, aes(x=date,y=MeanR),colour="green",alpha=0.75) +
-    geom_line(data=tmpdat, aes(x=date,y=smoothcasesR),colour="red",alpha=0.75) +
+  # Create a temporary tibble to plot the data
+  tmpdat <- tibble(date = comdat$date,
+                   c = Predict$c,
+                   smoothcasesR = Predict$smoothcasesR,
+                   SmoothRlog = Predict$SmoothRlog,
+                   SmoothRito = Predict$SmoothRito,
+                   MeanR = Predict$MeanR)
+
+  # Plot the data
+  ggplot(comdat, aes(x = date)) + geom_point(aes(y = allCases), alpha = 0.2) +
+    geom_line(data = tmpdat, aes(x = date, y = c), colour = "black", alpha = 0.5, size = 1.1) +
+    geom_line(data = tmpdat, aes(x = date, y = SmoothRlog), colour = "blue", alpha = 0.5, size = 1.1) +
+    geom_line(data = tmpdat, aes(x = date, y = SmoothRito), colour = "violet", alpha = 0.5, size = 1.1) +
+    geom_line(data = tmpdat, aes(x = date, y = MeanR), colour = "green", alpha = 0.5, size = 1.1) +
+    geom_line(data = tmpdat, aes(x = date, y = smoothcasesR), colour = "red", alpha = 0.5, size = 1.1) +
     xlab("Date") + ylab("Cases backdeduced from R") + theme_bw()
 
-  tibble(date=comdat$date,c = Predict$c,
-         smoothcasesR = dfR$smoothcasesR,
-         SmoothRlog = dfR$smoothRlog,
-         SmoothRito = dfR$smoothRito,
-         bylogR = dfR$bylogR,
-         MeanR = meanR )->tmpdat
+  # Create a temporary tibble for plotting
+  tmpdat <-  tibble(date = comdat$date,
+                    c = Predict$c,
+                    smoothcasesR = dfR$smoothcasesR,
+                    SmoothRlog = dfR$smoothRlog,
+                    SmoothRito = dfR$smoothRito,
+                    bylogR = dfR$bylogR,
+                    MeanR = meanR )
+  # Plot the data
   ggplot(comdat, aes(x = date)) +
     geom_point(data = tmpdat, aes(x = date, y = bylogR), colour = "black",alpha = 0.25, na.rm = TRUE) +
     geom_line(data = tmpdat, aes(x = date, y = SmoothRlog), colour = "blue",alpha = 0.75, size = 1.25) +
