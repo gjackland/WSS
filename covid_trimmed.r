@@ -1110,10 +1110,10 @@ if(interactive()){
 R_BestGuess <- list()
 R_Quant <- list()
 ### Smoothing Filters
-s1=0.05
-s2=0.1
-s3=0.2
-s4=0.3
+s1 <- 0.05
+s2 <- 0.1
+s3 <- 0.2
+s4 <- 0.3
 filteredR <-append(
   append(tail(predict(loess(bylogR ~ x, data=dfR,weight=comdat$allCases, span=s1))),
          tail(predict(loess(bylogR ~ x, data=dfR,weight=comdat$allCases,span=s2))) ) ,
@@ -1191,8 +1191,6 @@ filteredR <-append(
 
 R_BestGuess$EE <-mean(filteredR)
 R_Quant$EE <-unname(quantile(filteredR, probs=c(0.05,0.25,0.5,0.75,0.95)))
-
-
 
 rat$tmp <- rat$`South East`
 
@@ -1326,12 +1324,37 @@ R_Quant$x75 <-unname(quantile(filteredR, probs=c(0.05,0.25,0.5,0.75,0.95)))
 
 rm(filteredR)
 
-plot(smoothweightR$y,ylab="R-number",xlab="Day",ylim=c(0.5,1.6))
-#  Plot R continuous with many splines.
-for (ismooth in 4:30){
-#  lines(smooth.spline(dfR$bylogR,df=ismooth,w=sqrt(comdat$allCases)))
-  lines(predict(loess(bylogR ~ x, data=dfR,span=(4.0/ismooth))),col='red')
+if(interactive()){
+
+  plot(smoothweightR$y,ylab="R-number",xlab="Day",ylim=c(0.5,1.6))
+  #  Plot R continuous with many splines.
+  for (ismooth in 4:30){
+    #  lines(smooth.spline(dfR$bylogR,df=ismooth,w=sqrt(comdat$allCases)))
+    lines(predict(loess(bylogR ~ x, data=dfR,span=(4.0/ismooth))),col='red')
   }
+
+  # Temp tibble
+  ismooth <-  4
+  d <- tibble(x = seq_len(nrow(dfR)),
+             y = predict(loess(bylogR ~ x, data=dfR,span=(4.0/ismooth))),
+             type = rep(ismooth, nrow(dfR))
+            )
+  for (ismooth in 5:30){
+    d <- add_row(d,x = seq_len(nrow(dfR)),
+                 y = predict(loess(bylogR ~ x, data=dfR,span=(4.0/ismooth))),
+                 type = rep(ismooth, nrow(dfR)))
+  }
+
+  # plot the data
+  data.frame(x = smoothweightR$x,y = smoothweightR$y) %>%
+  ggplot(aes(x = x, y = y)) + geom_point(alpha = 0.25) +
+  theme_bw() + xlab("Day") + ylab("R-number") +
+  geom_line(data = d, aes(x = x, y = y, colour = factor(type)), alpha = 0.25, show.legend = FALSE)
+
+  # Remove the temporary tibble
+  rm(d)
+}
+
 
 
 # Plot Regional R data vs Government  spdf is spline smoothing factor, lospan for loess
