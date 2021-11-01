@@ -40,3 +40,4 @@ Workflow:
 
 4/ Run **Regional.R**. to read data and obtain compartment model data for 7 NHS England Regions in CrystalCast format.
 
+5/ **Sanity check**. R-numbers can be sensitive to late posting on recent cases, and wrong R-numbers tip over into the medium term predictions.  Before believing anything, always check the last few days of input case data for anomalies.  The parameter "enddate" can be increased to eliminate incomplete data.  If R is sensitive to enddate, there is a data problem.
