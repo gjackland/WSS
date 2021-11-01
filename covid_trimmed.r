@@ -1111,10 +1111,10 @@ if(interactive()){
 R_BestGuess <- list()
 R_Quant <- list()
 ### Smoothing Filters
-s1=0.05
-s2=0.1
-s3=0.2
-s4=0.3
+s1 <- 0.05
+s2 <- 0.1
+s3 <- 0.2
+s4 <- 0.3
 filteredR <-append(
   append(tail(predict(loess(bylogR ~ x, data=dfR,weight=comdat$allCases, span=s1))),
          tail(predict(loess(bylogR ~ x, data=dfR,weight=comdat$allCases,span=s2))) ) ,
@@ -1192,8 +1192,6 @@ filteredR <-append(
 
 R_BestGuess$EE <-mean(filteredR)
 R_Quant$EE <-unname(quantile(filteredR, probs=c(0.05,0.25,0.5,0.75,0.95)))
-
-
 
 rat$tmp <- rat$`South East`
 
@@ -1327,18 +1325,43 @@ R_Quant$x75 <-unname(quantile(filteredR, probs=c(0.05,0.25,0.5,0.75,0.95)))
 
 rm(filteredR)
 
-plot(smoothweightR$y,ylab="R-number",xlab="Day",ylim=c(0.5,1.6))
-#  Plot R continuous with many splines.
-for (ismooth in 4:30){
-#  lines(smooth.spline(dfR$bylogR,df=ismooth,w=sqrt(comdat$allCases)))
-  lines(predict(loess(bylogR ~ x, data=dfR,span=(4.0/ismooth))),col='red')
+if(interactive()){
+
+  plot(smoothweightR$y,ylab="R-number",xlab="Day",ylim=c(0.5,1.6))
+  #  Plot R continuous with many splines.
+  for (ismooth in 4:30){
+    #  lines(smooth.spline(dfR$bylogR,df=ismooth,w=sqrt(comdat$allCases)))
+    lines(predict(loess(bylogR ~ x, data=dfR,span=(4.0/ismooth))),col='red')
   }
+
+  # Temp tibble
+  ismooth <-  4
+  d <- tibble(x = seq_len(nrow(dfR)),
+             y = predict(loess(bylogR ~ x, data=dfR,span=(4.0/ismooth))),
+             type = rep(ismooth, nrow(dfR))
+            )
+  for (ismooth in 5:30){
+    d <- add_row(d,x = seq_len(nrow(dfR)),
+                 y = predict(loess(bylogR ~ x, data=dfR,span=(4.0/ismooth))),
+                 type = rep(ismooth, nrow(dfR)))
+  }
+
+  # plot the data
+  data.frame(x = smoothweightR$x,y = smoothweightR$y) %>%
+  ggplot(aes(x = x, y = y)) + geom_point(alpha = 0.25) +
+  theme_bw() + xlab("Day") + ylab("R-number") +
+  geom_line(data = d, aes(x = x, y = y, colour = factor(type)), alpha = 0.25, show.legend = FALSE)
+
+  # Remove the temporary tibble
+  rm(d)
+}
+
 
 
 # Plot Regional R data vs Government  spdf is spline smoothing factor, lospan for loess
 
 #  various options to silence pdf writing
-pdfpo=FALSE
+pdfpo <- FALSE
 
 #  Plot age data
 dfR[,c(2,9:27)]%>% filter(startplot < date & date < endplot) %>%
@@ -1415,33 +1438,41 @@ if(interactive()){
   lines(dfR$meanR,x=dfR$date, col="green",lwd=2)
   lines(dfR$smoothcasesR,x=dfR$date, col="red",lwd=2)
 
-  # ggplot version of the same graph
-  tibble(date=comdat$date,c=Predict$c,
-         smoothcasesR=Predict$smoothcasesR,
-         SmoothRlog=Predict$SmoothRlog,
-         SmoothRito=Predict$SmoothRito,
-         MeanR=Predict$MeanR) ->tmpdat
-  ggplot(comdat,aes(x=date)) + geom_point(aes(y=allCases),alpha=0.5) +
-    geom_line(data=tmpdat, aes(x=date,y=c),colour="black",alpha=0.75) +
-    geom_line(data=tmpdat, aes(x=date,y=SmoothRlog),colour="blue",alpha=0.75) +
-    geom_line(data=tmpdat, aes(x=date,y=SmoothRito),colour="violet",alpha=0.75) +
-    geom_line(data=tmpdat, aes(x=date,y=MeanR),colour="green",alpha=0.75) +
-    geom_line(data=tmpdat, aes(x=date,y=smoothcasesR),colour="red",alpha=0.75) +
+  # Create a temporary tibble to plot the data
+  tmpdat <- tibble(date = comdat$date,
+                   c = Predict$c,
+                   smoothcasesR = Predict$smoothcasesR,
+                   SmoothRlog = Predict$SmoothRlog,
+                   SmoothRito = Predict$SmoothRito,
+                   MeanR = Predict$MeanR)
+
+  # Plot the data
+  ggplot(comdat, aes(x = date)) + geom_point(aes(y = allCases), alpha = 0.2) +
+    geom_line(data = tmpdat, aes(x = date, y = c), colour = "black", alpha = 0.5, size = 1.1) +
+    geom_line(data = tmpdat, aes(x = date, y = SmoothRlog), colour = "blue", alpha = 0.5, size = 1.1) +
+    geom_line(data = tmpdat, aes(x = date, y = SmoothRito), colour = "violet", alpha = 0.5, size = 1.1) +
+    geom_line(data = tmpdat, aes(x = date, y = MeanR), colour = "green", alpha = 0.5, size = 1.1) +
+    geom_line(data = tmpdat, aes(x = date, y = smoothcasesR), colour = "red", alpha = 0.5, size = 1.1) +
     xlab("Date") + ylab("Cases backdeduced from R") + theme_bw()
 
-  tibble(date=comdat$date,c=Predict$c,
-         smoothcasesR=dfR$smoothcasesR,
-         SmoothRlog=dfR$smoothRlog,
-         SmoothRito=dfR$smoothRito,
-         bylogR=dfR$bylogR,
-         MeanR=mean(dfR$bylogR) )->tmpdat
-  ggplot(comdat,aes(x=date)) +
-    geom_point(data=tmpdat, aes(x=date,y=bylogR),colour="black",alpha=0.75) +
-    geom_line(data=tmpdat, aes(x=date,y=SmoothRlog),colour="blue",alpha=0.75) +
-    geom_line(data=tmpdat, aes(x=date,y=SmoothRito),colour="violet",alpha=0.75) +
-    geom_line(data=tmpdat, aes(x=date,y=MeanR),colour="green",alpha=0.75) +
-    geom_line(data=tmpdat, aes(x=date,y=smoothcasesR),colour="red",alpha=0.75) +
-    xlab("Date") + ylab("R") + theme_bw()
+  # Create a temporary tibble for plotting
+  tmpdat <-  tibble(date = comdat$date,
+                    c = Predict$c,
+                    smoothcasesR = dfR$smoothcasesR,
+                    SmoothRlog = dfR$smoothRlog,
+                    SmoothRito = dfR$smoothRito,
+                    bylogR = dfR$bylogR,
+                    MeanR = meanR )
+  # Plot the data
+  ggplot(comdat, aes(x = date)) +
+    geom_point(data = tmpdat, aes(x = date, y = bylogR), colour = "black",alpha = 0.25, na.rm = TRUE) +
+    geom_line(data = tmpdat, aes(x = date, y = SmoothRlog), colour = "blue",alpha = 0.75, size = 1.25) +
+    geom_line(data = tmpdat, aes(x = date, y = SmoothRito), colour = "violet",alpha = 0.75, size = 1.25) +
+    geom_line(data = tmpdat, aes(x = date, y = MeanR), colour = "green",alpha = 0.75, size = 1.25) +
+    geom_line(data = tmpdat, aes(x = date, y = smoothcasesR), colour = "red", alpha = 0.75, size = 1.25) +
+    xlab("Date") + ylab("R") + theme_bw() + ylim(0.7, 1.4)
+
+  # Remove the temporary array
   rm(tmpdat)
 
 }

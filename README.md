@@ -24,3 +24,19 @@ https://docs.google.com/document/d/1t7GydEG2PLbwHOkLVBnbXEByf5_h2OkZ/edit
 
 Analysis article
 
+# Execution
+
+The code is in pure R and developed in and best run through Rstudio.  There are no external input files, data is read at runtime from internet.   
+
+Workflow:
+
+1/. Run **Covid_trimmed.R.**  This sets up the global parameters for the UK, calculates all R. parameters, generates plots for interactive monitoring, and does the compartment simulation for England, including medium term predictions.  
+
+1*/ Legacy code from the WSS paper calculating CFR variation with time may be called from medrxiv.R and age_pdfplot.R, but these must be called by editing the calls in the code to {medout<-MedrxivPaper()} and setting pdfpo TRUE.
+
+2/  Run **ScottishData.R**. This reads data from the Scottish government, reformats it, and runs the compartment model.  The code ends with some monitoring plots
+
+3/  Run **CC_write.R**. to obtain R-numbers, growth rates, England and Scotland compartment model data in CrystalCast format
+
+4/ Run **Regional.R**. to read data and obtain compartment model data for 7 NHS England Regions in CrystalCast format.
+
