@@ -155,7 +155,7 @@ Compartment <- function(cases,  csimAge, rCFR, cdat, startc, endc){
       # ILI will go to SA/RI and REC
       ItoS <-  as.numeric(newILI[iday,iage] * pItoS[iage-1] * (1.0-vacdat[iday,iage]*vacCFR)) *ILIToSARI
       # Replace with vaccine effect
-      #    ItoS = as.numeric(newILI[iday,iage] * pItoS[iage-1])  *ILIToSARI
+      # ItoS = as.numeric(newILI[iday,iage] * pItoS[iage-1])  *ILIToSARI
       ItoR <-  as.numeric(newILI[iday,iage] *(1.0-pItoS[iage-1])) *ILIToRecovery
       newSARI[(iday:xday),iage] <- newSARI[(iday:xday),iage]+ItoS
       oldILI[(iday:xday),iage] <- oldILI[(iday:xday),iage]+ItoR+ItoS
