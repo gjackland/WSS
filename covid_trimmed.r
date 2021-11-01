@@ -510,7 +510,8 @@ regdeaths <- regdat %>%
              filter(date >= startdate &
                     date <= enddate )%>%
              arrange(date)
-
+regdeaths$NEY=regdeaths$`North East`+regdeaths$`Yorkshire and The Humber`
+regdeaths$MD=regdeaths$`East Midlands`+regdeaths$`West Midlands`
 # Get the demographic data for regions because can't download simultaneously with
 # the death data.
 regurl2 <- paste0(baseurl,
@@ -1520,11 +1521,12 @@ if(CrystalCast){
 }
 
 #####  Figures and analysis for https://www.medrxiv.org/content/10.1101/2021.04.14.21255385v1
-# Date not encapuslated and broken because of hardcoded dates
+# Date not encapuslated and may become broken because of hardcoded dates
 #Nothing should be returned or changed by this analysis
 
 
-if(FALSE){medout<-MedrxivPaper()}
+medrxiv<-FALSE
+if(interactive()&medrxiv){medout<-MedrxivPaper()}
 
 
 
@@ -1549,18 +1551,16 @@ PREV<-comp$ILI[2:20]+comp$SARI[2:20]+comp$CRIT[2:20]+comp$MILD[2:20]
 lines(rowSums(PREV))
 plot(rowSums(compMTP$CASE[2:20]),x=compMTP$CASE$date,xlim=c(startplot,endplot))
 
-plot(UKHospitalData$newAdmissions,x=UKHospitalData$date, ylab="Hospital Admission",xlab="Date",xlim=c(startplot,endplot-11
-                                                                                                ))
+plot(Hospital$UK$newsaridat,x=Hospital$UK$date, ylab="Hospital Admission",xlab="Date")
 lines(rowSums(compMTP$newSARI[2:20]),x=compMTP$newSARI$date,col="blue")
 
-plot(UKHospitalData$hospitalCases,x=UKHospitalData$date,ylab="Hospital Cases",xlab="Date",xlim=c((startplot),endplot))
+plot(Hospital$UK$saridat,x=Hospital$UK$date,ylab="Hospital Cases",xlab="Date",xlim=c((startplot),endplot))
 lines(rowSums(compMTP$SARI[2:20]+compMTP$CRIT[2:20]+compMTP$CRITREC[2:20]),x=compMTP$SARI$date,col='red')
 
 plot(rowSums(comp$newMILD[2:20]+comp$newILI[2:20]),xlim=c((startplot),endplot),col="blue",x=comp$newMILD$date,type="l",xlab="Date",ylab="Cases")
 points(rowSums(comp$CASE[2:20]),x=comp$CASE$date)
 lines(rowSums(comp$newMILD[2:10]+comp$newILI[2:10]),col="green",x=comp$newMILD$date,type="l",xlab="Date",ylab="Cases")
 lines(rowSums(comp$newMILD[11:20]+comp$newILI[11:20]),col="red",x=comp$newMILD$date,type="l",xlab="Date",ylab="Cases")
-
 
 plot(Hospital$UK$critdat,x=Hospital$UK$date,ylab="ICU Occupation",xlab="Date",xlim=c(startplot,endplot))
 lines(rowSums(comp$CRIT[2:20]),col="blue",x=comp$CRIT$date)
