@@ -64,6 +64,7 @@ startdate_scot <- as.Date("2020/07/25")
 # WAS To one week ago (-7)  NOW read in all the data
 enddate_scot <-  Sys.Date()
 
+
 # Base url for UK data
 baseurl <- "https://api.coronavirus.data.gov.uk/v2/data?"
 
@@ -227,7 +228,10 @@ scotdailycases %>% filter(HBName=="Scotland") %>%
     select(date = Date, newcritdat = ICUAdmissions, newsaridat = HospitalAdmissions) %>%
     filter(date >= startdate & date <= enddate) %>%
     arrange(date) -> jnk
+Hospital$Scot$date<-jnk$date
 Hospital$Scot$newcritdat<-jnk$newcritdat
+Hospital$Scot$newsaridat<-jnk$newsaridat
+
 
 # Daily Case Trends By Age and Sex
 # See:
@@ -381,19 +385,19 @@ CC_write(scotcomp,"Scotland",population$Scotland[1],R_BestGuess$Scotland,R_Quant
 #  Crystalcast format output  
 #write.xlsx(CC, file = paste("Data/compartment",today,"all.xlsx"), sheetName = "WSS", rowNames = FALSE)
 
-
+Remove NA 's 
+Hospital$Scot <- na.locf(Hospital$Scot)
 rbind(scotcomp$CASE,scotcomp$predCASE)->plotCASE
 plot(rowSums(plotCASE[2:20]),x=plotCASE$date)
 #Monitoring plots
 
-plot(rowSums(scotcomp$newSARI[2:20]),col="blue",x=scotcomp$SARI$date, type='l',xlim=c(as.Date(Hospital$Scot$date[1]),(enddate+predtime)))
-points(Hospital$Scot$newsari,x=Hospital$Scot$date,ylab="Scottish Hospital Cases",xlab="Date")
+plot(rowSums(scotcomp$newSARI[2:20]),col="blue", type='l')
+points(Hospital$Scot$newsari,ylab="Scottish Hospital Cases",xlab="Date")
 
-plot(Hospital$Scot$newsari,x=Hospital$Scot$date,ylab="Scottish Hospital Cases",xlab="Date",xlim=c(Hospital$Scot$date[1],(Hospital$Scot$date[350]+48)))
+plot(Hospital$Scot$newsaridat,x=Hospital$Scot$date,ylab="Scottish Hospital Cases",xlab="Date")
 lines(rowSums(scotcomp$newSARI[2:20]),x=scotcomp$SARI$date,col='red')
 plot(rowSums(scotcomp$CASE[2:20]),x=scotcomp$CASE$date,ylab="Cases",xlab="Date")
 lines(rowSums(scotcomp$newMILD[2:20]+scotcomp$newILI[2:20]),col="red",x=scotcomp$newMILD$date)
-
 
 plot(Hospital$Scot$newcritdat,x=deathdat$date,ylab="ICU Admissions",xlab="Date",las=2)
 lines(rowSums(scotcomp$newCRIT[2:20]),col="blue",x=scotcomp$newCRIT$date)
