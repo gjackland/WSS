@@ -26,7 +26,7 @@ Analysis article
 
 # Execution
 
-The code is in pure R and developed in and best run through Rstudio.  There are no external input files, data is read at runtime from internet.   
+The code is in pure R and developed in and best run through Rstudio.  There are no external input files, data is read at runtime from internet.   If online data is unavailable, code will fail.
 
 Workflow:
 
