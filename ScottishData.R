@@ -3,8 +3,11 @@
 library(readr, warn.conflicts = FALSE, quietly = TRUE)
 library(dplyr, warn.conflicts = FALSE, quietly = TRUE)
 library(tidyr, warn.conflicts = FALSE, quietly = TRUE)
+source("Weekend.R")
+source("CompartmentFunction.R")
+source("CC_write.R")
+source("Predictions.R")
 
-rm(scotage)
 # Scottish regions --------------------------------------------------------
 
 # List from https://en.wikipedia.org/wiki/Local_government_in_Scotland
@@ -55,10 +58,11 @@ BoardsToCouncils <- list(
 # Getting data ------------------------------------------------------------
 
 # Start and end date - the data to collect data from
-startdate <- as.Date("2020/07/25")
+#  start and end dates inherited from a previous run of covid_trimmed
+startdate_scot <- as.Date("2020/07/25")
 
 # WAS To one week ago (-7)  NOW read in all the data
-enddate <-  Sys.Date()
+enddate_scot <-  Sys.Date()
 
 # Base url for UK data
 baseurl <- "https://api.coronavirus.data.gov.uk/v2/data?"
@@ -219,9 +223,11 @@ scotdailycases %>% select(date=Date,board=HBName, cases=DailyPositive)  %>%
                    arrange(date) -> scotdailycasesbyboard
 
 # Hospital data
-scotdailycases %>% filter(HBName=="Scotland")->jnk
-jnk[1,20,22] %>% jnk2
-jnk2 %>%  filter(Date>=casedat$date[1]) %>% filter(Date<=casedat$date[nrow(casedat)])->scotHospital
+scotdailycases %>% filter(HBName=="Scotland") %>%
+    select(date = Date, newcritdat = ICUAdmissions, newsaridat = HospitalAdmissions) %>%
+    filter(date >= startdate & date <= enddate) %>%
+    arrange(date) -> jnk
+Hospital$Scot$newcritdat<-jnk$newcritdat
 
 # Daily Case Trends By Age and Sex
 # See:
@@ -265,14 +271,21 @@ ckanr_setup(url = "https://www.opendata.nhs.scot/")
 package_list(as="table")
 
 tags <- tag_list(as="table")
-
+#  Filter out the relevant columns
 corona <- tag_show("coronavirus", as = "table")
 scotagedat[,c(1,3,5,7,8, 10,11)] %>% filter(Sex=="Total") %>% filter(Date>=casedat$date[1]) %>% filter(Date<=casedat$date[nrow(casedat)])->jnk 
 jnk %>% filter(AgeGroup == "0 to 14") -> jnk2
-sum24=sum(casedat[2:4])
 
+#  Scottish data is in broader age groups.  To be compatible with the code,
+#  subdivide it  into 5 year bands.  Use the UK casedat & deathdat to set 
+#  up correct array sizes, and the demographics
+
+jnk2$DailyPositive<-Weekend(jnk2$DailyPositive)
 scotage <-casedat
 scotdeath <-deathdat
+
+#  Fractions in each 5 year age group same as in England (casedat)
+sum24=sum(casedat[2:4])
 
 scotage$'05_09' <-jnk2$DailyPositive*sum(casedat$`05_09`)/sum24
 scotage$`00_04` <- jnk2$DailyPositive*sum(casedat$`00_04`)/sum24
@@ -281,58 +294,63 @@ scotdeath$'05_09' <-jnk2$DailyDeaths *sum(casedat$`05_09`)/sum24
 scotdeath$`00_04` <- jnk2$DailyDeaths*sum(casedat$`00_04`)/sum24
 scotdeath$`10_14` <- jnk2$DailyDeaths*sum(casedat$`10_14`)/sum24
 jnk %>% filter(AgeGroup == "15 to 19") -> jnk2
-scotage$`15_19` <- jnk2$DailyPositive
+scotage$`15_19` <- Weekend(jnk2$DailyPositive)
 scotdeath$`15_19` <- jnk2$DailyDeaths
 jnk %>% filter(AgeGroup == "20 to 24") -> jnk2
-scotage$`20_24` <- jnk2$DailyPositive
+scotage$`20_24` <- Weekend(jnk2$DailyPositive)
 scotdeath$`20_24` <- jnk2$DailyDeaths
 jnk %>% filter(AgeGroup == "25 to 44") -> jnk2
+temp <- Weekend(jnk2$DailyPositive)
 sum24=sum(casedat[7:10])
-scotage$`25_29` <- jnk2$DailyPositive*sum(casedat$`25_29`)/sum24
-scotage$`30_34` <- jnk2$DailyPositive*sum(casedat$`30_34`)/sum24
-scotage$`35_39` <- jnk2$DailyPositive*sum(casedat$`35_39`)/sum24
-scotage$`40_44` <- jnk2$DailyPositive*sum(casedat$`40_44`)/sum24
+scotage$`25_29` <- temp*sum(casedat$`25_29`)/sum24
+scotage$`30_34` <- temp*sum(casedat$`30_34`)/sum24
+scotage$`35_39` <- temp*sum(casedat$`35_39`)/sum24
+scotage$`40_44` <- temp*sum(casedat$`40_44`)/sum24
 scotdeath$`25_29` <- jnk2$DailyDeaths*sum(casedat$`25_29`)/sum24
 scotdeath$`30_34` <- jnk2$DailyDeaths*sum(casedat$`30_34`)/sum24
 scotdeath$`35_39` <- jnk2$DailyDeaths*sum(casedat$`35_39`)/sum24
 scotdeath$`40_44` <- jnk2$DailyDeaths*sum(casedat$`40_44`)/sum24
 jnk %>% filter(AgeGroup == "45 to 64") -> jnk2
 
+temp <- Weekend(jnk2$DailyPositive)
 sum24=sum(casedat[11:14])
 
-scotage$`45_49` <- jnk2$DailyPositive*sum(casedat$`45_49`)/sum24
-scotage$`50_54` <- jnk2$DailyPositive*sum(casedat$`50_54`)/sum24
-scotage$`55_59` <- jnk2$DailyPositive*sum(casedat$`55_59`)/sum24
-scotage$`60_64` <- jnk2$DailyPositive*sum(casedat$`60_64`)/sum24
+scotage$`45_49` <- temp*sum(casedat$`45_49`)/sum24
+scotage$`50_54` <- temp*sum(casedat$`50_54`)/sum24
+scotage$`55_59` <- temp*sum(casedat$`55_59`)/sum24
+scotage$`60_64` <- temp*sum(casedat$`60_64`)/sum24
 
 scotdeath$`45_49` <- jnk2$DailyDeaths*sum(casedat$`45_49`)/sum24
 scotdeath$`50_54` <- jnk2$DailyDeaths*sum(casedat$`50_54`)/sum24
 scotdeath$`55_59` <- jnk2$DailyDeaths*sum(casedat$`55_59`)/sum24
 scotdeath$`60_64` <- jnk2$DailyDeaths*sum(casedat$`60_64`)/sum24
 
-# so fe wdeaths in younger groups, use case numbers as proxy. For over 65 use actual deaths
+# so few deaths in younger groups, use case numbers as proxy. For over 65 use actual deaths
 jnk %>% filter(AgeGroup == "65 to 74") -> jnk2
 sum24=sum(casedat[15:16])
 sumRIP=sum(deathdat[15:16])
-scotage$`65_69` <- jnk2$DailyPositive*sum(casedat$`65_69`)/sum24
-scotage$`70_74` <- jnk2$DailyPositive*sum(casedat$`70_74`)/sum24
+temp <- Weekend(jnk2$DailyPositive)
+scotage$`65_69` <- temp*sum(casedat$`65_69`)/sum24
+scotage$`70_74` <- temp*sum(casedat$`70_74`)/sum24
 scotdeath$`65_69` <- jnk2$DailyDeaths*sum(deathdat$`65_69`)/sumRIP
 scotdeath$`70_74` <- jnk2$DailyDeaths*sum(deathdat$`70_74`)/sumRIP
 jnk %>% filter(AgeGroup == "75 to 84") -> jnk2
+temp <- Weekend(jnk2$DailyPositive)
 sum24=sum(casedat[17:18])
 sumRIP=sum(deathdat[17:18])
-scotage$`75_79` <- jnk2$DailyPositive*sum(casedat$`75_79`)/sum24
-scotage$`80_84` <- jnk2$DailyPositive*sum(casedat$`80_84`)/sum24
+scotage$`75_79` <- temp*sum(casedat$`75_79`)/sum24
+scotage$`80_84` <- temp*sum(casedat$`80_84`)/sum24
 scotdeath$`75_79` <- jnk2$DailyDeaths*sum(deathdat$`75_79`)/sumRIP
 scotdeath$`80_84` <- jnk2$DailyDeaths*sum(deathdat$`80_84`)/sumRIP
 jnk %>% filter(AgeGroup == "85plus") -> jnk2
 sum24=sum(casedat[19:20])
 sumRIP=sum(deathdat[19:20])
-scotage$`85_89` <- jnk2$DailyPositive*sum(casedat$`85_89`)/sum24
-scotage$`90+` <- jnk2$DailyPositive*sum(casedat$`90+`)/sum24
-scotdeath$`85_89` <- jnk2$DailyDeaths*sum(casedat$`85_89`)/sumRIP
-scotdeath$`90+` <- jnk2$DailyDeaths*sum(casedat$`90+`)/sumRIP
-rm(sum24,sumRIP,jnk,jnk2)
+temp <- Weekend(jnk2$DailyPositive)
+scotage$`85_89` <- temp*sum(casedat$`85_89`)/sum24
+scotage$`90+` <- temp*sum(casedat$`90+`)/sum24
+scotdeath$`85_89` <- jnk2$DailyDeaths*sum(deathdat$`85_89`)/sumRIP
+scotdeath$`90+` <- jnk2$DailyDeaths*sum(deathdat$`90+`)/sumRIP
+rm(sum24,sumRIP,jnk,jnk2,temp)
 scotage[is.na(scotage)] <- 0.01
 scotage[scotage==Inf] <- 0.01
 scotage[scotage==-Inf] <- 0.01
@@ -340,4 +358,46 @@ scotdeath[is.na(scotdeath)] <- 0.01
 scotdeath[scotdeath==Inf] <- 0.01
 scotdeath[scotdeath==-Inf] <- 0.01
 pckg <- package_show("covid-19-wider-impacts-deaths", as ="table")
+
+
+#  Compartment section from WSS.
+#  Set CASE to the appropriate region
+#  CASE is the input cases which get WSS'ed.  
+# CASE=casedat produces estimates for UK, this already happens at the end of the main code.  CASE=scotage is for Scotland
+
+
+
+region="Scotland"
+
+RawCFR=colSums(scotdeath[2:20])/colSums(scotage[2:20])
+
+
+#  Full Epidemic model.
+comp <- Compartment(scotage, covidsimAge, RawCFR, comdat,2,nrow(scotage))
+#  28 day Projections
+scotcomp<-Predictions(comp,R_BestGuess$Scotland)
+
+CC_write(scotcomp,"Scotland",population$Scotland[1],R_BestGuess$Scotland,R_Quant$Scotland)
+#  Crystalcast format output  
+#write.xlsx(CC, file = paste("Data/compartment",today,"all.xlsx"), sheetName = "WSS", rowNames = FALSE)
+
+
+rbind(scotcomp$CASE,scotcomp$predCASE)->plotCASE
+plot(rowSums(plotCASE[2:20]),x=plotCASE$date)
+#Monitoring plots
+
+plot(rowSums(scotcomp$newSARI[2:20]),col="blue",x=scotcomp$SARI$date, type='l',xlim=c(as.Date(Hospital$Scot$date[1]),(enddate+predtime)))
+points(Hospital$Scot$newsari,x=Hospital$Scot$date,ylab="Scottish Hospital Cases",xlab="Date")
+
+plot(Hospital$Scot$newsari,x=Hospital$Scot$date,ylab="Scottish Hospital Cases",xlab="Date",xlim=c(Hospital$Scot$date[1],(Hospital$Scot$date[350]+48)))
+lines(rowSums(scotcomp$newSARI[2:20]),x=scotcomp$SARI$date,col='red')
+plot(rowSums(scotcomp$CASE[2:20]),x=scotcomp$CASE$date,ylab="Cases",xlab="Date")
+lines(rowSums(scotcomp$newMILD[2:20]+scotcomp$newILI[2:20]),col="red",x=scotcomp$newMILD$date)
+
+
+plot(Hospital$Scot$newcritdat,x=deathdat$date,ylab="ICU Admissions",xlab="Date",las=2)
+lines(rowSums(scotcomp$newCRIT[2:20]),col="blue",x=scotcomp$newCRIT$date)
+
+plot(rowSums(scotcomp$DEATH[2:20]),col="blue",x=scotcomp$DEATH$date,type="l", ylab="Deaths",xlab="Date",las=2)
+points(rowSums(scotdeath[2:20]),x=scotdeath$date,ylab="Deaths",xlab="Date")
 
