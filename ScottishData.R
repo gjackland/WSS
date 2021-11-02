@@ -385,7 +385,8 @@ CC_write(scotcomp,"Scotland",population$Scotland[1],R_BestGuess$Scotland,R_Quant
 #  Crystalcast format output  
 #write.xlsx(CC, file = paste("Data/compartment",today,"all.xlsx"), sheetName = "WSS", rowNames = FALSE)
 
-Remove NA 's 
+#Remove NA 's 
+
 Hospital$Scot <- na.locf(Hospital$Scot)
 rbind(scotcomp$CASE,scotcomp$predCASE)->plotCASE
 plot(rowSums(plotCASE[2:20]),x=plotCASE$date)
