@@ -681,8 +681,8 @@ if(enddate == (Sys.Date()-1)){
 # Numbers are fitted to death and hospitalisation data
 comdat$Kent <- 0.0
 comdat$India <- 0.0
-Kentfac <- 0.6
-Indiafac <- 0.9
+Kentfac <- 0.4
+Indiafac <- 0.7
 Kentdate <- as.integer(as.Date("2021/01/01")-startdate)
 
 # Approximate Kent by logistic rise around 2021/01/01
@@ -1480,15 +1480,14 @@ PREV<-comp$ILI[2:20]+comp$SARI[2:20]+comp$CRIT[2:20]+comp$MILD[2:20]
 lines(rowSums(PREV))
 plot(rowSums(compMTP$CASE[2:20]),x=compMTP$CASE$date,xlim=c(startplot,endplot))
 
-plot(UKHospitalData$newAdmissions,x=UKHospitalData$date, ylab="Hospital Admission",xlab="Date",xlim=c(startplot,endplot-11
-                                                                                                ))
+plot(Hospital$UK$newsaridat,x=Hospital$UK$date, ylab="Hospital Admission",xlab="Date",xlim=c(startplot,endplot-11                                                                                                ))
 lines(rowSums(compMTP$newSARI[2:20]),x=compMTP$newSARI$date,col="blue")
 
-plot(UKHospitalData$hospitalCases,x=UKHospitalData$date,ylab="Hospital Cases",xlab="Date",xlim=c((startplot),endplot))
+plot(Hospital$UK$saridat,x=Hospital$UK$date,ylab="Hospital Cases",xlab="Date",xlim=c((startplot),endplot))
 lines(rowSums(compMTP$SARI[2:20]+compMTP$CRIT[2:20]+compMTP$CRITREC[2:20]),x=compMTP$SARI$date,col='red')
 
 plot(rowSums(comp$newMILD[2:20]+comp$newILI[2:20]),xlim=c((startplot),endplot),col="blue",x=comp$newMILD$date,type="l",xlab="Date",ylab="Cases")
-points(rowSums(comp$CASE[2:20]),x=comp$CASE$date)
+points(rowSums(compMTP$CASE[2:20]),x=compMTP$CASE$date)
 lines(rowSums(comp$newMILD[2:10]+comp$newILI[2:10]),col="green",x=comp$newMILD$date,type="l",xlab="Date",ylab="Cases")
 lines(rowSums(comp$newMILD[11:20]+comp$newILI[11:20]),col="red",x=comp$newMILD$date,type="l",xlab="Date",ylab="Cases")
 

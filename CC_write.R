@@ -122,11 +122,11 @@ PREV<-CCcomp$ILI[2:20]+CCcomp$SARI[2:20]+CCcomp$CRIT[2:20]+CCcomp$MILD[2:20]
 PREV=PREV*Missing_prevalence/pop
 for (d in startwrite:(nrow(PREV)-22)){
   CCtmp$Value = sum(PREV[d,])
-  CCtmp$"Quantile 0.05"=max(0,CCtmp$Value*(1-12*sqrt(sum(PREV[(d-6):d,])/7)/CCtmp$Value))
-  CCtmp$"Quantile 0.25"=max(0,CCtmp$Value*(1-4*sqrt(sum(PREV[(d-6):d,])/7)/CCtmp$Value))
+  CCtmp$"Quantile 0.05"=CCtmp$Value*0.5
+  CCtmp$"Quantile 0.25"=CCtmp$Value*0.75
   CCtmp$"Quantile 0.5"=CCtmp$Value
-  CCtmp$"Quantile 0.75"=CCtmp$Value*(1+4*sqrt(sum(PREV[(d-6):d,])/7)/CCtmp$Value)
-  CCtmp$"Quantile 0.95"=CCtmp$Value*(1+12*sqrt(sum(PREV[(d-7):d,])/7)/CCtmp$Value)
+  CCtmp$"Quantile 0.75"=CCtmp$Value*1.5
+  CCtmp$"Quantile 0.95"=CCtmp$Value*2
   CCtmp$"Day of Value" = day(CCcomp$ILI$date[d])
   CCtmp$"Month of Value" = month(CCcomp$ILI$date[d]) 
   CCtmp$"Year of Value" = year(CCcomp$ILI$date[d])
