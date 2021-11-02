@@ -87,8 +87,8 @@ population <- data.frame(
   "Scotland"=c(5475660,261674,292754,303417,
                280757,333740,370972,381258,357430,330569,337259,389238,
                400834,360684,305248,289590,204947,143858,86413,45018),
-  "Wales"=c(3174970, 160688, 180503, 187819, 173842, 200210, 
-  202513, 201034, 186338, 177662,183427, 215927,223724, 
+  "Wales"=c(3174970, 160688, 180503, 187819, 173842, 200210,
+  202513, 201034, 186338, 177662,183427, 215927,223724,
 202578, 180391, 183716, 135819, 91798,55843, 31138 ),
 "NI"=c(1910623,116146,127557,129856,114652,111442,118998
 ,126555,125362,120465,120391,130049,129139
@@ -510,7 +510,8 @@ regdeaths <- regdat %>%
              filter(date >= startdate &
                     date <= enddate )%>%
              arrange(date)
-
+regdeaths$NEY=regdeaths$`North East`+regdeaths$`Yorkshire and The Humber`
+regdeaths$MD=regdeaths$`East Midlands`+regdeaths$`West Midlands`
 # Get the demographic data for regions because can't download simultaneously with
 # the death data.
 regurl2 <- paste0(baseurl,
@@ -799,30 +800,30 @@ if(interactive()){
                      left_join(comp$CRIT, by = "date")        %>%
                      rowwise()                                %>%
                      mutate(totCrit = sum(c_across(3:21)))    %>%
-                     select(date, MVbeds, totCrit)              %>%
+                     select(date, MVbeds, totCrit)            %>%
                      ggplot(aes(x = date, y = MVbeds)) + geom_point(alpha = 0.25) +
                      geom_line(aes(x = date, y = totCrit), colour = "blue") +
                      theme_bw() + ylab("Occupied MV beds") + xlab("Date")
 
-  Hospital$UK %>% select(date, newsaridat)                 %>%
+  Hospital$UK %>% select(date, newsaridat)                       %>%
                      left_join(comp$newSARI, by ="date")         %>%
                      rowwise()                                   %>%
                      mutate(totnewSARI = sum(c_across(3:21)))    %>%
-                     select(date, newsaridat, totnewSARI)     %>%
+                     select(date, newsaridat, totnewSARI)        %>%
                      ggplot(aes(x = date, y = newsaridat)) +
                      geom_point(alpha = 0.2) +
                      geom_line(aes(x = date, y = totnewSARI), colour = "blue") +
                      theme_bw() + ylab("New Admissions") + xlab("Date")
 
-  Hospital$UK %>% select(date, saridat)                  %>%
+  Hospital$UK %>% select(date, saridat)                           %>%
                      left_join(comp$SARI, by = "date")            %>%
                      rowwise()                                    %>%
                      mutate(totSARI = sum(c_across(3:21)))        %>%
-                     select(date, saridat, totSARI)         %>%
+                     select(date, saridat, totSARI)               %>%
                      left_join(comp$CRIT, by = "date")            %>%
                      rowwise()                                    %>%
                      mutate(totSariCrit = sum(c_across(3:22)))    %>%
-                     select(date, saridat, totSariCrit)     %>%
+                     select(date, saridat, totSariCrit)           %>%
                      left_join(comp$CRITREC, by = "date")         %>%
                      rowwise()                                    %>%
                      mutate(totSariCritRec = sum(c_across(3:22))) %>%
@@ -863,7 +864,7 @@ for(i in (2:nrow(regcases))    ){
 # Reset first row to 1, because there's no data
 # Fix R=1 not NaN or Inf when previous cases are zero
 # Its not really defined.  This generates a warning which we can ignore
-rat[1, 2:ncol(regcases)]<-1.0
+rat[1, 2:ncol(regcases)] <- 1.0
 rat[is.na(rat)] <- 1.0
 rat[rat==Inf] <- 1.0
 rat[rat==-Inf] <- 1.0
@@ -964,15 +965,15 @@ dfR$weeklyR[length(dfR$weeklyR)-2] <- 1.0
 Govdat <- Rest[Rest$Date >= min(comdat$date) & Rest$Date <= max(comdat$date),]
 
 # Parameters for fitting splines and Loess
-nospl=8
-spdf=18
-lospan=0.3
+nospl <- 8
+spdf <- 18
+lospan <- 0.3
 
-smoothweightR<-smooth.spline(dfR$bylogR,df=spdf,w=sqrt(comdat$allCases))
-smoothweightRstrat<-smooth.spline(dfR$stratR,df=spdf,w=sqrt(comdat$allCases))
-smoothweightRito<-smooth.spline(dfR$itoR,df=spdf,w=sqrt(comdat$allCases))
-smoothweightRfp<-smooth.spline(dfR$fpR,df=spdf,w=sqrt(comdat$fpCases))
-rat$smoothScotland <-smooth.spline(rat$Scotland,df=spdf,w=sqrt(regcases$Scotland))$y
+smoothweightR <- smooth.spline(dfR$bylogR,df=spdf,w=sqrt(comdat$allCases))
+smoothweightRstrat <- smooth.spline(dfR$stratR,df=spdf,w=sqrt(comdat$allCases))
+smoothweightRito <- smooth.spline(dfR$itoR,df=spdf,w=sqrt(comdat$allCases))
+smoothweightRfp <- smooth.spline(dfR$fpR,df=spdf,w=sqrt(comdat$fpCases))
+rat$smoothScotland <- smooth.spline(rat$Scotland,df=spdf,w=sqrt(regcases$Scotland))$y
 rat$smoothNW <-smooth.spline(rat$`North West`,df=spdf,w=sqrt(regcases$`North West`))$y
 rat$smoothNEY <-smooth.spline(rat$NE_Yorks,df=spdf,w=sqrt(regcases$NE_Yorks))$y
 rat$smoothLondon <-smooth.spline(rat$London,df=spdf,w=sqrt(regcases$London))$y
@@ -1011,40 +1012,109 @@ rm(smoothR1,smoothR2,smoothR3,smoothR4,smoothRend)
 #  Have to move the Official R data back by 16 days !
 
 #  All cases and Regions
+if(interactive()){
 
-plot(smoothweightR$y,ylab="Regional R-number",xlab="Date",x=dfR$date)
+  plot(smoothweightR$y,ylab="Regional R-number",xlab="Date",x=dfR$date)
 
-for (i in 8:17){
-  lines(smooth.spline(na.omit(dfR[i]),df=12)$y,col=i,x=dfR$date[!is.na(dfR[i])])
-}
+  for (i in 8:17){
+    lines(smooth.spline(na.omit(dfR[i]),df=12)$y,col=i,x=dfR$date[!is.na(dfR[i])])
+  }
 
-plot(dfR$bylogR,x=smoothweightR$date,ylab="R-number",xlab="",
-     title("R, England"),ylim=c(0.6,1.6),xlim=plotdate,cex.lab=1.6, cex.axis=1.6, cex.main=1.6, cex.sub=1.6)
-lines(Rest$England_LowerBound,x=Rest$Date-sagedelay,lwd=2)
-lines(y=Rest$England_UpperBound,x=Rest$Date-sagedelay,lwd=2)
-lines(dfR$piecewise,col="violet",lwd=3,x=dfR$date)
-lines(smoothweightR$y,col="blue",lwd=3,x=dfR$date)
-lines(predict(loess(itoR ~ x, data=dfR,span=0.3,weight=sqrt(comdat$allCases))),col='green',x=dfR$date,lwd=3)
-#lines(predict(loess(itoR ~ x, data=dfR,span=0.3)),col='green',x=dfR$date)
-lines(predict(loess(bylogR ~ x, data=dfR,span=0.3,weight=sqrt(comdat$allCases))),col='red',x=dfR$date,lwd=3)
-#lines(predict(loess(bylogR ~ x, data=dfR,span=0.3)),col='red',x=dfR$date)
+  # ggplot graph - create a temporary tibble
+  d <- tibble(x = dfR$date,
+              y = smooth.spline(na.omit(dfR[8]),df=12)$y,
+              type = rep(names(dfR)[8],nrow(dfR)))
 
-plot(dfR$piecewise,x=smoothweightR$date,ylab="R-number",xlab="",
-     title("R, England"),ylim=c(0.6,1.4),xlim=plotdate,cex.lab=1.5, cex.axis=1.5, cex.main=1.5, cex.sub=1.6)
-lines(Rest$England_LowerBound,x=(Rest$Date-sagedelay))
-lines(y=Rest$England_UpperBound,x=Rest$Date-sagedelay)
-lines(predict(loess(bylogR ~ x, data=dfR,span=0.05,weight=sqrt(comdat$allCases))),col='red',x=dfR$date,lwd=2)
-lines(predict(loess(bylogR ~ x, data=dfR,span=0.1,weight=sqrt(comdat$allCases))),col='green',x=dfR$date,lwd=2)
-lines(predict(loess(bylogR ~ x, data=dfR,span=0.2,weight=sqrt(comdat$allCases))),col='blue',x=dfR$date,lwd=2)
-lines(predict(loess(bylogR ~ x, data=dfR,span=0.3,weight=sqrt(comdat$allCases))),col='violet',x=dfR$date,lwd=3)
+  # Populate the tibble
+  for(i in names(dfR)[9:17]){
+    d <- add_row(d,
+                 x = dfR$date,
+                 y = smooth.spline(na.omit(dfR[i]),df=12)$y,
+                 type = rep(i, nrow(dfR)))
+  }
 
-R_BestGuess<-list()
-R_Quant<-list()
+  # Generate the graph
+  data.frame(x=dfR$date, y=smoothweightR$y) %>%
+    ggplot(aes(x, y)) + geom_point(alpha = 0.5) +
+    theme_bw()  + xlab("Date") + ylab("Regional R-number") +
+    geom_line(data=d,aes(x = x, y = y, colour = type, linetype = type) )
+
+  # remove temporary tibble
+  rm(d)
+
+  plot(dfR$bylogR,x=smoothweightR$date,ylab="R-number",xlab="",
+       title("R, England"),ylim=c(0.6,1.6),xlim=plotdate,cex.lab=1.6, cex.axis=1.6, cex.main=1.6, cex.sub=1.6)
+  lines(Rest$England_LowerBound,x=Rest$Date-sagedelay,lwd=2)
+  lines(y=Rest$England_UpperBound,x=Rest$Date-sagedelay,lwd=2)
+  lines(dfR$piecewise,col="violet",lwd=3,x=dfR$date)
+  lines(smoothweightR$y,col="blue",lwd=3,x=dfR$date)
+  lines(predict(loess(itoR ~ x, data=dfR,span=0.3,weight=sqrt(comdat$allCases))),col='green',x=dfR$date,lwd=3)
+  #lines(predict(loess(itoR ~ x, data=dfR,span=0.3)),col='green',x=dfR$date)
+  lines(predict(loess(bylogR ~ x, data=dfR,span=0.3,weight=sqrt(comdat$allCases))),col='red',x=dfR$date,lwd=3)
+  #lines(predict(loess(bylogR ~ x, data=dfR,span=0.3)),col='red',x=dfR$date)
+
+  # ggplot version of the same plot
+  dfR %>% ggplot(aes(x = date, y = bylogR)) + geom_point(alpha=0.5, na.rm = TRUE) +
+    theme_bw() + ylab("R-number") + xlab("Date") + ylim(0.6, 1.6) +
+    geom_ribbon(data = Rest,
+                aes(x = Date - sagedelay,
+                    ymin = England_LowerBound,
+                    ymax = England_UpperBound,
+                    fill = "red",
+                    colour = "black"), alpha = 0.1, inherit.aes = FALSE, show.legend = FALSE) +
+    geom_line(data = dfR, aes(x = date, y = piecewise), colour = "violet", size = 1.25) +
+    geom_line(data = data.frame(x = dfR$date, y = smoothweightR$y), aes(x = x, y = y), colour = "blue", size = 1.25) +
+    geom_line(data = data.frame(x = dfR$date,
+                                y = predict(loess(itoR ~ x, data = dfR, span = 0.3, weight = sqrt(comdat$allCases)))),
+              aes(x = x, y = y), colour = "green", size = 1.25) +
+    geom_line(data = data.frame(x = dfR$date,
+                                y = predict(loess(bylogR ~ x, data = dfR, span = 0.3, weight = sqrt(comdat$allCases)))),
+              aes(x = x, y = y), colour = "red", size = 1.25) + ggtitle("R, England") +
+    theme(plot.title = element_text(hjust = 0.5))
+
+
+  plot(dfR$piecewise,x=smoothweightR$date,ylab="R-number",xlab="",
+       title("R, England"),ylim=c(0.6,1.4),xlim=plotdate,cex.lab=1.5, cex.axis=1.5, cex.main=1.5, cex.sub=1.6)
+  lines(Rest$England_LowerBound,x=(Rest$Date-sagedelay))
+  lines(y=Rest$England_UpperBound,x=Rest$Date-sagedelay)
+  lines(predict(loess(bylogR ~ x, data=dfR,span=0.05,weight=sqrt(comdat$allCases))),col='red',x=dfR$date,lwd=2)
+  lines(predict(loess(bylogR ~ x, data=dfR,span=0.1,weight=sqrt(comdat$allCases))),col='green',x=dfR$date,lwd=2)
+  lines(predict(loess(bylogR ~ x, data=dfR,span=0.2,weight=sqrt(comdat$allCases))),col='blue',x=dfR$date,lwd=2)
+  lines(predict(loess(bylogR ~ x, data=dfR,span=0.3,weight=sqrt(comdat$allCases))),col='violet',x=dfR$date,lwd=3)
+
+  # ggplot version of the same plot
+  dfR %>% ggplot(aes(x = date, y = piecewise)) + geom_point(alpha=0.5, na.rm = TRUE) +
+          theme_bw() + ylab("R-number") + xlab("Date") + ylim(0.6, 1.4) + ggtitle("R, England") +
+          theme(plot.title = element_text(hjust = 0.5)) +
+          geom_ribbon(data = Rest,
+                     aes(x = Date - sagedelay,
+                        ymin = England_LowerBound,
+                        ymax = England_UpperBound,
+                        fill = "red",
+                        colour = "black"), alpha = 0.05, inherit.aes = FALSE, show.legend = FALSE) +
+          geom_line(data = data.frame(x = dfR$date,
+                                      y = predict(loess(bylogR ~ x, data = dfR, span = 0.05, weight = sqrt(comdat$allCases)))),
+                    aes(x = x, y = y), inherit.aes = FALSE, colour = "red", size = 1) +
+          geom_line(data = data.frame(x = dfR$date,
+                                      y = predict(loess(bylogR ~ x, data = dfR, span = 0.1, weight = sqrt(comdat$allCases)))),
+                    aes(x = x, y = y), colour = "green", size = 1) +
+          geom_line(data = data.frame(x = dfR$date,
+                                     y = predict(loess(bylogR ~ x, data = dfR, span = 0.2, weight = sqrt(comdat$allCases)))),
+                    aes(x = x, y = y), colour = "blue", size = 1) +
+          geom_line(data = data.frame(x = dfR$date,
+                                y = predict(loess(bylogR ~ x, data = dfR, span = 0.3, weight = sqrt(comdat$allCases)))),
+              aes(x = x, y = y), colour = "violet", size = 1.25)
+
+} # End interactive session
+
+
+R_BestGuess <- list()
+R_Quant <- list()
 ### Smoothing Filters
-s1=0.05
-s2=0.1
-s3=0.2
-s4=0.3
+s1 <- 0.05
+s2 <- 0.1
+s3 <- 0.2
+s4 <- 0.3
 filteredR <-append(
   append(tail(predict(loess(bylogR ~ x, data=dfR,weight=comdat$allCases, span=s1))),
          tail(predict(loess(bylogR ~ x, data=dfR,weight=comdat$allCases,span=s2))) ) ,
@@ -1122,8 +1192,6 @@ filteredR <-append(
 
 R_BestGuess$EE <-mean(filteredR)
 R_Quant$EE <-unname(quantile(filteredR, probs=c(0.05,0.25,0.5,0.75,0.95)))
-
-
 
 rat$tmp <- rat$`South East`
 
@@ -1257,18 +1325,43 @@ R_Quant$x75 <-unname(quantile(filteredR, probs=c(0.05,0.25,0.5,0.75,0.95)))
 
 rm(filteredR)
 
-plot(smoothweightR$y,ylab="R-number",xlab="Day",ylim=c(0.5,1.6))
-#  Plot R continuous with many splines.
-for (ismooth in 4:30){
-#  lines(smooth.spline(dfR$bylogR,df=ismooth,w=sqrt(comdat$allCases)))
-  lines(predict(loess(bylogR ~ x, data=dfR,span=(4.0/ismooth))),col='red')
+if(interactive()){
+
+  plot(smoothweightR$y,ylab="R-number",xlab="Day",ylim=c(0.5,1.6))
+  #  Plot R continuous with many splines.
+  for (ismooth in 4:30){
+    #  lines(smooth.spline(dfR$bylogR,df=ismooth,w=sqrt(comdat$allCases)))
+    lines(predict(loess(bylogR ~ x, data=dfR,span=(4.0/ismooth))),col='red')
   }
+
+  # Temp tibble
+  ismooth <-  4
+  d <- tibble(x = seq_len(nrow(dfR)),
+             y = predict(loess(bylogR ~ x, data=dfR,span=(4.0/ismooth))),
+             type = rep(ismooth, nrow(dfR))
+            )
+  for (ismooth in 5:30){
+    d <- add_row(d,x = seq_len(nrow(dfR)),
+                 y = predict(loess(bylogR ~ x, data=dfR,span=(4.0/ismooth))),
+                 type = rep(ismooth, nrow(dfR)))
+  }
+
+  # plot the data
+  data.frame(x = smoothweightR$x,y = smoothweightR$y) %>%
+  ggplot(aes(x = x, y = y)) + geom_point(alpha = 0.25) +
+  theme_bw() + xlab("Day") + ylab("R-number") +
+  geom_line(data = d, aes(x = x, y = y, colour = factor(type)), alpha = 0.25, show.legend = FALSE)
+
+  # Remove the temporary tibble
+  rm(d)
+}
+
 
 
 # Plot Regional R data vs Government  spdf is spline smoothing factor, lospan for loess
 
 #  various options to silence pdf writing
-pdfpo=FALSE
+pdfpo <- FALSE
 
 #  Plot age data
 dfR[,c(2,9:27)]%>% filter(startplot < date & date < endplot) %>%
@@ -1345,33 +1438,41 @@ if(interactive()){
   lines(dfR$meanR,x=dfR$date, col="green",lwd=2)
   lines(dfR$smoothcasesR,x=dfR$date, col="red",lwd=2)
 
-  # ggplot version of the same graph
-  tibble(date=comdat$date,c=Predict$c,
-         smoothcasesR=Predict$smoothcasesR,
-         SmoothRlog=Predict$SmoothRlog,
-         SmoothRito=Predict$SmoothRito,
-         MeanR=Predict$MeanR) ->tmpdat
-  ggplot(comdat,aes(x=date)) + geom_point(aes(y=allCases),alpha=0.5) +
-    geom_line(data=tmpdat, aes(x=date,y=c),colour="black",alpha=0.75) +
-    geom_line(data=tmpdat, aes(x=date,y=SmoothRlog),colour="blue",alpha=0.75) +
-    geom_line(data=tmpdat, aes(x=date,y=SmoothRito),colour="violet",alpha=0.75) +
-    geom_line(data=tmpdat, aes(x=date,y=MeanR),colour="green",alpha=0.75) +
-    geom_line(data=tmpdat, aes(x=date,y=smoothcasesR),colour="red",alpha=0.75) +
+  # Create a temporary tibble to plot the data
+  tmpdat <- tibble(date = comdat$date,
+                   c = Predict$c,
+                   smoothcasesR = Predict$smoothcasesR,
+                   SmoothRlog = Predict$SmoothRlog,
+                   SmoothRito = Predict$SmoothRito,
+                   MeanR = Predict$MeanR)
+
+  # Plot the data
+  ggplot(comdat, aes(x = date)) + geom_point(aes(y = allCases), alpha = 0.2) +
+    geom_line(data = tmpdat, aes(x = date, y = c), colour = "black", alpha = 0.5, size = 1.1) +
+    geom_line(data = tmpdat, aes(x = date, y = SmoothRlog), colour = "blue", alpha = 0.5, size = 1.1) +
+    geom_line(data = tmpdat, aes(x = date, y = SmoothRito), colour = "violet", alpha = 0.5, size = 1.1) +
+    geom_line(data = tmpdat, aes(x = date, y = MeanR), colour = "green", alpha = 0.5, size = 1.1) +
+    geom_line(data = tmpdat, aes(x = date, y = smoothcasesR), colour = "red", alpha = 0.5, size = 1.1) +
     xlab("Date") + ylab("Cases backdeduced from R") + theme_bw()
 
-  tibble(date=comdat$date,c=Predict$c,
-         smoothcasesR=dfR$smoothcasesR,
-         SmoothRlog=dfR$smoothRlog,
-         SmoothRito=dfR$smoothRito,
-         bylogR=dfR$bylogR,
-         MeanR=mean(dfR$bylogR) )->tmpdat
-  ggplot(comdat,aes(x=date)) +
-    geom_point(data=tmpdat, aes(x=date,y=bylogR),colour="black",alpha=0.75) +
-    geom_line(data=tmpdat, aes(x=date,y=SmoothRlog),colour="blue",alpha=0.75) +
-    geom_line(data=tmpdat, aes(x=date,y=SmoothRito),colour="violet",alpha=0.75) +
-    geom_line(data=tmpdat, aes(x=date,y=MeanR),colour="green",alpha=0.75) +
-    geom_line(data=tmpdat, aes(x=date,y=smoothcasesR),colour="red",alpha=0.75) +
-    xlab("Date") + ylab("R") + theme_bw()
+  # Create a temporary tibble for plotting
+  tmpdat <-  tibble(date = comdat$date,
+                    c = Predict$c,
+                    smoothcasesR = dfR$smoothcasesR,
+                    SmoothRlog = dfR$smoothRlog,
+                    SmoothRito = dfR$smoothRito,
+                    bylogR = dfR$bylogR,
+                    MeanR = meanR )
+  # Plot the data
+  ggplot(comdat, aes(x = date)) +
+    geom_point(data = tmpdat, aes(x = date, y = bylogR), colour = "black",alpha = 0.25, na.rm = TRUE) +
+    geom_line(data = tmpdat, aes(x = date, y = SmoothRlog), colour = "blue",alpha = 0.75, size = 1.25) +
+    geom_line(data = tmpdat, aes(x = date, y = SmoothRito), colour = "violet",alpha = 0.75, size = 1.25) +
+    geom_line(data = tmpdat, aes(x = date, y = MeanR), colour = "green",alpha = 0.75, size = 1.25) +
+    geom_line(data = tmpdat, aes(x = date, y = smoothcasesR), colour = "red", alpha = 0.75, size = 1.25) +
+    xlab("Date") + ylab("R") + theme_bw() + ylim(0.7, 1.4)
+
+  # Remove the temporary array
   rm(tmpdat)
 
 }
@@ -1451,11 +1552,12 @@ if(CrystalCast){
 }
 
 #####  Figures and analysis for https://www.medrxiv.org/content/10.1101/2021.04.14.21255385v1
-# Date not encapuslated and broken because of hardcoded dates
+# Date not encapuslated and may become broken because of hardcoded dates
 #Nothing should be returned or changed by this analysis
 
 
-if(FALSE){medout<-MedrxivPaper()}
+medrxiv<-FALSE
+if(interactive()&medrxiv){medout<-MedrxivPaper()}
 
 
 
@@ -1480,7 +1582,11 @@ PREV<-comp$ILI[2:20]+comp$SARI[2:20]+comp$CRIT[2:20]+comp$MILD[2:20]
 lines(rowSums(PREV))
 plot(rowSums(compMTP$CASE[2:20]),x=compMTP$CASE$date,xlim=c(startplot,endplot))
 
+<<<<<<< HEAD
 plot(Hospital$UK$newsaridat,x=Hospital$UK$date, ylab="Hospital Admission",xlab="Date",xlim=c(startplot,endplot-11                                                                                                ))
+=======
+plot(Hospital$UK$newsaridat,x=Hospital$UK$date, ylab="Hospital Admission",xlab="Date")
+>>>>>>> 6a5107d9683ae8953b83fb197ef19ff34de48cb0
 lines(rowSums(compMTP$newSARI[2:20]),x=compMTP$newSARI$date,col="blue")
 
 plot(Hospital$UK$saridat,x=Hospital$UK$date,ylab="Hospital Cases",xlab="Date",xlim=c((startplot),endplot))
@@ -1490,7 +1596,6 @@ plot(rowSums(comp$newMILD[2:20]+comp$newILI[2:20]),xlim=c((startplot),endplot),c
 points(rowSums(compMTP$CASE[2:20]),x=compMTP$CASE$date)
 lines(rowSums(comp$newMILD[2:10]+comp$newILI[2:10]),col="green",x=comp$newMILD$date,type="l",xlab="Date",ylab="Cases")
 lines(rowSums(comp$newMILD[11:20]+comp$newILI[11:20]),col="red",x=comp$newMILD$date,type="l",xlab="Date",ylab="Cases")
-
 
 plot(Hospital$UK$critdat,x=Hospital$UK$date,ylab="ICU Occupation",xlab="Date",xlim=c(startplot,endplot))
 lines(rowSums(comp$CRIT[2:20]),col="blue",x=comp$CRIT$date)

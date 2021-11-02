@@ -74,11 +74,11 @@ CCtmp$ValueType="hospital_inc"
 #  adjust for recent discrepancy
 for (d in startwrite:(nrow(CCcomp$newSARI)-22)){
   CCtmp$Value = sum(CCcomp$newSARI[d,2:20])
-  CCtmp$"Quantile 0.05"=max(0,CCtmp$Value*(1-12*sqrt(sum(CCcomp$newSARI[(d-6):d,2:20])/7)/CCtmp$Value))
-  CCtmp$"Quantile 0.25"=max(0,CCtmp$Value*(1-4*sqrt(sum(CCcomp$newSARI[(d-6):d,2:20])/7)/CCtmp$Value))
+  CCtmp$"Quantile 0.05"=max(0,CCtmp$Value*(1-sqrt(sum(CCcomp$newSARI[(d-6):d,2:20])/7)/CCtmp$Value))
+  CCtmp$"Quantile 0.25"=max(0,CCtmp$Value*(1-sqrt(sum(CCcomp$newSARI[(d-6):d,2:20])/7)/CCtmp$Value))
   CCtmp$"Quantile 0.5"=CCtmp$Value
-  CCtmp$"Quantile 0.75"=CCtmp$Value*(1+4*sqrt(sum(CCcomp$newSARI[(d-6):d,2:20])/7)/CCtmp$Value)
-  CCtmp$"Quantile 0.95"=CCtmp$Value*(1+12*sqrt(sum(CCcomp$newSARI[(d-7):d,2:20])/7)/CCtmp$Value)
+  CCtmp$"Quantile 0.75"=CCtmp$Value*(1+sqrt(sum(CCcomp$newSARI[(d-6):d,2:20])/7)/CCtmp$Value)
+  CCtmp$"Quantile 0.95"=CCtmp$Value*(1+sqrt(sum(CCcomp$newSARI[(d-7):d,2:20])/7)/CCtmp$Value)
   CCtmp$"Day of Value" = day(CCcomp$newSARI$date[d])
   CCtmp$"Month of Value" = month(CCcomp$newSARI$date[d])
   CCtmp$"Year of Value" = year(CCcomp$newSARI$date[d])
@@ -89,11 +89,11 @@ CCtmp$ValueType="death_inc_line"
 
 for (d in startwrite:(nrow(CCcomp$DEATH)-22)){
   CCtmp$Value = sum(CCcomp$DEATH[d,2:20])
-  CCtmp$"Quantile 0.05"=max(0,CCtmp$Value*(1-12*sqrt(sum(CCcomp$DEATH[(d-6):d,2:20])/7)/CCtmp$Value))
-  CCtmp$"Quantile 0.25"=max(0,CCtmp$Value*(1-4*sqrt(sum(CCcomp$DEATH[(d-6):d,2:20])/7)/CCtmp$Value))
+  CCtmp$"Quantile 0.05"=max(0,CCtmp$Value*(1-sqrt(sum(CCcomp$DEATH[(d-6):d,2:20])/7)/CCtmp$Value))
+  CCtmp$"Quantile 0.25"=max(0,CCtmp$Value*(1-sqrt(sum(CCcomp$DEATH[(d-6):d,2:20])/7)/CCtmp$Value))
   CCtmp$"Quantile 0.5"=CCtmp$Value
-  CCtmp$"Quantile 0.75"=CCtmp$Value*(1+4*sqrt(sum(CCcomp$DEATH[(d-6):d,2:20])/7)/CCtmp$Value)
-  CCtmp$"Quantile 0.95"=CCtmp$Value*(1+12*sqrt(sum(CCcomp$DEATH[(d-7):d,2:20])/7)/CCtmp$Value)
+  CCtmp$"Quantile 0.75"=CCtmp$Value*(1+sqrt(sum(CCcomp$DEATH[(d-6):d,2:20])/7)/CCtmp$Value)
+  CCtmp$"Quantile 0.95"=CCtmp$Value*(1+sqrt(sum(CCcomp$DEATH[(d-7):d,2:20])/7)/CCtmp$Value)
   CCtmp$"Day of Value" = day(CCcomp$DEATH$date[d])
   CCtmp$"Month of Value" = month(CCcomp$DEATH$date[d])
   CCtmp$"Year of Value" = year(CCcomp$DEATH$date[d])
@@ -104,11 +104,11 @@ for (d in startwrite:(nrow(CCcomp$DEATH)-22)){
 CCtmp$ValueType="incidence"
 for (d in startwrite:(nrow(CCcomp$CASE)-22)){
   CCtmp$Value = sum(CCcomp$CASE[d,2:20])
-  CCtmp$"Quantile 0.05"=max(0,CCtmp$Value*(1-12*sqrt(sum(CCcomp$CASE[(d-6):d,2:20])/7)/CCtmp$Value))
-  CCtmp$"Quantile 0.25"=max(0,CCtmp$Value*(1-4*sqrt(sum(CCcomp$CASE[(d-6):d,2:20])/7)/CCtmp$Value))
+  CCtmp$"Quantile 0.05"=max(0,CCtmp$Value*(1-sqrt(sum(CCcomp$CASE[(d-6):d,2:20])/7)/CCtmp$Value))
+  CCtmp$"Quantile 0.25"=max(0,CCtmp$Value*(1-sqrt(sum(CCcomp$CASE[(d-6):d,2:20])/7)/CCtmp$Value))
   CCtmp$"Quantile 0.5"=CCtmp$Value
-  CCtmp$"Quantile 0.75"=CCtmp$Value*(1+4*sqrt(sum(CCcomp$CASE[(d-6):d,2:20])/7)/CCtmp$Value)
-  CCtmp$"Quantile 0.95"=CCtmp$Value*(1+12*sqrt(sum(CCcomp$CASE[(d-7):d,2:20])/7)/CCtmp$Value)
+  CCtmp$"Quantile 0.75"=CCtmp$Value*(1+sqrt(sum(CCcomp$CASE[(d-6):d,2:20])/7)/CCtmp$Value)
+  CCtmp$"Quantile 0.95"=CCtmp$Value*(1+sqrt(sum(CCcomp$CASE[(d-7):d,2:20])/7)/CCtmp$Value)
   CCtmp$"Day of Value" = day(CCcomp$CASE$date[d])
   CCtmp$"Month of Value" = month(CCcomp$CASE$date[d])
   CCtmp$"Year of Value" = year(CCcomp$CASE$date[d])
@@ -125,7 +125,7 @@ for (d in startwrite:(nrow(PREV)-22)){
   CCtmp$"Quantile 0.05"=CCtmp$Value*0.5
   CCtmp$"Quantile 0.25"=CCtmp$Value*0.75
   CCtmp$"Quantile 0.5"=CCtmp$Value
-  CCtmp$"Quantile 0.75"=CCtmp$Value*1.5
+  CCtmp$"Quantile 0.75"=CCtmp$Value*1.3333
   CCtmp$"Quantile 0.95"=CCtmp$Value*2
   CCtmp$"Day of Value" = day(CCcomp$ILI$date[d])
   CCtmp$"Month of Value" = month(CCcomp$ILI$date[d]) 
@@ -135,16 +135,15 @@ for (d in startwrite:(nrow(PREV)-22)){
 }
 #  Crystalcast format output  
 
-filename=paste("data/CCcompartment",today(),region,".xlsx")
+filename=paste("data/CCcompartment",today(),"regions.xlsx")
 
-write.xlsx(CC, file = filename, 
-         overwrite = TRUE,  sheetName = region, rowNames = FALSE)
 
-#  try to write to separate sheets in the xlsx file
-#wb <- loadWorkbook("jnk")
-#addWorksheet(wb,region)
-#writeData(wb,region,CC)
-#saveWorkbook(wb,"jnk",overwrite = TRUE)
-
+if(file.exists(filename)){
+wb<-loadWorkbook(filename)
+addWorksheet(wb,region)
+writeData(wb,region,CC)
+saveWorkbook(wb,filename,overwrite = TRUE)  
+} else {
+  write.xlsx(CC, file = filename, 
+             overwrite = TRUE,  sheetName = region, rowNames = FALSE)}
 }
-
