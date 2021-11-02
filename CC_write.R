@@ -2,7 +2,7 @@
 #
 # Code to write out excel using the CC Schema.
 #
-
+library(lubridate)
 CC_write <- function(CCcomp,region,pop,R_region,Q_region){
 # Initiate variables
 
@@ -65,14 +65,15 @@ CCtmp<-CC
 #  Medium term projections
 
 
-today <- today()
+today <- Sys.Date()
 ageband <-  "All"
-CCtmp$Scenario="MTP"
+CCtmp$Scenario="NowCast"
 CCtmp$Geography=region
 CCtmp$ValueType="hospital_inc"
 #  Log. Errors from fluctuations time 4 for methodological uncertainty
 #  adjust for recent discrepancy
 for (d in startwrite:(nrow(CCcomp$newSARI)-22)){
+  if(CCcomp$CASE$date[d]>(today-reporting_delay)){ CCtmp$Scenario="MTP"}
   CCtmp$Value = sum(CCcomp$newSARI[d,2:20])
   CCtmp$"Quantile 0.05"=max(0,CCtmp$Value*(1-sqrt(sum(CCcomp$newSARI[(d-6):d,2:20])/7)/CCtmp$Value))
   CCtmp$"Quantile 0.25"=max(0,CCtmp$Value*(1-sqrt(sum(CCcomp$newSARI[(d-6):d,2:20])/7)/CCtmp$Value))
@@ -86,8 +87,9 @@ for (d in startwrite:(nrow(CCcomp$newSARI)-22)){
   CC <- rbind(CC, CCtmp)
 }
 CCtmp$ValueType="death_inc_line"
-
+CCtmp$Scenario="NowCast"
 for (d in startwrite:(nrow(CCcomp$DEATH)-22)){
+  if(CCcomp$DEATH$date[d]>(today-reporting_delay)){ CCtmp$Scenario="MTP"}  
   CCtmp$Value = sum(CCcomp$DEATH[d,2:20])
   CCtmp$"Quantile 0.05"=max(0,CCtmp$Value*(1-sqrt(sum(CCcomp$DEATH[(d-6):d,2:20])/7)/CCtmp$Value))
   CCtmp$"Quantile 0.25"=max(0,CCtmp$Value*(1-sqrt(sum(CCcomp$DEATH[(d-6):d,2:20])/7)/CCtmp$Value))
@@ -102,7 +104,9 @@ for (d in startwrite:(nrow(CCcomp$DEATH)-22)){
 }
 #  Check with ONS 
 CCtmp$ValueType="incidence"
+CCtmp$Scenario="NowCast"
 for (d in startwrite:(nrow(CCcomp$CASE)-22)){
+  if(CCcomp$CASE$date[d]>(today-reporting_delay)){ CCtmp$Scenario="MTP"}
   CCtmp$Value = sum(CCcomp$CASE[d,2:20])
   CCtmp$"Quantile 0.05"=max(0,CCtmp$Value*(1-sqrt(sum(CCcomp$CASE[(d-6):d,2:20])/7)/CCtmp$Value))
   CCtmp$"Quantile 0.25"=max(0,CCtmp$Value*(1-sqrt(sum(CCcomp$CASE[(d-6):d,2:20])/7)/CCtmp$Value))
@@ -120,7 +124,9 @@ Missing_prevalence=1.1
 CCtmp$ValueType="prevalence"
 PREV<-CCcomp$ILI[2:20]+CCcomp$SARI[2:20]+CCcomp$CRIT[2:20]+CCcomp$MILD[2:20]
 PREV=PREV*Missing_prevalence/pop
+CCtmp$Scenario="NowCast"
 for (d in startwrite:(nrow(PREV)-22)){
+  if(CCcomp$CASE$date[d]>(today-reporting_delay)){ CCtmp$Scenario="MTP"}
   CCtmp$Value = sum(PREV[d,])
   CCtmp$"Quantile 0.05"=CCtmp$Value*0.5
   CCtmp$"Quantile 0.25"=CCtmp$Value*0.75
@@ -135,7 +141,7 @@ for (d in startwrite:(nrow(PREV)-22)){
 }
 #  Crystalcast format output  
 
-filename=paste("data/CCcompartment",today(),"regions.xlsx")
+filename=paste("data/CCcompartment",Sys.Date(),"regions.xlsx")
 
 
 if(file.exists(filename)){

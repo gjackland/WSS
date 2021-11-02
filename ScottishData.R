@@ -116,7 +116,7 @@ coltypes <- cols(
   rollingRate = col_double()
 )
 
-# Get all the data - ALL English data - no Scottish regions
+# Get all the data - ALL English data - no Scottish regions, just Authorities
 allagedat <- read_csv(ageurl, col_types = coltypes)
 
 # Restrict to Scottish regions and change from long to wide format
@@ -228,7 +228,7 @@ scotdailycases %>% filter(HBName=="Scotland") %>%
     select(date = Date, newcritdat = ICUAdmissions, newsaridat = HospitalAdmissions) %>%
     filter(date >= startdate & date <= enddate) %>%
     arrange(date) -> jnk
-Hospital$Scot$date<-jnk$date
+Hospital$Scot$date<-as.Date(jnk$date)
 Hospital$Scot$newcritdat<-jnk$newcritdat
 Hospital$Scot$newsaridat<-jnk$newsaridat
 
@@ -393,14 +393,14 @@ plot(rowSums(plotCASE[2:20]),x=plotCASE$date)
 #Monitoring plots
 
 plot(rowSums(scotcomp$newSARI[2:20]),col="blue", type='l')
-points(Hospital$Scot$newsari,ylab="Scottish Hospital Cases",xlab="Date")
+points(Hospital$Scot$newsaridat,ylab="Scottish Hospital Cases",xlab="Date")
 
-plot(Hospital$Scot$newsaridat,x=Hospital$Scot$date,ylab="Scottish Hospital Cases",xlab="Date")
+plot(Hospital$Scot$newsaridat,x=Hospital$Scot$date,ylab="Scottish Hospital Admissions",xlab="Date")
 lines(rowSums(scotcomp$newSARI[2:20]),x=scotcomp$SARI$date,col='red')
 plot(rowSums(scotcomp$CASE[2:20]),x=scotcomp$CASE$date,ylab="Cases",xlab="Date")
 lines(rowSums(scotcomp$newMILD[2:20]+scotcomp$newILI[2:20]),col="red",x=scotcomp$newMILD$date)
 
-plot(Hospital$Scot$newcritdat,x=deathdat$date,ylab="ICU Admissions",xlab="Date",las=2)
+plot(Hospital$Scot$newcritdat,x=Hospital$Scot$date,ylab="ICU Admissions",xlab="Date",las=2)
 lines(rowSums(scotcomp$newCRIT[2:20]),col="blue",x=scotcomp$newCRIT$date)
 
 plot(rowSums(scotcomp$DEATH[2:20]),col="blue",x=scotcomp$DEATH$date,type="l", ylab="Deaths",xlab="Date",las=2)
