@@ -44,3 +44,7 @@ Workflow:
 1. Run **CC_write.R**. to obtain R-numbers, growth rates, England and Scotland compartment model data in CrystalCast format
 1. Run **Regional.R**. to read data and obtain compartment model data for 7 NHS England Regions in CrystalCast format.
 1. **Sanity check**. R-numbers can be sensitive to late posting on recent cases, and wrong R-numbers tip over into the medium term predictions.  Before believing anything, always check the last few days of input case data for anomalies.  The parameter "enddate" can be increased to eliminate incomplete data.  If R is sensitive to enddate, there is a data problem.
+
+## Licensing
+
+The code is licensed under GPL-3.0. The data used for making the calculations is made available under an [Open Government Licence](http://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/).
