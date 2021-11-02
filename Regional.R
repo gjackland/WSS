@@ -199,3 +199,4 @@ lines(rowSums(predlondon$DEATH[2:20]),x=predlondon$DEATH$date,xlim=plot_date,col
 
 
 #
+

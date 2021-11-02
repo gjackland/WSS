@@ -190,7 +190,8 @@ startdate <- as.Date("2020/08/09") #as.Date("2020/08/09")
 
 # Lose only the last day of data - use tail correction for reporting delay
 # Weekend data can be sketchy Extend the enddate if run on Monday morning
-enddate <-  Sys.Date()-5
+reporting_delay=5
+enddate <-  Sys.Date()-reporting_delay
 # Set the generation time
 genTime <- 5
 #  Dates for the plots
@@ -1582,11 +1583,9 @@ PREV<-comp$ILI[2:20]+comp$SARI[2:20]+comp$CRIT[2:20]+comp$MILD[2:20]
 lines(rowSums(PREV))
 plot(rowSums(compMTP$CASE[2:20]),x=compMTP$CASE$date,xlim=c(startplot,endplot))
 
-<<<<<<< HEAD
+
 plot(Hospital$UK$newsaridat,x=Hospital$UK$date, ylab="Hospital Admission",xlab="Date",xlim=c(startplot,endplot-11                                                                                                ))
-=======
-plot(Hospital$UK$newsaridat,x=Hospital$UK$date, ylab="Hospital Admission",xlab="Date")
->>>>>>> 6a5107d9683ae8953b83fb197ef19ff34de48cb0
+
 lines(rowSums(compMTP$newSARI[2:20]),x=compMTP$newSARI$date,col="blue")
 
 plot(Hospital$UK$saridat,x=Hospital$UK$date,ylab="Hospital Cases",xlab="Date",xlim=c((startplot),endplot))

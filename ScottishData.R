@@ -228,7 +228,7 @@ scotdailycases %>% filter(HBName=="Scotland") %>%
     select(date = Date, newcritdat = ICUAdmissions, newsaridat = HospitalAdmissions) %>%
     filter(date >= startdate & date <= enddate) %>%
     arrange(date) -> jnk
-Hospital$Scot$date<-jnk$date
+Hospital$Scot$date<-as.Date(jnk$date)
 Hospital$Scot$newcritdat<-jnk$newcritdat
 Hospital$Scot$newsaridat<-jnk$newsaridat
 
@@ -393,7 +393,7 @@ plot(rowSums(plotCASE[2:20]),x=plotCASE$date)
 #Monitoring plots
 
 plot(rowSums(scotcomp$newSARI[2:20]),col="blue", type='l')
-points(Hospital$Scot$newsari,ylab="Scottish Hospital Cases",xlab="Date")
+points(Hospital$Scot$newsaridat,ylab="Scottish Hospital Cases",xlab="Date")
 
 plot(Hospital$Scot$newsaridat,x=Hospital$Scot$date,ylab="Scottish Hospital Cases",xlab="Date")
 lines(rowSums(scotcomp$newSARI[2:20]),x=scotcomp$SARI$date,col='red')
