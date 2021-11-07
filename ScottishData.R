@@ -3,6 +3,10 @@
 library(readr, warn.conflicts = FALSE, quietly = TRUE)
 library(dplyr, warn.conflicts = FALSE, quietly = TRUE)
 library(tidyr, warn.conflicts = FALSE, quietly = TRUE)
+library(lubridate, warn.conflicts = FALSE, quietly = TRUE)
+library(zoo, warn.conflicts = FALSE, quietly = TRUE)
+library(ggplot2, warn.conflicts = FALSE, quietly = TRUE)
+
 source("Weekend.R")
 source("CompartmentFunction.R")
 source("CC_write.R")
@@ -277,11 +281,11 @@ package_list(as="table")
 tags <- tag_list(as="table")
 #  Filter out the relevant columns
 corona <- tag_show("coronavirus", as = "table")
-scotagedat[,c(1,3,5,7,8, 10,11)] %>% filter(Sex=="Total") %>% filter(Date>=casedat$date[1]) %>% filter(Date<=casedat$date[nrow(casedat)])->jnk 
+scotagedat[,c(1,3,5,7,8, 10,11)] %>% filter(Sex=="Total") %>% filter(Date>=casedat$date[1]) %>% filter(Date<=casedat$date[nrow(casedat)])->jnk
 jnk %>% filter(AgeGroup == "0 to 14") -> jnk2
 
 #  Scottish data is in broader age groups.  To be compatible with the code,
-#  subdivide it  into 5 year bands.  Use the UK casedat & deathdat to set 
+#  subdivide it  into 5 year bands.  Use the UK casedat & deathdat to set
 #  up correct array sizes, and the demographics
 
 jnk2$DailyPositive<-Weekend(jnk2$DailyPositive)
@@ -366,7 +370,7 @@ pckg <- package_show("covid-19-wider-impacts-deaths", as ="table")
 
 #  Compartment section from WSS.
 #  Set CASE to the appropriate region
-#  CASE is the input cases which get WSS'ed.  
+#  CASE is the input cases which get WSS'ed.
 # CASE=casedat produces estimates for UK, this already happens at the end of the main code.  CASE=scotage is for Scotland
 
 
@@ -382,27 +386,62 @@ comp <- Compartment(scotage, covidsimAge, RawCFR, comdat,2,nrow(scotage))
 scotcomp<-Predictions(comp,R_BestGuess$Scotland)
 
 CC_write(scotcomp,"Scotland",population$Scotland[1],R_BestGuess$Scotland,R_Quant$Scotland)
-#  Crystalcast format output  
+#  Crystalcast format output
 #write.xlsx(CC, file = paste("Data/compartment",today,"all.xlsx"), sheetName = "WSS", rowNames = FALSE)
 
-#Remove NA 's 
+#Remove NA 's
 
 Hospital$Scot <- na.locf(Hospital$Scot)
 rbind(scotcomp$CASE,scotcomp$predCASE)->plotCASE
 plot(rowSums(plotCASE[2:20]),x=plotCASE$date)
-#Monitoring plots
+
+data.frame(x = plotCASE$date, y = rowSums(plotCASE[2:20])) %>%
+  ggplot(aes(x = x, y = y)) + geom_point(alpha =  0.25) + theme_bw() +
+  ylab("Cases") + xlab("Dates"
+                       )
+# Monitoring plots
 
 plot(rowSums(scotcomp$newSARI[2:20]),col="blue", type='l')
 points(Hospital$Scot$newsaridat,ylab="Scottish Hospital Cases",xlab="Date")
 
+data.frame(x = Hospital$Scot$date, y = Hospital$Scot$newsaridat) %>%
+  ggplot(aes(x = x, y = y)) + geom_point(alpha =  0.25) + theme_bw() +
+  ylab("new SARI") + xlab("Date") +
+  geom_line(data = data.frame(x = scotcomp$newSARI$date, y = rowSums(scotcomp$newSARI[2:20])),
+            aes(y = y), colour = "blue")
+
 plot(Hospital$Scot$newsaridat,x=Hospital$Scot$date,ylab="Scottish Hospital Cases",xlab="Date")
 lines(rowSums(scotcomp$newSARI[2:20]),x=scotcomp$SARI$date,col='red')
+
+data.frame(x = Hospital$Scot$date, y = Hospital$Scot$newsaridat) %>%
+  ggplot(aes(x = x, y = y)) + geom_point(alpha =  0.25) + theme_bw() +
+  ylab("new SARI") + xlab("Date") +
+  geom_line(data = data.frame(x = scotcomp$SARI$date, y = rowSums(scotcomp$newSARI[2:20])),
+            aes(y = y), colour = "red")
+
 plot(rowSums(scotcomp$CASE[2:20]),x=scotcomp$CASE$date,ylab="Cases",xlab="Date")
 lines(rowSums(scotcomp$newMILD[2:20]+scotcomp$newILI[2:20]),col="red",x=scotcomp$newMILD$date)
+
+data.frame(x = Hospital$Scot$date, y = Hospital$Scot$newsaridat) %>%
+  ggplot(aes(x = x, y = y)) + geom_point(alpha =  0.25) + theme_bw() +
+  ylab("Cases") + xlab("Date") +
+  geom_line(data = data.frame(x = scotcomp$SARI$date, y = rowSums(scotcomp$newSARI[2:20])),
+            aes(y = y), colour = "red")
 
 plot(Hospital$Scot$newcritdat,x=deathdat$date,ylab="ICU Admissions",xlab="Date",las=2)
 lines(rowSums(scotcomp$newCRIT[2:20]),col="blue",x=scotcomp$newCRIT$date)
 
+data.frame(x = Hospital$Scot$date, y = Hospital$Scot$newcritdat) %>%
+  ggplot(aes(x = x, y = y)) + geom_point(alpha =  0.25) + theme_bw() +
+  ylab("ICU Admissions") + xlab("Date") +
+  geom_line(data = data.frame(x = scotcomp$newCRIT$date, y = rowSums(scotcomp$newCRIT[2:20])),
+            aes(y = y), colour = "red")
+
 plot(rowSums(scotcomp$DEATH[2:20]),col="blue",x=scotcomp$DEATH$date,type="l", ylab="Deaths",xlab="Date",las=2)
 points(rowSums(scotdeath[2:20]),x=scotdeath$date,ylab="Deaths",xlab="Date")
 
+data.frame(x = scotdeath$date, y = rowSums(scotdeath[2:20])) %>%
+  ggplot(aes(x = x, y = y)) + geom_point(alpha =  0.25) + theme_bw() +
+  ylab("Deaths") + xlab("Date") +
+  geom_line(data = data.frame(x = scotcomp$DEATH$date, y = rowSums(scotcomp$DEATH[2:20])),
+            aes(y = y), colour = "blue")
