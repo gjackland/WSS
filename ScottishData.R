@@ -415,7 +415,7 @@ lines(rowSums(scotcomp$newSARI[2:20]),x=scotcomp$SARI$date,col='red')
 
 data.frame(x = Hospital$Scot$date, y = Hospital$Scot$newsaridat) %>%
   ggplot(aes(x = x, y = y)) + geom_point(alpha =  0.25) + theme_bw() +
-  ylab("new SARI") + xlab("Date") +
+  ylab("Scottish Hospital Cases") + xlab("Date") +
   geom_line(data = data.frame(x = scotcomp$SARI$date, y = rowSums(scotcomp$newSARI[2:20])),
             aes(y = y), colour = "red")
 
@@ -445,3 +445,4 @@ data.frame(x = scotdeath$date, y = rowSums(scotdeath[2:20])) %>%
   ylab("Deaths") + xlab("Date") +
   geom_line(data = data.frame(x = scotcomp$DEATH$date, y = rowSums(scotcomp$DEATH[2:20])),
             aes(y = y), colour = "blue")
+
