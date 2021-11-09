@@ -392,8 +392,8 @@ rbind(scotcomp$CASE,scotcomp$predCASE)->plotCASE
 plot(rowSums(plotCASE[2:20]),x=plotCASE$date)
 #Monitoring plots
 
-plot(rowSums(scotcomp$newSARI[2:20]),col="blue", type='l')
-points(Hospital$Scot$newsaridat,ylab="Scottish Hospital Cases",xlab="Date")
+plot(rowSums(scotcomp$SARI[2:20]+scotcomp$CRIT[2:20]+scotcomp$CRITREC[2:20]),col="blue", type='l')
+points(Hospital$Scot$newsari,ylab="Scottish Hospital Cases",xlab="Date")
 
 plot(Hospital$Scot$newsaridat,x=Hospital$Scot$date,ylab="Scottish Hospital Admissions",xlab="Date")
 lines(rowSums(scotcomp$newSARI[2:20]),x=scotcomp$SARI$date,col='red')
@@ -403,6 +403,8 @@ lines(rowSums(scotcomp$newMILD[2:20]+scotcomp$newILI[2:20]),col="red",x=scotcomp
 plot(Hospital$Scot$newcritdat,x=Hospital$Scot$date,ylab="ICU Admissions",xlab="Date",las=2)
 lines(rowSums(scotcomp$newCRIT[2:20]),col="blue",x=scotcomp$newCRIT$date)
 
-plot(rowSums(scotcomp$DEATH[2:20]),col="blue",x=scotcomp$DEATH$date,type="l", ylab="Deaths",xlab="Date",las=2)
-points(rowSums(scotdeath[2:20]),x=scotdeath$date,ylab="Deaths",xlab="Date")
+lines(rowSums(scotcomp$DEATH[2:20]),col="blue",x=scotcomp$DEATH$date,type="l", ylab="Deaths",xlab="Date",las=2)
+plot(rowSums(scotdeath[2:20]),x=scotdeath$date,ylab="Deaths",xlab="Date")
+dratio=sum(scotdeath[2:20])/sum(scotcomp$DEATH[2:20])
+lines(rowSums(scotcomp$DEATH[2:20])*dratio,x=scotcomp$DEATH$date,ylab="Deaths",col='red',xlab="Date")
 

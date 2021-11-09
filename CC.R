@@ -397,7 +397,7 @@ for (d in 4:(length(smoothweightR$date)-3)){
 
 for (d in 4:(length(rat$date)-3)){
   CCdate$Geography="Scotland"
-  CCdate$Value = rat$smoothScotland[d]
+  CCdate$Value =rat$smoothScotland[d]
   CCdate$"Quantile 0.05"=min(rat$smoothScotland[(d-3):(d+3)])-0.2
   CCdate$"Quantile 0.25"=min(rat$smoothScotland[(d-3):(d+3)])-0.1
   CCdate$"Quantile 0.5"=rat$smoothScotland[d]
