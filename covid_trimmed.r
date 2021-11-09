@@ -19,6 +19,7 @@ if(interactive()){
   rm(list = ls())
 }
 
+
 # Read packages used by the script
 library(readr, warn.conflicts = FALSE, quietly = TRUE)
 library(dplyr, warn.conflicts = FALSE, quietly = TRUE)
@@ -722,11 +723,6 @@ comdat <- na.locf(comdat)
 regcases <- na.locf(regcases)
 scotdat <- na.locf(scotdat)
 
-# Get mean age-related CFR across the whole pandemic
-RawCFR=colSums(deathdat[2:ncol(deathdat)])/colSums(casedat[2:ncol(casedat)])
-
-
-
 # Remove weekend effect, assuming each weekday has same number of cases over the
 # epidemic, and national averages hold regionally.  Also, smooth data through Xmas.
 #  Pulled out comdat & scotdat to a function. Regions need to deal with tibble
@@ -780,8 +776,14 @@ if(interactive()){
     xlab("Dates") + ylab("Cases") +
     theme_bw()
 }
+##  CFR going down gets entangled with vaccine effect.  Use pre-vaccination values
+##  With 12 day delay from WSS. 
+RawCFR=colSums(deathdat[12:211,2:20])/colSums(casedat[1:200,2:20])
 
-CFR_All_ByAge=colSums(deathdat[2:ncol(deathdat)])/colSums(casedat[2:ncol(casedat)])
+
+# Get mean age-related CFR across the whole pandemic, with adjustment for vaccination
+# giving people who would have died.  Alternative would be time dependent CFR
+# RawCFR=colSums(deathdat[2:20]/(1-vacdat[2:20]*vacCFR))/colSums(casedat[2:ncol(casedat)])
 
 
 #  Compartment model now done with a function.  Last two inputs are indices giving date range
@@ -1468,11 +1470,24 @@ compMTP<-Predictions(comp,R_BestGuess$England)
 
 #  Compartment predictions removed to Predictions.R
 #  Replicated the data because repeated calls to Predictions would increment comp
-sum(comdat$allCases)
-sum(comp$CASE[2:20])
-
 
 #Monitoring plots
+
+#Ratios
+total_deaths=sum(deathdat[2:20])
+total_cases=sum(casedat[2:20])
+total_admissions=sum(Hospital$UK$newsaridat)
+total_crit=sum(Hospital$UK$critdat)
+total_time_death=nrow(deathdat)
+total_time_case=nrow(casedat)
+total_time=length(Hospital$UK$date)
+ratio <-list()
+ratio$death=total_deaths/sum(comp$DEATH[1:total_time_death,2:20])
+ratio$case=total_cases/sum(comp$CASE[1:total_time_case,2:20])
+ratio$hosp=total_admissions/sum(comp$newSARI[1:total_time,2:20])
+ratio$crit=total_crit/sum(comp$CRIT[1:total_time,2:20])
+
+
 startplot=startdate+3
 endplot=startdate+nrow(compMTP$CASE)+predtime-3
 PREV<-comp$ILI[2:20]+comp$SARI[2:20]+comp$CRIT[2:20]+comp$MILD[2:20]
@@ -1481,8 +1496,7 @@ plot(rowSums(compMTP$CASE[2:20]),x=compMTP$CASE$date,xlim=c(startplot,endplot))
 
 
 plot(Hospital$UK$newsaridat,x=Hospital$UK$date, ylab="Hospital Admission",xlab="Date",xlim=c(startplot,endplot-11                                                                                                ))
-
-lines(rowSums(compMTP$newSARI[2:20]),x=compMTP$newSARI$date,col="blue")
+lines(rowSums(comp$newSARI[2:20])*1.47,x=comp$newSARI$date,col="blue")
 
 plot(Hospital$UK$saridat,x=Hospital$UK$date,ylab="Hospital Cases",xlab="Date",xlim=c((startplot),endplot))
 lines(rowSums(compMTP$SARI[2:20]+compMTP$CRIT[2:20]+compMTP$CRITREC[2:20]),x=compMTP$SARI$date,col='red')
