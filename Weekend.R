@@ -28,7 +28,17 @@ Xmasgrad <- cdat[XMend]-cdat[XMstart]
 for (i in XMstart:XMend){
   cdat[i]=Xmasav-Xmasgrad*(((XMend+XMstart)/2)-i)/XMdays
 }
-
-
 return(cdat)
+}
+
+estimate_R <- function(rat_in,date_in,reg_in){
+  filteredR<-append(
+  append(tail(predict(loess(rat_in ~ as.numeric(date_in),weight=reg_in ,span=s1))),
+         tail(predict(loess(rat_in ~ as.numeric(date_in),weight=reg_in, span=s2))) ) ,
+  append(tail(predict(loess(rat_in ~ as.numeric(date_in),weight=reg_in,span=s3))),
+         tail(predict(loess(rat_in ~ as.numeric(date_in),weight=reg_in,span=s4))))
+)
+R_Quant <-unname(quantile(filteredR, probs=c(0.05,0.25,0.5,0.75,0.95)))
+R <-mean(filteredR)
+return( c(R,R_Quant) )
 }
