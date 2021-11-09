@@ -400,7 +400,7 @@ lines(rowSums(scotcomp$newSARI[2:20]),x=scotcomp$SARI$date,col='red')
 plot(rowSums(scotcomp$CASE[2:20]),x=scotcomp$CASE$date,ylab="Cases",xlab="Date")
 lines(rowSums(scotcomp$newMILD[2:20]+scotcomp$newILI[2:20]),col="red",x=scotcomp$newMILD$date)
 
-plot(Hospital$Scot$newcritdat,x=deathdat$date,ylab="ICU Admissions",xlab="Date",las=2)
+plot(Hospital$Scot$newcritdat,x=Hospital$Scot$date,ylab="ICU Admissions",xlab="Date",las=2)
 lines(rowSums(scotcomp$newCRIT[2:20]),col="blue",x=scotcomp$newCRIT$date)
 
 lines(rowSums(scotcomp$DEATH[2:20]),col="blue",x=scotcomp$DEATH$date,type="l", ylab="Deaths",xlab="Date",las=2)

@@ -544,14 +544,14 @@ for (d in 4:(length(rat$date)-3)){
 
 today <- today()
 ageband <-  "All"
-CCdate$Scenario="MTP"
+CCdate$Scenario="NowCast"
 CCdate$Geography=region
 CCdate$ValueType="hospital_inc"
 #  Log. Errors from fluctuations time 4 for methodological uncertainty
 #  adjust for recent discrepancy
 
-
 for (d in 8:(nrow(comp$newSARI)-22)){
+  if(comp$DEATH$date[d]<(today-reporting_delay)){ CCdate$Scenario="MTP"}
   CCdate$Value = sum(comp$newSARI[d,2:20])
   CCdate$"Quantile 0.05"=max(0,CCdate$Value*(1-12*sqrt(sum(comp$newSARI[(d-6):d,2:20])/7)/CCdate$Value))
   CCdate$"Quantile 0.25"=max(0,CCdate$Value*(1-4*sqrt(sum(comp$newSARI[(d-6):d,2:20])/7)/CCdate$Value))
@@ -565,7 +565,9 @@ for (d in 8:(nrow(comp$newSARI)-22)){
   CC <- rbind(CC, CCdate)
 }
 CCdate$ValueType="death_inc_line"
+CCdate$Scenario="NowCast"
 for (d in 8:(nrow(comp$DEATH)-22)){
+  if(comp$DEATH$date[d]<(today-reporting_delay)){ CCdate$Scenario="MTP"}
   CCdate$Value = sum(comp$DEATH[d,2:20])
   CCdate$"Quantile 0.05"=max(0,CCdate$Value*(1-12*sqrt(sum(comp$DEATH[(d-6):d,2:20])/7)/CCdate$Value))
   CCdate$"Quantile 0.25"=max(0,CCdate$Value*(1-4*sqrt(sum(comp$DEATH[(d-6):d,2:20])/7)/CCdate$Value))
@@ -580,7 +582,9 @@ for (d in 8:(nrow(comp$DEATH)-22)){
 }
 #  Check with ONS CCdate$ValueType="prevalence"
 CCdate$ValueType="incidence"
+CCdate$Scenario="NowCast"
 for (d in 8:(nrow(comp$CASE)-22)){
+  if(comp$DEATH$date[d]<(today-reporting_delay)){ CCdate$Scenario="MTP"}
   CCdate$Value = sum(comp$CASE[d,2:20])
   CCdate$"Quantile 0.05"=CCdate$Value*0.5
   CCdate$"Quantile 0.25"=CCdate$Value*0.75
