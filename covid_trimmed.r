@@ -520,7 +520,10 @@ regdeaths$MD=regdeaths$`East Midlands`+regdeaths$`West Midlands`
 regurl2 <- paste0(baseurl,
                   "areaType=region&",
                   "metric=newCasesBySpecimenDateAgeDemographics&",
-                  "metric=newDeathsBySpecimenDateAgeDemographics&",
+                  "format=csv")
+regurl3 <- paste0(baseurl,
+                  "areaType=region&",
+                  "metric=newDeaths28DaysByDeathDateAgeDemographics&",
                   "format=csv")
 
 # Specify the column types
@@ -530,22 +533,43 @@ coltypes <- cols(
   areaType = col_character(),
   date = col_date(format = "%Y-%m-%d"),
   age = col_character(),
-  cases = col_number(),
+  cases = col_number(), 
   rollingSum = col_number(),
   rollingRate = col_number()
 )
 
-# Read in the regional case and death data by age
-regagedat <-  read_csv(file = regurl2, col_types = coltypes)
-
+# Read in the regional case and death data by age and filter
 # Transform the data - reduce the number of columns and filter the data to
 # lie between specific dates.
-regagedat <- regagedat %>%
-             select(date, areaName, age, cases) %>%
-             filter(date >= startdate &
-                    date <= enddate ) %>%
-             arrange(date)
+regagedat <-  read_csv(file = regurl2, col_types = coltypes) %>%
+  select(date, areaName, age, cases) %>%
+  filter(date >= startdate &
+           date <= enddate ) %>%
+  filter(age!="unassigned") %>%
+  arrange(date)
 
+# And do it again for deaths to avoid 500 error Specify the column types
+regurl3 <- paste0(baseurl,
+                  "areaType=region&",
+                  "metric=newDeaths28DaysByDeathDateAgeDemographics&",
+                  "format=csv")
+coltypes <- cols(
+  areaCode = col_character(),
+  areaName = col_character(),
+  areaType = col_character(),
+  date = col_date(format = "%Y-%m-%d"),
+  age = col_character(),
+  deaths = col_number(),
+  rollingSum = col_number(),
+  rollingRate = col_number()
+)
+
+regagedat3 <-  read_csv(file = regurl3, col_types = coltypes)  %>%
+  select(date, areaName, age, deaths) %>%
+  filter(date >= startdate &
+           date <= enddate ) %>%
+  arrange(date)
+regagedat$deaths <- regagedat3$deaths
 # Define the columns for the UK government R estimate data from a csv file
 coltypes <- cols(
   Date = col_date(format = "%d/%m/%Y"), UK_LowerBound = col_number(),
@@ -666,8 +690,8 @@ regcases$NI <- NIdat$allCases
 
 
 # Remove the no longer needed input data
-rm(ukcasedat,scotdailycases,scotdailycasesbyboard,jnk,coltypes,NIdat,walesdat)
-rm(HospitalUrl,deathurl,casesurl,scoturl,walesurl,NIurl,ageurl,baseurl,regurl,regurl2,ukcaseurl,vacurl)
+rm(ukcasedat,scotdailycases,scotdailycasesbyboard,jnk,coltypes,NIdat,walesdat,regagedat3)
+rm(HospitalUrl,deathurl,casesurl,scoturl,walesurl,NIurl,ageurl,baseurl,regurl,regurl2,regurl3,ukcaseurl,vacurl)
 
 # Plot all cases against date: Used for the paper, uncomment to recreate
 if(interactive()){
