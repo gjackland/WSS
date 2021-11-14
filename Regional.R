@@ -16,7 +16,7 @@ getData <- function(dftmp) {
 
 gethData <- function(dftmp) {
   out <- dftmp %>%
-    select(date = as.Date(date), saridat = hospitalCases, newsaridat = newAdmissions) %>%
+    select(date = date, saridat = hospitalCases, newsaridat = newAdmissions) %>%
     filter(date >= startdate & date <= enddate) %>%
     arrange(date)
   return(out)
