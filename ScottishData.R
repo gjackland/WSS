@@ -389,7 +389,7 @@ try(CC_write(scotcomp,"Scotland",population$Scotland[1],R_BestGuess$Scotland,R_Q
 
 #Remove NA 's 
 Hospital$Scot <- na.locf(Hospital$Scot)
-
+if(interactive()){
 #Ratios
 total_deaths=sum(scotdeath[2:20])
 total_cases=sum(scotage[2:20])
@@ -422,4 +422,4 @@ lines(rowSums(scotcomp$newCRIT[2:20]),col="blue",x=scotcomp$newCRIT$date)
 lines(rowSums(scotcomp$DEATH[2:20]),col="blue",x=scotcomp$DEATH$date,type="l", ylab="Deaths",xlab="Date",las=2)
 plot(rowSums(scotdeath[2:20]),x=scotdeath$date,ylab="Deaths",xlab="Date")
 lines(rowSums(scotcomp$DEATH[2:20]),x=scotcomp$DEATH$date,ylab="Deaths",col='red',xlab="Date")
-
+}

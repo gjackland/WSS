@@ -6,7 +6,7 @@ library(lubridate)
 CC_write <- function(CCcomp,region,pop,R_region,Q_region){
 # Initiate variables
 
-startwrite=200  
+startwrite=300  
 
 group <- "Edinburgh"
 model <-  "WSS"

@@ -1217,6 +1217,72 @@ tmp <-estimate_R(rat$NI,rat$date,regcases$NI)
 R_BestGuess$NI <-tmp[1]
 R_Quant$NI <-tmp[2:6]
 
+tmp <-estimate_R(rat$`NHS Lothian`,rat$date,regcases$NI)
+R_BestGuess$Lothian <-tmp[1]
+R_Quant$Lothian <-tmp[2:6]
+
+tmp <-estimate_R(rat$`NHS Greater Glasgow and Clyde`,rat$date,regcases$NI)
+R_BestGuess$Glasgow <-tmp[1]
+R_Quant$Glasgow <-tmp[2:6]
+
+tmp <-estimate_R(rat$`NHS Ayrshire and Arran`,rat$date,regcases$NI)
+R_BestGuess$Ayr <-tmp[1]
+R_Quant$Ayr <-tmp[2:6]
+
+tmp <-estimate_R(rat$`NHS Borders`,rat$date,regcases$NI)
+R_BestGuess$Borders<-tmp[1]
+R_Quant$Borders <-tmp[2:6]
+
+tmp <-estimate_R(rat$`NHS Dumfries and Galloway`,rat$date,regcases$NI)
+R_BestGuess$Dumfries <-tmp[1]
+R_Quant$Dumfries <-tmp[2:6]
+
+tmp <-estimate_R(rat$`NHS Forth Valley`,rat$date,regcases$NI)
+R_BestGuess$Forth <-tmp[1]
+R_Quant$Forth <-tmp[2:6]
+
+tmp <-estimate_R(rat$`NHS Grampian`,rat$date,regcases$NI)
+R_BestGuess$Gramp <-tmp[1]
+R_Quant$Gramp <-tmp[2:6]
+
+tmp <-estimate_R(rat$`NHS Highland`,rat$date,regcases$NI)
+R_BestGuess$Highland <-tmp[1]
+R_Quant$Highland <-tmp[2:6]
+
+tmp <-estimate_R(rat$`NHS Fife`,rat$date,regcases$NI)
+R_BestGuess$Fife <-tmp[1]
+R_Quant$Fife <-tmp[2:6]
+
+tmp <-estimate_R(rat$`NHS Tayside`,rat$date,regcases$NI)
+R_BestGuess$Tayside <-tmp[1]
+R_Quant$Tayside <-tmp[2:6]
+
+tmp <-estimate_R(rat$`NHS Lanarkshire`,rat$date,regcases$NI)
+R_BestGuess$Lanark<-tmp[1]
+R_Quant$Lanark <-tmp[2:6]
+
+tmp <-estimate_R(rat$`NHS Orkney`,rat$date,regcases$NI)
+R_BestGuess$Orkney <-tmp[1]
+R_Quant$Orkney <-tmp[2:6]
+
+tmp <-estimate_R(rat$`NHS Western Isles`,rat$date,regcases$NI)
+R_BestGuess$WI <-tmp[1]
+R_Quant$WI <-tmp[2:6]
+
+tmp <-estimate_R(rat$`NHS Shetland`,rat$date,regcases$NI)
+R_BestGuess$Shetland <-tmp[1]
+R_Quant$Shetland <-tmp[2:6]
+
+
+
+
+
+
+
+
+
+
+
 ##########   Age groups  ########
 
 tmp <-estimate_R(dfR$p00,dfR$date,comdat$allCases)
@@ -1511,7 +1577,7 @@ ratio$case=total_cases/sum(comp$CASE[1:total_time_case,2:20])
 ratio$hosp=total_admissions/sum(comp$newSARI[1:total_time,2:20])
 ratio$crit=total_crit/sum(comp$CRIT[1:total_time,2:20])
 
-
+if(interactive()){
 startplot=startdate+3
 endplot=startdate+nrow(compMTP$CASE)+predtime-3
 PREV<-comp$ILI[2:20]+comp$SARI[2:20]+comp$CRIT[2:20]+comp$MILD[2:20]
@@ -1536,7 +1602,7 @@ lines(rowSums(comp$CRIT[2:20]),col="blue",x=comp$CRIT$date)
 plot(rowSums(compMTP$DEATH[2:20]),col="blue",x=compMTP$DEATH$date, type="l",ylab="Deaths"
      ,xlab="Date",xlim=c(startplot,endplot-11))
 points(rowSums(deathdat[2:20]),x=deathdat$date)
-
+}
 # This needs to be the last routine called for the UI, by default it returns
 # success (0), if there is no success setStatus() should be called. By default
 # it will return -1 but you can set a value setStatus(1). Any non-zero value
