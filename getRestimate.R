@@ -4,7 +4,7 @@
 #
 # Code to get the UK reproductive number (R) estimate. Data is downloaded from
 #
-# https://www.gov.uk/guidance/the-r-value-and-growth-rat
+# https://www.gov.uk/guidance/the-r-value-and-growth-rate 
 #
 # A spreadsheet is downloaded from that page if it has not already been downloaded.
 # The content from the "Table1_-_R" is saved to a csv file.

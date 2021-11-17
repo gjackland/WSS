@@ -1,8 +1,7 @@
 # WSS
 Weight scale and shift code for covid epidemic modelling.
 
-The model takes CASES from https://coronavirus.data.gov.uk/ .  All predictions are based on a compartment model 
-moving people from CASE through hospitalization, ICU, to recovery or death.  Compartments are broken down by age region.
+The model takes CASES from https://coronavirus.data.gov.uk/ .  All predictions are based on a compartment model moving people from CASE through hospitalization, ICU, to recovery or death.  Compartments are broken down by age region.
 
 R-numbers are calculated by differentiating the case data, after a little data processing to make this legit.  
 They reliably agree with "official" estimates published from SPI-M, but are available 16 days earlier.  
@@ -14,13 +13,15 @@ Lockdowns etc are not included directly, because their effect is mainly in CASES
 
 Model description and application is here...
 
-https://www.medrxiv.org/content/10.1101/2021.04.14.21255385v1.article-info
+* https://www.medrxiv.org/content/10.1101/2021.04.14.21255385v1.article-info
 
 Previous version, all calculations were spreadsheet-based
-https://www.medrxiv.org/content/10.1101/2021.01.21.21250264v1
+
+* https://www.medrxiv.org/content/10.1101/2021.01.21.21250264v1
 
 Ongoing version for BMJ
-https://docs.google.com/document/d/1t7GydEG2PLbwHOkLVBnbXEByf5_h2OkZ/edit
+
+* https://docs.google.com/document/d/1t7GydEG2PLbwHOkLVBnbXEByf5_h2OkZ/edit
 
 Analysis article
 
@@ -30,14 +31,20 @@ The code is in pure R and developed in and best run through Rstudio.  There are 
 
 Workflow:
 
-1/. Run **Covid_trimmed.R.**  This sets up the global parameters for the UK, calculates all R. parameters, generates plots for interactive monitoring, and does the compartment simulation for England, including medium term predictions.  
+1. Run **Covid_trimmed.R.**  This sets up the global parameters for the UK, calculates all R. parameters, generates plots for interactive monitoring, and does the compartment simulation for England, including medium term predictions.  
+1. Legacy code from the WSS paper calculating CFR variation with time may be called from `medrxiv.R` and `age_pdfplot.R`, but these must be called by editing the calls in the code to:
+   ```R
+   medout <- MedrxivPaper()
+   ```
+   and setting:
+   ```R
+   pdfpo <- TRUE
+   ```
+1. Run **ScottishData.R**. This reads data from the Scottish government, reformats it, and runs the compartment model.  The code ends with some monitoring plots
+1. Run **CC_write.R**. to obtain R-numbers, growth rates, England and Scotland compartment model data in CrystalCast format
+1. Run **Regional.R**. to read data and obtain compartment model data for 7 NHS England Regions in CrystalCast format.
+1. **Sanity check**. R-numbers can be sensitive to late posting on recent cases, and wrong R-numbers tip over into the medium term predictions.  Before believing anything, always check the last few days of input case data for anomalies.  The parameter "enddate" can be increased to eliminate incomplete data.  If R is sensitive to enddate, there is a data problem.
 
-1*/ Legacy code from the WSS paper calculating CFR variation with time may be called from medrxiv.R and age_pdfplot.R, but these must be called by editing the calls in the code to {medout<-MedrxivPaper()} and setting pdfpo TRUE.
+## Licensing
 
-2/  Run **ScottishData.R**. This reads data from the Scottish government, reformats it, and runs the compartment model.  The code ends with some monitoring plots
-
-3/  Run **CC_write.R**. to obtain R-numbers, growth rates, England and Scotland compartment model data in CrystalCast format
-
-4/ Run **Regional.R**. to read data and obtain compartment model data for 7 NHS England Regions in CrystalCast format.
-
-5/ **Sanity check**. R-numbers can be sensitive to late posting on recent cases, and wrong R-numbers tip over into the medium term predictions.  Before believing anything, always check the last few days of input case data for anomalies.  The parameter "enddate" can be increased to eliminate incomplete data.  If R is sensitive to enddate, there is a data problem.
+The code is licensed under GPL-3.0. The data used for making the calculations is made available under an [Open Government Licence](http://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/).

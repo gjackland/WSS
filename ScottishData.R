@@ -64,6 +64,7 @@ startdate_scot <- as.Date("2020/07/25")
 # WAS To one week ago (-7)  NOW read in all the data
 enddate_scot <-  Sys.Date()
 
+
 # Base url for UK data
 baseurl <- "https://api.coronavirus.data.gov.uk/v2/data?"
 
@@ -115,7 +116,7 @@ coltypes <- cols(
   rollingRate = col_double()
 )
 
-# Get all the data - ALL English data - no Scottish regions
+# Get all the data - ALL English data - no Scottish regions, just Authorities
 allagedat <- read_csv(ageurl, col_types = coltypes)
 
 # Restrict to Scottish regions and change from long to wide format
@@ -227,7 +228,10 @@ scotdailycases %>% filter(HBName=="Scotland") %>%
     select(date = Date, newcritdat = ICUAdmissions, newsaridat = HospitalAdmissions) %>%
     filter(date >= startdate & date <= enddate) %>%
     arrange(date) -> jnk
+Hospital$Scot$date<-as.Date(jnk$date)
 Hospital$Scot$newcritdat<-jnk$newcritdat
+Hospital$Scot$newsaridat<-jnk$newsaridat
+
 
 # Daily Case Trends By Age and Sex
 # See:
@@ -368,36 +372,54 @@ pckg <- package_show("covid-19-wider-impacts-deaths", as ="table")
 
 
 region="Scotland"
-
+##  CFR going down gets entangled with vaccine effect.  Use pre-vaccination values
+##  With 12 day delay from WSS. 
 RawCFR=colSums(scotdeath[2:20])/colSums(scotage[2:20])
-
+RawCFR=colSums(scotdeath[13:212,2:20])/colSums(scotage[1:200,2:20])
 
 #  Full Epidemic model.
 comp <- Compartment(scotage, covidsimAge, RawCFR, comdat,2,nrow(scotage))
 #  28 day Projections
 scotcomp<-Predictions(comp,R_BestGuess$Scotland)
 
-CC_write(scotcomp,"Scotland",population$Scotland[1],R_BestGuess$Scotland,R_Quant$Scotland)
+
+try(CC_write(scotcomp,"Scotland",population$Scotland[1],R_BestGuess$Scotland,R_Quant$Scotland))
 #  Crystalcast format output  
 #write.xlsx(CC, file = paste("Data/compartment",today,"all.xlsx"), sheetName = "WSS", rowNames = FALSE)
 
+#Remove NA 's 
+Hospital$Scot <- na.locf(Hospital$Scot)
+if(interactive()){
+#Ratios
+total_deaths=sum(scotdeath[2:20])
+total_cases=sum(scotage[2:20])
+total_admissions=sum(Hospital$Scot$newsaridat)
+total_crit=sum(Hospital$Scot$newcritdat)
+total_time_death=nrow(scotdeath)
+total_time_case=nrow(scotage)
+total_time=length(Hospital$Scot$date)
+ratio <-list()
+ratio$death=total_deaths/sum(comp$DEATH[1:total_time_death,2:20])
+ratio$case=total_cases/sum(comp$CASE[1:total_time_case,2:20])
+ratio$hosp=total_admissions/sum(comp$newSARI[1:total_time,2:20])
+ratio$crit=total_crit/sum(comp$newCRIT[1:total_time,2:20])
 
 rbind(scotcomp$CASE,scotcomp$predCASE)->plotCASE
 plot(rowSums(plotCASE[2:20]),x=plotCASE$date)
 #Monitoring plots
 
-plot(rowSums(scotcomp$newSARI[2:20]),col="blue",x=scotcomp$SARI$date, type='l',xlim=c(as.Date(Hospital$Scot$date[1]),(enddate+predtime)))
-points(Hospital$Scot$newsari,x=Hospital$Scot$date,ylab="Scottish Hospital Cases",xlab="Date")
+plot(rowSums(scotcomp$SARI[2:20]+scotcomp$CRIT[2:20]+scotcomp$CRITREC[2:20]),col="blue", 
+     type='l',ylab="Scottish Hospital Beds",xlab="Date")
 
-plot(Hospital$Scot$newsari,x=Hospital$Scot$date,ylab="Scottish Hospital Cases",xlab="Date",xlim=c(Hospital$Scot$date[1],(Hospital$Scot$date[350]+48)))
+plot(Hospital$Scot$newsaridat,x=Hospital$Scot$date,ylab="Scottish Hospital Admissions",xlab="Date")
 lines(rowSums(scotcomp$newSARI[2:20]),x=scotcomp$SARI$date,col='red')
 plot(rowSums(scotcomp$CASE[2:20]),x=scotcomp$CASE$date,ylab="Cases",xlab="Date")
 lines(rowSums(scotcomp$newMILD[2:20]+scotcomp$newILI[2:20]),col="red",x=scotcomp$newMILD$date)
 
-
-plot(Hospital$Scot$newcritdat,x=deathdat$date,ylab="ICU Admissions",xlab="Date",las=2)
+plot(Hospital$Scot$newcritdat,x=Hospital$Scot$date,ylab="ICU Admissions",xlab="Date",las=2)
 lines(rowSums(scotcomp$newCRIT[2:20]),col="blue",x=scotcomp$newCRIT$date)
 
-plot(rowSums(scotcomp$DEATH[2:20]),col="blue",x=scotcomp$DEATH$date,type="l", ylab="Deaths",xlab="Date",las=2)
-points(rowSums(scotdeath[2:20]),x=scotdeath$date,ylab="Deaths",xlab="Date")
-
+lines(rowSums(scotcomp$DEATH[2:20]),col="blue",x=scotcomp$DEATH$date,type="l", ylab="Deaths",xlab="Date",las=2)
+plot(rowSums(scotdeath[2:20]),x=scotdeath$date,ylab="Deaths",xlab="Date")
+lines(rowSums(scotcomp$DEATH[2:20]),x=scotcomp$DEATH$date,ylab="Deaths",col='red',xlab="Date")
+}

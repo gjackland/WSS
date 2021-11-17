@@ -2,11 +2,11 @@
 #
 # Code to write out excel using the CC Schema.
 #
-
+library(lubridate)
 CC_write <- function(CCcomp,region,pop,R_region,Q_region){
 # Initiate variables
 
-startwrite=200  
+startwrite=300  
 
 group <- "Edinburgh"
 model <-  "WSS"
@@ -65,20 +65,21 @@ CCtmp<-CC
 #  Medium term projections
 
 
-today <- today()
+today <- Sys.Date()
 ageband <-  "All"
-CCtmp$Scenario="MTP"
+CCtmp$Scenario="NowCast"
 CCtmp$Geography=region
 CCtmp$ValueType="hospital_inc"
 #  Log. Errors from fluctuations time 4 for methodological uncertainty
 #  adjust for recent discrepancy
 for (d in startwrite:(nrow(CCcomp$newSARI)-22)){
+  if(CCcomp$CASE$date[d]>(today-reporting_delay)){ CCtmp$Scenario="MTP"}
   CCtmp$Value = sum(CCcomp$newSARI[d,2:20])
-  CCtmp$"Quantile 0.05"=max(0,CCtmp$Value*(1-12*sqrt(sum(CCcomp$newSARI[(d-6):d,2:20])/7)/CCtmp$Value))
-  CCtmp$"Quantile 0.25"=max(0,CCtmp$Value*(1-4*sqrt(sum(CCcomp$newSARI[(d-6):d,2:20])/7)/CCtmp$Value))
+  CCtmp$"Quantile 0.05"=max(0,CCtmp$Value*(1-sqrt(sum(CCcomp$newSARI[(d-6):d,2:20])/7)/CCtmp$Value))
+  CCtmp$"Quantile 0.25"=max(0,CCtmp$Value*(1-sqrt(sum(CCcomp$newSARI[(d-6):d,2:20])/7)/CCtmp$Value))
   CCtmp$"Quantile 0.5"=CCtmp$Value
-  CCtmp$"Quantile 0.75"=CCtmp$Value*(1+4*sqrt(sum(CCcomp$newSARI[(d-6):d,2:20])/7)/CCtmp$Value)
-  CCtmp$"Quantile 0.95"=CCtmp$Value*(1+12*sqrt(sum(CCcomp$newSARI[(d-7):d,2:20])/7)/CCtmp$Value)
+  CCtmp$"Quantile 0.75"=CCtmp$Value*(1+sqrt(sum(CCcomp$newSARI[(d-6):d,2:20])/7)/CCtmp$Value)
+  CCtmp$"Quantile 0.95"=CCtmp$Value*(1+sqrt(sum(CCcomp$newSARI[(d-7):d,2:20])/7)/CCtmp$Value)
   CCtmp$"Day of Value" = day(CCcomp$newSARI$date[d])
   CCtmp$"Month of Value" = month(CCcomp$newSARI$date[d])
   CCtmp$"Year of Value" = year(CCcomp$newSARI$date[d])
@@ -86,14 +87,15 @@ for (d in startwrite:(nrow(CCcomp$newSARI)-22)){
   CC <- rbind(CC, CCtmp)
 }
 CCtmp$ValueType="death_inc_line"
-
+CCtmp$Scenario="NowCast"
 for (d in startwrite:(nrow(CCcomp$DEATH)-22)){
+  if(CCcomp$DEATH$date[d]>(today-reporting_delay)){ CCtmp$Scenario="MTP"}  
   CCtmp$Value = sum(CCcomp$DEATH[d,2:20])
-  CCtmp$"Quantile 0.05"=max(0,CCtmp$Value*(1-12*sqrt(sum(CCcomp$DEATH[(d-6):d,2:20])/7)/CCtmp$Value))
-  CCtmp$"Quantile 0.25"=max(0,CCtmp$Value*(1-4*sqrt(sum(CCcomp$DEATH[(d-6):d,2:20])/7)/CCtmp$Value))
+  CCtmp$"Quantile 0.05"=max(0,CCtmp$Value*(1-sqrt(sum(CCcomp$DEATH[(d-6):d,2:20])/7)/CCtmp$Value))
+  CCtmp$"Quantile 0.25"=max(0,CCtmp$Value*(1-sqrt(sum(CCcomp$DEATH[(d-6):d,2:20])/7)/CCtmp$Value))
   CCtmp$"Quantile 0.5"=CCtmp$Value
-  CCtmp$"Quantile 0.75"=CCtmp$Value*(1+4*sqrt(sum(CCcomp$DEATH[(d-6):d,2:20])/7)/CCtmp$Value)
-  CCtmp$"Quantile 0.95"=CCtmp$Value*(1+12*sqrt(sum(CCcomp$DEATH[(d-7):d,2:20])/7)/CCtmp$Value)
+  CCtmp$"Quantile 0.75"=CCtmp$Value*(1+sqrt(sum(CCcomp$DEATH[(d-6):d,2:20])/7)/CCtmp$Value)
+  CCtmp$"Quantile 0.95"=CCtmp$Value*(1+sqrt(sum(CCcomp$DEATH[(d-7):d,2:20])/7)/CCtmp$Value)
   CCtmp$"Day of Value" = day(CCcomp$DEATH$date[d])
   CCtmp$"Month of Value" = month(CCcomp$DEATH$date[d])
   CCtmp$"Year of Value" = year(CCcomp$DEATH$date[d])
@@ -102,13 +104,15 @@ for (d in startwrite:(nrow(CCcomp$DEATH)-22)){
 }
 #  Check with ONS 
 CCtmp$ValueType="incidence"
+CCtmp$Scenario="NowCast"
 for (d in startwrite:(nrow(CCcomp$CASE)-22)){
+  if(CCcomp$CASE$date[d]>(today-reporting_delay)){ CCtmp$Scenario="MTP"}
   CCtmp$Value = sum(CCcomp$CASE[d,2:20])
-  CCtmp$"Quantile 0.05"=max(0,CCtmp$Value*(1-12*sqrt(sum(CCcomp$CASE[(d-6):d,2:20])/7)/CCtmp$Value))
-  CCtmp$"Quantile 0.25"=max(0,CCtmp$Value*(1-4*sqrt(sum(CCcomp$CASE[(d-6):d,2:20])/7)/CCtmp$Value))
+  CCtmp$"Quantile 0.05"=max(0,CCtmp$Value*(1-sqrt(sum(CCcomp$CASE[(d-6):d,2:20])/7)/CCtmp$Value))
+  CCtmp$"Quantile 0.25"=max(0,CCtmp$Value*(1-sqrt(sum(CCcomp$CASE[(d-6):d,2:20])/7)/CCtmp$Value))
   CCtmp$"Quantile 0.5"=CCtmp$Value
-  CCtmp$"Quantile 0.75"=CCtmp$Value*(1+4*sqrt(sum(CCcomp$CASE[(d-6):d,2:20])/7)/CCtmp$Value)
-  CCtmp$"Quantile 0.95"=CCtmp$Value*(1+12*sqrt(sum(CCcomp$CASE[(d-7):d,2:20])/7)/CCtmp$Value)
+  CCtmp$"Quantile 0.75"=CCtmp$Value*(1+sqrt(sum(CCcomp$CASE[(d-6):d,2:20])/7)/CCtmp$Value)
+  CCtmp$"Quantile 0.95"=CCtmp$Value*(1+sqrt(sum(CCcomp$CASE[(d-7):d,2:20])/7)/CCtmp$Value)
   CCtmp$"Day of Value" = day(CCcomp$CASE$date[d])
   CCtmp$"Month of Value" = month(CCcomp$CASE$date[d])
   CCtmp$"Year of Value" = year(CCcomp$CASE$date[d])
@@ -120,13 +124,15 @@ Missing_prevalence=1.1
 CCtmp$ValueType="prevalence"
 PREV<-CCcomp$ILI[2:20]+CCcomp$SARI[2:20]+CCcomp$CRIT[2:20]+CCcomp$MILD[2:20]
 PREV=PREV*Missing_prevalence/pop
+CCtmp$Scenario="NowCast"
 for (d in startwrite:(nrow(PREV)-22)){
+  if(CCcomp$CASE$date[d]>(today-reporting_delay)){ CCtmp$Scenario="MTP"}
   CCtmp$Value = sum(PREV[d,])
-  CCtmp$"Quantile 0.05"=max(0,CCtmp$Value*(1-12*sqrt(sum(PREV[(d-6):d,])/7)/CCtmp$Value))
-  CCtmp$"Quantile 0.25"=max(0,CCtmp$Value*(1-4*sqrt(sum(PREV[(d-6):d,])/7)/CCtmp$Value))
+  CCtmp$"Quantile 0.05"=CCtmp$Value*0.5
+  CCtmp$"Quantile 0.25"=CCtmp$Value*0.75
   CCtmp$"Quantile 0.5"=CCtmp$Value
-  CCtmp$"Quantile 0.75"=CCtmp$Value*(1+4*sqrt(sum(PREV[(d-6):d,])/7)/CCtmp$Value)
-  CCtmp$"Quantile 0.95"=CCtmp$Value*(1+12*sqrt(sum(PREV[(d-7):d,])/7)/CCtmp$Value)
+  CCtmp$"Quantile 0.75"=CCtmp$Value*1.3333
+  CCtmp$"Quantile 0.95"=CCtmp$Value*2
   CCtmp$"Day of Value" = day(CCcomp$ILI$date[d])
   CCtmp$"Month of Value" = month(CCcomp$ILI$date[d]) 
   CCtmp$"Year of Value" = year(CCcomp$ILI$date[d])
@@ -135,16 +141,15 @@ for (d in startwrite:(nrow(PREV)-22)){
 }
 #  Crystalcast format output  
 
-filename=paste("data/CCcompartment",today(),region,".xlsx")
+filename=paste("data/CCcompartment",Sys.Date(),"regions.xlsx")
 
-write.xlsx(CC, file = filename, 
-         overwrite = TRUE,  sheetName = region, rowNames = FALSE)
 
-#  try to write to separate sheets in the xlsx file
-#wb <- loadWorkbook("jnk")
-#addWorksheet(wb,region)
-#writeData(wb,region,CC)
-#saveWorkbook(wb,"jnk",overwrite = TRUE)
-
+if(file.exists(filename)){
+wb<-loadWorkbook(filename)
+addWorksheet(wb,region)
+writeData(wb,region,CC)
+saveWorkbook(wb,filename,overwrite = TRUE)  
+} else {
+  write.xlsx(CC, file = filename, 
+             overwrite = TRUE,  sheetName = region, rowNames = FALSE)}
 }
-

@@ -182,3 +182,49 @@ CC_write(predSW,"South West",population$SW[1],R_BestGuess$SW,R_Quant$SW)
 CC_write(predSE,"South East",population$SE[1],R_BestGuess$SE,R_Quant$SE)
 CC_write(predEE,"East of England",population$EE[1],R_BestGuess$EE,R_Quant$EE)
 
+#  Monitoring plots for MTP deaths
+
+plot_date<-c(plotdate[1],plotdate[2])
+ymax = max(tail(rowSums(predMD$DEATH[2:20]),n=100))*1.1
+plot(rowSums(predMD$DEATH[2:20]),x=predMD$DEATH$date,xlim=plot_date,ylim=c(0,ymax),cex.axis=0.7,ylab="Regional Death",xlab="Date") 
+lines(rowSums(predNEY$DEATH[2:20]),x=predNEY$DEATH$date,xlim=plot_date,col="red") 
+lines(rowSums(predNW$DEATH[2:20]),x=predNW$DEATH$date,xlim=plot_date,col="blue")  
+lines(rowSums(predSW$DEATH[2:20]),x=predSW$DEATH$date,xlim=plot_date,col="green")  
+lines(rowSums(predSE$DEATH[2:20]),x=predSE$DEATH$date,xlim=plot_date,col="orange")  
+lines(rowSums(predEE$DEATH[2:20]),x=predEE$DEATH$date,xlim=plot_date,col="violet")  
+lines(rowSums(predlondon$DEATH[2:20]),x=predlondon$DEATH$date,xlim=plot_date,col="yellow")  
+
+
+plot(y=Hospital$MD$newsaridat,x=Hospital$UK$date,ylab="MD Hospital Cases",xlab="Date",xlim=plot_date)
+lines(rowSums(predMD$newSARI[2:20]),x=predMD$newSARI$date)
+plot(y=Hospital$NW$newsaridat,x=Hospital$UK$date,ylab="NW Hospital Cases",xlab="Date",xlim=plot_date)
+lines(rowSums(predNW$newSARI[2:20]),x=predNW$newSARI$date)
+plot(y=Hospital$NEY$newsaridat,x=Hospital$UK$date,ylab="NEY Hospital Cases",xlab="Date",xlim=plot_date)
+lines(rowSums(predNEY$newSARI[2:20]),x=predNEY$newSARI$date)
+plot(y=Hospital$EE$newsaridat,x=Hospital$UK$date,ylab="EE Hospital Cases",xlab="Date",xlim=plot_date)
+lines(rowSums(predEE$newSARI[2:20]),x=predEE$newSARI$date)
+plot(y=Hospital$SE$newsaridat,x=Hospital$UK$date,ylab="MD Hospital Cases",xlab="Date",xlim=plot_date)
+lines(rowSums(predSE$newSARI[2:20]),x=predSE$newSARI$date)
+plot(y=Hospital$SW$newsaridat,x=Hospital$UK$date,ylab="MD Hospital Cases",xlab="Date",xlim=plot_date)
+lines(rowSums(predSW$newSARI[2:20]),x=predSW$newSARI$date)
+plot(y=Hospital$london$newsaridat,x=Hospital$UK$date,ylab="MD Hospital Cases",xlab="Date",xlim=plot_date)
+lines(rowSums(predlondon$newSARI[2:20]),x=predlondon$newSARI$date)
+
+
+plot(y=Hospital$MD$saridat,x=Hospital$UK$date,ylab="MD Hospital Cases",xlab="Date",xlim=plot_date)
+lines(rowSums(predMD$SARI[2:20]),x=predMD$newSARI$date)
+plot(y=Hospital$NW$saridat,x=Hospital$UK$date,ylab="NW Hospital Cases",xlab="Date",xlim=plot_date)
+lines(rowSums(predNW$SARI[2:20]),x=predNW$newSARI$date)
+plot(y=Hospital$NEY$saridat,x=Hospital$UK$date,ylab="NEY Hospital Cases",xlab="Date",xlim=plot_date)
+lines(rowSums(predNEY$SARI[2:20]),x=predNEY$newSARI$date)
+plot(y=Hospital$EE$saridat,x=Hospital$UK$date,ylab="EE Hospital Cases",xlab="Date",xlim=plot_date)
+lines(rowSums(predEE$SARI[2:20]),x=predEE$newSARI$date)
+plot(y=Hospital$SE$saridat,x=Hospital$UK$date,ylab="SE Hospital Cases",xlab="Date",xlim=plot_date)
+lines(rowSums(predSE$SARI[2:20]),x=predSE$newSARI$date)
+plot(y=Hospital$SW$saridat,x=Hospital$UK$date,ylab="SW Hospital Cases",xlab="Date",xlim=plot_date)
+lines(rowSums(predSW$SARI[2:20]),x=predSW$newSARI$date)
+plot(y=Hospital$london$saridat,x=Hospital$UK$date,ylab="London Hospital Cases",xlab="Date",xlim=plot_date)
+lines(rowSums(predlondon$SARI[2:20]),x=predlondon$newSARI$date)
+
+
+

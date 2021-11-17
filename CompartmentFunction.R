@@ -10,15 +10,15 @@
 # values from the calling space
 # Inherits vacdat from covid_trimmed
 Compartment <- function(cases,  csimAge, rCFR, cdat, startc, endc){
-
+  
   # Create a list to output various data frames
   out <- list()
-
+  
   # CASE is the input cases which get WSS'ed.
   # CASE=cases produces estimates for the data used.
   CASE <- cases
   cdflength <- 50
-
+  
   #  Time dependences of transitions - assumed age independent
   #  Make cdflength day cdfs.  these are same for all age groups, but fractions Prop/CFR vary
   #  Choose to use lognormal with logsd=logmean/4.0.  Data not available to do better
@@ -42,7 +42,7 @@ Compartment <- function(cases,  csimAge, rCFR, cdat, startc, endc){
   CriticalToDeath <- dlnorm(1:cdflength, logmean,  logmean/4.0)
   logmean <- log(8.0) #  Stay in hospital post ICU - needs evidence
   CritRecovToRecov <- dlnorm(1:cdflength, logmean,  logmean/4.0)
-
+  
   #  Normalise these time distributions
   MildToRecovery <- MildToRecovery/sum(MildToRecovery)
   ILIToRecovery <- ILIToRecovery/sum(ILIToRecovery)
@@ -54,12 +54,12 @@ Compartment <- function(cases,  csimAge, rCFR, cdat, startc, endc){
   CriticalToDeath <- CriticalToDeath/sum(CriticalToDeath)
   CritRecovToRecov <- CritRecovToRecov/sum(CritRecovToRecov)
   #  Follow infections through ILI (Case) - SARI (Hospital) - Crit (ICU) - CritRecov (Hospital)- Deaths
-
+  
   #  Zero dataframes.
   #  Follow these cases to the end of the CDFs
   lengthofdata <- nrow(CASE)
   lengthofspread <- length(ILIToRecovery)
-
+  
   #extend ILI longer than cases to allow for predictions (eventually)
   ILI <- cases
   for (i in lengthofdata:(lengthofdata+lengthofspread) ){
@@ -74,7 +74,7 @@ Compartment <- function(cases,  csimAge, rCFR, cdat, startc, endc){
   CRITREC <- ILI
   RECOV <- ILI
   DEATH <- ILI
-
+  
   # These are the new arrivals in each category.  NOT the increase.  Recov and death just increase
   # Initialize with day 1 in place
   newMILD <- MILD
@@ -87,22 +87,22 @@ Compartment <- function(cases,  csimAge, rCFR, cdat, startc, endc){
   oldSARI <- SARI
   oldCRIT <- CRIT
   oldCRITREC <- CRITREC
-
+  
   #  Set day 1.  This assumes - wrongly - that there were zero cases before,
   #              but should autocorrect as those cases get resolved
-
+  
   #  csimAge has no date row, so need to use iage-1
-
+  
   MILD[1,(2:ncol(MILD))] <- CASE[1,(2:ncol(CASE))]
   ILI[1,(2:ncol(ILI))] <- CASE[1,(2:ncol(CASE))]*csimAge$Prop_ILI_ByAge
   SARI[1,(2:ncol(SARI))] <- CASE[1,(2:ncol(CASE))]*csimAge$Prop_SARI_ByAge
   CRIT[1,(2:ncol(CRIT))] <- CASE[1,(2:ncol(CASE))]*csimAge$Prop_Critical_ByAge
-
+  
   # Add new cases to Mild, ILI, SARI and CRIT people in each  age group.
   # Bring forward cases from yesterday
   # Current values will typically be negative, as they are sums of people leaving the compartment
   # Nobody changes age band.  Vectorize over distributions
-
+  
   # Age dependent transition probabilities a->ILI b->SARI c->Death
   # apow+bpow+cpow=1 gives a fit to death data, not accounting for variant & vaccination effect
   # bpow/bfac conditions the hospital admissions by age Distribution is Approx U65=65-85=2 * 85+
@@ -113,9 +113,9 @@ Compartment <- function(cases,  csimAge, rCFR, cdat, startc, endc){
   bfac <- 1.2
   cfac <- 1.0/afac/bfac
   for (iday in (startc:endc)){
-# Update current vaccine/variant lethality if available    
+    # Update current vaccine/variant lethality if available    
     if(!is.na(cdat$lethality[iday])){
-    sfac <- sqrt(cdat$lethality[iday])}
+      sfac <- sqrt(cdat$lethality[iday])}
     pTtoI <- afac*rCFR^apow*sfac
     pItoS <- bfac*rCFR^bpow*sfac
     pStoD <- cfac*rCFR^cpow*sfac
@@ -127,8 +127,8 @@ Compartment <- function(cases,  csimAge, rCFR, cdat, startc, endc){
     pCRtoD <- pStoD
     # Rescale pStoD to allow for CRIT->CRITREC route
     pStoD <- pStoD - pStoC*(pCtoD+(1-pCtoD)*pCRtoD)
-
-
+    
+    
     # Proportions become variant dependent.
     # ILI is case driven, so extra infectivity is automatic from the data.
     # ILI -> SARI increases with variant.
@@ -136,15 +136,15 @@ Compartment <- function(cases,  csimAge, rCFR, cdat, startc, endc){
     # Need to increase CFR without exceeding 1.
     # Note inverse lethality isnt a simple % as CFR cant be >1
     # Will have negative people  trouble if CFR>1
-
-  xday <- iday+length(SARIToCritical)-1
+    
+    xday <- iday+length(SARIToCritical)-1
     agerange <- (2:ncol(ILI))
     ageminus <- agerange-1
-
+    
     newMILD[iday,agerange] <- CASE[iday,agerange]*(1.0-pTtoI)+newMILD[iday,agerange]
     newILI[iday,agerange] <- CASE[iday,agerange]*  pTtoI    +newILI[iday,agerange]
-
-
+    
+    
     #  vectorize
     MtoR <- outer(as.numeric(newMILD[iday,agerange]),MildToRecovery,FUN="*")
     oldMILD[(iday:xday),agerange] <- oldMILD[(iday:xday),agerange]+MtoR
@@ -155,7 +155,7 @@ Compartment <- function(cases,  csimAge, rCFR, cdat, startc, endc){
       # ILI will go to SA/RI and REC
       ItoS <-  as.numeric(newILI[iday,iage] * pItoS[iage-1] * (1.0-vacdat[iday,iage]*vacCFR)) *ILIToSARI
       # Replace with vaccine effect
-      #    ItoS = as.numeric(newILI[iday,iage] * pItoS[iage-1])  *ILIToSARI
+      # ItoS = as.numeric(newILI[iday,iage] * pItoS[iage-1])  *ILIToSARI
       ItoR <-  as.numeric(newILI[iday,iage] *(1.0-pItoS[iage-1])) *ILIToRecovery
       newSARI[(iday:xday),iage] <- newSARI[(iday:xday),iage]+ItoS
       oldILI[(iday:xday),iage] <- oldILI[(iday:xday),iage]+ItoR+ItoS
@@ -166,13 +166,13 @@ Compartment <- function(cases,  csimAge, rCFR, cdat, startc, endc){
       StoR <-  as.numeric(newSARI[iday,iage] *(1.0-pStoC[iage-1]-pStoD[iage-1]) )*SARIToRecovery
       newCRIT[(iday:xday),iage] <- newCRIT[(iday:xday),iage]+StoC
       oldSARI[(iday:xday),iage] <- oldSARI[(iday:xday),iage]+StoR+StoC+StoD
-
+      
       # CRIT  goes to CRITREC DEATH
       CtoD <-  as.numeric(newCRIT[iday,iage]*pCtoD[(iage-1)]) *CriticalToDeath
       CtoCR <-  as.numeric(newCRIT[iday,iage]*(1.0-pCtoD[(iage-1)])) *CriticalToCritRecov
       newCRITREC[(iday:xday),iage] <- newCRITREC[(iday:xday),iage]+CtoCR
       oldCRIT[(iday:xday),iage] <- oldCRIT[(iday:xday),iage]+CtoD+CtoCR
-
+      
       # CRITREC goes to RECOV
       CRtoR <-  as.numeric(newCRITREC[iday,iage]) *CritRecovToRecov
       oldCRITREC[(iday:xday),iage] <- oldCRITREC[(iday:xday),iage]+CRtoR
@@ -188,7 +188,7 @@ Compartment <- function(cases,  csimAge, rCFR, cdat, startc, endc){
     CRIT[iday,agerange] <- CRIT[iday,agerange]+newCRIT[iday,agerange]-oldCRIT[iday,agerange]+CRIT[(iday-1),agerange]
     CRITREC[iday,agerange] <- CRITREC[iday,agerange]+newCRITREC[iday,agerange]-oldCRITREC[iday,agerange]+CRITREC[(iday-1),agerange]
   }
-
+  
   # Pack anything that you want to use - anything not returned will not have a
   # value in the calling space.
   out$DEATH <- DEATH
@@ -226,6 +226,5 @@ Compartment <- function(cases,  csimAge, rCFR, cdat, startc, endc){
   out$CriticalToCritRecov <-  CriticalToCritRecov
   out$CritRecovToRecov <- CritRecovToRecov
   return(out)
-
+  
 }# End of compartment function
-
