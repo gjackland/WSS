@@ -1096,7 +1096,7 @@ if(interactive()){
 
   # Generate the graph
   data.frame(x=dfR$date, y=smoothweightR$y) %>%
-    ggplot(aes(x, y)) + geom_point(alpha = 0.5) +
+    ggplot(aes(x, y)) + geom_point(alpha = 0.25) +
     theme_bw()  + xlab("Date") + ylab("Regional R-number") +
     geom_line(data=d,aes(x = x, y = y, colour = type, linetype = type) )
 
@@ -1550,8 +1550,8 @@ if(CrystalCast){
 }
 
 #####  Figures and analysis for https://www.medrxiv.org/content/10.1101/2021.04.14.21255385v1
-# Date not encapuslated and may become broken because of hardcoded dates
-#Nothing should be returned or changed by this analysis
+# Date not encapsulated and may become broken because of hard coded dates
+# Nothing should be returned or changed by this analysis
 
 
 medrxiv<-FALSE
@@ -1570,7 +1570,7 @@ compMTP<-Predictions(comp,R_BestGuess$England)
 #  Compartment predictions removed to Predictions.R
 #  Replicated the data because repeated calls to Predictions would increment comp
 
-#Monitoring plots
+# Monitoring plots
 
 #Ratios
 total_deaths=sum(deathdat[2:20])
@@ -1587,31 +1587,32 @@ ratio$hosp=total_admissions/sum(comp$newSARI[1:total_time,2:20])
 ratio$crit=total_crit/sum(comp$CRIT[1:total_time,2:20])
 
 if(interactive()){
-startplot=startdate+3
-endplot=startdate+nrow(compMTP$CASE)+predtime-3
-PREV<-comp$ILI[2:20]+comp$SARI[2:20]+comp$CRIT[2:20]+comp$MILD[2:20]
-lines(rowSums(PREV))
-plot(rowSums(compMTP$CASE[2:20]),x=compMTP$CASE$date,xlim=c(startplot,endplot))
+  startplot=startdate+3
+  endplot=startdate+nrow(compMTP$CASE)+predtime-3
+  PREV<-comp$ILI[2:20]+comp$SARI[2:20]+comp$CRIT[2:20]+comp$MILD[2:20]
 
+  lines(rowSums(PREV))
+  plot(rowSums(compMTP$CASE[2:20]),x=compMTP$CASE$date,xlim=c(startplot,endplot))
 
-plot(Hospital$UK$newsaridat,x=Hospital$UK$date, ylab="Hospital Admission",xlab="Date",xlim=c(startplot,endplot-11                                                                                                ))
-lines(rowSums(comp$newSARI[2:20])*1.47,x=comp$newSARI$date,col="blue")
+  plot(Hospital$UK$newsaridat,x=Hospital$UK$date, ylab="Hospital Admission",xlab="Date",xlim=c(startplot,endplot-11                                                                                                ))
+  lines(rowSums(comp$newSARI[2:20])*1.47,x=comp$newSARI$date,col="blue")
 
-plot(Hospital$UK$saridat,x=Hospital$UK$date,ylab="Hospital Cases",xlab="Date",xlim=c((startplot),endplot))
-lines(rowSums(compMTP$SARI[2:20]+compMTP$CRIT[2:20]+compMTP$CRITREC[2:20]),x=compMTP$SARI$date,col='red')
+  plot(Hospital$UK$saridat,x=Hospital$UK$date,ylab="Hospital Cases",xlab="Date",xlim=c((startplot),endplot))
+  lines(rowSums(compMTP$SARI[2:20]+compMTP$CRIT[2:20]+compMTP$CRITREC[2:20]),x=compMTP$SARI$date,col='red')
 
-plot(rowSums(comp$newMILD[2:20]+comp$newILI[2:20]),xlim=c((startplot),endplot),col="blue",x=comp$newMILD$date,type="l",xlab="Date",ylab="Cases")
-points(rowSums(compMTP$CASE[2:20]),x=compMTP$CASE$date)
-lines(rowSums(comp$newMILD[2:10]+comp$newILI[2:10]),col="green",x=comp$newMILD$date,type="l",xlab="Date",ylab="Cases")
-lines(rowSums(comp$newMILD[11:20]+comp$newILI[11:20]),col="red",x=comp$newMILD$date,type="l",xlab="Date",ylab="Cases")
+  plot(rowSums(comp$newMILD[2:20]+comp$newILI[2:20]),xlim=c((startplot),endplot),col="blue",x=comp$newMILD$date,type="l",xlab="Date",ylab="Cases")
+  points(rowSums(compMTP$CASE[2:20]),x=compMTP$CASE$date)
+  lines(rowSums(comp$newMILD[2:10]+comp$newILI[2:10]),col="green",x=comp$newMILD$date,type="l",xlab="Date",ylab="Cases")
+  lines(rowSums(comp$newMILD[11:20]+comp$newILI[11:20]),col="red",x=comp$newMILD$date,type="l",xlab="Date",ylab="Cases")
 
-plot(Hospital$UK$critdat,x=Hospital$UK$date,ylab="ICU Occupation",xlab="Date",xlim=c(startplot,endplot))
-lines(rowSums(comp$CRIT[2:20]),col="blue",x=comp$CRIT$date)
+  plot(Hospital$UK$critdat,x=Hospital$UK$date,ylab="ICU Occupation",xlab="Date",xlim=c(startplot,endplot))
+  lines(rowSums(comp$CRIT[2:20]),col="blue",x=comp$CRIT$date)
 
-plot(rowSums(compMTP$DEATH[2:20]),col="blue",x=compMTP$DEATH$date, type="l",ylab="Deaths"
-     ,xlab="Date",xlim=c(startplot,endplot-11))
-points(rowSums(deathdat[2:20]),x=deathdat$date)
+  plot(rowSums(compMTP$DEATH[2:20]),col="blue",x=compMTP$DEATH$date, type="l",ylab="Deaths"
+       ,xlab="Date",xlim=c(startplot,endplot-11))
+  points(rowSums(deathdat[2:20]),x=deathdat$date)
 }
+
 # This needs to be the last routine called for the UI, by default it returns
 # success (0), if there is no success setStatus() should be called. By default
 # it will return -1 but you can set a value setStatus(1). Any non-zero value
