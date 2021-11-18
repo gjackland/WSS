@@ -913,9 +913,16 @@ endplot <- enddate
 
 
 if(interactive()){
+
   plot(smooth.spline(rat$Scotland[startplot <= rat$date & rat$date <= endplot],df=14)$y,
        x=rat$date[startplot <= rat$date & rat$date <= endplot],
        ylim=c(0.7,1.40),xlab="Date",ylab="R, Scotland")
+
+  data.frame(x = rat$date[startplot <= rat$date & rat$date <= endplot],
+             y = smooth.spline(rat$Scotland[startplot <= rat$date & rat$date <= endplot], df = 14)$y) %>%
+    ggplot(aes(x = x, y = y)) +
+    geom_point(alpha = 0.25) +ylim(c(0.7,1.40)) +
+    xlab("Date") + ylab("R, Scotland") + theme_bw()
 
   rat %>% filter(startplot < date & date < endplot) %>%
     pivot_longer(!date,names_to = "Region", values_to="R") %>%
