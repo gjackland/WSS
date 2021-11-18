@@ -534,7 +534,7 @@ coltypes <- cols(
   areaType = col_character(),
   date = col_date(format = "%Y-%m-%d"),
   age = col_character(),
-  cases = col_number(), 
+  cases = col_number(),
   rollingSum = col_number(),
   rollingRate = col_number()
 )
@@ -801,7 +801,7 @@ if(interactive()){
     theme_bw()
 }
 ##  CFR going down gets entangled with vaccine effect.  Use pre-vaccination values
-##  With 12 day delay from WSS. 
+##  With 12 day delay from WSS.
 RawCFR=colSums(deathdat[12:211,2:20])/colSums(casedat[1:200,2:20])
 
 
@@ -865,7 +865,7 @@ if(interactive()){
                      rowwise()                                    %>%
                      mutate(totSariCritRec = sum(c_across(3:22))) %>%
                      ggplot(aes(x = date, y = saridat)) +
-                     geom_point(alpha = 0.2) +
+                     geom_point(alpha = 0.2, na.rm = TRUE) +
                      geom_line(aes(x = date, y = totSariCritRec), colour = "blue") +
                      theme_bw() + ylab("Hospital cases") + xlab("Date")
 }
@@ -921,7 +921,7 @@ if(interactive()){
     geom_smooth(formula= y ~ x, method = "loess", span=0.3) +  guides(color = "none") +
     facet_wrap(vars(Region)) +
     theme(axis.text.x=element_text(angle=90,hjust=1)) +xlab("Date")
-  
+
   #  Plot UK nations and English regions
   rat[,c(1,2,3,4,5,6,7,8,9,10,11,12,13)]%>% filter(startplot < date & date < endplot) %>%
     pivot_longer(!date,names_to = "Region", values_to="R") %>%
@@ -929,7 +929,7 @@ if(interactive()){
     coord_cartesian(ylim=c(0.5,1.9))+ geom_smooth(formula= y ~ x, method = "loess", span=0.3) +
     guides(color = "none") + facet_wrap(vars(Region)) +
     theme(axis.text.x=element_text(angle=90,hjust=1)) +xlab("Date")
-  
+
   #  Plot Scottish regions
   rat[,c(1,11,14,15,16,17,18,19,20,21,22,23,24,25,26,27)]%>% filter(startplot < date & date < endplot) %>%
     pivot_longer(!date,names_to = "Region", values_to="R") %>%
