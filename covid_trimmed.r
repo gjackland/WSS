@@ -894,8 +894,10 @@ if(any(comp$CASE==0)){
   }
 }
 rat <- regcases
-for(i in (2:nrow(regcases))    ){
+for(i in (2:nrow(regcases)) ){
+  suppressWarnings(
   rat[i, 2:ncol(regcases)] <- 1 + log(regcases[i, 2:ncol(regcases)]/regcases[(i-1), 2:ncol(regcases)])*genTime
+  )
 }
 
 # Reset first row to 1, because there's no data
