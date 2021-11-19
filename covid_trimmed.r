@@ -1591,8 +1591,8 @@ if(interactive()){
   endplot=startdate+nrow(compMTP$CASE)+predtime-3
   PREV<-comp$ILI[2:20]+comp$SARI[2:20]+comp$CRIT[2:20]+comp$MILD[2:20]
 
-  lines(rowSums(PREV))
   plot(rowSums(compMTP$CASE[2:20]),x=compMTP$CASE$date,xlim=c(startplot,endplot))
+  lines(x=comp$MILD$date, y = rowSums(PREV))
 
   plot(Hospital$UK$newsaridat,x=Hospital$UK$date, ylab="Hospital Admission",xlab="Date",xlim=c(startplot,endplot-11                                                                                                ))
   lines(rowSums(comp$newSARI[2:20])*1.47,x=comp$newSARI$date,col="blue")
