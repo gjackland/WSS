@@ -3,13 +3,13 @@
 # Code to write out excel using the CC Schema.
 #
 library(lubridate)
-CC_write <- function(CCcomp,region,pop,R_region,Q_region,Rseries){
+CC_write <- function(CCcomp,region,pop,R_region,Q_region,Rseries,ratio){
 # Initiate variables
-startwrite=300  
+startwrite=400  
 
 group <- "Edinburgh"
 model <-  "WSS"
-scenario <- "NowCast"
+scenario <- "Nowcast"
 modeltype <- "Cases"
 version <- 0.1
 today <- today()
@@ -65,7 +65,7 @@ CCtmp<-CC
 CCtmp$Scenario="Nowcast"
 CCtmp$Geography=region
 CCtmp$ValueType="R"
-for (d in 4:(length(Rseries)-3)){
+for (d in startwrite:(length(Rseries)-3)){
   CCtmp$Value = Rseries[d]
   CCtmp$"Quantile 0.05"=min(Rseries[(d-3):(d+3)])-0.2
   CCtmp$"Quantile 0.25"=min(Rseries[(d-3):(d+3)])-0.1
@@ -80,19 +80,19 @@ for (d in 4:(length(Rseries)-3)){
 }
 today <- Sys.Date()
 ageband <-  "All"
-CCtmp$Scenario="NowCast"
+CCtmp$Scenario="Nowcast"
 CCtmp$Geography=region
 CCtmp$ValueType="hospital_inc"
 #  Log. Errors from fluctuations time 4 for methodological uncertainty
 #  adjust for recent discrepancy
 for (d in startwrite:(nrow(CCcomp$newSARI)-22)){
   if(CCcomp$CASE$date[d]>(today-reporting_delay)){ CCtmp$Scenario="MTP"}
-  CCtmp$Value = sum(CCcomp$newSARI[d,2:20])
-  CCtmp$"Quantile 0.05"=max(0,CCtmp$Value*(1-sqrt(sum(CCcomp$newSARI[(d-6):d,2:20])/7)/CCtmp$Value))
-  CCtmp$"Quantile 0.25"=max(0,CCtmp$Value*(1-sqrt(sum(CCcomp$newSARI[(d-6):d,2:20])/7)/CCtmp$Value))
+  CCtmp$Value = sum(CCcomp$newSARI[d,2:20])/ratio$newhosp
+  CCtmp$"Quantile 0.05"=max(0,CCtmp$Value*(1-sqrt(sum(CCcomp$newSARI[(d-6):d,2:20])/7)/CCtmp$Value))/ratio$newhosp
+  CCtmp$"Quantile 0.25"=max(0,CCtmp$Value*(1-sqrt(sum(CCcomp$newSARI[(d-6):d,2:20])/7)/CCtmp$Value))/ratio$newhosp
   CCtmp$"Quantile 0.5"=CCtmp$Value
-  CCtmp$"Quantile 0.75"=CCtmp$Value*(1+sqrt(sum(CCcomp$newSARI[(d-6):d,2:20])/7)/CCtmp$Value)
-  CCtmp$"Quantile 0.95"=CCtmp$Value*(1+sqrt(sum(CCcomp$newSARI[(d-7):d,2:20])/7)/CCtmp$Value)
+  CCtmp$"Quantile 0.75"=CCtmp$Value*(1+sqrt(sum(CCcomp$newSARI[(d-6):d,2:20])/7)/CCtmp$Value)/ratio$newhosp
+  CCtmp$"Quantile 0.95"=CCtmp$Value*(1+sqrt(sum(CCcomp$newSARI[(d-7):d,2:20])/7)/CCtmp$Value)/ratio$newhosp
   CCtmp$"Day of Value" = day(CCcomp$newSARI$date[d])
   CCtmp$"Month of Value" = month(CCcomp$newSARI$date[d])
   CCtmp$"Year of Value" = year(CCcomp$newSARI$date[d])
@@ -100,7 +100,7 @@ for (d in startwrite:(nrow(CCcomp$newSARI)-22)){
   CC <- rbind(CC, CCtmp)
 }
 CCtmp$ValueType="death_inc_line"
-CCtmp$Scenario="NowCast"
+CCtmp$Scenario="Nowcast"
 for (d in startwrite:(nrow(CCcomp$DEATH)-22)){
   if(CCcomp$DEATH$date[d]>(today-reporting_delay)){ CCtmp$Scenario="MTP"}  
   CCtmp$Value = sum(CCcomp$DEATH[d,2:20])
@@ -115,29 +115,35 @@ for (d in startwrite:(nrow(CCcomp$DEATH)-22)){
   # Add the new row
   CC <- rbind(CC, CCtmp)
 }
-#  Check with ONS 
+#  Incidence is per 100000
+# Missing_prevalence, deduced from ONS, is the undetected ongoing cases
+# Missing incidence is the undetected infections. primarily short-lived
+Missing_prevalence=1.2
+Missing_incidence=2.2
+scalefac=100000/pop*Missing_incidence
 CCtmp$ValueType="incidence"
-CCtmp$Scenario="NowCast"
+CCtmp$Scenario="Nowcast"
 for (d in startwrite:(nrow(CCcomp$CASE)-22)){
-  if(CCcomp$CASE$date[d]>(today-reporting_delay)){ CCtmp$Scenario="MTP"}
-  CCtmp$Value = sum(CCcomp$CASE[d,2:20])
-  CCtmp$"Quantile 0.05"=max(0,CCtmp$Value*(1-sqrt(sum(CCcomp$CASE[(d-6):d,2:20])/7)/CCtmp$Value))
-  CCtmp$"Quantile 0.25"=max(0,CCtmp$Value*(1-sqrt(sum(CCcomp$CASE[(d-6):d,2:20])/7)/CCtmp$Value))
+#  This doesn't seem to be wanted  if(CCcomp$CASE$date[d]>(today-reporting_delay)){ CCtmp$Scenario="MTP"}
+  CCtmp$Value = sum(CCcomp$CASE[d,2:20])*scalefac
+  CCtmp$"Quantile 0.05"=max(0,CCtmp$Value*(1-sqrt(sum(CCcomp$CASE[(d-6):d,2:20])/7)/CCtmp$Value))*scalefac
+  CCtmp$"Quantile 0.25"=max(0,CCtmp$Value*(1-sqrt(sum(CCcomp$CASE[(d-6):d,2:20])/7)/CCtmp$Value))*scalefac
   CCtmp$"Quantile 0.5"=CCtmp$Value
-  CCtmp$"Quantile 0.75"=CCtmp$Value*(1+sqrt(sum(CCcomp$CASE[(d-6):d,2:20])/7)/CCtmp$Value)
-  CCtmp$"Quantile 0.95"=CCtmp$Value*(1+sqrt(sum(CCcomp$CASE[(d-7):d,2:20])/7)/CCtmp$Value)
+  CCtmp$"Quantile 0.75"=CCtmp$Value*(1+sqrt(sum(CCcomp$CASE[(d-6):d,2:20])/7)/CCtmp$Value)*scalefac
+  CCtmp$"Quantile 0.95"=CCtmp$Value*(1+sqrt(sum(CCcomp$CASE[(d-7):d,2:20])/7)/CCtmp$Value)*scalefac
   CCtmp$"Day of Value" = day(CCcomp$CASE$date[d])
   CCtmp$"Month of Value" = month(CCcomp$CASE$date[d])
   CCtmp$"Year of Value" = year(CCcomp$CASE$date[d])
   # Add the new row
   CC <- rbind(CC, CCtmp)
 }
+CCtmp$Value
 #  Missing prevalence covers discrepancy between ONS and case data
-Missing_prevalence=1.1
+#  Prevalence is a percentage who would test positive
 CCtmp$ValueType="prevalence"
 PREV<-CCcomp$ILI[2:20]+CCcomp$SARI[2:20]+CCcomp$CRIT[2:20]+CCcomp$MILD[2:20]
-PREV=PREV*Missing_prevalence/pop
-CCtmp$Scenario="NowCast"
+PREV=PREV*Missing_prevalence/pop*100
+CCtmp$Scenario="Nowcast"
 for (d in startwrite:(nrow(PREV)-22)){
   if(CCcomp$CASE$date[d]>(today-reporting_delay)){ 
     CCtmp$Scenario="MTP"

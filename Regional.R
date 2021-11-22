@@ -171,16 +171,51 @@ predMD<-Predictions(compMD,R_BestGuess$Midlands)
 compNEY<- Compartment(NEY,  covidsimAge, RawCFR, comdat,3,nrow(NEY))
 predNEY<-Predictions(compNEY,R_BestGuess$NEY)
 
-rm(compSE,compSW,compMD,compNEY,compNW,compEE,complondon, 
-   SE, SW, EE, NEY, MD, london, NW, hSE, hSW, hEE, hNEY, hMD, hlondon, hNW)
+rm( SE, SW, EE, NEY, MD, london, NW, hSE, hSW, hEE, hNEY, hMD, hlondon, hNW)
 
-CC_write(predNW,"North West",population$NW[1],R_BestGuess$NW,R_Quant$NW,rat$smoothNW)
-CC_write(predNEY,"North East",population$NEY[1],R_BestGuess$NEY,R_Quant$NEY,rat$smoothNEY)
-CC_write(predMD,"Midlands",population$MD[1],R_BestGuess$Midlands,R_Quant$Midlands,rat$smoothMD)
-CC_write(predlondon,"London",population$London[1],R_BestGuess$London,R_Quant$London,,rat$smoothLondon)
-CC_write(predSW,"South West",population$SW[1],R_BestGuess$SW,R_Quant$SW,rat$smoothSW)
-CC_write(predSE,"South East",population$SE[1],R_BestGuess$SE,R_Quant$SE,rat$smoothSE)
-CC_write(predEE,"East of England",population$EE[1],R_BestGuess$EE,R_Quant$EE,rat$smoothEE)
+# recent scaling factors for MTPs
+#Ratios
+Hospital$Eng$newsaridat=Hospital$NEY$newsaridat+Hospital$NW$newsaridat+
+  Hospital$MD$newsaridat+Hospital$EE$newsaridat+
+  Hospital$SE$newsaridat+Hospital$SW$newsaridat+
+  Hospital$london$newsaridat
+Hospital$Eng$saridat=Hospital$NEY$saridat+Hospital$NW$saridat+
+  Hospital$MD$saridat+Hospital$EE$saridat+
+  Hospital$SE$saridat+Hospital$SW$saridat+
+  Hospital$london$saridat
+total_deaths=sum(deathdat[2:20])
+total_cases=sum(casedat[2:20])
+total_admissions=sum(Hospital$Eng$newsaridat)
+total_crit=sum(Hospital$UK$critdat)
+total_time_death=nrow(deathdat)
+total_time_case=nrow(casedat)
+total_time=length(Hospital$UK$date)
+ratio <-list()
+ratio$death=total_deaths/sum(compEng$DEATH[1:total_time,2:20])
+ratio$case=total_cases/sum(compEng$CASE[1:total_time,2:20])
+ratio$newhosp=total_admissions/sum(compEng$newSARI[1:total_time,2:20])
+ratio$hosp=sum(Hospital$Eng$saridat)/sum(compEng$SARI[1:total_time,2:20])
+ratio$crit=total_crit/sum(compEng$CRIT[1:total_time,2:20])
+
+#  Rescale big regional differences in hospitalization times.
+
+CC_write(predEng,"England",population$England[1],R_BestGuess$England,R_Quant$England,rat$smoothEngland,ratio)
+ratio$hosp=sum(rowSums(predScot$SARI[2:20]+predScot$CRIT[2:20]+predScot$CRITREC[2:20]))/sum(Hospital$Scot$saridat)
+CC_write(predScot,"Scotland",population$Scotland[1],R_BestGuess$Scotland,R_Quant$NW,rat$smoothScotland,ratio)
+ratio$hosp=sum(rowSums(predNW$SARI[2:20]+predNW$CRIT[2:20]+predNW$CRITREC[2:20]))/sum(Hospital$NW$saridat)
+CC_write(predNW,"North West",population$NW[1],R_BestGuess$NW,R_Quant$NW,rat$smoothNW,ratio)
+ratio$hosp=sum(rowSums(predNEY$SARI[2:20]+predNEY$CRIT[2:20]+predNEY$CRITREC[2:20]))/sum(Hospital$NEY$saridat)
+CC_write(predNEY,"North East",population$NEY[1],R_BestGuess$NEY,R_Quant$NEY,rat$smoothNEY,ratio)
+ratio$hosp=sum(rowSums(predMD$SARI[2:20]+predMD$CRIT[2:20]+predMD$CRITREC[2:20]))/sum(Hospital$MD$saridat)
+CC_write(predMD,"Midlands",population$MD[1],R_BestGuess$Midlands,R_Quant$Midlands,rat$smoothMD,ratio)
+ratio$hosp=sum(rowSums(predlondon$SARI[2:20]+predlondon$CRIT[2:20]+predlondon$CRITREC[2:20]))/sum(Hospital$London$saridat)
+CC_write(predlondon,"London",population$London[1],R_BestGuess$London,R_Quant$London,rat$smoothLondon,ratio)
+ratio$hosp=sum(rowSums(predSW$SARI[2:20]+predSW$CRIT[2:20]+predSW$CRITREC[2:20]))/sum(Hospital$SW$saridat)
+CC_write(predSW,"South West",population$SW[1],R_BestGuess$SW,R_Quant$SW,rat$smoothSW,ratio)
+ratio$hosp=sum(rowSums(predSE$SARI[2:20]+predSE$CRIT[2:20]+predSE$CRITREC[2:20]))/sum(Hospital$SE$saridat)
+CC_write(predSE,"South East",population$SE[1],R_BestGuess$SE,R_Quant$SE,rat$smoothSE,ratio)
+ratio$hosp=sum(rowSums(predEE$SARI[2:20]+predEE$CRIT[2:20]+predEE$CRITREC[2:20]))/sum(Hospital$EE$saridat)
+CC_write(predEE,"East of England",population$EE[1],R_BestGuess$EE,R_Quant$EE,rat$smoothEE,ratio)
 
 #  Monitoring plots for MTP deaths
 
@@ -196,23 +231,25 @@ lines(rowSums(predlondon$DEATH[2:20]),x=predlondon$DEATH$date,xlim=plot_date,col
 
 
 plot(y=Hospital$MD$newsaridat,x=Hospital$UK$date,ylab="MD Hospital Admissions",xlab="Date",xlim=plot_date)
-lines(rowSums(predMD$newSARI[2:20]),x=predMD$newSARI$date)
+lines(rowSums(predMD$newSARI[2:20])/ratio$newhosp,x=predMD$newSARI$date)
 plot(y=Hospital$NW$newsaridat,x=Hospital$UK$date,ylab="NW Hospital Admissions",xlab="Date",xlim=plot_date)
-lines(rowSums(predNW$newSARI[2:20]),x=predNW$newSARI$date)
+lines(rowSums(predNW$newSARI[2:20])/ratio$newhosp,x=predNW$newSARI$date)
 plot(y=Hospital$NEY$newsaridat,x=Hospital$UK$date,ylab="NEY Hospital Admissions",xlab="Date",xlim=plot_date)
-lines(rowSums(predNEY$newSARI[2:20]),x=predNEY$newSARI$date)
+lines(rowSums(predNEY$newSARI[2:20])/ratio$newhosp,x=predNEY$newSARI$date)
 plot(y=Hospital$EE$newsaridat,x=Hospital$UK$date,ylab="EE Hospital Admissions",xlab="Date",xlim=plot_date)
-lines(rowSums(predEE$newSARI[2:20]),x=predEE$newSARI$date)
+lines(rowSums(predEE$newSARI[2:20])/ratio$newhosp,x=predEE$newSARI$date)
 plot(y=Hospital$SE$newsaridat,x=Hospital$UK$date,ylab="MD Hospital Admissions",xlab="Date",xlim=plot_date)
-lines(rowSums(predSE$newSARI[2:20]),x=predSE$newSARI$date)
-plot(y=Hospital$SW$newsaridat,x=Hospital$UK$date,ylab="MD Hospital Admissions",xlab="Date",xlim=plot_date)
-lines(rowSums(predSW$newSARI[2:20]),x=predSW$newSARI$date)
+lines(rowSums(predSE$newSARI[2:20])/ratio$newhosp,x=predSE$newSARI$date)
+plot(y=Hospital$SW$newsaridat,x=Hospital$UK$date,ylab="SW Hospital Admissions",xlab="Date",xlim=plot_date)
+lines(rowSums(predSW$newSARI[2:20])/ratio$newhosp,x=predSW$newSARI$date)
 plot(y=Hospital$london$newsaridat,x=Hospital$UK$date,ylab="London Hospital Admissions",xlab="Date",xlim=plot_date)
-lines(rowSums(predlondon$newSARI[2:20]),x=predlondon$newSARI$date)
+lines(rowSums(predlondon$newSARI[2:20])/ratio$newhosp,x=predlondon$newSARI$date)
+plot(y=na.locf(Hospital$Scot$newsaridat),x=na.locf(Hospital$Scot$date),ylab="Scotland Hospital Admissions",xlab="Date",xlim=plot_date)
+lines(rowSums(predScot$newSARI[2:20])/ratio$newhosp,x=predScot$newSARI$date)
 
 
-plot(y=Hospital$UK$saridat,x=Hospital$UK$date,ylab="UK Hospital Cases",xlab="Date",xlim=plot_date)
-lines(rowSums(predEng$SARI[2:20]+predEng$CRIT[2:20]+predEng$CRITREC[2:20]),x=predEng$newSARI$date)
+plot(y=Hospital$Eng$saridat,x=Hospital$UK$date,ylab="England Hospital Cases",xlab="Date",xlim=plot_date)
+lines(rowSums(predEng$SARI[2:20]+predEng$CRIT[2:20]+predEng$CRITREC[2:20])/ratio$hosp,x=predEng$newSARI$date)
 plot(y=Hospital$MD$saridat,x=Hospital$UK$date,ylab="MD Hospital Cases",xlab="Date",xlim=plot_date)
 lines(rowSums(predMD$SARI[2:20]+predMD$CRIT[2:20]+predMD$CRITREC[2:20]),x=predMD$newSARI$date)
 plot(y=Hospital$NW$saridat,x=Hospital$UK$date,ylab="NW Hospital Cases",xlab="Date",xlim=plot_date)
@@ -228,19 +265,12 @@ lines(rowSums(predSW$SARI[2:20]+predSW$CRIT[2:20]+predSW$CRITREC[2:20]),x=predSW
 plot(y=Hospital$london$saridat,x=Hospital$UK$date,ylab="London Hospital Cases",xlab="Date",xlim=plot_date)
 lines(rowSums(predlondon$SARI[2:20]+predlondon$CRIT[2:20]+predlondon$CRITREC[2:20]),x=predlondon$newSARI$date)
 
-# recent scaling factors for MTPs
 
 
 #Admissions Uk total and by region
+sum(na.locf(Hospital$Eng$saridat))
 sum(na.locf(Hospital$UK$saridat))
 sum(na.locf(Hospital$NEY$saridat)+Hospital$NW$saridat+Hospital$EE$saridat+Hospital$MD$saridat+Hospital$london$saridat+Hospital$SE$saridat+Hospital$SW$saridat+Hospital$Scot$saridat+na.locf(Hospital$Wal$saridat)+na.locf(Hospital$NI$saridat))
-
-
-Missing_prevalence=1.1
-CCcomp=predlondon
-pop=population$London[1]
-#incidence
-plot(rowSums(CCcomp$CASE[2:20])/pop)
-#prevalence
-plot(rowSums(CCcomp$ILI[2:20]+CCcomp$SARI[2:20]+CCcomp$CRIT[2:20]+CCcomp$MILD[2:20])/pop,x=CCcomp$MILD$date)
-
+sum(rowSums(compEng$SARI[2:20]+compEng$CRIT[2:20]+compEng$CRITREC[2:20]))
+sum(na.locf(Hospital$Eng$newsaridat))
+sum(na.locf(compEng$newSARI[2:20]))

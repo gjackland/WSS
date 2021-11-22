@@ -24,9 +24,9 @@ Compartment <- function(cases,  csimAge, rCFR, cdat, startc, endc){
   #  Choose to use lognormal with logsd=logmean/4.0.  Data not available to do better
   #  Mean stay in Hospital = Sum(Cases)/Sum(admissions) = 10 days
   #  In model  sum(SARI[2:20]+CRIT[2:20]+CRITREC[2:20])/sum(newSARI[2:20])
-  logmean <- log(12.6)
-  MildToRecovery <- dlnorm(1:cdflength, logmean,  logmean/4.0) # These "Milds" are never recorded
-  logmean <- log(10.6)
+  logmean <- log(6.0)
+  MildToRecovery <- dlnorm(1:cdflength, logmean,  logmean/8.0) # These "Milds" are never recorded
+  logmean <- log(7.6)
   ILIToRecovery <- dlnorm(1:cdflength, logmean,  logmean/4.0)
   #  Fit  shift & scale from ILI to SARI
   logmean <- log(5.0)

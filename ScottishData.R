@@ -378,15 +378,15 @@ RawCFR=colSums(scotdeath[2:20])/colSums(scotage[2:20])
 RawCFR=colSums(scotdeath[13:212,2:20])/colSums(scotage[1:200,2:20])
 
 #  Full Epidemic model.
-comp <- Compartment(scotage, covidsimAge, RawCFR, comdat,2,nrow(scotage))
+compScot <- Compartment(scotage, covidsimAge, RawCFR, comdat,2,nrow(scotage))
 #  28 day Projections
-scotcomp<-Predictions(comp,R_BestGuess$Scotland)
+predScot<-Predictions(compScot,R_BestGuess$Scotland)
 
 
-try(CC_write(scotcomp,"Scotland",population$Scotland[1],R_BestGuess$Scotland,R_Quant$Scotland,rat$smoothScotland))
+try(CC_write(predScot,"Scotland2",population$Scotland[1],R_BestGuess$Scotland,R_Quant$Scotland),rat$smoothScotland)
 #  Crystalcast format output  
 #write.xlsx(CC, file = paste("Data/compartment",today,"all.xlsx"), sheetName = "WSS", rowNames = FALSE)
-  
+
 #Remove NA 's 
 Hospital$Scot <- na.locf(Hospital$Scot)
 if(interactive()){
@@ -399,12 +399,12 @@ total_time_death=nrow(scotdeath)
 total_time_case=nrow(scotage)
 total_time=length(Hospital$Scot$date)
 ratio <-list()
-ratio$death=total_deaths/sum(comp$DEATH[1:total_time_death,2:20])
-ratio$case=total_cases/sum(comp$CASE[1:total_time_case,2:20])
-ratio$hosp=total_admissions/sum(comp$newSARI[1:total_time,2:20])
-ratio$crit=total_crit/sum(comp$newCRIT[1:total_time,2:20])
+ratio$death=total_deaths/sum(compScot$DEATH[1:total_time_death,2:20])
+ratio$case=total_cases/sum(compScot$CASE[1:total_time_case,2:20])
+ratio$hosp=total_admissions/sum(compScot$newSARI[1:total_time,2:20])
+ratio$crit=total_crit/sum(compScot$newCRIT[1:total_time,2:20])
 
-rbind(scotcomp$CASE,scotcomp$predCASE)->plotCASE
+rbind(compScot$CASE,predScot$CASE)->plotCASE
 plot(rowSums(plotCASE[2:20]),x=plotCASE$date)
 #Monitoring plots
 
