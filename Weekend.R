@@ -30,13 +30,16 @@ for (i in XMstart:XMend){
 }
 return(cdat)
 }
-
+#  Function to do nowcast for R based on smoothing over 200 days
 estimate_R <- function(rat_in,date_in,reg_in){
+  rat_range<-rat_in[(length(rat_in)-200):length(rat_in)]
+  date_range<-c(1:201)
+  reg_range<-reg_in[(length(rat_in)-200):length(rat_in)]
   filteredR<-append(
-  append(tail(predict(loess(rat_in ~ as.numeric(date_in),weight=reg_in ,span=s1))),
-         tail(predict(loess(rat_in ~ as.numeric(date_in),weight=reg_in, span=s2))) ) ,
-  append(tail(predict(loess(rat_in ~ as.numeric(date_in),weight=reg_in,span=s3))),
-         tail(predict(loess(rat_in ~ as.numeric(date_in),weight=reg_in,span=s4))))
+  append(tail(predict(loess(rat_range ~ as.numeric(date_range),weight=reg_range ,span=s1))),
+         tail(predict(loess(rat_range ~ as.numeric(date_range),weight=reg_range, span=s2))) ) ,
+  append(tail(predict(loess(rat_range ~ as.numeric(date_range),weight=reg_range,span=s3))),
+         tail(predict(loess(rat_range ~ as.numeric(date_range),weight=reg_range,span=s4))))
 )
 R_Quant <-unname(quantile(filteredR, probs=c(0.05,0.25,0.5,0.75,0.95)))
 R <-mean(filteredR)

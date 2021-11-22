@@ -580,23 +580,6 @@ for (d in 8:(nrow(comp$DEATH)-22)){
   # Add the new row
   CC <- rbind(CC, CCdate)
 }
-#  Check with ONS CCdate$ValueType="prevalence"
-CCdate$ValueType="incidence"
-CCdate$Scenario="NowCast"
-for (d in 8:(nrow(comp$CASE)-22)){
-  if(comp$DEATH$date[d]<(today-reporting_delay)){ CCdate$Scenario="MTP"}
-  CCdate$Value = sum(comp$CASE[d,2:20])
-  CCdate$"Quantile 0.05"=CCdate$Value*0.5
-  CCdate$"Quantile 0.25"=CCdate$Value*0.75
-  CCdate$"Quantile 0.5"=CCdate$Value
-  CCdate$"Quantile 0.75"=CCdate$Value*1.5
-  CCdate$"Quantile 0.95"=CCdate$Value*2
-  CCdate$"Day of Value" = day(comp$CASE$date[d])
-  CCdate$"Month of Value" = month(comp$CASE$date[d])
-  CCdate$"Year of Value" = year(comp$CASE$date[d])
-  # Add the new row
-  CC <- rbind(CC, CCdate)
-}
 
 #  Crystalcast format output  
 write.xlsx(CC, file = paste("Data/CCcompartment",today,".xlsx"), sheetName = "WSS", rowNames = FALSE, overwrite=TRUE)

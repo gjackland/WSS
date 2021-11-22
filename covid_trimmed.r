@@ -682,8 +682,9 @@ Hospital$UK  <-  jnk%>%
                   select(date = date, saridat = hospitalCases, newsaridat = newAdmissions, critdat=covidOccupiedMVBeds) %>%
                   filter(date >= startdate & date <= enddate ) %>%
                   arrange(date)
-na.locf(Hospital$UK)
-
+na.locf(Hospital$UK$saridat)
+na.locf(Hospital$UK$newsaridat)
+na.locf(Hospital$UK$critdat)
 
 # Add the Welsh and Northern Ireland cases data
 regcases$Wales <- walesdat$allCases
@@ -1556,7 +1557,7 @@ if(interactive()&medrxiv){medout<-MedrxivPaper()}
 predtime = 28
 region="England"
 
-compMTP<-Predictions(comp,R_BestGuess$England)
+predEng<-Predictions(comp,R_BestGuess$England)
 
 #  Compartment predictions removed to Predictions.R
 #  Replicated the data because repeated calls to Predictions would increment comp
@@ -1564,9 +1565,17 @@ compMTP<-Predictions(comp,R_BestGuess$England)
 #Monitoring plots
 
 #Ratios
+Hospital$Eng$newsaridat=Hospital$NEY$newsaridat+Hospital$NW$newsaridat+
+  Hospital$MD$newsaridat+Hospital$EE$newsaridat+
+  Hospital$SE$newsaridat+Hospital$SW$newsaridat+
+  Hospital$london$newsaridat
+Hospital$Eng$saridat=Hospital$NEY$saridat+Hospital$NW$saridat+
+  Hospital$MD$saridat+Hospital$EE$saridat+
+  Hospital$SE$saridat+Hospital$SW$saridat+
+  Hospital$london$saridat
 total_deaths=sum(deathdat[2:20])
 total_cases=sum(casedat[2:20])
-total_admissions=sum(Hospital$UK$newsaridat)
+total_admissions=sum(Hospital$Eng$newsaridat)
 total_crit=sum(Hospital$UK$critdat)
 total_time_death=nrow(deathdat)
 total_time_case=nrow(casedat)
@@ -1579,27 +1588,27 @@ ratio$crit=total_crit/sum(comp$CRIT[1:total_time,2:20])
 
 if(interactive()){
 startplot=startdate+3
-endplot=startdate+nrow(compMTP$CASE)+predtime-3
+endplot=startdate+nrow(predEng$CASE)+predtime-3
 PREV<-comp$ILI[2:20]+comp$SARI[2:20]+comp$CRIT[2:20]+comp$MILD[2:20]
 lines(rowSums(PREV))
-plot(rowSums(compMTP$CASE[2:20]),x=compMTP$CASE$date,xlim=c(startplot,endplot))
+plot(rowSums(predEng$CASE[2:20]),x=predEng$CASE$date,xlim=c(startplot,endplot))
 
 
 plot(Hospital$UK$newsaridat,x=Hospital$UK$date, ylab="Hospital Admission",xlab="Date",xlim=c(startplot,endplot-11                                                                                                ))
-lines(rowSums(comp$newSARI[2:20])*1.47,x=comp$newSARI$date,col="blue")
+lines(rowSums(comp$newSARI[2:20]),x=comp$newSARI$date,col="blue")
 
 plot(Hospital$UK$saridat,x=Hospital$UK$date,ylab="Hospital Cases",xlab="Date",xlim=c((startplot),endplot))
-lines(rowSums(compMTP$SARI[2:20]+compMTP$CRIT[2:20]+compMTP$CRITREC[2:20]),x=compMTP$SARI$date,col='red')
+lines(rowSums(predEng$SARI[2:20]+predEng$CRIT[2:20]+predEng$CRITREC[2:20]),x=predEng$SARI$date,col='red')
 
 plot(rowSums(comp$newMILD[2:20]+comp$newILI[2:20]),xlim=c((startplot),endplot),col="blue",x=comp$newMILD$date,type="l",xlab="Date",ylab="Cases")
-points(rowSums(compMTP$CASE[2:20]),x=compMTP$CASE$date)
+points(rowSums(predEng$CASE[2:20]),x=predEng$CASE$date)
 lines(rowSums(comp$newMILD[2:10]+comp$newILI[2:10]),col="green",x=comp$newMILD$date,type="l",xlab="Date",ylab="Cases")
 lines(rowSums(comp$newMILD[11:20]+comp$newILI[11:20]),col="red",x=comp$newMILD$date,type="l",xlab="Date",ylab="Cases")
 
 plot(Hospital$UK$critdat,x=Hospital$UK$date,ylab="ICU Occupation",xlab="Date",xlim=c(startplot,endplot))
 lines(rowSums(comp$CRIT[2:20]),col="blue",x=comp$CRIT$date)
 
-plot(rowSums(compMTP$DEATH[2:20]),col="blue",x=compMTP$DEATH$date, type="l",ylab="Deaths"
+plot(rowSums(predEng$DEATH[2:20]),col="blue",x=predEng$DEATH$date, type="l",ylab="Deaths"
      ,xlab="Date",xlim=c(startplot,endplot-11))
 points(rowSums(deathdat[2:20]),x=deathdat$date)
 }
