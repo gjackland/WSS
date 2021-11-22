@@ -782,7 +782,6 @@ comdat$fpCases <- comdat$allCases-0.004*as.integer(comdat$tests)
 comdat$regions <- regcases$London + regcases$`South East` + regcases$`South West` +
                   regcases$NE_Yorks + regcases$Midlands + regcases$`North West` +
                   regcases$`East of England`
-
 # Plot only if running interactively
 if(interactive()){
 
@@ -1032,7 +1031,7 @@ rat$smoothNW <-smooth.spline(rat$`North West`,df=spdf,w=sqrt(regcases$`North Wes
 rat$smoothNEY <-smooth.spline(rat$NE_Yorks,df=spdf,w=sqrt(regcases$NE_Yorks))$y
 rat$smoothLondon <-smooth.spline(rat$London,df=spdf,w=sqrt(regcases$London))$y
 rat$smoothEE <-smooth.spline(rat$`East of England`,df=spdf,w=sqrt(regcases$`East of England`))$y
-rat$smoothMid <-smooth.spline(rat$Midlands,df=spdf,w=sqrt(regcases$Midlands))$y
+rat$smoothMD <-smooth.spline(rat$Midlands,df=spdf,w=sqrt(regcases$Midlands))$y
 rat$smoothSE <-smooth.spline(rat$`South East`,df=spdf,w=sqrt(regcases$`South East`))$y
 rat$smoothSW <-smooth.spline(rat$`South West`,df=spdf,w=sqrt(regcases$`South West`))$y
 rat$smoothWales <-smooth.spline(rat$Wales,df=spdf,w=sqrt(regcases$Wales))$y
@@ -1571,6 +1570,10 @@ compMTP<-Predictions(comp,R_BestGuess$England)
 #  Replicated the data because repeated calls to Predictions would increment comp
 
 # Monitoring plots
+
+
+CC_write(compMTP,"England",population$England[1],R_BestGuess$England,R_Quant$England,rat$smoothEngland)
+#  Wales and NI awaiting age data wrangle
 
 #Ratios
 total_deaths=sum(deathdat[2:20])

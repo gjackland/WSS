@@ -174,13 +174,13 @@ predNEY<-Predictions(compNEY,R_BestGuess$NEY)
 rm(compSE,compSW,compMD,compNEY,compNW,compEE,complondon, 
    SE, SW, EE, NEY, MD, london, NW, hSE, hSW, hEE, hNEY, hMD, hlondon, hNW)
 
-CC_write(predNW,"North West",population$NW[1],R_BestGuess$NW,R_Quant$NW)
-CC_write(predNEY,"North East",population$NEY[1],R_BestGuess$NEY,R_Quant$NEY)
-CC_write(predMD,"Midlands",population$MD[1],R_BestGuess$Midlands,R_Quant$Midlands)
-CC_write(predlondon,"London",population$London[1],R_BestGuess$London,R_Quant$London)
-CC_write(predSW,"South West",population$SW[1],R_BestGuess$SW,R_Quant$SW)
-CC_write(predSE,"South East",population$SE[1],R_BestGuess$SE,R_Quant$SE)
-CC_write(predEE,"East of England",population$EE[1],R_BestGuess$EE,R_Quant$EE)
+CC_write(predNW,"North West",population$NW[1],R_BestGuess$NW,R_Quant$NW,rat$smoothNW)
+CC_write(predNEY,"North East",population$NEY[1],R_BestGuess$NEY,R_Quant$NEY,rat$smoothNEY)
+CC_write(predMD,"Midlands",population$MD[1],R_BestGuess$Midlands,R_Quant$Midlands,rat$smoothMD)
+CC_write(predlondon,"London",population$London[1],R_BestGuess$London,R_Quant$London,,rat$smoothLondon)
+CC_write(predSW,"South West",population$SW[1],R_BestGuess$SW,R_Quant$SW,rat$smoothSW)
+CC_write(predSE,"South East",population$SE[1],R_BestGuess$SE,R_Quant$SE,rat$smoothSE)
+CC_write(predEE,"East of England",population$EE[1],R_BestGuess$EE,R_Quant$EE,rat$smoothEE)
 
 #  Monitoring plots for MTP deaths
 
@@ -227,4 +227,10 @@ plot(y=Hospital$london$saridat,x=Hospital$UK$date,ylab="London Hospital Cases",x
 lines(rowSums(predlondon$SARI[2:20]),x=predlondon$newSARI$date)
 
 
-
+Missing_prevalence=1.1
+CCcomp=predlondon
+pop=population$London[1]
+#incidence
+plot(rowSums(CCcomp$CASE[2:20])/pop)
+#prevalence
+plot(rowSums(CCcomp$ILI[2:20]+CCcomp$SARI[2:20]+CCcomp$CRIT[2:20]+CCcomp$MILD[2:20])/pop,x=CCcomp$MILD$date)
