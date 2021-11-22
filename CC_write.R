@@ -3,9 +3,8 @@
 # Code to write out excel using the CC Schema.
 #
 library(lubridate)
-CC_write <- function(CCcomp,region,pop,R_region,Q_region){
+CC_write <- function(CCcomp,region,pop,R_region,Q_region,Rseries){
 # Initiate variables
-
 startwrite=300  
 
 group <- "Edinburgh"
@@ -63,8 +62,22 @@ library(lubridate)
   )
 CCtmp<-CC  
 #  Medium term projections
-
-
+CCtmp$Scenario="Nowcast"
+CCtmp$Geography=region
+CCtmp$ValueType="R"
+for (d in 4:(length(Rseries)-3)){
+  CCtmp$Value = Rseries[d]
+  CCtmp$"Quantile 0.05"=min(Rseries[(d-3):(d+3)])-0.2
+  CCtmp$"Quantile 0.25"=min(Rseries[(d-3):(d+3)])-0.1
+  CCtmp$"Quantile 0.5"=Rseries[d]
+  CCtmp$"Quantile 0.75"=max(Rseries[(d-3):(d+3)])+0.1
+  CCtmp$"Quantile 0.95"=max(Rseries[(d-3):(d+3)])+0.2
+  CCtmp$"Day of Value" = day(rat$date[d])
+  CCtmp$"Month of Value" = month(rat$date[d])
+  CCtmp$"Year of Value" = year(rat$date[d])
+  # Add the new row
+  CC <- rbind(CC, CCtmp)
+}
 today <- Sys.Date()
 ageband <-  "All"
 CCtmp$Scenario="NowCast"
@@ -126,7 +139,10 @@ PREV<-CCcomp$ILI[2:20]+CCcomp$SARI[2:20]+CCcomp$CRIT[2:20]+CCcomp$MILD[2:20]
 PREV=PREV*Missing_prevalence/pop
 CCtmp$Scenario="NowCast"
 for (d in startwrite:(nrow(PREV)-22)){
-  if(CCcomp$CASE$date[d]>(today-reporting_delay)){ CCtmp$Scenario="MTP"}
+  if(CCcomp$CASE$date[d]>(today-reporting_delay)){ 
+    CCtmp$Scenario="MTP"
+    CCtmp$ValueType="prevalence_mtp"  
+  }
   CCtmp$Value = sum(PREV[d,])
   CCtmp$"Quantile 0.05"=CCtmp$Value*0.5
   CCtmp$"Quantile 0.25"=CCtmp$Value*0.75
@@ -152,4 +168,5 @@ saveWorkbook(wb,filename,overwrite = TRUE)
 } else {
   write.xlsx(CC, file = filename, 
              overwrite = TRUE,  sheetName = region, rowNames = FALSE)}
+
 }

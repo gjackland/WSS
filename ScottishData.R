@@ -383,10 +383,10 @@ comp <- Compartment(scotage, covidsimAge, RawCFR, comdat,2,nrow(scotage))
 scotcomp<-Predictions(comp,R_BestGuess$Scotland)
 
 
-try(CC_write(scotcomp,"Scotland",population$Scotland[1],R_BestGuess$Scotland,R_Quant$Scotland))
+try(CC_write(scotcomp,"Scotland",population$Scotland[1],R_BestGuess$Scotland,R_Quant$Scotland,rat$smoothScotland))
 #  Crystalcast format output  
 #write.xlsx(CC, file = paste("Data/compartment",today,"all.xlsx"), sheetName = "WSS", rowNames = FALSE)
-
+  
 #Remove NA 's 
 Hospital$Scot <- na.locf(Hospital$Scot)
 if(interactive()){

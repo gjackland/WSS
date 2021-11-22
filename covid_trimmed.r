@@ -534,7 +534,7 @@ coltypes <- cols(
   areaType = col_character(),
   date = col_date(format = "%Y-%m-%d"),
   age = col_character(),
-  cases = col_number(), 
+  cases = col_number(),
   rollingSum = col_number(),
   rollingRate = col_number()
 )
@@ -783,7 +783,6 @@ comdat$fpCases <- comdat$allCases-0.004*as.integer(comdat$tests)
 comdat$regions <- regcases$London + regcases$`South East` + regcases$`South West` +
                   regcases$NE_Yorks + regcases$Midlands + regcases$`North West` +
                   regcases$`East of England`
-
 # Plot only if running interactively
 if(interactive()){
 
@@ -802,7 +801,7 @@ if(interactive()){
     theme_bw()
 }
 ##  CFR going down gets entangled with vaccine effect.  Use pre-vaccination values
-##  With 12 day delay from WSS. 
+##  With 12 day delay from WSS.
 RawCFR=colSums(deathdat[12:211,2:20])/colSums(casedat[1:200,2:20])
 
 
@@ -866,7 +865,7 @@ if(interactive()){
                      rowwise()                                    %>%
                      mutate(totSariCritRec = sum(c_across(3:22))) %>%
                      ggplot(aes(x = date, y = saridat)) +
-                     geom_point(alpha = 0.2) +
+                     geom_point(alpha = 0.2, na.rm = TRUE) +
                      geom_line(aes(x = date, y = totSariCritRec), colour = "blue") +
                      theme_bw() + ylab("Hospital cases") + xlab("Date")
 }
@@ -895,8 +894,10 @@ if(any(comp$CASE==0)){
   }
 }
 rat <- regcases
-for(i in (2:nrow(regcases))    ){
+for(i in (2:nrow(regcases)) ){
+  suppressWarnings(
   rat[i, 2:ncol(regcases)] <- 1 + log(regcases[i, 2:ncol(regcases)]/regcases[(i-1), 2:ncol(regcases)])*genTime
+  )
 }
 
 # Reset first row to 1, because there's no data
@@ -912,9 +913,16 @@ endplot <- enddate
 
 
 if(interactive()){
+
   plot(smooth.spline(rat$Scotland[startplot <= rat$date & rat$date <= endplot],df=14)$y,
        x=rat$date[startplot <= rat$date & rat$date <= endplot],
        ylim=c(0.7,1.40),xlab="Date",ylab="R, Scotland")
+
+  data.frame(x = rat$date[startplot <= rat$date & rat$date <= endplot],
+             y = smooth.spline(rat$Scotland[startplot <= rat$date & rat$date <= endplot], df = 14)$y) %>%
+    ggplot(aes(x = x, y = y)) +
+    geom_point(alpha = 0.25) +ylim(c(0.7,1.40)) +
+    xlab("Date") + ylab("R, Scotland") + theme_bw()
 
   rat %>% filter(startplot < date & date < endplot) %>%
     pivot_longer(!date,names_to = "Region", values_to="R") %>%
@@ -922,7 +930,7 @@ if(interactive()){
     geom_smooth(formula= y ~ x, method = "loess", span=0.3) +  guides(color = "none") +
     facet_wrap(vars(Region)) +
     theme(axis.text.x=element_text(angle=90,hjust=1)) +xlab("Date")
-  
+
   #  Plot UK nations and English regions
   rat[,c(1,2,3,4,5,6,7,8,9,10,11,12,13)]%>% filter(startplot < date & date < endplot) %>%
     pivot_longer(!date,names_to = "Region", values_to="R") %>%
@@ -930,7 +938,7 @@ if(interactive()){
     coord_cartesian(ylim=c(0.5,1.9))+ geom_smooth(formula= y ~ x, method = "loess", span=0.3) +
     guides(color = "none") + facet_wrap(vars(Region)) +
     theme(axis.text.x=element_text(angle=90,hjust=1)) +xlab("Date")
-  
+
   #  Plot Scottish regions
   rat[,c(1,11,14,15,16,17,18,19,20,21,22,23,24,25,26,27)]%>% filter(startplot < date & date < endplot) %>%
     pivot_longer(!date,names_to = "Region", values_to="R") %>%
@@ -1024,7 +1032,7 @@ rat$smoothNW <-smooth.spline(rat$`North West`,df=spdf,w=sqrt(regcases$`North Wes
 rat$smoothNEY <-smooth.spline(rat$NE_Yorks,df=spdf,w=sqrt(regcases$NE_Yorks))$y
 rat$smoothLondon <-smooth.spline(rat$London,df=spdf,w=sqrt(regcases$London))$y
 rat$smoothEE <-smooth.spline(rat$`East of England`,df=spdf,w=sqrt(regcases$`East of England`))$y
-rat$smoothMid <-smooth.spline(rat$Midlands,df=spdf,w=sqrt(regcases$Midlands))$y
+rat$smoothMD <-smooth.spline(rat$Midlands,df=spdf,w=sqrt(regcases$Midlands))$y
 rat$smoothSE <-smooth.spline(rat$`South East`,df=spdf,w=sqrt(regcases$`South East`))$y
 rat$smoothSW <-smooth.spline(rat$`South West`,df=spdf,w=sqrt(regcases$`South West`))$y
 rat$smoothWales <-smooth.spline(rat$Wales,df=spdf,w=sqrt(regcases$Wales))$y
@@ -1088,7 +1096,7 @@ if(interactive()){
 
   # Generate the graph
   data.frame(x=dfR$date, y=smoothweightR$y) %>%
-    ggplot(aes(x, y)) + geom_point(alpha = 0.5) +
+    ggplot(aes(x, y)) + geom_point(alpha = 0.25) +
     theme_bw()  + xlab("Date") + ylab("Regional R-number") +
     geom_line(data=d,aes(x = x, y = y, colour = type, linetype = type) )
 
@@ -1542,8 +1550,8 @@ if(CrystalCast){
 }
 
 #####  Figures and analysis for https://www.medrxiv.org/content/10.1101/2021.04.14.21255385v1
-# Date not encapuslated and may become broken because of hardcoded dates
-#Nothing should be returned or changed by this analysis
+# Date not encapsulated and may become broken because of hard coded dates
+# Nothing should be returned or changed by this analysis
 
 
 medrxiv<-FALSE
@@ -1562,7 +1570,11 @@ predEng<-Predictions(comp,R_BestGuess$England)
 #  Compartment predictions removed to Predictions.R
 #  Replicated the data because repeated calls to Predictions would increment comp
 
-#Monitoring plots
+# Monitoring plots
+
+
+CC_write(compMTP,"England",population$England[1],R_BestGuess$England,R_Quant$England,rat$smoothEngland)
+#  Wales and NI awaiting age data wrangle
 
 #Ratios
 Hospital$Eng$newsaridat=Hospital$NEY$newsaridat+Hospital$NW$newsaridat+
@@ -1587,12 +1599,12 @@ ratio$hosp=total_admissions/sum(comp$newSARI[1:total_time,2:20])
 ratio$crit=total_crit/sum(comp$CRIT[1:total_time,2:20])
 
 if(interactive()){
+
 startplot=startdate+3
 endplot=startdate+nrow(predEng$CASE)+predtime-3
 PREV<-comp$ILI[2:20]+comp$SARI[2:20]+comp$CRIT[2:20]+comp$MILD[2:20]
 lines(rowSums(PREV))
 plot(rowSums(predEng$CASE[2:20]),x=predEng$CASE$date,xlim=c(startplot,endplot))
-
 
 plot(Hospital$UK$newsaridat,x=Hospital$UK$date, ylab="Hospital Admission",xlab="Date",xlim=c(startplot,endplot-11                                                                                                ))
 lines(rowSums(comp$newSARI[2:20]),x=comp$newSARI$date,col="blue")
@@ -1605,13 +1617,27 @@ points(rowSums(predEng$CASE[2:20]),x=predEng$CASE$date)
 lines(rowSums(comp$newMILD[2:10]+comp$newILI[2:10]),col="green",x=comp$newMILD$date,type="l",xlab="Date",ylab="Cases")
 lines(rowSums(comp$newMILD[11:20]+comp$newILI[11:20]),col="red",x=comp$newMILD$date,type="l",xlab="Date",ylab="Cases")
 
-plot(Hospital$UK$critdat,x=Hospital$UK$date,ylab="ICU Occupation",xlab="Date",xlim=c(startplot,endplot))
-lines(rowSums(comp$CRIT[2:20]),col="blue",x=comp$CRIT$date)
+  plot(Hospital$UK$newsaridat,x=Hospital$UK$date, ylab="Hospital Admission",xlab="Date",xlim=c(startplot,endplot-11                                                                                                ))
+  lines(rowSums(comp$newSARI[2:20])*1.47,x=comp$newSARI$date,col="blue")
+
+  plot(Hospital$UK$saridat,x=Hospital$UK$date,ylab="Hospital Cases",xlab="Date",xlim=c((startplot),endplot))
+  lines(rowSums(compMTP$SARI[2:20]+compMTP$CRIT[2:20]+compMTP$CRITREC[2:20]),x=compMTP$SARI$date,col='red')
+
+
+  lines(rowSums(comp$newMILD[2:10]+comp$newILI[2:10]),col="green",x=comp$newMILD$date,type="l",xlab="Date",ylab="Cases")
+  lines(rowSums(comp$newMILD[11:20]+comp$newILI[11:20]),col="red",x=comp$newMILD$date,type="l",xlab="Date",ylab="Cases")
+
+
+  plot(Hospital$UK$critdat,x=Hospital$UK$date,ylab="ICU Occupation",xlab="Date",xlim=c(startplot,endplot))
+  lines(rowSums(comp$CRIT[2:20]),col="blue",x=comp$CRIT$date)
+
 
 plot(rowSums(predEng$DEATH[2:20]),col="blue",x=predEng$DEATH$date, type="l",ylab="Deaths"
      ,xlab="Date",xlim=c(startplot,endplot-11))
 points(rowSums(deathdat[2:20]),x=deathdat$date)
+
 }
+
 # This needs to be the last routine called for the UI, by default it returns
 # success (0), if there is no success setStatus() should be called. By default
 # it will return -1 but you can set a value setStatus(1). Any non-zero value

@@ -547,17 +547,17 @@ ageband <-  "All"
 CCdate$Scenario="NowCast"
 CCdate$Geography=region
 CCdate$ValueType="hospital_inc"
-#  Log. Errors from fluctuations time 4 for methodological uncertainty
+#  Log. Errors from fluctuations times 2 for methodological uncertainty
 #  adjust for recent discrepancy
 
 for (d in 8:(nrow(comp$newSARI)-22)){
   if(comp$DEATH$date[d]<(today-reporting_delay)){ CCdate$Scenario="MTP"}
   CCdate$Value = sum(comp$newSARI[d,2:20])
-  CCdate$"Quantile 0.05"=max(0,CCdate$Value*(1-12*sqrt(sum(comp$newSARI[(d-6):d,2:20])/7)/CCdate$Value))
-  CCdate$"Quantile 0.25"=max(0,CCdate$Value*(1-4*sqrt(sum(comp$newSARI[(d-6):d,2:20])/7)/CCdate$Value))
+  CCdate$"Quantile 0.05"=max(0,CCdate$Value*(1-6*sqrt(sum(comp$newSARI[(d-6):d,2:20])/7)/CCdate$Value))
+  CCdate$"Quantile 0.25"=max(0,CCdate$Value*(1-2*sqrt(sum(comp$newSARI[(d-6):d,2:20])/7)/CCdate$Value))
   CCdate$"Quantile 0.5"=CCdate$Value
-  CCdate$"Quantile 0.75"=CCdate$Value*(1+4*sqrt(sum(comp$newSARI[(d-6):d,2:20])/7)/CCdate$Value)
-  CCdate$"Quantile 0.95"=CCdate$Value*(1+12*sqrt(sum(comp$newSARI[(d-7):d,2:20])/7)/CCdate$Value)
+  CCdate$"Quantile 0.75"=CCdate$Value*(1+2*sqrt(sum(comp$newSARI[(d-6):d,2:20])/7)/CCdate$Value)
+  CCdate$"Quantile 0.95"=CCdate$Value*(1+6*sqrt(sum(comp$newSARI[(d-7):d,2:20])/7)/CCdate$Value)
   CCdate$"Day of Value" = day(comp$newSARI$date[d])
   CCdate$"Month of Value" = month(comp$newSARI$date[d])
   CCdate$"Year of Value" = year(comp$newSARI$date[d])
@@ -569,17 +569,36 @@ CCdate$Scenario="NowCast"
 for (d in 8:(nrow(comp$DEATH)-22)){
   if(comp$DEATH$date[d]<(today-reporting_delay)){ CCdate$Scenario="MTP"}
   CCdate$Value = sum(comp$DEATH[d,2:20])
-  CCdate$"Quantile 0.05"=max(0,CCdate$Value*(1-12*sqrt(sum(comp$DEATH[(d-6):d,2:20])/7)/CCdate$Value))
-  CCdate$"Quantile 0.25"=max(0,CCdate$Value*(1-4*sqrt(sum(comp$DEATH[(d-6):d,2:20])/7)/CCdate$Value))
+  CCdate$"Quantile 0.05"=max(0,CCdate$Value*(1-3*sqrt(sum(comp$DEATH[(d-6):d,2:20])/7)/CCdate$Value))
+  CCdate$"Quantile 0.25"=max(0,CCdate$Value*(1-sqrt(sum(comp$DEATH[(d-6):d,2:20])/7)/CCdate$Value))
   CCdate$"Quantile 0.5"=CCdate$Value
-  CCdate$"Quantile 0.75"=CCdate$Value*(1+4*sqrt(sum(comp$DEATH[(d-6):d,2:20])/7)/CCdate$Value)
-  CCdate$"Quantile 0.95"=CCdate$Value*(1+12*sqrt(sum(comp$DEATH[(d-7):d,2:20])/7)/CCdate$Value)
+  CCdate$"Quantile 0.75"=CCdate$Value*(1+sqrt(sum(comp$DEATH[(d-6):d,2:20])/7)/CCdate$Value)
+  CCdate$"Quantile 0.95"=CCdate$Value*(1+3*sqrt(sum(comp$DEATH[(d-7):d,2:20])/7)/CCdate$Value)
   CCdate$"Day of Value" = day(comp$DEATH$date[d])
   CCdate$"Month of Value" = month(comp$DEATH$date[d])
   CCdate$"Year of Value" = year(comp$DEATH$date[d])
   # Add the new row
   CC <- rbind(CC, CCdate)
 }
+
+#  Check with ONS CCdate$ValueType="prevalence"
+CCdate$ValueType="incidence"
+CCdate$Scenario="NowCast"
+for (d in 8:(nrow(comp$CASE)-22)){
+  if(comp$CASE$date[d]<(today-reporting_delay)){ CCdate$Scenario="MTP"}
+  CCdate$Value = sum(comp$CASE[d,2:20])
+  CCdate$"Quantile 0.05"=CCdate$Value*0.5
+  CCdate$"Quantile 0.25"=CCdate$Value*0.75
+  CCdate$"Quantile 0.5"=CCdate$Value
+  CCdate$"Quantile 0.75"=CCdate$Value*1.5
+  CCdate$"Quantile 0.95"=CCdate$Value*2
+  CCdate$"Day of Value" = day(comp$CASE$date[d])
+  CCdate$"Month of Value" = month(comp$CASE$date[d])
+  CCdate$"Year of Value" = year(comp$CASE$date[d])
+  # Add the new row
+  CC <- rbind(CC, CCdate)
+}
+
 
 #  Crystalcast format output  
 write.xlsx(CC, file = paste("Data/CCcompartment",today,".xlsx"), sheetName = "WSS", rowNames = FALSE, overwrite=TRUE)
