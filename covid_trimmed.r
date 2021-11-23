@@ -1564,7 +1564,8 @@ predEng<-Predictions(compEng,R_BestGuess$England)
 
 #Monitoring plots
 
-CC_write(predEng,"England",population$England[1],R_BestGuess$England,R_Quant$England,rat$smoothEngland)
+#  crystal cast writing moved to Regional.R 
+#CC_write(predEng,"England",population$England[1],R_BestGuess$England,R_Quant$England,rat$smoothEngland)
 #  Wales and NI awaiting age data wrangle
 
 if(interactive()){
@@ -1577,7 +1578,7 @@ plot(rowSums(predEng$CASE[2:20]),x=predEng$CASE$date,xlim=c(startplot,endplot))
 
 plot(Hospital$UK$newsaridat,x=Hospital$UK$date, ylab="Hospital Admission",xlab="Date",xlim=c(startplot,endplot-11                                                                                                ))
 lines(rowSums(compEng$newSARI[2:20]),x=compEng$newSARI$date,col="blue")
-
+lines(rowSums(predEng$newSARI[2:20]),x=compEng$newSARI$date,col="red")
 plot(Hospital$UK$saridat,x=Hospital$UK$date,ylab="Hospital Cases",xlab="Date",xlim=c((startplot),endplot))
 lines(rowSums(predEng$SARI[2:20]+predEng$CRIT[2:20]+predEng$CRITREC[2:20]),x=predEng$SARI$date,col='red')
 

@@ -26,7 +26,7 @@ Compartment <- function(cases,  csimAge, rCFR, cdat, startc, endc){
   #  In model  sum(SARI[2:20]+CRIT[2:20]+CRITREC[2:20])/sum(newSARI[2:20])
   logmean <- log(6.0)
   MildToRecovery <- dlnorm(1:cdflength, logmean,  logmean/8.0) # These "Milds" are never recorded
-  logmean <- log(7.6)
+  logmean <- log(7.0)
   ILIToRecovery <- dlnorm(1:cdflength, logmean,  logmean/4.0)
   #  Fit  shift & scale from ILI to SARI
   logmean <- log(5.0)

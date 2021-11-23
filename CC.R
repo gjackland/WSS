@@ -377,9 +377,9 @@ CCmid$"Quantile 0.75"=Quant[4]
 CCmid$"Quantile 0.95"=Quant[5]
 # Add the new row
 CC <- rbind(CC, CCmid)
+start_date=300
 
-
-for (d in 4:(length(smoothweightR$date)-3)){
+for (d in start_date:(length(smoothweightR$date)-3)){
   CCdate <-CCtmp
   CCdate$Geography="England"
   CCdate$Value = smoothweightR$y[d]
@@ -395,7 +395,7 @@ for (d in 4:(length(smoothweightR$date)-3)){
   CC <- rbind(CC, CCdate)
 }
 
-for (d in 4:(length(rat$date)-3)){
+for (d in start_date:(length(rat$date)-3)){
   CCdate$Geography="Scotland"
   CCdate$Value =rat$smoothScotland[d]
   CCdate$"Quantile 0.05"=min(rat$smoothScotland[(d-3):(d+3)])-0.2
@@ -409,7 +409,7 @@ for (d in 4:(length(rat$date)-3)){
   # Add the new row
   CC <- rbind(CC, CCdate)
 }
-for (d in 4:(length(rat$date)-3)){
+for (d in start_date:(length(rat$date)-3)){
   CCdate$Geography="North East"
   CCdate$Value = rat$smoothNEY[d]
   CCdate$"Quantile 0.05"=min(rat$smoothNEY[(d-3):(d+3)])-0.2
@@ -423,7 +423,7 @@ for (d in 4:(length(rat$date)-3)){
   # Add the new row
   CC <- rbind(CC, CCdate)
 }
-for (d in 4:(length(rat$date)-3)){
+for (d in start_date:(length(rat$date)-3)){
   CCdate$Geography="North West"
   CCdate$Value = rat$smoothNW[d]
   CCdate$"Quantile 0.05"=min(rat$smoothNW[(d-3):(d+3)])-0.2
@@ -437,7 +437,7 @@ for (d in 4:(length(rat$date)-3)){
   # Add the new row
   CC <- rbind(CC, CCdate)
 }
-for (d in 4:(length(rat$date)-3)){
+for (d in start_date:(length(rat$date)-3)){
   CCdate$Geography="East of England"
   CCdate$Value = rat$smoothEE[d]
   CCdate$"Quantile 0.05"=min(rat$smoothEE[(d-3):(d+3)])-0.2
@@ -451,7 +451,7 @@ for (d in 4:(length(rat$date)-3)){
   # Add the new row
   CC <- rbind(CC, CCdate)
 }
-for (d in 4:(length(rat$date)-3)){
+for (d in start_date:(length(rat$date)-3)){
   CCdate$Geography="South West"
   CCdate$Value = rat$smoothSW[d]
   CCdate$"Quantile 0.05"=min(rat$smoothSW[(d-3):(d+3)])-0.2
@@ -466,7 +466,7 @@ for (d in 4:(length(rat$date)-3)){
   CC <- rbind(CC, CCdate)
 }
 
-for (d in 4:(length(rat$date)-3)){
+for (d in start_date:(length(rat$date)-3)){
   CCdate$Geography="South East"
   CCdate$Value = rat$smoothSE[d]
   CCdate$"Quantile 0.05"=min(rat$smoothSE[(d-3):(d+3)])-0.2
@@ -480,7 +480,7 @@ for (d in 4:(length(rat$date)-3)){
   # Add the new row
   CC <- rbind(CC, CCdate)
 }
-for (d in 4:(length(rat$date)-3)){
+for (d in start_date:(length(rat$date)-3)){
   CCdate$Geography="London"
   CCdate$Value = rat$smoothLondon[d]
   CCdate$"Quantile 0.05"=min(rat$smoothLondon[(d-3):(d+3)])-0.2
@@ -494,21 +494,21 @@ for (d in 4:(length(rat$date)-3)){
   # Add the new row
   CC <- rbind(CC, CCdate)
 }
-for (d in 4:(length(rat$date)-3)){
+for (d in start_date:(length(rat$date)-3)){
   CCdate$Geography="Midlands"
-  CCdate$Value = rat$smoothMid[d]
-  CCdate$"Quantile 0.05"=min(rat$smoothMid[(d-3):(d+3)])-0.2
-  CCdate$"Quantile 0.25"=min(rat$smoothMid[(d-3):(d+3)])-0.1
-  CCdate$"Quantile 0.5"=rat$smoothMid[d]
-  CCdate$"Quantile 0.75"=max(rat$smoothMid[(d-3):(d+3)])+0.1
-  CCdate$"Quantile 0.95"=max(rat$smoothMid[(d-3):(d+3)])+0.2
+  CCdate$Value = rat$smoothMD[d]
+  CCdate$"Quantile 0.05"=min(rat$smoothMD[(d-3):(d+3)])-0.2
+  CCdate$"Quantile 0.25"=min(rat$smoothMD[(d-3):(d+3)])-0.1
+  CCdate$"Quantile 0.5"=rat$smoothMD[d]
+  CCdate$"Quantile 0.75"=max(rat$smoothMD[(d-3):(d+3)])+0.1
+  CCdate$"Quantile 0.95"=max(rat$smoothMD[(d-3):(d+3)])+0.2
   CCdate$"Day of Value" = day(rat$date[d])
   CCdate$"Month of Value" = month(rat$date[d])
   CCdate$"Year of Value" = year(rat$date[d])
   # Add the new row
   CC <- rbind(CC, CCdate)
 }
-for (d in 4:(length(rat$date)-3)){
+for (d in start_date:(length(rat$date)-3)){
   CCdate$Geography="Wales"
   CCdate$Value = rat$smoothWales [d]
   CCdate$"Quantile 0.05"=min(rat$smoothWales[(d-3):(d+3)])-0.2
@@ -522,7 +522,7 @@ for (d in 4:(length(rat$date)-3)){
   # Add the new row
   CC <- rbind(CC, CCdate)
 }
-for (d in 4:(length(rat$date)-3)){
+for (d in start_date:(length(rat$date)-3)){
   CCdate$Geography="Northern Ireland"
   CCdate$Value = rat$smoothNI[d]
   CCdate$"Quantile 0.05"=min(rat$smoothNI[(d-3):(d+3)])-0.2

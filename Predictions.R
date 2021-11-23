@@ -39,7 +39,7 @@ Predictions <- function(input,R_input){
   CritRecovToRecov <- input$CritRecovToRecov
   # enddateP is end of actual data - sometimes earlier than asked for
 
-  predtime = 28
+  predtime = 42+reporting_delay
   #  For loop over time, predCASE using R numbers
   lengthofdata <- nrow(CASE)
   enddateP<-CASE$date[lengthofdata]

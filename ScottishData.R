@@ -388,7 +388,8 @@ try(CC_write(predScot,"Scotland2",population$Scotland[1],R_BestGuess$Scotland,R_
 #write.xlsx(CC, file = paste("Data/compartment",today,"all.xlsx"), sheetName = "WSS", rowNames = FALSE)
 
 #Remove NA 's 
-Hospital$Scot <- na.locf(Hospital$Scot)
+Hospital$Scot$newsaridat <- na.locf(Hospital$Scot$newsaridat)
+Hospital$Scot$newcritdat <- na.locf(Hospital$Scot$newcritdat)
 if(interactive()){
 #Ratios
 total_deaths=sum(scotdeath[2:20])
@@ -408,18 +409,19 @@ rbind(compScot$CASE,predScot$CASE)->plotCASE
 plot(rowSums(plotCASE[2:20]),x=plotCASE$date)
 #Monitoring plots
 
-plot(rowSums(scotcomp$SARI[2:20]+scotcomp$CRIT[2:20]+scotcomp$CRITREC[2:20]),col="blue", 
+plot(rowSums(predScot$SARI[2:20]+predScot$CRIT[2:20]+predScot$CRITREC[2:20]),col="blue", 
      type='l',ylab="Scottish Hospital Beds",xlab="Date")
 
 plot(Hospital$Scot$newsaridat,x=Hospital$Scot$date,ylab="Scottish Hospital Admissions",xlab="Date")
-lines(rowSums(scotcomp$newSARI[2:20]),x=scotcomp$SARI$date,col='red')
-plot(rowSums(scotcomp$CASE[2:20]),x=scotcomp$CASE$date,ylab="Cases",xlab="Date")
-lines(rowSums(scotcomp$newMILD[2:20]+scotcomp$newILI[2:20]),col="red",x=scotcomp$newMILD$date)
+lines(rowSums(predScot$newSARI[2:20]),x=predScot$SARI$date,col='red')
+plot(rowSums(predScot$CASE[2:20]),x=predScot$CASE$date,ylab="Cases",xlab="Date")
+lines(rowSums(predScot$newMILD[2:20]+predScot$newILI[2:20]),col="red",x=predScot$newMILD$date)
 
 plot(Hospital$Scot$newcritdat,x=Hospital$Scot$date,ylab="ICU Admissions",xlab="Date",las=2)
-lines(rowSums(scotcomp$newCRIT[2:20]),col="blue",x=scotcomp$newCRIT$date)
+lines(rowSums(predScot$newCRIT[2:20]),col="blue",x=predScot$newCRIT$date)
 
-lines(rowSums(scotcomp$DEATH[2:20]),col="blue",x=scotcomp$DEATH$date,type="l", ylab="Deaths",xlab="Date",las=2)
+lines(rowSums(predScot$DEATH[2:20]),col="blue",x=predScot$DEATH$date,type="l", ylab="Deaths",xlab="Date",las=2)
 plot(rowSums(scotdeath[2:20]),x=scotdeath$date,ylab="Deaths",xlab="Date")
-lines(rowSums(scotcomp$DEATH[2:20]),x=scotcomp$DEATH$date,ylab="Deaths",col='red',xlab="Date")
+lines(rowSums(predScot$DEATH[2:20]),x=predScot$DEATH$date,ylab="Deaths",col='red',xlab="Date")
 }
+
