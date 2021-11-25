@@ -1533,14 +1533,6 @@ outputJSON(myt0 = t0,
            mycumSARI = cumsum(mynewSARI),
            myincDeath = as.integer(rowSums(compEng$DEATH[2:20]))
 )
-CrystalCast=TRUE
-if(CrystalCast){
-  "Edinburgh,WSS,Nowcast,Cases,v1"
-  date()
-  date()
-  "All,Scotland,R"
-  R_BestGuess$Scotland
-}
 
 #####  Figures and analysis for https://www.medrxiv.org/content/10.1101/2021.04.14.21255385v1
 # Date not encapsulated and may become broken because of hard coded dates
@@ -1563,7 +1555,7 @@ predEng<-Predictions(compEng,R_BestGuess$England)
 #  Compartment predictions removed to Predictions.R
 #  Replicated the data because repeated calls to Predictions would increment comp
 
-#Monitoring plots
+# Monitoring plots
 
 #  crystal cast writing moved to Regional.R
 #CC_write(predEng,"England",population$England[1],R_BestGuess$England,R_Quant$England,rat$smoothEngland)
