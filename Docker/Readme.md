@@ -1,32 +1,20 @@
 # Creating a docker instance for WSS
 
-Install [docker-desktop](https://www.docker.com/products/docker-desktop) for Mac/Windows and once installed run ithe application. You can check that you have docker installed by running the hello-world instance on your command line:
+Install [docker-desktop](https://www.docker.com/products/docker-desktop) for Mac/Windows and once installed run ithe application.
 
-```bash
-$ docker run hello-world
-Unable to find image 'hello-world:latest' locally
-latest: Pulling from library/hello-world
-b8dfde127a29: Pull complete
-Digest: sha256:f2266cbfc127c960fd30e76b7c792dc23b588c0db76233517e1891a4e357d519
-Status: Downloaded newer image for hello-world:latest
-
-Hello from Docker!
-This message shows that your installation appears to be working correctly.
-...
-```
-
-Docker file reference instructions are available [here](https://docs.docker.com/engine/reference/builder/).  The following `Dockerfile` will:
-
-* get a suitable image that has R installed in it, 
-* install additional R packages required to run the code, 
-* Copy the code into the docker image:
+The instruction for building the image is contained in the `Dockerfile` in this directory. A copy is shown below (the canonical version is what lives in the Dockerfile):
 
 ```dockerfile
 # Get a base R docker image
 FROM r-base
 
 # Install additional R packages required to run the code
-RUN install2.r --error \
+RUN apt-get update -y && \
+    apt-get install -y libxml2-dev \
+    libssl-dev \
+    libcurl4-openssl-dev && \
+    install2.r --error \
+    devtools \
     readr \
     dplyr \
     tidyr \
@@ -34,10 +22,17 @@ RUN install2.r --error \
     lubridate \
     zoo \
     RColorBrewer \
-    jsonlite
+    jsonlite \
+    openxlsx
 
 # Copy the code and any data to the root directory of the image
 COPY ./covid_trimmed.r .
+COPY ./CompartmentFunction.R .
+COPY ./medrxiv.R .
+COPY ./Predictions.R .
+COPY ./age_pdfplot.R .
+COPY ./Weekend.R .
+COPY ./CC_write.R .
 COPY ./json_out.R .
 ADD ./data /data
 
@@ -45,7 +40,32 @@ ADD ./data /data
 CMD ["Rscript", "covid_trimmed.r"]
 ```
 
-Build the docker image from the parent directory as that is where the wss code is (this takes a bit of time but you should only have to do it once):
+Copy the latest version of the output schema to check against.
+
+```bash
+curl https://raw.githubusercontent.com/covid-policy-modelling/model-runner/main/packages/api/schema/output.json -o output-schema.json
+```
+
+To build the docker image use:
+
+```dockerfile
+docker-compose build run-model 
+```
+Once it is built run the code in the image:
+
+```dockerfile
+docker-compose run run-model
+```
+
+Test the output to check:
+
+```docker
+docker-compose run --rm validate
+```
+
+
+
+This may take some time.
 
 ```bash
 # The -t gives the image a name

@@ -15,10 +15,17 @@ RUN apt-get update -y && \
     lubridate \
     zoo \
     RColorBrewer \
-    jsonlite
+    jsonlite \
+    openxlsx
 
 # Copy the code to the root directory of the image
 COPY ./covid_trimmed.r .
+COPY ./CompartmentFunction.R .
+COPY ./medrxiv.R .
+COPY ./Predictions.R .
+COPY ./age_pdfplot.R .
+COPY ./Weekend.R .
+COPY ./CC_write.R .
 COPY ./json_wss.R .
 ADD ./data /data
 
