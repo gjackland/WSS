@@ -63,28 +63,4 @@ Test the output to check:
 docker-compose run --rm validate
 ```
 
-
-
 This may take some time.
-
-```bash
-# The -t gives the image a name
-$ cd ..
-$ docker build -t wss -f Docker/Dockerfile .
-```
-
-Run the script directly in the docker instance created:
-
-```bash
-# -t terminal
-# -i interactive
-# --rm remove the image once one exits
-$ docker run -ti --rm wss 
-```
-
-Can check what is in the docker image by running a bash shell in the image:
-
-```bash
-$ docker run -ti --rm wss bash
-```
-
