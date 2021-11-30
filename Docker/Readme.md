@@ -43,7 +43,7 @@ CMD ["Rscript", "covid_trimmed.r"]
 Copy the latest version of the output schema to check against.
 
 ```bash
-curl https://raw.githubusercontent.com/covid-policy-modelling/model-runner/main/packages/api/schema/output.json -o output-schema.json
+curl https://raw.githubusercontent.com/covid-policy-modelling/model-runner/main/packages/api/schema/output.json -o schema.json
 ```
 
 To build the docker image use:
