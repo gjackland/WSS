@@ -1,4 +1,5 @@
 source("CC_write.R")
+source("CC.R")
 source("CompartmentFunction.R")
 source("Predictions.R")
 
@@ -192,6 +193,7 @@ total_time_case=nrow(casedat)
 total_time=length(Hospital$UK$date)
 ratio <-list()
 ratio$death=total_deaths/sum(compEng$DEATH[1:total_time,2:20])
+ratio$death=1.0
 ratio$case=total_cases/sum(compEng$CASE[1:total_time,2:20])
 ratio$newhosp=total_admissions/sum(compEng$newSARI[1:total_time,2:20])
 ratio$hosp=sum(Hospital$Eng$saridat)/sum(compEng$SARI[1:total_time,2:20])
@@ -201,28 +203,38 @@ ratio$crit=total_crit/sum(compEng$CRIT[1:total_time,2:20])
 filename=paste("data/CCcompartment",Sys.Date(),"regions.xlsx")
 
 CCEng=CC_write(predEng,"England",population$England[1],R_BestGuess$England,R_Quant$England,rat$smoothEngland,ratio,filename)
-
+ratio$death=sum(compScot$DEATH[(total_time-51):(total_time-1),2:20])/sum(scotdeath[(total_time-51):(total_time-1),2:20])
 ratio$hosp=sum(rowSums(predScot$SARI[2:20]+predScot$CRIT[2:20]+predScot$CRITREC[2:20]))/sum(Hospital$Scot$saridat)
 CCScot=CC_write(predScot,"Scotland",population$Scotland[1],R_BestGuess$Scotland,R_Quant$NW,rat$smoothScotland,ratio,filename)
+ratio$death=sum(compNW$DEATH[(total_time-50):total_time,2:20])/sum(regdeaths$`North West`[(total_time-50):total_time])
 ratio$hosp=sum(rowSums(predNW$SARI[2:20]+predNW$CRIT[2:20]+predNW$CRITREC[2:20]))/sum(Hospital$NW$saridat)
 CCNW=CC_write(predNW,"North West",population$NW[1],R_BestGuess$NW,R_Quant$NW,rat$smoothNW,ratio,filename)
+ratio$death=sum(compNEY$DEATH[(total_time-50):total_time,2:20])/sum(regdeaths$NEY[(total_time-50):total_time])
 ratio$hosp=sum(rowSums(predNEY$SARI[2:20]+predNEY$CRIT[2:20]+predNEY$CRITREC[2:20]))/sum(Hospital$NEY$saridat)
 CCNEY=CC_write(predNEY,"North East and Yorkshire",population$NEY[1],R_BestGuess$NEY,R_Quant$NEY,rat$smoothNEY,ratio,filename)
+ratio$death=sum(compMD$DEATH[(total_time-50):total_time,2:20])/sum(regdeaths$MD[(total_time-50):total_time])
 ratio$hosp=sum(rowSums(predMD$SARI[2:20]+predMD$CRIT[2:20]+predMD$CRITREC[2:20]))/sum(Hospital$MD$saridat)
 CCMD=CC_write(predMD,"Midlands",population$MD[1],R_BestGuess$Midlands,R_Quant$Midlands,rat$smoothMD,ratio,filename)
-ratio$hosp=sum(rowSums(predlondon$SARI[2:20]+predlondon$CRIT[2:20]+predlondon$CRITREC[2:20]))/sum(Hospital$London$saridat)
+ratio$death=sum(complondon$DEATH[(total_time-50):total_time,2:20])/sum(regdeaths$London[(total_time-50):total_time])
+ratio$hosp=sum(rowSums(predlondon$SARI[2:20]+predlondon$CRIT[2:20]+predlondon$CRITREC[2:20]))/sum(Hospital$london$saridat)
 CCLon=CC_write(predlondon,"London",population$London[1],R_BestGuess$London,R_Quant$London,rat$smoothLondon,ratio,filename)
+ratio$death=sum(compSW$DEATH[(total_time-50):total_time,2:20])/sum(regdeaths$`South West`[(total_time-50):total_time])
 ratio$hosp=sum(rowSums(predSW$SARI[2:20]+predSW$CRIT[2:20]+predSW$CRITREC[2:20]))/sum(Hospital$SW$saridat)
 CCSW=CC_write(predSW,"South West",population$SW[1],R_BestGuess$SW,R_Quant$SW,rat$smoothSW,ratio,filename)
 ratio$hosp=sum(rowSums(predSE$SARI[2:20]+predSE$CRIT[2:20]+predSE$CRITREC[2:20]))/sum(Hospital$SE$saridat)
+ratio$death=sum(compSE$DEATH[(total_time-50):total_time,2:20])/sum(regdeaths$`South East`[(total_time-50):total_time])
 CCSE=CC_write(predSE,"South East",population$SE[1],R_BestGuess$SE,R_Quant$SE,rat$smoothSE,ratio,filename)
 ratio$hosp=sum(rowSums(predEE$SARI[2:20]+predEE$CRIT[2:20]+predEE$CRITREC[2:20]))/sum(Hospital$EE$saridat)
+ratio$death=sum(compEE$DEATH[(total_time-50):total_time,2:20])/sum(regdeaths$`East of England`[(total_time-50):total_time])
 CCEE=CC_write(predEE,"East of England",population$EE[1],R_BestGuess$EE,R_Quant$EE,rat$smoothEE,ratio,filename)
 
 #Now combine all the sheets into one
 
+NIWal_write()
+
 CC<-rbind(CCEng,CCScot,CCNW,CCNEY,CCMD,CCLon,CCSW,CCSE,CCEE)
-write.xlsx(CC, file = "all3.xlsx", 
+
+write.xlsx(CC, file = "allx.xlsx", 
            overwrite = TRUE,  sheetName = region, rowNames = FALSE)
 
 #  Monitoring plots for MTP deaths
@@ -246,7 +258,7 @@ plot(y=Hospital$NEY$newsaridat,x=Hospital$UK$date,ylab="NEY Hospital Admissions"
 lines(rowSums(predNEY$newSARI[2:20])/ratio$newhosp,x=predNEY$newSARI$date)
 plot(y=Hospital$EE$newsaridat,x=Hospital$UK$date,ylab="EE Hospital Admissions",xlab="Date",xlim=plot_date)
 lines(rowSums(predEE$newSARI[2:20])/ratio$newhosp,x=predEE$newSARI$date)
-plot(y=Hospital$SE$newsaridat,x=Hospital$UK$date,ylab="MD Hospital Admissions",xlab="Date",xlim=plot_date)
+plot(y=Hospital$SE$newsaridat,x=Hospital$UK$date,ylab="SE Hospital Admissions",xlab="Date",xlim=plot_date)
 lines(rowSums(predSE$newSARI[2:20])/ratio$newhosp,x=predSE$newSARI$date)
 plot(y=Hospital$SW$newsaridat,x=Hospital$UK$date,ylab="SW Hospital Admissions",xlab="Date",xlim=plot_date)
 lines(rowSums(predSW$newSARI[2:20])/ratio$newhosp,x=predSW$newSARI$date)

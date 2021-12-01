@@ -89,17 +89,10 @@ CC <- data.frame(
     CCtmp$Value = exp((Rseries[d]-1.0)/genTime)-1.0
     CCtmp$"Quantile 0.05"=exp((min(Rseries[(d-3):(d+3)])-0.2-1.0)/genTime)-1.0
     CCtmp$"Quantile 0.25"=exp((min(Rseries[(d-3):(d+3)])-0.1-1.0)/genTime)-1.0
-    CCtmp$"Quantile 0.5"=exp((R_Quant$England[3]-1.0)/genTime)-1.0
+    CCtmp$"Quantile 0.5"=exp((Rseries[d]-1.0)/genTime)-1.0
     CCtmp$"Quantile 0.75"=exp((max(Rseries[(d-3):(d+3)])+0.1-1.0)/genTime)-1.0
     CCtmp$"Quantile 0.95"=exp((max(Rseries[(d-3):(d+3)])+0.2-1.0)/genTime)-1.0
-    CCtmp$Value = exp((R_BestGuess$England-1.0)/genTime)-1.0
-    # Add the new row
-    CCtmp$Value = Rseries[d]
-    CCtmp$"Quantile 0.05"=min(Rseries[(d-3):(d+3)])-0.2
-    CCtmp$"Quantile 0.25"=min(Rseries[(d-3):(d+3)])-0.1
-    CCtmp$"Quantile 0.5"=Rseries[d]
-    CCtmp$"Quantile 0.75"=max(Rseries[(d-3):(d+3)])+0.1
-    CCtmp$"Quantile 0.95"=max(Rseries[(d-3):(d+3)])+0.2
+    CCtmp$Value = exp((Rseries[d]-1.0)/genTime)-1.0
     CCtmp$"Day of Value" = day(rat$date[d])
     CCtmp$"Month of Value" = month(rat$date[d])
     CCtmp$"Year of Value" = year(rat$date[d])
@@ -115,15 +108,16 @@ CCtmp$Geography=region
 CCtmp$ValueType="hospital_inc"
 #  Log. Errors from fluctuations time 4 for methodological uncertainty
 #  adjust for recent discrepancy
+#  Would like regional admissions data, only have totals, but use them anyway
 for (d in startwrite:endwrite){
   if(CCcomp$CASE$date[d]>(today-reporting_delay)){ CCtmp$Scenario="MTP"}
-  CCtmp$Value = sum(CCcomp$newSARI[d,2:20])/ratio$newhosp
+  CCtmp$Value = sum(CCcomp$newSARI[d,2:20])/ratio$hosp
   NStoday = sum(CCcomp$newSARI[d,2:20])
-  CCtmp$"Quantile 0.05"=max(0,NStoday*(1-3*sqrt(sum(CCcomp$newSARI[(d-6):d,2:20])/7)/NStoday))/ratio$newhosp
-  CCtmp$"Quantile 0.25"=max(0,NStoday*(1-sqrt(sum(CCcomp$newSARI[(d-6):d,2:20])/7)/NStoday))/ratio$newhosp
+  CCtmp$"Quantile 0.05"=max(0,NStoday*(1-3*sqrt(sum(CCcomp$newSARI[(d-6):d,2:20])/7)/NStoday))/ratio$hosp
+  CCtmp$"Quantile 0.25"=max(0,NStoday*(1-sqrt(sum(CCcomp$newSARI[(d-6):d,2:20])/7)/NStoday))/ratio$hosp
   CCtmp$"Quantile 0.5"=CCtmp$Value
-  CCtmp$"Quantile 0.75"=NStoday*(1+sqrt(sum(CCcomp$newSARI[(d-6):d,2:20])/7)/NStoday)/ratio$newhosp
-  CCtmp$"Quantile 0.95"=NStoday*(1+3*sqrt(sum(CCcomp$newSARI[(d-6):d,2:20])/7)/NStoday)/ratio$newhosp
+  CCtmp$"Quantile 0.75"=NStoday*(1+sqrt(sum(CCcomp$newSARI[(d-6):d,2:20])/7)/NStoday)/ratio$hosp
+  CCtmp$"Quantile 0.95"=NStoday*(1+3*sqrt(sum(CCcomp$newSARI[(d-6):d,2:20])/7)/NStoday)/ratio$hosp
   CCtmp$"Day of Value" = day(CCcomp$newSARI$date[d])
   CCtmp$"Month of Value" = month(CCcomp$newSARI$date[d])
   CCtmp$"Year of Value" = year(CCcomp$newSARI$date[d])
@@ -134,12 +128,12 @@ CCtmp$ValueType="type28_death_inc_line"
 CCtmp$Scenario="MTP"
 for (d in startwrite:endwrite){
   if(CCcomp$DEATH$date[d]>(today-reporting_delay)){ CCtmp$Scenario="MTP"}  
-  CCtmp$Value = sum(CCcomp$DEATH[d,2:20])
-  CCtmp$"Quantile 0.05"=max(0,CCtmp$Value*(1-3*sqrt(sum(CCcomp$DEATH[(d-6):d,2:20])/7)/CCtmp$Value))
+  CCtmp$Value = sum(CCcomp$DEATH[d,2:20])/ratio$death
+  CCtmp$"Quantile 0.05"=max(0,CCtmp$Value*(1-sqrt(sum(CCcomp$DEATH[(d-6):d,2:20])/7)/CCtmp$Value))
   CCtmp$"Quantile 0.25"=max(0,CCtmp$Value*(1-sqrt(sum(CCcomp$DEATH[(d-6):d,2:20])/7)/3/CCtmp$Value))
   CCtmp$"Quantile 0.5"=CCtmp$Value
   CCtmp$"Quantile 0.75"=CCtmp$Value*(1+sqrt(sum(CCcomp$DEATH[(d-6):d,2:20])/7)/3/CCtmp$Value)
-  CCtmp$"Quantile 0.95"=CCtmp$Value*(1+3*sqrt(sum(CCcomp$DEATH[(d-6):d,2:20])/7)/CCtmp$Value)
+  CCtmp$"Quantile 0.95"=CCtmp$Value*(1+sqrt(sum(CCcomp$DEATH[(d-6):d,2:20])/7)/CCtmp$Value)
   CCtmp$"Day of Value" = day(CCcomp$DEATH$date[d])
   CCtmp$"Month of Value" = month(CCcomp$DEATH$date[d])
   CCtmp$"Year of Value" = year(CCcomp$DEATH$date[d])
@@ -151,9 +145,9 @@ for (d in startwrite:endwrite){
 # Missing incidence is the undetected infections. primarily short-lived
 #  Quantiles for the prevalence & incidence represent perceived methodological not statistical errors.
 #  These need more detailed study!
-Missing_prevalence=1.2
+Missing_prevalence=1.0
 Missing_incidence=2.2
-scalefac=100000/pop*Missing_incidence
+scalefac=(100000/pop)*Missing_incidence
 CCtmp$ValueType="incidence"
 CCtmp$Scenario="Nowcast"
 for (d in startwrite:length(CCcomp$CASE$date)){
@@ -175,17 +169,18 @@ for (d in startwrite:length(CCcomp$CASE$date)){
   CC <- rbind(CC, CCtmp)
 }
 #  Missing prevalence covers discrepancy between ONS and case data
+#  Also assume a five day delay between infection and test.
 #  Prevalence is a percentage who would test positive
+# There is some difficulty about the ONS data c/f e.g. https://www.medrxiv.org/content/10.1101/2021.02.09.21251411v1.full.pdf
 CCtmp$ValueType="prevalence"
-PREV<-CCcomp$ILI[2:20]+CCcomp$SARI[2:20]+CCcomp$CRIT[2:20]+CCcomp$MILD[2:20]
-PREV=PREV*Missing_prevalence/pop*100
 CCtmp$Scenario="Nowcast"
-for (d in startwrite:endwrite){
+for (d in startwrite:(endwrite-4)){
   if(CCcomp$CASE$date[d]>(today-reporting_delay)){ 
     CCtmp$Scenario="MTP"
     CCtmp$ValueType="prevalence_mtp"  
   }
-  CCtmp$Value = sum(PREV[d,])
+  PREV= sum(CCcomp$ILI[d,2:20]+CCcomp$SARI[d,2:20])+sum(CCcomp$CASE[d:(d+4),2:20])*Missing_incidence
+  CCtmp$Value=PREV*Missing_prevalence/pop*100
   CCtmp$"Quantile 0.05"=CCtmp$Value*0.5
   CCtmp$"Quantile 0.25"=CCtmp$Value*0.75
   CCtmp$"Quantile 0.5"=CCtmp$Value
@@ -197,6 +192,22 @@ for (d in startwrite:endwrite){
   # Add the new row
   CC <- rbind(CC, CCtmp)
 }
+#  Extend assuming derivative of CASE[d] is zero 
+for (d in (endwrite-3):endwrite){
+  PREV= sum(CCcomp$ILI[d,2:20]+CCcomp$SARI[d,2:20])+sum(CCcomp$CASE[d,2:20]*5)*Missing_incidence
+  CCtmp$Value=PREV*Missing_prevalence/pop*100
+  CCtmp$"Quantile 0.05"=CCtmp$Value*0.5
+  CCtmp$"Quantile 0.25"=CCtmp$Value*0.75
+  CCtmp$"Quantile 0.5"=CCtmp$Value
+  CCtmp$"Quantile 0.75"=CCtmp$Value*1.3333
+  CCtmp$"Quantile 0.95"=CCtmp$Value*2
+  CCtmp$"Day of Value" = day(CCcomp$ILI$date[d])
+  CCtmp$"Month of Value" = month(CCcomp$ILI$date[d]) 
+  CCtmp$"Year of Value" = year(CCcomp$ILI$date[d])
+  # Add the new row
+  CC <- rbind(CC, CCtmp)  
+}
+
 #  Crystalcast format output  
 
 

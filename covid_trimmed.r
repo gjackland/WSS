@@ -682,9 +682,9 @@ Hospital$UK  <-  jnk%>%
                   select(date = date, saridat = hospitalCases, newsaridat = newAdmissions, critdat=covidOccupiedMVBeds) %>%
                   filter(date >= startdate & date <= enddate ) %>%
                   arrange(date)
-na.locf(Hospital$UK$saridat)
-na.locf(Hospital$UK$newsaridat)
-na.locf(Hospital$UK$critdat)
+Hospital$UK$saridat <- na.locf(Hospital$UK$saridat)
+Hospital$UK$newsaridat <- na.locf(Hospital$UK$newsaridat)
+Hospital$UK$critdat <- na.locf(Hospital$UK$critdat) 
 
 # Add the Welsh and Northern Ireland cases data
 regcases$Wales <- walesdat$allCases
@@ -1532,14 +1532,7 @@ outputJSON(myt0 = t0,
            mycumSARI = cumsum(mynewSARI),
            myincDeath = as.integer(rowSums(compEng$DEATH[2:20]))
 )
-CrystalCast=TRUE
-if(CrystalCast){
-  "Edinburgh,WSS,Nowcast,Cases,v1"
-  date()
-  date()
-  "All,Scotland,R"
-  R_BestGuess$Scotland
-}
+
 
 #####  Figures and analysis for https://www.medrxiv.org/content/10.1101/2021.04.14.21255385v1
 # Date not encapuslated and may become broken because of hardcoded dates
