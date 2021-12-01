@@ -534,7 +534,7 @@ coltypes <- cols(
   areaType = col_character(),
   date = col_date(format = "%Y-%m-%d"),
   age = col_character(),
-  cases = col_number(), 
+  cases = col_number(),
   rollingSum = col_number(),
   rollingRate = col_number()
 )
@@ -678,13 +678,14 @@ coltypes <-  cols(
 jnk <- read_csv(HospitalUrl, col_types = coltypes)
 Hospital<-list()
 Hospital$UK <- tibble()
-Hospital$UK  <-  jnk%>%
+Hospital$UK  <-  jnk %>%
                   select(date = date, saridat = hospitalCases, newsaridat = newAdmissions, critdat=covidOccupiedMVBeds) %>%
                   filter(date >= startdate & date <= enddate ) %>%
                   arrange(date)
 Hospital$UK$saridat <- na.locf(Hospital$UK$saridat)
 Hospital$UK$newsaridat <- na.locf(Hospital$UK$newsaridat)
 Hospital$UK$critdat <- na.locf(Hospital$UK$critdat) 
+
 
 # Add the Welsh and Northern Ireland cases data
 regcases$Wales <- walesdat$allCases
@@ -796,13 +797,14 @@ if(interactive()){
   # between 0 (opaque) to 1 (transparent)
   ggplot(comdat,aes(x=date)) +
     geom_point(aes(y=inputCases),alpha=0.5) +
-    geom_line(aes(y=allCases), color="green", size=1.5, alpha=0.5) +
-    geom_line(aes(y=fpCases),color="red", size=1.5, alpha=0.5) +
+    geom_line(aes(y=allCases), colour="green", size=1., alpha=0.5) +
+    geom_line(aes(y=fpCases),colour="red", size=1., alpha=0.5) +
+    geom_line(aes(y = regions), colour = "blue", size=1., alpha=0.5) +
     xlab("Dates") + ylab("Cases") +
     theme_bw()
 }
 ##  CFR going down gets entangled with vaccine effect.  Use pre-vaccination values
-##  With 12 day delay from WSS. 
+##  With 12 day delay from WSS.
 RawCFR=colSums(deathdat[12:211,2:20])/colSums(casedat[1:200,2:20])
 
 
@@ -922,7 +924,7 @@ if(interactive()){
     geom_smooth(formula= y ~ x, method = "loess", span=0.3) +  guides(color = "none") +
     facet_wrap(vars(Region)) +
     theme(axis.text.x=element_text(angle=90,hjust=1)) +xlab("Date")
-  
+
   #  Plot UK nations and English regions
   rat[,c(1,2,3,4,5,6,7,8,9,10,11,12,13)]%>% filter(startplot < date & date < endplot) %>%
     pivot_longer(!date,names_to = "Region", values_to="R") %>%
@@ -930,7 +932,7 @@ if(interactive()){
     coord_cartesian(ylim=c(0.5,1.9))+ geom_smooth(formula= y ~ x, method = "loess", span=0.3) +
     guides(color = "none") + facet_wrap(vars(Region)) +
     theme(axis.text.x=element_text(angle=90,hjust=1)) +xlab("Date")
-  
+
   #  Plot Scottish regions
   rat[,c(1,11,14,15,16,17,18,19,20,21,22,23,24,25,26,27)]%>% filter(startplot < date & date < endplot) %>%
     pivot_longer(!date,names_to = "Region", values_to="R") %>%
@@ -1535,8 +1537,8 @@ outputJSON(myt0 = t0,
 
 
 #####  Figures and analysis for https://www.medrxiv.org/content/10.1101/2021.04.14.21255385v1
-# Date not encapuslated and may become broken because of hardcoded dates
-#Nothing should be returned or changed by this analysis
+# Date not encapsulated and may become broken because of hard coded dates
+# Nothing should be returned or changed by this analysis
 
 
 medrxiv<-FALSE
@@ -1555,9 +1557,9 @@ predEng<-Predictions(compEng,R_BestGuess$England)
 #  Compartment predictions removed to Predictions.R
 #  Replicated the data because repeated calls to Predictions would increment comp
 
-#Monitoring plots
+# Monitoring plots
 
-#  crystal cast writing moved to Regional.R 
+#  crystal cast writing moved to Regional.R
 #CC_write(predEng,"England",population$England[1],R_BestGuess$England,R_Quant$England,rat$smoothEngland)
 #  Wales and NI awaiting age data wrangle
 
@@ -1587,6 +1589,7 @@ plot(rowSums(predEng$DEATH[2:20]),col="blue",x=predEng$DEATH$date, type="l",ylab
      ,xlab="Date",xlim=c(startplot,endplot-11))
 points(rowSums(deathdat[2:20]),x=deathdat$date)
 }
+
 # This needs to be the last routine called for the UI, by default it returns
 # success (0), if there is no success setStatus() should be called. By default
 # it will return -1 but you can set a value setStatus(1). Any non-zero value

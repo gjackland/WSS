@@ -2,10 +2,14 @@
 #
 # Code to write out excel using the CC Schema.
 #
+
+# Load packages  - Without java dependency
+library(openxlsx)
 library(lubridate)
+
 CC_write <- function(CCcomp,region,pop,R_region,Q_region,Rseries,ratio,filename){
 # write from arbitrary start point to last day where there are cases
-startwrite=400  
+startwrite=400
 endwrite=nrow(CCcomp$CASE)
 group <- "Edinburgh"
 model <-  "WSS"
@@ -16,10 +20,6 @@ today <- today()
 ageband <-  "All"
 # Region should be inherited from most recent CCcompartment run, e.g. region <- "Scotland"
 valuetype <- "R"
-
-# Load packages  - Without java dependency 
-library(openxlsx)
-library(lubridate)
 
 #  Initiate CC with Scotland default - overwrite later
 
@@ -80,7 +80,7 @@ CC <- data.frame(
   }
   #  Delete the first row - Crystal cast requires numerical order
   CC <- CC[-c(1),]
-  
+
   #  Hindcast for growth rate
   CCtmp$Scenario="Nowcast"
   CCtmp$Geography=region
@@ -99,7 +99,7 @@ CC <- data.frame(
     # Add the new row
     CC <- rbind(CC, CCtmp)
   }
-  
+
 
 today <- Sys.Date()
 ageband <-  "All"
@@ -127,9 +127,15 @@ for (d in startwrite:endwrite){
 CCtmp$ValueType="type28_death_inc_line"
 CCtmp$Scenario="MTP"
 for (d in startwrite:endwrite){
+<<<<<<< HEAD
   if(CCcomp$DEATH$date[d]>(today-reporting_delay)){ CCtmp$Scenario="MTP"}  
   CCtmp$Value = sum(CCcomp$DEATH[d,2:20])/ratio$death
   CCtmp$"Quantile 0.05"=max(0,CCtmp$Value*(1-sqrt(sum(CCcomp$DEATH[(d-6):d,2:20])/7)/CCtmp$Value))
+=======
+  if(CCcomp$DEATH$date[d]>(today-reporting_delay)){ CCtmp$Scenario="MTP"}
+  CCtmp$Value = sum(CCcomp$DEATH[d,2:20])
+  CCtmp$"Quantile 0.05"=max(0,CCtmp$Value*(1-3*sqrt(sum(CCcomp$DEATH[(d-6):d,2:20])/7)/CCtmp$Value))
+>>>>>>> 92871883a38d88744a447294a71d313390112bbb
   CCtmp$"Quantile 0.25"=max(0,CCtmp$Value*(1-sqrt(sum(CCcomp$DEATH[(d-6):d,2:20])/7)/3/CCtmp$Value))
   CCtmp$"Quantile 0.5"=CCtmp$Value
   CCtmp$"Quantile 0.75"=CCtmp$Value*(1+sqrt(sum(CCcomp$DEATH[(d-6):d,2:20])/7)/3/CCtmp$Value)
@@ -151,9 +157,9 @@ scalefac=(100000/pop)*Missing_incidence
 CCtmp$ValueType="incidence"
 CCtmp$Scenario="Nowcast"
 for (d in startwrite:length(CCcomp$CASE$date)){
-  if(CCcomp$CASE$date[d]>(today-reporting_delay)){ 
+  if(CCcomp$CASE$date[d]>(today-reporting_delay)){
     CCtmp$Scenario="MTP"
-    CCtmp$ValueType="infections_inc"  
+    CCtmp$ValueType="infections_inc"
   }
   CASEtoday=sum(CCcomp$CASE[d,2:20])
   CCtmp$Value =   CASEtoday*scalefac
@@ -174,10 +180,12 @@ for (d in startwrite:length(CCcomp$CASE$date)){
 # There is some difficulty about the ONS data c/f e.g. https://www.medrxiv.org/content/10.1101/2021.02.09.21251411v1.full.pdf
 CCtmp$ValueType="prevalence"
 CCtmp$Scenario="Nowcast"
+
 for (d in startwrite:(endwrite-4)){
   if(CCcomp$CASE$date[d]>(today-reporting_delay)){ 
+
     CCtmp$Scenario="MTP"
-    CCtmp$ValueType="prevalence_mtp"  
+    CCtmp$ValueType="prevalence_mtp"
   }
   PREV= sum(CCcomp$ILI[d,2:20]+CCcomp$SARI[d,2:20])+sum(CCcomp$CASE[d:(d+4),2:20])*Missing_incidence
   CCtmp$Value=PREV*Missing_prevalence/pop*100
@@ -187,11 +195,12 @@ for (d in startwrite:(endwrite-4)){
   CCtmp$"Quantile 0.75"=CCtmp$Value*1.3333
   CCtmp$"Quantile 0.95"=CCtmp$Value*2
   CCtmp$"Day of Value" = day(CCcomp$ILI$date[d])
-  CCtmp$"Month of Value" = month(CCcomp$ILI$date[d]) 
+  CCtmp$"Month of Value" = month(CCcomp$ILI$date[d])
   CCtmp$"Year of Value" = year(CCcomp$ILI$date[d])
   # Add the new row
   CC <- rbind(CC, CCtmp)
 }
+
 #  Extend assuming derivative of CASE[d] is zero 
 for (d in (endwrite-3):endwrite){
   PREV= sum(CCcomp$ILI[d,2:20]+CCcomp$SARI[d,2:20])+sum(CCcomp$CASE[d,2:20]*5)*Missing_incidence
@@ -212,12 +221,13 @@ for (d in (endwrite-3):endwrite){
 
 
 
+
 try(
 if(file.exists(filename)){
 wb<-loadWorkbook(filename)
 addWorksheet(wb,region)
 writeData(wb,region,CC)
-saveWorkbook(wb,filename,overwrite = TRUE)  
+saveWorkbook(wb,filename,overwrite = TRUE)
 } else {}
 )
 return(CC)

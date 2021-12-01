@@ -1,32 +1,20 @@
 # Creating a docker instance for WSS
 
-Install [docker-desktop](https://www.docker.com/products/docker-desktop) for Mac/Windows and once installed run ithe application. You can check that you have docker installed by running the hello-world instance on your command line:
+Install [docker-desktop](https://www.docker.com/products/docker-desktop) for Mac/Windows and once installed run ithe application.
 
-```bash
-$ docker run hello-world
-Unable to find image 'hello-world:latest' locally
-latest: Pulling from library/hello-world
-b8dfde127a29: Pull complete
-Digest: sha256:f2266cbfc127c960fd30e76b7c792dc23b588c0db76233517e1891a4e357d519
-Status: Downloaded newer image for hello-world:latest
-
-Hello from Docker!
-This message shows that your installation appears to be working correctly.
-...
-```
-
-Docker file reference instructions are available [here](https://docs.docker.com/engine/reference/builder/).  The following `Dockerfile` will:
-
-* get a suitable image that has R installed in it, 
-* install additional R packages required to run the code, 
-* Copy the code into the docker image:
+The instruction for building the image is contained in the `Dockerfile` in this directory. A copy is shown below (the canonical version is what lives in the Dockerfile):
 
 ```dockerfile
 # Get a base R docker image
 FROM r-base
 
 # Install additional R packages required to run the code
-RUN install2.r --error \
+RUN apt-get update -y && \
+    apt-get install -y libxml2-dev \
+    libssl-dev \
+    libcurl4-openssl-dev && \
+    install2.r --error \
+    devtools \
     readr \
     dplyr \
     tidyr \
@@ -34,10 +22,17 @@ RUN install2.r --error \
     lubridate \
     zoo \
     RColorBrewer \
-    jsonlite
+    jsonlite \
+    openxlsx
 
 # Copy the code and any data to the root directory of the image
 COPY ./covid_trimmed.r .
+COPY ./CompartmentFunction.R .
+COPY ./medrxiv.R .
+COPY ./Predictions.R .
+COPY ./age_pdfplot.R .
+COPY ./Weekend.R .
+COPY ./CC_write.R .
 COPY ./json_out.R .
 ADD ./data /data
 
@@ -45,26 +40,53 @@ ADD ./data /data
 CMD ["Rscript", "covid_trimmed.r"]
 ```
 
-Build the docker image from the parent directory as that is where the wss code is (this takes a bit of time but you should only have to do it once):
+Copy the latest version of the output schema to check against.
 
 ```bash
-# The -t gives the image a name
-$ cd ..
-$ docker build -t wss -f Docker/Dockerfile .
+curl https://raw.githubusercontent.com/covid-policy-modelling/model-runner/main/packages/api/schema/output.json -o schema.json
 ```
 
-Run the script directly in the docker instance created:
+To build the docker image use:
+
+```dockerfile
+docker-compose build run-model 
+```
+Once it is built run the code in the image:
+
+```dockerfile
+docker-compose run run-model
+```
+
+Test the output to check:
+
+```docker
+docker-compose run --rm validate
+```
+
+This may take some time.
+
+Once the above works upload a new version the image by tagging the repo with  a new version starting with a `v` where the increment of x is done appropriately.
 
 ```bash
-# -t terminal
-# -i interactive
-# --rm remove the image once one exits
-$ docker run -ti --rm wss 
+git tag v0.0.(x+1)
 ```
 
-Can check what is in the docker image by running a bash shell in the image:
+This will trigger an actions workflow. You should see the new image at:
 
-```bash
-$ docker run -ti --rm wss bash
+* https://github.com/gjackland/WSS/pkgs/container/WSS%2Fwss-connector
+
+Once this has built at GitHub go to the web-ui repo. Edit the `models.yml` file to ensure the right version is being downloaded in the `imageURL` for WSS. The repo then has to be tagged with a version beginning with a `v`. This will start another workflow which will take a bit of time to complete. 
+
+Once this has completed you need to go to the infrastructure and depending on where it is being deployed you need to go to the appropriate service, e.g. `staging/web-ui` edit the `ui_container_image_tag` in the `web-ui` module in the `main.tf` to reflect the version of the tag change you added to the `web-ui` service. Once this is done test:
+
+```terraform
+terraform plan
 ```
 
+and if that works then implement the change:
+
+```terraform
+terraform apply
+```
+
+and the newer version of WSS should be deployed on to the WSS service.

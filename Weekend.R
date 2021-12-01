@@ -1,12 +1,12 @@
 Weekend <- function(cdat){
 # Remove weekend effect, assuming each weekday has same number of cases over the
 # epidemic, and national averages hold regionally.
-#  Input vector of cases, like comdat$allcases  
+#  Input vector of cases, like comdat$allcases
   XMas <- as.Date("2020/12/24")
   XMstart <- as.integer(XMas-startdate)
   XMdays <- 12
   XMend <- XMstart+11
-  
+
 days <-1:7
 weeks<-as.integer(length(cdat)/7)-1
 
@@ -30,18 +30,19 @@ for (i in XMstart:XMend){
 }
 return(cdat)
 }
+
 #  Function to do nowcast for R based on smoothing over 200 days
 estimate_R <- function(rat_in,date_in,reg_in){
   rat_range<-rat_in[(length(rat_in)-200):length(rat_in)]
   date_range<-c(1:201)
   reg_range<-reg_in[(length(rat_in)-200):length(rat_in)]
-  filteredR<-append(
+  filteredR<-  suppressWarnings(append(
   append(tail(predict(loess(rat_range ~ as.numeric(date_range),weight=reg_range ,span=s1))),
          tail(predict(loess(rat_range ~ as.numeric(date_range),weight=reg_range, span=s2))) ) ,
   append(tail(predict(loess(rat_range ~ as.numeric(date_range),weight=reg_range,span=s3))),
          tail(predict(loess(rat_range ~ as.numeric(date_range),weight=reg_range,span=s4))))
-)
-R_Quant <-unname(quantile(filteredR, probs=c(0.05,0.25,0.5,0.75,0.95)))
-R <-mean(filteredR)
-return( c(R,R_Quant) )
+   ))
+   R_Quant <-unname(quantile(filteredR, probs=c(0.05,0.25,0.5,0.75,0.95)))
+   R <-mean(filteredR)
+   return( c(R,R_Quant) )
 }
