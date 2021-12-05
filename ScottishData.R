@@ -59,10 +59,10 @@ BoardsToCouncils <- list(
 
 # Start and end date - the data to collect data from
 #  start and end dates inherited from a previous run of covid_trimmed
-startdate_scot <- as.Date("2020/07/25")
+startdate <- as.Date("2020/07/25")
 
 # WAS To one week ago (-7)  NOW read in all the data
-enddate_scot <-  Sys.Date()
+enddate <-  Sys.Date()-reporting_delay
 
 
 # Base url for UK data

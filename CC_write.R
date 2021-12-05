@@ -127,15 +127,9 @@ for (d in startwrite:endwrite){
 CCtmp$ValueType="type28_death_inc_line"
 CCtmp$Scenario="MTP"
 for (d in startwrite:endwrite){
-<<<<<<< HEAD
   if(CCcomp$DEATH$date[d]>(today-reporting_delay)){ CCtmp$Scenario="MTP"}  
   CCtmp$Value = sum(CCcomp$DEATH[d,2:20])/ratio$death
   CCtmp$"Quantile 0.05"=max(0,CCtmp$Value*(1-sqrt(sum(CCcomp$DEATH[(d-6):d,2:20])/7)/CCtmp$Value))
-=======
-  if(CCcomp$DEATH$date[d]>(today-reporting_delay)){ CCtmp$Scenario="MTP"}
-  CCtmp$Value = sum(CCcomp$DEATH[d,2:20])
-  CCtmp$"Quantile 0.05"=max(0,CCtmp$Value*(1-3*sqrt(sum(CCcomp$DEATH[(d-6):d,2:20])/7)/CCtmp$Value))
->>>>>>> 92871883a38d88744a447294a71d313390112bbb
   CCtmp$"Quantile 0.25"=max(0,CCtmp$Value*(1-sqrt(sum(CCcomp$DEATH[(d-6):d,2:20])/7)/3/CCtmp$Value))
   CCtmp$"Quantile 0.5"=CCtmp$Value
   CCtmp$"Quantile 0.75"=CCtmp$Value*(1+sqrt(sum(CCcomp$DEATH[(d-6):d,2:20])/7)/3/CCtmp$Value)
