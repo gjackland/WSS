@@ -112,10 +112,10 @@ Compartment <- function(cases,  csimAge, rCFR, cdat, startc, endc){
   afac <- 1.0
   bfac <- 1.2
   cfac <- 1.0/afac/bfac
-  for (iday in (startc:endc)){
+  cdat$lethality<-na.locf(cdat$lethality)
+    for (iday in (startc:endc)){
     # Update current vaccine/variant lethality if available    
-    if(!is.na(cdat$lethality[iday])){
-      sfac <- sqrt(cdat$lethality[iday])}
+  sfac=(rCFR*cdat$lethality[iday])/(1-rCFR+rCFR*cdat$lethality[iday])^(1/3)
     pTtoI <- afac*rCFR^apow*sfac
     pItoS <- bfac*rCFR^bpow*sfac
     pStoD <- cfac*rCFR^cpow*sfac
@@ -137,7 +137,7 @@ Compartment <- function(cases,  csimAge, rCFR, cdat, startc, endc){
     # Note inverse lethality isnt a simple % as CFR cant be >1
     # Will have negative people  trouble if CFR>1
     
-    xday <- iday+length(SARIToCritical)-1
+    xday <- iday+cdflength-1
     agerange <- (2:ncol(ILI))
     ageminus <- agerange-1
     
@@ -146,11 +146,13 @@ Compartment <- function(cases,  csimAge, rCFR, cdat, startc, endc){
     
     
     #  vectorize
-    MtoR <- outer(as.numeric(newMILD[iday,agerange]),MildToRecovery,FUN="*")
-    oldMILD[(iday:xday),agerange] <- oldMILD[(iday:xday),agerange]+MtoR
+    #MtoR <- outer(as.numeric(newMILD[iday,agerange]),MildToRecovery,FUN="*")
+    #oldMILD[(iday:xday),agerange] <- oldMILD[(iday:xday),agerange]+MtoR
     vacCFR <- 0.85 #Vaccine reduction in ILI-> SARI
     for (iage in agerange){
       # All todays new MILDs will all leave to REC across distribution
+      MtoR <-  as.numeric(newMILD[iday,iage])  *MildToRecovery  
+      oldMILD[(iday:xday),iage] <- oldMILD[(iday:xday),iage]+MtoR
       # multiple by vaccination and its CFR reduction
       # ILI will go to SA/RI and REC
       ItoS <-  as.numeric(newILI[iday,iage] * pItoS[iage-1] * (1.0-vacdat[iday,iage]*vacCFR)) *ILIToSARI
@@ -160,9 +162,10 @@ Compartment <- function(cases,  csimAge, rCFR, cdat, startc, endc){
       newSARI[(iday:xday),iage] <- newSARI[(iday:xday),iage]+ItoS
       oldILI[(iday:xday),iage] <- oldILI[(iday:xday),iage]+ItoR+ItoS
       # SARI will go to REC, DEATH, CRIT
-      #  Assume vaccination only reduces ILI-> SARI  CFR is th StoD/StoC death rate by 0%
-      StoC <-  as.numeric(newSARI[iday,iage] *pStoC[iage-1] * (1.0-vacdat[iday,iage]*0.0) )*SARIToCritical
-      StoD <-  as.numeric(newSARI[iday,iage] *pStoD[iage-1] * (1.0-vacdat[iday,iage]*0.0) )*SARIToDeath
+      #  Assume vaccination only reduces ILI-> SARI  CFR is thth StoD/StoC death rate by 0%
+      # Once you are Severely Ill (hospitalised) chance of recovery is unaffected
+      StoC <-  as.numeric(newSARI[iday,iage] *pStoC[iage-1]  )*SARIToCritical
+      StoD <-  as.numeric(newSARI[iday,iage] *pStoD[iage-1]  )*SARIToDeath
       StoR <-  as.numeric(newSARI[iday,iage] *(1.0-pStoC[iage-1]-pStoD[iage-1]) )*SARIToRecovery
       newCRIT[(iday:xday),iage] <- newCRIT[(iday:xday),iage]+StoC
       oldSARI[(iday:xday),iage] <- oldSARI[(iday:xday),iage]+StoR+StoC+StoD

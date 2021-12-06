@@ -9,7 +9,7 @@ library(lubridate)
 
 CC_write <- function(CCcomp,region,pop,R_region,Q_region,Rseries,ratio,filename){
 # write from arbitrary start point to last day where there are cases
-startwrite=400
+startwrite=450
 endwrite=nrow(CCcomp$CASE)
 group <- "Edinburgh"
 model <-  "WSS"

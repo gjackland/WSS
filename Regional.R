@@ -185,7 +185,7 @@ Hospital$Eng$saridat=Hospital$NEY$saridat+Hospital$NW$saridat+
   Hospital$SE$saridat+Hospital$SW$saridat+
   Hospital$london$saridat
 total_deaths=sum(deathdat[2:20])
-total_cases=sum(casedat[2:20])
+total_cases=sum(casedat[1:total_time_case,2:20])
 total_admissions=sum(Hospital$Eng$newsaridat)
 total_crit=sum(Hospital$UK$critdat)
 total_time_death=nrow(deathdat)
@@ -194,7 +194,7 @@ total_time=length(Hospital$UK$date)
 ratio <-list()
 ratio$death=total_deaths/sum(compEng$DEATH[1:total_time,2:20])
 ratio$death=1.0
-ratio$case=total_cases/sum(compEng$CASE[1:total_time,2:20])
+ratio$case=total_cases/sum(compEng$CASE[1:total_time_case,2:20])
 ratio$newhosp=total_admissions/sum(compEng$newSARI[1:total_time,2:20])
 ratio$hosp=sum(Hospital$Eng$saridat)/sum(compEng$SARI[1:total_time,2:20])
 ratio$crit=total_crit/sum(compEng$CRIT[1:total_time,2:20])
@@ -241,7 +241,7 @@ write.xlsx(CC, file = "allx.xlsx",
 
 plot_date<-c(plotdate[1],plotdate[2])
 ymax = max(tail(rowSums(predMD$DEATH[2:20]),n=100))*1.1
-plot(rowSums(predMD$DEATH[2:20]),x=predMD$DEATH$date,xlim=plot_date,ylim=c(0,ymax),cex.axis=0.7,ylab="Regional Death",xlab="Date") 
+plot(rowSums(predMD$DEATH[2:20]),x=predMD$DEATH$date,xlim=plot_date,cex.axis=0.7,ylab="Regional Death",xlab="Date") 
 lines(rowSums(predNEY$DEATH[2:20]),x=predNEY$DEATH$date,xlim=plot_date,col="red") 
 lines(rowSums(predNW$DEATH[2:20]),x=predNW$DEATH$date,xlim=plot_date,col="blue")  
 lines(rowSums(predSW$DEATH[2:20]),x=predSW$DEATH$date,xlim=plot_date,col="green")  
