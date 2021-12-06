@@ -115,7 +115,7 @@ Compartment <- function(cases,  csimAge, rCFR, cdat, startc, endc){
   for (iday in (startc:endc)){
     # Update current vaccine/variant lethality if available    
     if(!is.na(cdat$lethality[iday])){
-      sfac <- sqrt(cdat$lethality[iday])}
+    sfac <- sqrt(cdat$lethality[iday])}
     pTtoI <- afac*rCFR^apow*sfac
     pItoS <- bfac*rCFR^bpow*sfac
     pStoD <- cfac*rCFR^cpow*sfac
@@ -137,7 +137,7 @@ Compartment <- function(cases,  csimAge, rCFR, cdat, startc, endc){
     # Note inverse lethality isnt a simple % as CFR cant be >1
     # Will have negative people  trouble if CFR>1
     
-    xday <- iday+length(SARIToCritical)-1
+    xday <- iday+cdflength-1
     agerange <- (2:ncol(ILI))
     ageminus <- agerange-1
     
@@ -146,11 +146,13 @@ Compartment <- function(cases,  csimAge, rCFR, cdat, startc, endc){
     
     
     #  vectorize
-    MtoR <- outer(as.numeric(newMILD[iday,agerange]),MildToRecovery,FUN="*")
-    oldMILD[(iday:xday),agerange] <- oldMILD[(iday:xday),agerange]+MtoR
+    #MtoR <- outer(as.numeric(newMILD[iday,agerange]),MildToRecovery,FUN="*")
+    #oldMILD[(iday:xday),agerange] <- oldMILD[(iday:xday),agerange]+MtoR
     vacCFR <- 0.85 #Vaccine reduction in ILI-> SARI
     for (iage in agerange){
       # All todays new MILDs will all leave to REC across distribution
+      MtoR <-  as.numeric(newMILD[iday,iage])  *MildToRecovery  
+      oldMILD[(iday:xday),iage] <- oldMILD[(iday:xday),iage]+MtoR
       # multiple by vaccination and its CFR reduction
       # ILI will go to SA/RI and REC
       ItoS <-  as.numeric(newILI[iday,iage] * pItoS[iage-1] * (1.0-vacdat[iday,iage]*vacCFR)) *ILIToSARI
