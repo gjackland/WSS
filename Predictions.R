@@ -2,7 +2,7 @@
 
 Predictions <- function(input,R_input){
   #Unpack input
-  
+  input[is.na(input)]<-0
   DEATH <- input$DEATH
   RECOV <- input$RECOV
   MILD <- input$MILD
@@ -68,7 +68,7 @@ Predictions <- function(input,R_input){
       
       
       # ILI will go to SA/RI and REC   Vaccination frozen on last day, not predicted
-      ItoS = as.numeric(newILI[iday,iage] * pItoS[iage-1] * (1.0-vacdat[lengthofdata,iage]*vacCFR)) *ILIToSARI  #  ItoS = as.numeric(newILI[iday,iage] *  pItoS[iage-1])     *ILIToSARI
+      ItoS = as.numeric(newILI[iday,iage] * pItoS[iage-1] * (1.0-vacdat[nrow(vacdat),iage]*vacCFR)) *ILIToSARI  #  ItoS = as.numeric(newILI[iday,iage] *  pItoS[iage-1])     *ILIToSARI
       ItoR = as.numeric(newILI[iday,iage] *(1.0-pItoS[iage-1])) *ILIToRecovery
       newSARI[(iday:xday),iage]=newSARI[(iday:xday),iage]+ItoS
       oldILI[(iday:xday),iage]=oldILI[(iday:xday),iage]+ItoR+ItoS

@@ -185,7 +185,7 @@ Hospital$Eng$saridat=Hospital$NEY$saridat+Hospital$NW$saridat+
   Hospital$SE$saridat+Hospital$SW$saridat+
   Hospital$london$saridat
 total_deaths=sum(deathdat[2:20])
-total_cases=sum(casedat[2:20])
+total_cases=sum(1:total_time_case,casedat[2:20])
 total_admissions=sum(Hospital$Eng$newsaridat)
 total_crit=sum(Hospital$UK$critdat)
 total_time_death=nrow(deathdat)
@@ -194,7 +194,7 @@ total_time=length(Hospital$UK$date)
 ratio <-list()
 ratio$death=total_deaths/sum(compEng$DEATH[1:total_time,2:20])
 ratio$death=1.0
-ratio$case=total_cases/sum(compEng$CASE[1:total_time,2:20])
+ratio$case=total_cases/sum(compEng$CASE[1:total_time_case,2:20])
 ratio$newhosp=total_admissions/sum(compEng$newSARI[1:total_time,2:20])
 ratio$hosp=sum(Hospital$Eng$saridat)/sum(compEng$SARI[1:total_time,2:20])
 ratio$crit=total_crit/sum(compEng$CRIT[1:total_time,2:20])
@@ -230,11 +230,11 @@ CCEE=CC_write(predEE,"East of England",population$EE[1],R_BestGuess$EE,R_Quant$E
 
 #Now combine all the sheets into one
 
-NIWal_write()
+CC2=NIWal_write()
 
-CC<-rbind(CCEng,CCScot,CCNW,CCNEY,CCMD,CCLon,CCSW,CCSE,CCEE)
+CC<-rbind(CCEng,CCScot,CCNW,CCNEY,CCMD,CCLon,CCSW,CCSE,CCEE,CC2)
 
-write.xlsx(CC, file = "allx.xlsx", 
+write.xlsx(CC, file = "all.xlsx", 
            overwrite = TRUE,  sheetName = region, rowNames = FALSE)
 
 #  Monitoring plots for MTP deaths
@@ -250,7 +250,7 @@ lines(rowSums(predEE$DEATH[2:20]),x=predEE$DEATH$date,xlim=plot_date,col="violet
 lines(rowSums(predlondon$DEATH[2:20]),x=predlondon$DEATH$date,xlim=plot_date,col="yellow")  
 
 
-plot(y=Hospital$MD$newsaridat,x=Hospital$UK$date,ylab="MD Hospital Admissions",xlab="Date",xlim=plot_date)
+plot(y=Hospital$MD$newsaridat,x=Hospital$MD$date,ylab="MD Hospital Admissions",xlab="Date",xlim=plot_date)
 lines(rowSums(predMD$newSARI[2:20])/ratio$newhosp,x=predMD$newSARI$date)
 plot(y=Hospital$NW$newsaridat,x=Hospital$UK$date,ylab="NW Hospital Admissions",xlab="Date",xlim=plot_date)
 lines(rowSums(predNW$newSARI[2:20])/ratio$newhosp,x=predNW$newSARI$date)
@@ -262,10 +262,10 @@ plot(y=Hospital$SE$newsaridat,x=Hospital$UK$date,ylab="SE Hospital Admissions",x
 lines(rowSums(predSE$newSARI[2:20])/ratio$newhosp,x=predSE$newSARI$date)
 plot(y=Hospital$SW$newsaridat,x=Hospital$UK$date,ylab="SW Hospital Admissions",xlab="Date",xlim=plot_date)
 lines(rowSums(predSW$newSARI[2:20])/ratio$newhosp,x=predSW$newSARI$date)
-plot(y=Hospital$london$newsaridat,x=Hospital$UK$date,ylab="London Hospital Admissions",xlab="Date",xlim=plot_date)
+plot(y=Hospital$london$newsaridat,x=Hospital$london$date,ylab="London Hospital Admissions",xlab="Date")
 lines(rowSums(predlondon$newSARI[2:20])/ratio$newhosp,x=predlondon$newSARI$date)
-plot(y=Hospital$Scot$newsaridat,x=Hospital$Scot$date,ylab="Scotland Hospital Admissions",xlab="Date",xlim=plot_date)
-lines(rowSums(predScot$newSARI[2:20])/ratio$newhosp,x=predScot$newSARI$date)
+plot(Hospital$Scot$newsaridat,ylab="Scotland Hospital Admissions",xlab="Date")
+plot(rowSums(predScot$newSARI[2:20])/ratio$newhosp,x=predScot$newSARI$date)
 
 
 plot(y=Hospital$Eng$saridat,x=Hospital$UK$date,ylab="England Hospital Cases",xlab="Date",xlim=plot_date)
