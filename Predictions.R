@@ -2,7 +2,7 @@
 
 Predictions <- function(input,R_input){
   #Unpack input
-  
+  input[is.na(input)]<-0
   DEATH <- input$DEATH
   RECOV <- input$RECOV
   MILD <- input$MILD
@@ -67,13 +67,10 @@ Predictions <- function(input,R_input){
     
     
     #  vectorize - suddenly not working ???
-#    MtoR=outer(as.numeric(newMILD[iday,agerange]),MildToRecovery,FUN="*")
-#    oldMILD[(iday:xday),agerange]=oldMILD[(iday:xday),agerange]+MtoR
+  MtoR=outer(as.numeric(newMILD[iday,agerange]),MildToRecovery,FUN="*")
+  oldMILD[(iday:xday),agerange]=oldMILD[(iday:xday),agerange]+MtoR
     for (iage in agerange){
       # All todays new MILDs will all leave to REC across distribution
-      MtoR <-  as.numeric(newMILD[iday,iage])  *MildToRecovery  
-      oldMILD[(iday:xday),iage] <- oldMILD[(iday:xday),iage]+MtoR
-      
       # ILI will go to SARI and REC   Vaccination frozen on last day, not predicted
       ItoS = as.numeric(newILI[iday,iage] * pItoS[iage-1] * (1.0-vacdat[nrow(vacdat),iage]*vacCFR)) *ILIToSARI  #  ItoS = as.numeric(newILI[iday,iage] *  pItoS[iage-1])     *ILIToSARI
       ItoR = as.numeric(newILI[iday,iage] *(1.0-pItoS[iage-1])) *ILIToRecovery

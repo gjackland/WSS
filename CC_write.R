@@ -175,19 +175,18 @@ for (d in startwrite:length(CCcomp$CASE$date)){
 CCtmp$ValueType="prevalence"
 CCtmp$Scenario="Nowcast"
 
-for (d in startwrite:(endwrite-4)){
+for (d in startwrite:(endwrite-4)){R_error=0
   if(CCcomp$CASE$date[d]>(today-reporting_delay)){ 
-
     CCtmp$Scenario="MTP"
     CCtmp$ValueType="prevalence_mtp"
   }
   PREV= sum(CCcomp$ILI[d,2:20]+CCcomp$SARI[d,2:20])+sum(CCcomp$CASE[d:(d+4),2:20])*Missing_incidence
   CCtmp$Value=PREV*Missing_prevalence/pop*100
-  CCtmp$"Quantile 0.05"=CCtmp$Value*0.5
-  CCtmp$"Quantile 0.25"=CCtmp$Value*0.75
+  CCtmp$"Quantile 0.05"=CCtmp$Value*(0.75-0.075*R_error)
+  CCtmp$"Quantile 0.25"=CCtmp$Value*(0.875-0.085*R_error)
   CCtmp$"Quantile 0.5"=CCtmp$Value
-  CCtmp$"Quantile 0.75"=CCtmp$Value*1.3333
-  CCtmp$"Quantile 0.95"=CCtmp$Value*2
+  CCtmp$"Quantile 0.75"=CCtmp$Value*(8/7+8/70*R_error)
+  CCtmp$"Quantile 0.95"=CCtmp$Value*(4/3+4/30*R_error)
   CCtmp$"Day of Value" = day(CCcomp$ILI$date[d])
   CCtmp$"Month of Value" = month(CCcomp$ILI$date[d])
   CCtmp$"Year of Value" = year(CCcomp$ILI$date[d])
