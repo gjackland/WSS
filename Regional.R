@@ -185,7 +185,7 @@ Hospital$Eng$saridat=Hospital$NEY$saridat+Hospital$NW$saridat+
   Hospital$SE$saridat+Hospital$SW$saridat+
   Hospital$london$saridat
 total_deaths=sum(deathdat[2:20])
-total_cases=sum(1:total_time_case,casedat[2:20])
+total_cases=sum(casedat[1:total_time_case,2:20])
 total_admissions=sum(Hospital$Eng$newsaridat)
 total_crit=sum(Hospital$UK$critdat)
 total_time_death=nrow(deathdat)
@@ -201,6 +201,9 @@ ratio$crit=total_crit/sum(compEng$CRIT[1:total_time,2:20])
 
 #  Rescale big regional differences in hospitalization times.
 filename=paste("data/CCcompartment",Sys.Date(),"regions.xlsx")
+
+ratio$death=sum(compEng$DEATH[(total_time-51):(total_time-1),2:20])/sum(deathdat[(total_time-51):(total_time-1),2:20])
+ratio$hosp=sum(rowSums(predEng$SARI[2:20]+predEng$CRIT[2:20]+predEng$CRITREC[2:20]))/sum(Hospital$Eng$saridat)
 
 CCEng=CC_write(predEng,"England",population$England[1],R_BestGuess$England,R_Quant$England,rat$smoothEngland,ratio,filename)
 ratio$death=sum(compScot$DEATH[(total_time-51):(total_time-1),2:20])/sum(scotdeath[(total_time-51):(total_time-1),2:20])

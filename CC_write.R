@@ -111,13 +111,13 @@ CCtmp$ValueType="hospital_inc"
 #  Would like regional admissions data, only have totals, but use them anyway
 for (d in startwrite:endwrite){
   if(CCcomp$CASE$date[d]>(today-reporting_delay)){ CCtmp$Scenario="MTP"}
-  CCtmp$Value = sum(CCcomp$newSARI[d,2:20])/ratio$hosp
+  CCtmp$Value = sum(CCcomp$newSARI[d,2:20])*ratio$newhosp
   NStoday = sum(CCcomp$newSARI[d,2:20])
-  CCtmp$"Quantile 0.05"=max(0,NStoday*(1-3*sqrt(sum(CCcomp$newSARI[(d-6):d,2:20])/7)/NStoday))/ratio$hosp
-  CCtmp$"Quantile 0.25"=max(0,NStoday*(1-sqrt(sum(CCcomp$newSARI[(d-6):d,2:20])/7)/NStoday))/ratio$hosp
+  CCtmp$"Quantile 0.05"=max(0,NStoday*(1-3*sqrt(sum(CCcomp$newSARI[(d-6):d,2:20])/7)/NStoday))*ratio$newhosp
+  CCtmp$"Quantile 0.25"=max(0,NStoday*(1-sqrt(sum(CCcomp$newSARI[(d-6):d,2:20])/7)/NStoday))*ratio$newhosp
   CCtmp$"Quantile 0.5"=CCtmp$Value
-  CCtmp$"Quantile 0.75"=NStoday*(1+sqrt(sum(CCcomp$newSARI[(d-6):d,2:20])/7)/NStoday)/ratio$hosp
-  CCtmp$"Quantile 0.95"=NStoday*(1+3*sqrt(sum(CCcomp$newSARI[(d-6):d,2:20])/7)/NStoday)/ratio$hosp
+  CCtmp$"Quantile 0.75"=NStoday*(1+sqrt(sum(CCcomp$newSARI[(d-6):d,2:20])/7)/NStoday)*ratio$newhosp
+  CCtmp$"Quantile 0.95"=NStoday*(1+3*sqrt(sum(CCcomp$newSARI[(d-6):d,2:20])/7)/NStoday)*ratio$newhosp
   CCtmp$"Day of Value" = day(CCcomp$newSARI$date[d])
   CCtmp$"Month of Value" = month(CCcomp$newSARI$date[d])
   CCtmp$"Year of Value" = year(CCcomp$newSARI$date[d])
@@ -128,7 +128,7 @@ CCtmp$ValueType="type28_death_inc_line"
 CCtmp$Scenario="MTP"
 for (d in startwrite:endwrite){
   if(CCcomp$DEATH$date[d]>(today-reporting_delay)){ CCtmp$Scenario="MTP"}  
-  CCtmp$Value = sum(CCcomp$DEATH[d,2:20])/ratio$death
+  CCtmp$Value = sum(CCcomp$DEATH[d,2:20])*ratio$death
   CCtmp$"Quantile 0.05"=max(0,CCtmp$Value*(1-sqrt(sum(CCcomp$DEATH[(d-6):d,2:20])/7)/CCtmp$Value))
   CCtmp$"Quantile 0.25"=max(0,CCtmp$Value*(1-sqrt(sum(CCcomp$DEATH[(d-6):d,2:20])/7)/3/CCtmp$Value))
   CCtmp$"Quantile 0.5"=CCtmp$Value
@@ -147,7 +147,8 @@ for (d in startwrite:endwrite){
 #  These need more detailed study!
 Missing_prevalence=1.0
 Missing_incidence=2.2
-scalefac=(100000/pop)*Missing_incidence
+#scalefac=(100000/pop)*Missing_incidence convert to total numbers
+scalefac=Missing_incidence
 CCtmp$ValueType="incidence"
 CCtmp$Scenario="Nowcast"
 for (d in startwrite:length(CCcomp$CASE$date)){
