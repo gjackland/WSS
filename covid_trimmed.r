@@ -195,6 +195,7 @@ startdate <- as.Date("2020/08/09") #as.Date("2020/08/09")
 # Weekend data can be sketchy Extend the enddate if run on Monday morning
 reporting_delay=5
 enddate <-  Sys.Date()-reporting_delay
+predtime = 44+reporting_delay
 # Set the generation time
 genTime <- 5
 #  Dates for the plots
@@ -1549,10 +1550,9 @@ if(interactive()&medrxiv){medout<-MedrxivPaper()}
 ################################################################
 ###  Finally, Use all this to make predictions for England (Scotland & Regions in separate compartment.R code)
 ###Assume that R and lethality are constants
-predtime = 28
-region="England"
 
-predEng<-Predictions(compEng,R_BestGuess$England)
+region="England"
+predEng<-Predictions(compEng,R_BestGuess$England,predtime)
 
 #  Compartment predictions removed to Predictions.R
 #  Replicated the data because repeated calls to Predictions would increment comp

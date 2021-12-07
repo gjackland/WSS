@@ -62,7 +62,7 @@ Compartment <- function(cases,  csimAge, rCFR, cdat, startc, endc){
   
   #extend ILI longer than cases to allow for predictions (eventually)
   ILI <- cases
-  for (i in lengthofdata:(lengthofdata+lengthofspread) ){
+  for (i in lengthofdata:(lengthofdata+lengthofspread+predtime) ){
     ILI[i,(2:ncol(ILI))] <-  0.0
     ILI[i,1] <- ILI$date[1]+i-1
   }

@@ -58,11 +58,9 @@ BoardsToCouncils <- list(
 # Getting data ------------------------------------------------------------
 
 # Start and end date - the data to collect data from
-#  start and end dates inherited from a previous run of covid_trimmed
-startdate <- as.Date("2020/07/25")
-
+#  startdate and enddate inherited from a previous run of covid_trimmed
 # WAS To one week ago (-7)  NOW read in all the data
-enddate <-  Sys.Date()-reporting_delay
+
 
 
 # Base url for UK data
@@ -380,7 +378,7 @@ RawCFR=colSums(scotdeath[13:212,2:20])/colSums(scotage[1:200,2:20])
 #  Full Epidemic model.
 compScot <- Compartment(scotage, covidsimAge, RawCFR, comdat,2,nrow(scotage))
 #  Medium Term Projections
-predScot<-Predictions(compScot,R_BestGuess$Scotland)
+predScot<-Predictions(compScot,R_BestGuess$Scotland,predtime)
 
 
 try(CC_write(predScot,"Scotland2",population$Scotland[1],R_BestGuess$Scotland,R_Quant$Scotland),rat$smoothScotland)
