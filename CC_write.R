@@ -9,7 +9,7 @@ library(lubridate)
 
 CC_write <- function(CCcomp,region,pop,R_region,Q_region,Rseries,ratio,filename){
 # write from arbitrary start point to last day where there are cases
-startwrite=400
+startwrite=450
 endwrite=nrow(CCcomp$CASE)
 group <- "Edinburgh"
 model <-  "WSS"
@@ -61,17 +61,17 @@ CC <- data.frame(
   check.names = FALSE
 )
   CCtmp<-CC
-  #  R number Nowcast
+  #  R number Nowcast.  Error mainly comes from uncrtainty in GenTime
   CCtmp$Scenario="Nowcast"
   CCtmp$Geography=region
   CCtmp$ValueType="R"
   for (d in startwrite:(length(Rseries)-3)){
     CCtmp$Value = Rseries[d]
-    CCtmp$"Quantile 0.05"=min(Rseries[(d-3):(d+3)])-0.2
-    CCtmp$"Quantile 0.25"=min(Rseries[(d-3):(d+3)])-0.1
+    CCtmp$"Quantile 0.05"=min(Rseries[(d-3):(d+3)])-0.15
+    CCtmp$"Quantile 0.25"=min(Rseries[(d-3):(d+3)])-0.075
     CCtmp$"Quantile 0.5"=Rseries[d]
-    CCtmp$"Quantile 0.75"=max(Rseries[(d-3):(d+3)])+0.1
-    CCtmp$"Quantile 0.95"=max(Rseries[(d-3):(d+3)])+0.2
+    CCtmp$"Quantile 0.75"=max(Rseries[(d-3):(d+3)])+0.075
+    CCtmp$"Quantile 0.95"=max(Rseries[(d-3):(d+3)])+0.15
     CCtmp$"Day of Value" = day(rat$date[d])
     CCtmp$"Month of Value" = month(rat$date[d])
     CCtmp$"Year of Value" = year(rat$date[d])
@@ -87,11 +87,11 @@ CC <- data.frame(
   CCtmp$ValueType="growth_rate"
   for (d in startwrite:(length(Rseries)-3)){
     CCtmp$Value = exp((Rseries[d]-1.0)/genTime)-1.0
-    CCtmp$"Quantile 0.05"=exp((min(Rseries[(d-3):(d+3)])-0.2-1.0)/genTime)-1.0
-    CCtmp$"Quantile 0.25"=exp((min(Rseries[(d-3):(d+3)])-0.1-1.0)/genTime)-1.0
+    CCtmp$"Quantile 0.05"=exp((min(Rseries[(d-3):(d+3)])-0.1-1.0)/genTime)-1.0
+    CCtmp$"Quantile 0.25"=exp((min(Rseries[(d-3):(d+3)])-0.05-1.0)/genTime)-1.0
     CCtmp$"Quantile 0.5"=exp((Rseries[d]-1.0)/genTime)-1.0
-    CCtmp$"Quantile 0.75"=exp((max(Rseries[(d-3):(d+3)])+0.1-1.0)/genTime)-1.0
-    CCtmp$"Quantile 0.95"=exp((max(Rseries[(d-3):(d+3)])+0.2-1.0)/genTime)-1.0
+    CCtmp$"Quantile 0.75"=exp((max(Rseries[(d-3):(d+3)])+0.05-1.0)/genTime)-1.0
+    CCtmp$"Quantile 0.95"=exp((max(Rseries[(d-3):(d+3)])+0.1-1.0)/genTime)-1.0
     CCtmp$Value = exp((Rseries[d]-1.0)/genTime)-1.0
     CCtmp$"Day of Value" = day(rat$date[d])
     CCtmp$"Month of Value" = month(rat$date[d])
@@ -176,19 +176,18 @@ for (d in startwrite:length(CCcomp$CASE$date)){
 CCtmp$ValueType="prevalence"
 CCtmp$Scenario="Nowcast"
 
-for (d in startwrite:(endwrite-4)){
+for (d in startwrite:(endwrite-4)){R_error=0
   if(CCcomp$CASE$date[d]>(today-reporting_delay)){ 
-
     CCtmp$Scenario="MTP"
     CCtmp$ValueType="prevalence_mtp"
   }
   PREV= sum(CCcomp$ILI[d,2:20]+CCcomp$SARI[d,2:20])+sum(CCcomp$CASE[d:(d+4),2:20])*Missing_incidence
   CCtmp$Value=PREV*Missing_prevalence/pop*100
-  CCtmp$"Quantile 0.05"=CCtmp$Value*0.5
-  CCtmp$"Quantile 0.25"=CCtmp$Value*0.75
+  CCtmp$"Quantile 0.05"=CCtmp$Value*(0.75-0.075*R_error)
+  CCtmp$"Quantile 0.25"=CCtmp$Value*(0.875-0.085*R_error)
   CCtmp$"Quantile 0.5"=CCtmp$Value
-  CCtmp$"Quantile 0.75"=CCtmp$Value*1.3333
-  CCtmp$"Quantile 0.95"=CCtmp$Value*2
+  CCtmp$"Quantile 0.75"=CCtmp$Value*(8/7+8/70*R_error)
+  CCtmp$"Quantile 0.95"=CCtmp$Value*(4/3+4/30*R_error)
   CCtmp$"Day of Value" = day(CCcomp$ILI$date[d])
   CCtmp$"Month of Value" = month(CCcomp$ILI$date[d])
   CCtmp$"Year of Value" = year(CCcomp$ILI$date[d])
@@ -196,7 +195,7 @@ for (d in startwrite:(endwrite-4)){
   CC <- rbind(CC, CCtmp)
 }
 
-#  Extend assuming derivative of CASE[d] is zero 
+#  Extend for the last three days assuming derivative of CASE[d] is zero 
 for (d in (endwrite-3):endwrite){
   PREV= sum(CCcomp$ILI[d,2:20]+CCcomp$SARI[d,2:20])+sum(CCcomp$CASE[d,2:20]*5)*Missing_incidence
   CCtmp$Value=PREV*Missing_prevalence/pop*100

@@ -1,6 +1,6 @@
 ##Assume that R and lethality are constants
 
-Predictions <- function(input,R_input){
+Predictions <- function(input,R_input,predtime){
   #Unpack input
   input[is.na(input)]<-0
   DEATH <- input$DEATH
@@ -37,20 +37,28 @@ Predictions <- function(input,R_input){
   CriticalToDeath <- input$CriticalToDeath
   CriticalToCritRecov <- input$CriticalToCritRecov
   CritRecovToRecov <- input$CritRecovToRecov
+ 
   # enddateP is end of actual data - sometimes earlier than asked for
 
-  predtime = 44+reporting_delay
+ 
   #  For loop over time, predCASE using R numbers
   lengthofdata <- nrow(CASE)
   enddateP<-CASE$date[lengthofdata]
   agerange <- (2:ncol(ILI))
   #  Initialise predCASE, the predicted values. These will be added to CASE, with the
   #   actual data retained in casedat
+  #  For predictions after Dec 2021, assume omicron_frac
+  omicron_frac <- 0.05
   predCASE<-CASE[lengthofdata,(1:20)]
-  predCASE[1,(2:20)]<-CASE[lengthofdata,(2:20)] #  Growth rate by age group
+  predCASE[1,(2:20)]<-CASE[lengthofdata,(2:20)]*(1-omicron_frac) #  Growth rate by age group
   predCASE[1,1]=enddateP
+  omicronCASE<-CASE[lengthofdata,(1:20)]
+  omicronCASE[1,(2:20)]<-CASE[lengthofdata,(2:20)]*omicron_frac #  Growth rate by age group
+  omicronCASE[1,1]=enddateP
+  R_omicron=R_input*1.5
   ipred=1
-  for (iday in ((lengthofdata+1):(lengthofdata+predtime))){
+   } 
+   for (iday in ((lengthofdata+1):(lengthofdata+predtime))){
     #  Proportions become variant dependent.  ILI is case driven, so extra infectivity is automatic
     # from the data. ILI->SARI increases with variant.  CRIT is an NHS decision, not favoured for very old
     #  Need to increase CFR without exceeding 1.  Note inverse lethality isnt a simple % as CFR cant be >1
@@ -60,14 +68,12 @@ Predictions <- function(input,R_input){
     newILI[iday,agerange]=predCASE[ipred,agerange]*  pTtoI    +newILI[iday,agerange]
     
     
-    #  vectorize
-    MtoR=outer(as.numeric(newMILD[iday,agerange]),MildToRecovery,FUN="*")
-    oldMILD[(iday:xday),agerange]=oldMILD[(iday:xday),agerange]+MtoR
+    #  vectorize - suddenly not working ???
+  MtoR=outer(as.numeric(newMILD[iday,agerange]),MildToRecovery,FUN="*")
+  oldMILD[(iday:xday),agerange]=oldMILD[(iday:xday),agerange]+MtoR
     for (iage in agerange){
       # All todays new MILDs will all leave to REC across distribution
-      
-      
-      # ILI will go to SA/RI and REC   Vaccination frozen on last day, not predicted
+      # ILI will go to SARI and REC   Vaccination frozen on last day, not predicted
       ItoS = as.numeric(newILI[iday,iage] * pItoS[iage-1] * (1.0-vacdat[nrow(vacdat),iage]*vacCFR)) *ILIToSARI  #  ItoS = as.numeric(newILI[iday,iage] *  pItoS[iage-1])     *ILIToSARI
       ItoR = as.numeric(newILI[iday,iage] *(1.0-pItoS[iage-1])) *ILIToRecovery
       newSARI[(iday:xday),iage]=newSARI[(iday:xday),iage]+ItoS
@@ -105,16 +111,21 @@ Predictions <- function(input,R_input){
     
     # R decays back to 1 with growth rate down 5% a day, faster if larger
     # R is the same in all age groups
-    
+    # By hand, add omicron at 5% of cases
+  
     if(R_input > 1.4) {R_input=(R_input-1)*0.95+1.0}
     R_input=(R_input-1)*0.95+1.0
+    if(R_omicron > 1.4) {R_omicron=(R_omicron-1)*0.95+1.0}
+    R_omicron=(R_omicron-1)*0.95+1.0
     predCASE[(ipred+1),(2:20)]<-predCASE[ipred,(2:20)]*exp((R_input-1)/genTime)
+    omicronCASE[(ipred+1),(2:20)]<-omicronCASE[ipred,(2:20)]*exp((R_omicron-1)/genTime)
     predCASE[ipred+1,1]<-enddateP+ipred 
+    omicronCASE[ipred+1,1]<-enddateP+ipred 
     ipred=ipred+1 
   }
   # Remove the redundant first column
   predCASE <- predCASE[-c(1),]
-
+  omicronCASE <- omicronCASE[-c(1),]
   # Pack anything that you want to use - anything not returned will not have a
   # value in the calling space.
   
