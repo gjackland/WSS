@@ -42,6 +42,37 @@ setwd(".")
 # Turn off scientific notation.
 options(scipen = 999)
 
+# Load code to function to output to the web-ui interface
+# From stackoverflow: 6456501
+if(!exists("outputJSON", mode="function")) source("json_wss.R")
+
+# Get requested outputs from the web-ui. For the web-ui the
+# file must be "/data/input/inputFile.json".
+if(dir.exists("/data/input")){
+  infile <- "/data/input/inputFile.json"
+}else{
+  infile <- "data/sample-inputFile.json"
+}
+
+# Get input data from the web interface or a test file
+dataIn <- getInput(infile)
+
+# NOTE: These are the regions and subregions being asked for - data should be produced
+# that corresponds to these.  Add UI to avoid name clash with CrystalCast
+UI_region <- dataIn$region
+UI_subregion <- dataIn$subregion
+
+# Read these parameters to output again
+calibrationDate <- dataIn$parameters$calibrationDate
+calibrationCaseCount <- dataIn$parameters$calibrationCaseCount
+calibrationDeathCount <- dataIn$parameters$calibrationDeathCount
+interventionPeriods <- dataIn$parameters$interventionPeriods
+
+if(UI_region != "GB" || UI_subregion != "GB-ENG") {
+  # Any other regions are currently unsupported
+  if(! interactive()){quit(status=10)}
+}
+
 # Copy transition rates from covidsim.  There are three different functions for
 # ICDFs (Inverse Cumulative Distribution Function).  x-axis divided into 20 blocks of 5%.
 # Will need to invert this.  Recent versions include a "Stepdown" state which seems to entail dying in CRITREC
@@ -103,7 +134,7 @@ population$NEY<-population$Yorks+population$NE
 population$UK<-popdat
 covidsimAge<-data.frame(
   "Prop_ILI_ByAge"=c(
-    0.333122437,  0.333153617,	0.333001453, 0.332654731, 0.33181821, 0.330417289, 0.328732618, 0.326716425, 0.325130732, 0.322392505, 0.316971878, 0.312809664, 0.304540269, 0.300182488, 0.2919304, 0.283276936, 0.282323232, 0.282323232, 0.282323232
+    0.333122437,  0.333153617,  0.333001453, 0.332654731, 0.33181821, 0.330417289, 0.328732618, 0.326716425, 0.325130732, 0.322392505, 0.316971878, 0.312809664, 0.304540269, 0.300182488, 0.2919304, 0.283276936, 0.282323232, 0.282323232, 0.282323232
   ),
  "Prop_SARI_ByAge"=c( 0.000557744, 0.000475283, 0.000877703, 0.001794658, 0.004006955, 0.007711884, 
   0.012167229, 0.017359248, 0.021140307, 0.027047193, 0.03708932, 0.039871236, 0.020788928, 
@@ -1484,31 +1515,6 @@ if(interactive()){
 
 }
 
-# Load code to function to output to the web-ui interface
-# From stackoverflow: 6456501
-if(!exists("outputJSON", mode="function")) source("json_wss.R")
-
-# Get requested outputs from the web-ui. For the web-ui the
-# file must be "/data/input/inputFile.json".
-if(dir.exists("/data/input")){
-  infile <- "/data/input/inputFile.json"
-}else{
-  infile <- "data/sample-inputFile.json"
-}
-
-# Get input data from the web interface or a test file
-dataIn <- getInput(infile)
-
-# NOTE: These are the regions and subregions being asked for - data should be produced
-# that corresponds to these.  Add UI to avoid name clash with CrystalCast
-UI_region <- dataIn$region
-UI_subregion <- dataIn$subregion
-
-# Read these parameters to output again
-calibrationDate <- dataIn$parameters$calibrationDate
-calibrationCaseCount <- dataIn$parameters$calibrationCaseCount
-calibrationDeathCount <- dataIn$parameters$calibrationDeathCount
-interventionPeriods <- dataIn$parameters$interventionPeriods
 
 # Beginning of time series
 t0 <-  min(dfR$date)

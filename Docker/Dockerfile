@@ -1,5 +1,5 @@
 # Get a base R docker image
-FROM r-base
+FROM r-base:4.1.2
 
 # Install additional R packages
 RUN apt-get update -y && \
