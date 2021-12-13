@@ -32,7 +32,7 @@ YHurl="https://api.coronavirus.data.gov.uk/v2/data?areaType=region&areaCode=E120
 EMurl="https://api.coronavirus.data.gov.uk/v2/data?areaType=region&areaCode=E12000004&metric=newCasesBySpecimenDateAgeDemographics&format=csv"
 WMurl="https://api.coronavirus.data.gov.uk/v2/data?areaType=region&areaCode=E12000005&metric=newCasesBySpecimenDateAgeDemographics&format=csv"
 EEurl="https://api.coronavirus.data.gov.uk/v2/data?areaType=region&areaCode=E12000006&metric=newCasesBySpecimenDateAgeDemographics&format=csv"
-londonurl="https://api.coronavirus.data.gov.uk/v2/data?areaType=region&areaCode=E12000007&metric=newCasesBySpecimenDateAgeDemographics&format=csv"
+Lonurl="https://api.coronavirus.data.gov.uk/v2/data?areaType=region&areaCode=E12000007&metric=newCasesBySpecimenDateAgeDemographics&format=csv"
 SEurl="https://api.coronavirus.data.gov.uk/v2/data?areaType=region&areaCode=E12000008&metric=newCasesBySpecimenDateAgeDemographics&format=csv"
 SWurl="https://api.coronavirus.data.gov.uk/v2/data?areaType=region&areaCode=E12000009&metric=newCasesBySpecimenDateAgeDemographics&format=csv"
 
@@ -52,7 +52,7 @@ YH <-  read.csv(file=YHurl)
 EM <-  read.csv(file=EMurl)
 WM <-  read.csv(file=WMurl)
 EE <-  read.csv(file=EEurl)
-london <-  read.csv(file=londonurl)
+Lon <-  read.csv(file=Lonurl)
 SE <-  read.csv(file=SEurl)
 SW <-  read.csv(file=SWurl)
 
@@ -63,7 +63,7 @@ YH<-getData(YH)
 EM<-getData(EM)
 WM<-getData(WM)
 EE<-getData(EE)
-london<-getData(london)
+Lon<-getData(Lon)
 SE<-getData(SE)
 SW<-getData(SW)
 
@@ -76,7 +76,7 @@ NEY[2:20]=NE[2:20]+YH[2:20]
 
 SWhospurl="https://api.coronavirus.data.gov.uk/v2/data?areaType=nhsRegion&areaCode=E40000006&metric=hospitalCases&metric=newAdmissions&format=csv"
 EEhospurl="https://api.coronavirus.data.gov.uk/v2/data?areaType=nhsRegion&areaCode=E40000007&metric=hospitalCases&metric=newAdmissions&format=csv"
-londonhospurl="https://api.coronavirus.data.gov.uk/v2/data?areaType=nhsRegion&areaCode=E40000003&metric=hospitalCases&metric=newAdmissions&format=csv"
+Lonhospurl="https://api.coronavirus.data.gov.uk/v2/data?areaType=nhsRegion&areaCode=E40000003&metric=hospitalCases&metric=newAdmissions&format=csv"
 MDhospurl="https://api.coronavirus.data.gov.uk/v2/data?areaType=nhsRegion&areaCode=E40000008&metric=hospitalCases&metric=newAdmissions&format=csv"
 SEhospurl="https://api.coronavirus.data.gov.uk/v2/data?areaType=nhsRegion&areaCode=E40000005&metric=hospitalCases&metric=newAdmissions&format=csv"
 NEYhospurl="https://api.coronavirus.data.gov.uk/v2/data?areaType=nhsRegion&areaCode=E40000009&metric=hospitalCases&metric=newAdmissions&format=csv"
@@ -88,7 +88,7 @@ hNEY <-  read.csv(file=NEYhospurl)
 hNW <-  read.csv(file=NWhospurl)
 hMD <-  read.csv(file=MDhospurl)
 hEE <-  read.csv(file=EEhospurl)
-hlondon <-  read.csv(file=londonhospurl)
+hLon <-  read.csv(file=Lonhospurl)
 hSE <-  read.csv(file=SEhospurl)
 hSW <-  read.csv(file=SWhospurl)
 hScot <- read.csv(file=Scothospurl)
@@ -98,15 +98,15 @@ Hospital$NEY<-gethData(hNEY)
 Hospital$NW<-gethData(hNW)
 Hospital$MD<-gethData(hMD)
 Hospital$EE<-gethData(hEE)
-Hospital$london<-gethData(hlondon)
+Hospital$Lon<-gethData(hLon)
 Hospital$SE<-gethData(hSE)
 Hospital$SW<-gethData(hSW)
 Hospital$Scot<-gethData(hScot)
 Hospital$Wal<-gethData(hWal)
 Hospital$NI<-gethData(hNI)
 
-for (iage in 2:length(london)){
-  london[iage]<-Weekend(london %>% pull(iage)) 
+for (iage in 2:length(Lon)){
+  Lon[iage]<-Weekend(Lon %>% pull(iage)) 
 }
 for (iage in 2:length(NE)){
   NE[iage]<-Weekend(NE %>% pull(iage)) 
@@ -139,7 +139,7 @@ for (iage in 2:length(NEY)){
   NEY[iage]<-Weekend(NEY %>% pull(iage)) 
 }
 
-london$date<-as.Date(london$date)
+Lon$date<-as.Date(Lon$date)
 NE$date<-as.Date(NE$date)
 NW$date<-as.Date(NW$date)
 YH$date<-as.Date(YH$date)
@@ -153,8 +153,8 @@ NEY$date<-as.Date(NEY$date)
 
 #  Still use R from 7 regions...  CFR and vaccinations are assumed from National stats
 
-complondon<- Compartment(london,  covidsimAge, RawCFR, comdat,3,nrow(london))
-predlondon<-Predictions(complondon,R_BestGuess$London,predtime)
+compLon<- Compartment(Lon,  covidsimAge, RawCFR, comdat,3,nrow(Lon))
+predLon<-Predictions(compLon,R_BestGuess$Lon,predtime)
 
 compNW<- Compartment(NW,  covidsimAge, RawCFR, comdat,3,nrow(NW))
 predNW<-Predictions(compNW,R_BestGuess$NW,predtime)
@@ -174,7 +174,7 @@ predMD<-Predictions(compMD,R_BestGuess$Midlands,predtime)
 compNEY<- Compartment(NEY,  covidsimAge, RawCFR, comdat,3,nrow(NEY))
 predNEY<-Predictions(compNEY,R_BestGuess$NEY,predtime)
 
-rm( SE, SW, EE, NEY, MD, london, NW, hSE, hSW, hEE, hNEY, hMD, hlondon, hNW)
+rm( SE, SW, EE, NEY, MD, Lon, NW, hSE, hSW, hEE, hNEY, hMD, hLon, hNW)
 
 # recent scaling factors for MTPs, 
 total_time = min(nrow(deathdat),nrow(casedat),length(Hospital$UK$date))
@@ -184,11 +184,11 @@ recent_time<-(total_time-50):total_time
 Hospital$Eng$newsaridat=Hospital$NEY$newsaridat+Hospital$NW$newsaridat+
   Hospital$MD$newsaridat+Hospital$EE$newsaridat+
   Hospital$SE$newsaridat+Hospital$SW$newsaridat+
-  Hospital$london$newsaridat
+  Hospital$Lon$newsaridat
 Hospital$Eng$saridat=Hospital$NEY$saridat+Hospital$NW$saridat+
   Hospital$MD$saridat+Hospital$EE$saridat+
   Hospital$SE$saridat+Hospital$SW$saridat+
-  Hospital$london$saridat
+  Hospital$Lon$saridat
 total_deaths=sum(deathdat[recent_time,2:20])
 total_cases=sum(casedat[recent_time,2:20])
 
@@ -221,10 +221,10 @@ ratio$MD$death=sum(compMD$DEATH[recent_time,2:20])/sum(regdeaths$MD[recent_time]
 ratio$MD$hosp=sum(rowSums(predMD$SARI[recent_time,2:20]+predMD$CRIT[recent_time,2:20]+predMD$CRITREC[recent_time,2:20]))/sum(Hospital$MD$saridat[recent_time])
 ratio$MD$newhosp=sum(rowSums(predMD$newSARI[recent_time,2:20]))/sum(Hospital$MD$newsaridat[recent_time])
 CCMD=CC_write(predMD,"Midlands",population$MD[1],R_BestGuess$Midlands,R_Quant$Midlands,rat$smoothMD,ratio$MD,filename)
-ratio$Lon$death=sum(complondon$DEATH[recent_time,2:20])/sum(regdeaths$London[recent_time])
-ratio$Lon$hosp=sum(rowSums(predlondon$SARI[recent_time,2:20]+predlondon$CRIT[recent_time,2:20]+predlondon$CRITREC[recent_time,2:20]))/sum(Hospital$london$saridat[recent_time])
-ratio$Lon$newhosp=sum(rowSums(predlondon$newSARI[recent_time,2:20]))/sum(Hospital$london$newsaridat[recent_time])
-CCLon=CC_write(predlondon,"London",population$London[1],R_BestGuess$London,R_Quant$London,rat$smoothLondon,ratio$Lon,filename)
+ratio$Lon$death=sum(compLon$DEATH[recent_time,2:20])/sum(regdeaths$Lon[recent_time])
+ratio$Lon$hosp=sum(rowSums(predLon$SARI[recent_time,2:20]+predLon$CRIT[recent_time,2:20]+predLon$CRITREC[recent_time,2:20]))/sum(Hospital$Lon$saridat[recent_time])
+ratio$Lon$newhosp=sum(rowSums(predLon$newSARI[recent_time,2:20]))/sum(Hospital$Lon$newsaridat[recent_time])
+CCLon=CC_write(predLon,"Lon",population$Lon[1],R_BestGuess$Lon,R_Quant$Lon,rat$smoothLon,ratio$Lon,filename)
 ratio$SW$death=sum(compSW$DEATH[recent_time,2:20])/sum(regdeaths$`South West`[recent_time])
 ratio$SW$hosp=sum(rowSums(predSW$SARI[recent_time,2:20]+predSW$CRIT[recent_time,2:20]+predSW$CRITREC[recent_time,2:20]))/sum(Hospital$SW$saridat[recent_time])
 ratio$SW$newhosp=sum(rowSums(predSW$newSARI[recent_time,2:20]))/sum(Hospital$SW$newsaridat[recent_time])
@@ -257,29 +257,29 @@ lines(rowSums(predNW$DEATH[2:20]),x=predNW$DEATH$date,xlim=plot_date,col="blue")
 lines(rowSums(predSW$DEATH[2:20]),x=predSW$DEATH$date,xlim=plot_date,col="green")  
 lines(rowSums(predSE$DEATH[2:20]),x=predSE$DEATH$date,xlim=plot_date,col="orange")  
 lines(rowSums(predEE$DEATH[2:20]),x=predEE$DEATH$date,xlim=plot_date,col="violet")  
-lines(rowSums(predlondon$DEATH[2:20]),x=predlondon$DEATH$date,xlim=plot_date,col="yellow")  
+lines(rowSums(predLon$DEATH[2:20]),x=predLon$DEATH$date,xlim=plot_date,col="yellow")  
 
 
 plot(Hospital$MD$newsaridat,x=as.Date(Hospital$MD$date),ylab="MD Hospital Admissions",xlab="Date",xlim=plot_date)
-lines(rowSums(predMD$newSARI[2:20])/ratio$newhosp,x=predMD$newSARI$date)
+lines(rowSums(predMD$newSARI[2:20])/ratio$MD$newhosp,x=predMD$newSARI$date)
 plot(y=Hospital$NW$newsaridat,x=Hospital$UK$date,ylab="NW Hospital Admissions",xlab="Date",xlim=plot_date)
-lines(rowSums(predNW$newSARI[2:20])/ratio$newhosp,x=predNW$newSARI$date)
+lines(rowSums(predNW$newSARI[2:20])/ratio$NW$newhosp,x=predNW$newSARI$date)
 plot(y=Hospital$NEY$newsaridat,x=Hospital$UK$date,ylab="NEY Hospital Admissions",xlab="Date",xlim=plot_date)
-lines(rowSums(predNEY$newSARI[2:20])/ratio$newhosp,x=predNEY$newSARI$date)
+lines(rowSums(predNEY$newSARI[2:20])/ratio$NEY$newhosp,x=predNEY$newSARI$date)
 plot(y=Hospital$EE$newsaridat,x=Hospital$UK$date,ylab="EE Hospital Admissions",xlab="Date",xlim=plot_date)
-lines(rowSums(predEE$newSARI[2:20])/ratio$newhosp,x=predEE$newSARI$date)
+lines(rowSums(predEE$newSARI[2:20])/ratio$EE$newhosp,x=predEE$newSARI$date)
 plot(y=Hospital$SE$newsaridat,x=Hospital$UK$date,ylab="SE Hospital Admissions",xlab="Date",xlim=plot_date)
-lines(rowSums(predSE$newSARI[2:20])/ratio$newhosp,x=predSE$newSARI$date)
+lines(rowSums(predSE$newSARI[2:20])/ratio$SE$newhosp,x=predSE$newSARI$date)
 plot(y=Hospital$SW$newsaridat,x=Hospital$UK$date,ylab="SW Hospital Admissions",xlab="Date",xlim=plot_date)
-lines(rowSums(predSW$newSARI[2:20])/ratio$newhosp,x=predSW$newSARI$date)
-plot(y=Hospital$london$newsaridat,x=Hospital$london$date,ylab="London Hospital Admissions",xlab="Date")
-lines(rowSums(predlondon$newSARI[2:20])/ratio$newhosp,x=predlondon$newSARI$date)
+lines(rowSums(predSW$newSARI[2:20])/ratio$SW$newhosp,x=predSW$newSARI$date)
+plot(y=Hospital$Lon$newsaridat,x=Hospital$Lon$date,ylab="Lon Hospital Admissions",xlab="Date")
+lines(rowSums(predLon$newSARI[2:20])/ratio$Lon$newhosp,x=predLon$newSARI$date)
 plot(Hospital$Scot$newsaridat,ylab="Scotland Hospital Admissions",xlab="Date")
-plot(rowSums(predScot$newSARI[2:20])/ratio$newhosp,x=predScot$newSARI$date)
+plot(rowSums(predScot$newSARI[2:20])/ratio$Scot$newhosp,x=predScot$newSARI$date)
 
 
 plot(y=Hospital$Eng$saridat,x=Hospital$SW$date,ylab="England Hospital Cases",xlab="Date",xlim=plot_date)
-lines(rowSums(predEng$SARI[2:20]+predEng$CRIT[2:20]+predEng$CRITREC[2:20])/ratio$hosp,x=predEng$newSARI$date)
+lines(rowSums(predEng$SARI[2:20]+predEng$CRIT[2:20]+predEng$CRITREC[2:20])/ratio$Eng$hosp,x=predEng$newSARI$date)
 plot(y=Hospital$MD$saridat,x=Hospital$MD$date,ylab="MD Hospital Cases",xlab="Date",xlim=plot_date)
 lines(rowSums(predMD$SARI[2:20]+predMD$CRIT[2:20]+predMD$CRITREC[2:20]),x=predMD$newSARI$date)
 plot(y=Hospital$NW$saridat,x=Hospital$NW$date,ylab="NW Hospital Cases",xlab="Date",xlim=plot_date)
@@ -292,15 +292,15 @@ plot(y=Hospital$SE$saridat,x=Hospital$SE$date,ylab="SE Hospital Cases",xlab="Dat
 lines(rowSums(predSE$SARI[2:20]+predSE$CRIT[2:20]+predSE$CRITREC[2:20]),x=predSE$newSARI$date)
 plot(y=Hospital$SW$saridat,x=Hospital$SW$date,ylab="SW Hospital Cases",xlab="Date",xlim=plot_date)
 lines(rowSums(predSW$SARI[2:20]+predSW$CRIT[2:20]+predSW$CRITREC[2:20]),x=predSW$newSARI$date)
-plot(y=Hospital$london$saridat,x=Hospital$london$date,ylab="London Hospital Cases",xlab="Date",xlim=plot_date)
-lines(rowSums(predlondon$SARI[2:20]+predlondon$CRIT[2:20]+predlondon$CRITREC[2:20]),x=predlondon$newSARI$date)
+plot(y=Hospital$Lon$saridat,x=Hospital$Lon$date,ylab="Lon Hospital Cases",xlab="Date",xlim=plot_date)
+lines(rowSums(predLon$SARI[2:20]+predLon$CRIT[2:20]+predLon$CRITREC[2:20]),x=predLon$newSARI$date)
 
 
 
 #Admissions Uk total and by region
 sum(na.locf(Hospital$Eng$saridat))
 sum(na.locf(Hospital$UK$saridat))
-sum(na.locf(Hospital$NEY$saridat)+Hospital$NW$saridat+Hospital$EE$saridat+Hospital$MD$saridat+Hospital$london$saridat+Hospital$SE$saridat+Hospital$SW$saridat+Hospital$Scot$saridat+na.locf(Hospital$Wal$saridat)+na.locf(Hospital$NI$saridat))
+sum(na.locf(Hospital$NEY$saridat)+Hospital$NW$saridat+Hospital$EE$saridat+Hospital$MD$saridat+Hospital$Lon$saridat+Hospital$SE$saridat+Hospital$SW$saridat+Hospital$Scot$saridat+na.locf(Hospital$Wal$saridat)+na.locf(Hospital$NI$saridat))
 sum(rowSums(compEng$SARI[2:20]+compEng$CRIT[2:20]+compEng$CRITREC[2:20]))
 sum(na.locf(Hospital$Eng$newsaridat))
 sum(na.locf(compEng$newSARI[2:20]))

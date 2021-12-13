@@ -721,8 +721,8 @@ if(enddate == (Sys.Date()-1)){
 # Numbers are fitted to death and hospitalisation data
 comdat$Kent <- 0.0
 comdat$India <- 0.0
-Kentfac <- 0.4
-Indiafac <- 0.7
+Kentfac <- 0.5
+Indiafac <- 2.0
 Kentdate <- as.integer(as.Date("2021/01/01")-startdate)
 
 # Approximate Kent by logistic rise around 2021/01/01
@@ -1278,15 +1278,6 @@ R_BestGuess$Shetland <-tmp[1]
 R_Quant$Shetland <-tmp[2:6]
 
 
-
-
-
-
-
-
-
-
-
 ##########   Age groups  ########
 
 tmp <-estimate_R(dfR$p00,dfR$date,comdat$allCases)
@@ -1567,9 +1558,9 @@ if(interactive()){
 startplot=startdate+3
 endplot=startdate+nrow(predEng$CASE)+predtime-3
 PREV<-compEng$ILI[2:20]+compEng$SARI[2:20]+compEng$CRIT[2:20]+compEng$MILD[2:20]
-lines(rowSums(PREV))
-plot(rowSums(predEng$CASE[2:20]),x=predEng$CASE$date,xlim=c(startplot,endplot))
 
+plot(rowSums(predEng$CASE[2:20]))
+lines(rowSums(PREV[1:19])/20)
 
 plot(Hospital$UK$newsaridat,x=Hospital$UK$date, ylab="Hospital Admission",xlab="Date",xlim=c(startplot,endplot-11                                                                                                ))
 lines(rowSums(compEng$newSARI[2:20]),x=compEng$newSARI$date,col="blue")
