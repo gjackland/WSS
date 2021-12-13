@@ -57,7 +57,7 @@ Predictions <- function(input,R_input,predtime){
   omicronCASE[1,1]=enddateP
   R_omicron=R_input*1.5
   ipred=1
-   } 
+  
    for (iday in ((lengthofdata+1):(lengthofdata+predtime))){
     #  Proportions become variant dependent.  ILI is case driven, so extra infectivity is automatic
     # from the data. ILI->SARI increases with variant.  CRIT is an NHS decision, not favoured for very old

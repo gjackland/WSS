@@ -166,7 +166,7 @@ compSE<- Compartment(SE,  covidsimAge, RawCFR, comdat,3,nrow(SE))
 predSE<-Predictions(compSE,R_BestGuess$SE,predtime)
 
 compSW<- Compartment(SW,  covidsimAge, RawCFR, comdat,3,nrow(SW))
-predSW<-Predictions(compSW,R_BestGuess$SWy,predtime)
+predSW<-Predictions(compSW,R_BestGuess$SW,predtime)
 
 compMD<- Compartment(MD,  covidsimAge, RawCFR, comdat,3,nrow(MD))
 predMD<-Predictions(compMD,R_BestGuess$Midlands,predtime)
