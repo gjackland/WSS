@@ -48,7 +48,7 @@ Predictions <- function(input,R_input,predtime){
   #  Initialise predCASE, the predicted values. These will be added to CASE, with the
   #   actual data retained in casedat
   #  For predictions after Dec 2021, assume omicron_frac
-  omicron_frac <- 0.05
+  omicron_frac <- 0.00
   predCASE<-CASE[lengthofdata,(1:20)]
   predCASE[1,(2:20)]<-CASE[lengthofdata,(2:20)]*(1-omicron_frac) #  Growth rate by age group
   predCASE[1,1]=enddateP
@@ -57,7 +57,7 @@ Predictions <- function(input,R_input,predtime){
   omicronCASE[1,1]=enddateP
   R_omicron=R_input*1.5
   ipred=1
-   } 
+
    for (iday in ((lengthofdata+1):(lengthofdata+predtime))){
     #  Proportions become variant dependent.  ILI is case driven, so extra infectivity is automatic
     # from the data. ILI->SARI increases with variant.  CRIT is an NHS decision, not favoured for very old

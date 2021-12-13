@@ -116,11 +116,12 @@ Compartment <- function(cases,  csimAge, rCFR, cdat, startc, endc){
     for (iday in (startc:endc)){
     # Update current vaccine/variant lethality if available    
     day_lethality<-cdat$lethality[min(iday,length(comdat$lethality))]
-    xCFR <- rCFR*day_lethality/(1+rCFR*day_lethality)
+    xCFR <- rCFR*day_lethality/(1+rCFR*(day_lethality-1))
     pTtoI <- afac*xCFR^apow
     pItoS <- bfac*xCFR^bpow
     pStoD <- cfac*xCFR^cpow
     #  Entry to ventilation still from covidsim
+    #  Redu
     pStoC <-  csimAge$Prop_Critical_ByAge /
       ( csimAge$Prop_Critical_ByAge + csimAge$Prop_SARI_ByAge )
     # All routes to death are the same, vary by age
@@ -148,7 +149,7 @@ Compartment <- function(cases,  csimAge, rCFR, cdat, startc, endc){
  
 MtoR <- outer(as.numeric(newMILD[iday,agerange]),MildToRecovery,FUN="*")
 oldMILD[(iday:xday),agerange] <- oldMILD[(iday:xday),agerange]+MtoR
-    vacCFR <- 0.85 
+    vacCFR <- 0.90 
     #Vaccine reduction in ILI-> SARI
 
     for (iage in agerange){
