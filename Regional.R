@@ -198,7 +198,7 @@ ratio <-list()
 ratio$Eng$death=sum(predEng$DEATH[recent_time,2:20])/sum(regdeaths[recent_time,2:8])
 ratio$Eng$case=total_cases/sum(predEng$CASE[recent_time,2:20])
 ratio$Eng$newhosp=total_admissions/sum(compEng$newSARI[recent_time,2:20])
-ratio$Eng$hosp=sum(Hospital$Eng$saridat[recent_time])/sum(compEng$SARI[recent_time,2:20])
+ratio$Eng$hosp=sum(rowSums(predEng$SARI[recent_time,2:20]+predEng$CRIT[recent_time,2:20]+predEng$CRITREC[recent_time,2:20]))/sum(Hospital$Eng$saridat[recent_time])
 ratio$Eng$crit=total_crit/sum(compEng$CRIT[recent_time,2:20])
 
 #  Rescale big regional differences in hospitalization times.
@@ -221,10 +221,10 @@ ratio$MD$death=sum(compMD$DEATH[recent_time,2:20])/sum(regdeaths$MD[recent_time]
 ratio$MD$hosp=sum(rowSums(predMD$SARI[recent_time,2:20]+predMD$CRIT[recent_time,2:20]+predMD$CRITREC[recent_time,2:20]))/sum(Hospital$MD$saridat[recent_time])
 ratio$MD$newhosp=sum(rowSums(predMD$newSARI[recent_time,2:20]))/sum(Hospital$MD$newsaridat[recent_time])
 CCMD=CC_write(predMD,"Midlands",population$MD[1],R_BestGuess$Midlands,R_Quant$Midlands,rat$smoothMD,ratio$MD,filename)
-ratio$Lon$death=sum(compLon$DEATH[recent_time,2:20])/sum(regdeaths$Lon[recent_time])
+ratio$Lon$death=sum(compLon$DEATH[recent_time,2:20])/sum(regdeaths$London[recent_time])
 ratio$Lon$hosp=sum(rowSums(predLon$SARI[recent_time,2:20]+predLon$CRIT[recent_time,2:20]+predLon$CRITREC[recent_time,2:20]))/sum(Hospital$Lon$saridat[recent_time])
 ratio$Lon$newhosp=sum(rowSums(predLon$newSARI[recent_time,2:20]))/sum(Hospital$Lon$newsaridat[recent_time])
-CCLon=CC_write(predLon,"Lon",population$Lon[1],R_BestGuess$Lon,R_Quant$Lon,rat$smoothLon,ratio$Lon,filename)
+CCLon=CC_write(predLon,"Lon",population$Lon[1],R_BestGuess$Lon,R_Quant$Lon,rat$smoothLondon,ratio$Lon,filename)
 ratio$SW$death=sum(compSW$DEATH[recent_time,2:20])/sum(regdeaths$`South West`[recent_time])
 ratio$SW$hosp=sum(rowSums(predSW$SARI[recent_time,2:20]+predSW$CRIT[recent_time,2:20]+predSW$CRITREC[recent_time,2:20]))/sum(Hospital$SW$saridat[recent_time])
 ratio$SW$newhosp=sum(rowSums(predSW$newSARI[recent_time,2:20]))/sum(Hospital$SW$newsaridat[recent_time])
@@ -244,7 +244,7 @@ CC2=NIWal_write()
 
 CC<-rbind(CCEng,CCScot,CCNW,CCNEY,CCMD,CCLon,CCSW,CCSE,CCEE,CC2)
 
-write.xlsx(CC, file = "allx.xlsx", 
+write.xlsx(CC, file = "all.xlsx", 
            overwrite = TRUE,  sheetName = region, rowNames = FALSE)
 
 #  Monitoring plots for MTP deaths

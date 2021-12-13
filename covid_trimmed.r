@@ -76,7 +76,7 @@ population <- data.frame(
   "EE"=c(6312979,355635,398437,395598,
          339798,325756,366991,399596,407771,399357,402382,438271,
          434586,374081,325178,339205,256233,173570,112856,67679),
-  "London"=c(9095459,582490,605204,561365,
+  "Lon"=c(9095459,582490,605204,561365,
              485920,560277,763720,819377,781076,695268,602324,571429,
              520757,419558,327896,283856,207035,150959,96744,60205),
   "SE"=c(9282330,501455,574647,590311,
@@ -1025,7 +1025,7 @@ smoothweightRfp <- smooth.spline(dfR$fpR,df=spdf,w=sqrt(comdat$fpCases))
 rat$smoothScotland <- smooth.spline(rat$Scotland,df=spdf,w=sqrt(regcases$Scotland))$y
 rat$smoothNW <-smooth.spline(rat$`North West`,df=spdf,w=sqrt(regcases$`North West`))$y
 rat$smoothNEY <-smooth.spline(rat$NE_Yorks,df=spdf,w=sqrt(regcases$NE_Yorks))$y
-rat$smoothLondon <-smooth.spline(rat$London,df=spdf,w=sqrt(regcases$London))$y
+rat$smoothLon <-smooth.spline(rat$London,df=spdf,w=sqrt(regcases$London))$y
 rat$smoothEE <-smooth.spline(rat$`East of England`,df=spdf,w=sqrt(regcases$`East of England`))$y
 rat$smoothMD <-smooth.spline(rat$Midlands,df=spdf,w=sqrt(regcases$Midlands))$y
 rat$smoothSE <-smooth.spline(rat$`South East`,df=spdf,w=sqrt(regcases$`South East`))$y
@@ -1039,7 +1039,7 @@ rat$smoothLothian <-smooth.spline(jnkR,df=spdf,w=sqrt(jnkC))$y
 jnkR=rat$`NHS Greater Glasgow and Clyde`
 jnkC=regcases$`NHS Greater Glasgow and Clyde`
 rat$smoothGlasgow <-smooth.spline(jnkR,df=spdf,w=sqrt(jnkC))$y
-rat$smoothLondon <-smooth.spline(rat$London,df=spdf,w=sqrt(regcases$London))$y
+rat$smoothLon <-smooth.spline(rat$London,df=spdf,w=sqrt(regcases$London))$y
 smoothweightR$date<-comdat$date
 smoothweightRfp$date<-dfR$date
 
@@ -1183,8 +1183,8 @@ R_BestGuess$Scotland <-tmp[1]
 R_Quant$Scotland <-tmp[2:6]
 
 tmp <-estimate_R(rat$London,rat$date,regcases$London)
-R_BestGuess$London <-tmp[1]
-R_Quant$London <-tmp[2:6]
+R_BestGuess$Lon <-tmp[1]
+R_Quant$Lon <-tmp[2:6]
 
 tmp <-estimate_R(rat$Midlands,rat$date,regcases$Midlands)
 R_BestGuess$Midlands <-tmp[1]
