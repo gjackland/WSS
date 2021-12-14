@@ -195,7 +195,8 @@ startdate <- as.Date("2020/08/09") #as.Date("2020/08/09")
 # Weekend data can be sketchy Extend the enddate if run on Monday morning
 reporting_delay=5
 enddate <-  Sys.Date()-reporting_delay
-predtime = 44+reporting_delay
+#  Six week prediction 
+predtime = 48
 # Set the generation time
 genTime <- 5
 #  Dates for the plots

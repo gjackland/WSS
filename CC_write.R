@@ -111,13 +111,13 @@ CCtmp$ValueType="hospital_inc"
 #  Would like regional admissions data, only have totals, but use them anyway
 for (d in startwrite:endwrite){
   if(CCcomp$CASE$date[d]>(today-reporting_delay)){ CCtmp$Scenario="MTP"}
-  CCtmp$Value = sum(CCcomp$newSARI[d,2:20])*ratio$newhosp
+  CCtmp$Value = sum(CCcomp$newSARI[d,2:20])/ratio$newhosp
   NStoday = sum(CCcomp$newSARI[d,2:20])
-  CCtmp$"Quantile 0.05"=max(0,NStoday*(1-3*sqrt(sum(CCcomp$newSARI[(d-6):d,2:20])/7)/NStoday))*ratio$newhosp
-  CCtmp$"Quantile 0.25"=max(0,NStoday*(1-sqrt(sum(CCcomp$newSARI[(d-6):d,2:20])/7)/NStoday))*ratio$newhosp
+  CCtmp$"Quantile 0.05"=max(0,NStoday*(1-3*sqrt(sum(CCcomp$newSARI[(d-6):d,2:20])/7)/NStoday))/ratio$newhosp
+  CCtmp$"Quantile 0.25"=max(0,NStoday*(1-sqrt(sum(CCcomp$newSARI[(d-6):d,2:20])/7)/NStoday))/ratio$newhosp
   CCtmp$"Quantile 0.5"=CCtmp$Value
-  CCtmp$"Quantile 0.75"=NStoday*(1+sqrt(sum(CCcomp$newSARI[(d-6):d,2:20])/7)/NStoday)*ratio$newhosp
-  CCtmp$"Quantile 0.95"=NStoday*(1+3*sqrt(sum(CCcomp$newSARI[(d-6):d,2:20])/7)/NStoday)*ratio$newhosp
+  CCtmp$"Quantile 0.75"=NStoday*(1+sqrt(sum(CCcomp$newSARI[(d-6):d,2:20])/7)/NStoday)/ratio$newhosp
+  CCtmp$"Quantile 0.95"=NStoday*(1+3*sqrt(sum(CCcomp$newSARI[(d-6):d,2:20])/7)/NStoday)/ratio$newhosp
   CCtmp$"Day of Value" = day(CCcomp$newSARI$date[d])
   CCtmp$"Month of Value" = month(CCcomp$newSARI$date[d])
   CCtmp$"Year of Value" = year(CCcomp$newSARI$date[d])
@@ -128,7 +128,7 @@ CCtmp$ValueType="type28_death_inc_line"
 CCtmp$Scenario="MTP"
 for (d in startwrite:endwrite){
   if(CCcomp$DEATH$date[d]>(today-reporting_delay)){ CCtmp$Scenario="MTP"}  
-  CCtmp$Value = sum(CCcomp$DEATH[d,2:20])*ratio$death
+  CCtmp$Value = sum(CCcomp$DEATH[d,2:20])/ratio$death
   CCtmp$"Quantile 0.05"=max(0,CCtmp$Value*(1-sqrt(sum(CCcomp$DEATH[(d-6):d,2:20])/7)/CCtmp$Value))
   CCtmp$"Quantile 0.25"=max(0,CCtmp$Value*(1-sqrt(sum(CCcomp$DEATH[(d-6):d,2:20])/7)/3/CCtmp$Value))
   CCtmp$"Quantile 0.5"=CCtmp$Value
@@ -151,18 +151,19 @@ Missing_incidence=2.2
 scalefac=Missing_incidence
 CCtmp$ValueType="incidence"
 CCtmp$Scenario="Nowcast"
-for (d in startwrite:length(CCcomp$CASE$date)){
-  if(CCcomp$CASE$date[d]>(today-reporting_delay)){
+R_error=0.0
+for (d in startwrite:endwrite){
+  if(CCcomp$CASE$date[d]>(today-reporting_delay)){R_error=R_error+0.1/genTime
     CCtmp$Scenario="MTP"
     CCtmp$ValueType="infections_inc"
   }
   CASEtoday=sum(CCcomp$CASE[d,2:20])
   CCtmp$Value =   CASEtoday*scalefac
-  CCtmp$"Quantile 0.05"=max(0,CASEtoday*(1-0.3))*scalefac
-  CCtmp$"Quantile 0.25"=max(0,CASEtoday*(1-0.1))*scalefac
+  CCtmp$"Quantile 0.05"=max(0,CASEtoday*(1-0.3*(1+R_error)))*scalefac
+  CCtmp$"Quantile 0.25"=max(0,CASEtoday*(1-0.1*(1+R_error)))*scalefac
   CCtmp$"Quantile 0.5"=CASEtoday*scalefac
-  CCtmp$"Quantile 0.75"=CASEtoday*(1+0.1)*scalefac
-  CCtmp$"Quantile 0.95"=CASEtoday*(1+0.3)*scalefac
+  CCtmp$"Quantile 0.75"=CASEtoday*(1+0.1*(1+R_error))*scalefac
+  CCtmp$"Quantile 0.95"=CASEtoday*(1+0.3*(1+R_error))*scalefac
   CCtmp$"Day of Value" = day(CCcomp$CASE$date[d])
   CCtmp$"Month of Value" = month(CCcomp$CASE$date[d])
   CCtmp$"Year of Value" = year(CCcomp$CASE$date[d])
@@ -175,19 +176,19 @@ for (d in startwrite:length(CCcomp$CASE$date)){
 # There is some difficulty about the ONS data c/f e.g. https://www.medrxiv.org/content/10.1101/2021.02.09.21251411v1.full.pdf
 CCtmp$ValueType="prevalence"
 CCtmp$Scenario="Nowcast"
-
-for (d in startwrite:(endwrite-4)){R_error=0
-  if(CCcomp$CASE$date[d]>(today-reporting_delay)){ 
+R_error=0
+for (d in startwrite:(endwrite-4)){
+  if(CCcomp$CASE$date[d]>(today-reporting_delay)){R_error=R_error+0.1/genTime 
     CCtmp$Scenario="MTP"
     CCtmp$ValueType="prevalence_mtp"
   }
   PREV= sum(CCcomp$ILI[d,2:20]+CCcomp$SARI[d,2:20])+sum(CCcomp$CASE[d:(d+4),2:20])*Missing_incidence
   CCtmp$Value=PREV*Missing_prevalence/pop*100
-  CCtmp$"Quantile 0.05"=CCtmp$Value*(0.75-0.075*R_error)
-  CCtmp$"Quantile 0.25"=CCtmp$Value*(0.875-0.085*R_error)
+  CCtmp$"Quantile 0.05"=CCtmp$Value*(1.0-0.3*(1+R_error))
+  CCtmp$"Quantile 0.25"=CCtmp$Value*(1.0-0.1*(1+R_error))
   CCtmp$"Quantile 0.5"=CCtmp$Value
-  CCtmp$"Quantile 0.75"=CCtmp$Value*(8/7+8/70*R_error)
-  CCtmp$"Quantile 0.95"=CCtmp$Value*(4/3+4/30*R_error)
+  CCtmp$"Quantile 0.75"=CCtmp$Value*(1.0+0.1*(1+R_error))
+  CCtmp$"Quantile 0.95"=CCtmp$Value*(1.0+0.3*(1+R_error))
   CCtmp$"Day of Value" = day(CCcomp$ILI$date[d])
   CCtmp$"Month of Value" = month(CCcomp$ILI$date[d])
   CCtmp$"Year of Value" = year(CCcomp$ILI$date[d])
@@ -196,14 +197,14 @@ for (d in startwrite:(endwrite-4)){R_error=0
 }
 
 #  Extend for the last three days assuming derivative of CASE[d] is zero 
-for (d in (endwrite-3):endwrite){
+for (d in (endwrite-3):endwrite){R_error=R_error+0.1/genTime
   PREV= sum(CCcomp$ILI[d,2:20]+CCcomp$SARI[d,2:20])+sum(CCcomp$CASE[d,2:20]*5)*Missing_incidence
   CCtmp$Value=PREV*Missing_prevalence/pop*100
-  CCtmp$"Quantile 0.05"=CCtmp$Value*0.5
-  CCtmp$"Quantile 0.25"=CCtmp$Value*0.75
+  CCtmp$"Quantile 0.05"=CCtmp$Value*(1.0-0.3*(1+R_error))
+  CCtmp$"Quantile 0.25"=CCtmp$Value*(1.0-0.1*(1+R_error))
   CCtmp$"Quantile 0.5"=CCtmp$Value
-  CCtmp$"Quantile 0.75"=CCtmp$Value*1.3333
-  CCtmp$"Quantile 0.95"=CCtmp$Value*2
+  CCtmp$"Quantile 0.75"=CCtmp$Value*(1.0+0.1*(1+R_error))
+  CCtmp$"Quantile 0.95"=CCtmp$Value*(1.0+0.3*(1+R_error))  
   CCtmp$"Day of Value" = day(CCcomp$ILI$date[d])
   CCtmp$"Month of Value" = month(CCcomp$ILI$date[d]) 
   CCtmp$"Year of Value" = year(CCcomp$ILI$date[d])
