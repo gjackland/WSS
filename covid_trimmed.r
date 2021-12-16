@@ -1544,7 +1544,8 @@ if(interactive()&medrxiv){medout<-MedrxivPaper()}
 ###Assume that R and lethality are constants
 
 region="England"
-predEng<-Predictions(compEng,R_BestGuess$England,predtime)
+o_frac=0.2
+predEng<-Predictions(compEng,R_BestGuess$England,predtime,o_frac)
 
 #  Compartment predictions removed to Predictions.R
 #  Replicated the data because repeated calls to Predictions would increment comp

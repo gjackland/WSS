@@ -1,6 +1,6 @@
 ##Assume that R and lethality are constants
 
-Predictions <- function(input,R_input,predtime){
+Predictions <- function(input,R_input,predtime,frac_omicron){
   #Unpack input
   input[is.na(input)]<-0
   DEATH <- input$DEATH
@@ -38,24 +38,19 @@ Predictions <- function(input,R_input,predtime){
   CriticalToCritRecov <- input$CriticalToCritRecov
   CritRecovToRecov <- input$CritRecovToRecov
  
-  # enddateP is end of actual data - sometimes earlier than asked for
-
- 
+#  logtwo sets the growth rate of omicron.  tomicron is dominance date
+  logtwo = genTime
+  tomicron = genTime*log(1/frac_omicron - 1)
   #  For loop over time, predCASE using R numbers
+  # enddateP is end of actual data - sometimes earlier than asked for
   lengthofdata <- nrow(CASE)
   enddateP<-CASE$date[lengthofdata]
   agerange <- (2:ncol(ILI))
   #  Initialise predCASE, the predicted values. These will be added to CASE, with the
   #   actual data retained in casedat
-  #  For predictions after Dec 2021, assume omicron_frac
-  omicron_frac <- 0.00
+  #  For CASE predictions 
   predCASE<-CASE[lengthofdata,(1:20)]
-  predCASE[1,(2:20)]<-CASE[lengthofdata,(2:20)]*(1-omicron_frac) #  Growth rate by age group
-  predCASE[1,1]=enddateP
-  omicronCASE<-CASE[lengthofdata,(1:20)]
-  omicronCASE[1,(2:20)]<-CASE[lengthofdata,(2:20)]*omicron_frac #  Growth rate by age group
-  omicronCASE[1,1]=enddateP
-  R_omicron=R_input*1.5
+
   ipred=1
 
    for (iday in ((lengthofdata+1):(lengthofdata+predtime+1))){
@@ -68,7 +63,7 @@ Predictions <- function(input,R_input,predtime){
     newILI[iday,agerange]=predCASE[ipred,agerange]*  pTtoI    +newILI[iday,agerange]
     
     
-    #  vectorize - suddenly not working ???
+    #  vectorize 
   MtoR=outer(as.numeric(newMILD[iday,agerange]),MildToRecovery,FUN="*")
   oldMILD[(iday:xday),agerange]=oldMILD[(iday:xday),agerange]+MtoR
     for (iage in agerange){
@@ -111,21 +106,23 @@ Predictions <- function(input,R_input,predtime){
     
     # R decays back to 1 with growth rate down 5% a day, faster if larger
     # R is the same in all age groups
-    # By hand, add omicron at 5% of cases
-  
+    #  R_input is average of delta & omicron R_input =R_d*fracd+R_o*frac_o
     if(R_input > 1.4) {R_input=(R_input-1)*0.95+1.0}
     R_input=(R_input-1)*0.95+1.0
-    if(R_omicron > 1.4) {R_omicron=(R_omicron-1)*0.95+1.0}
-    R_omicron=(R_omicron-1)*0.95+1.0
-    predCASE[(ipred+1),(2:20)]<-predCASE[ipred,(2:20)]*exp((R_input-1)/genTime)
-    omicronCASE[(ipred+1),(2:20)]<-omicronCASE[ipred,(2:20)]*exp((R_omicron-1)/genTime)
-    predCASE[ipred+1,1]<-enddateP+ipred 
-    omicronCASE[ipred+1,1]<-enddateP+ipred 
+
+    #oooooooooo  Omicron fraction grows as 2 day doubling time
+    old_omicron=frac_omicron
+    frac_omicron=1/(1+exp((tomicron-ipred)/genTime))
+    new_omicron=frac_omicron-old_omicron
+    R_input = R_input+new_omicron*2.5
+    #oooooooooo
+    growthrate<-exp((R_input-1)/genTime)
+    predCASE[(ipred+1),(2:20)]<-predCASE[ipred,(2:20)]*growthrate
+    predCASE[ipred+1,1]<-enddateP+ipred
     ipred=ipred+1 
   }
   # Remove the redundant first column
   predCASE <- predCASE[-c(1),]
-  omicronCASE <- omicronCASE[-c(1),]
   # Pack anything that you want to use - anything not returned will not have a
   # value in the calling space.
   
