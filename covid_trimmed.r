@@ -722,8 +722,9 @@ if(enddate == (Sys.Date()-1)){
 # Numbers are fitted to death and hospitalisation data
 comdat$Kent <- 0.0
 comdat$India <- 0.0
-Kentfac <- 0.5
-Indiafac <- 2.0
+Kentfac <- 0.4
+Indiafac <- 0.9
+Omicronfac <- 0.0
 Kentdate <- as.integer(as.Date("2021/01/01")-startdate)
 
 # Approximate Kent by logistic rise around 2021/01/01
