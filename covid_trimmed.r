@@ -722,6 +722,7 @@ if(enddate == (Sys.Date()-1)){
 # Numbers are fitted to death and hospitalisation data
 comdat$Kent <- 0.0
 comdat$India <- 0.0
+comdat$Omicron <- 0.0
 Kentfac <- 0.4
 Indiafac <- 0.9
 Omicronfac <- 0.0
@@ -735,15 +736,24 @@ for (i in 1:nrow(comdat)){
 }
 Indiadate <- as.integer(as.Date("2021/05/15")-startdate)
 # Approximate India by logistic rise around 2021/15/01: see covid19.sanger.
-# Same genTime R+0.4 vs Kent
+# Same genTime R+0.4 vs Kent  AY4.2 assumes same as India
 for (i in 1:nrow(comdat)){
   x= (i-Indiadate)*0.4/genTime
   comdat$India[i]=1.0/(1.0+exp(-x))
 }
+Omicrondate <- as.integer(as.Date("2021/12/15")-startdate)
+# Approximate Omicron by logistic rise around 2021/11/28: see covid19.sanger.
+# Same genTime R+1 vs India
+for (i in 1:nrow(comdat)){
+  x= (i-Omicrondate)*1.0/genTime
+  comdat$Omicron[i]=1.0/(1.0+exp(-x))
+}
+
 rm(x)
 # Kent is Kentfac worse, india is Indiafac worse
-comdat$Kent<-comdat$Kent-comdat$India
-comdat$lethality<-1.0+ Kentfac*comdat$Kent + Indiafac*comdat$India
+comdat$Kent<-comdat$Kent-comdat$India-comdat$Omicron
+comdat$India<-comdat$India - comdat$Omicron
+comdat$lethality<-1.0+ Kentfac*comdat$Kent + Indiafac*comdat$India + Omicronfac*comdat$Omicron
 
 # Fix missing data to constant values
 
@@ -1017,7 +1027,7 @@ Govdat <- Rest[Rest$Date >= min(comdat$date) & Rest$Date <= max(comdat$date),]
 
 # Parameters for fitting splines and Loess
 nospl <- 8
-spdf <- 18
+spdf <- length(dfR$rawR)/14
 lospan <- 0.3
 
 smoothweightR <- smooth.spline(dfR$bylogR,df=spdf,w=sqrt(comdat$allCases))
@@ -1075,7 +1085,7 @@ if(interactive()){
   plot(smoothweightR$y,ylab="Regional R-number",xlab="Date",x=dfR$date)
 
   for (i in 8:17){
-    lines(smooth.spline(na.omit(dfR[i]),df=12)$y,col=i,x=dfR$date[!is.na(dfR[i])])
+    lines(smooth.spline(na.omit(dfR[i]),df=20)$y,col=i,x=dfR$date[!is.na(dfR[i])])
   }
 
   # ggplot graph - create a temporary tibble
@@ -1545,8 +1555,8 @@ if(interactive()&medrxiv){medout<-MedrxivPaper()}
 ###Assume that R and lethality are constants
 
 region="England"
-o_frac=0.2
-predEng<-Predictions(compEng,R_BestGuess$England,predtime,o_frac)
+o_frac=0.0
+predEng<-Predictions(compEng,R_BestGuess$England,predtime,comdat$Omicron[length(casedat$date)])
 
 #  Compartment predictions removed to Predictions.R
 #  Replicated the data because repeated calls to Predictions would increment comp
