@@ -1,6 +1,6 @@
 ##Assume that R and lethality are constants
 
-Predictions <- function(input,R_input,predtime,frac_omicron){
+Predictions <- function(input,R_input,predtime,frac_omicron = 0){
   #Unpack input
   input[is.na(input)]<-0
   DEATH <- input$DEATH
