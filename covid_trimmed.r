@@ -193,7 +193,7 @@ startdate <- as.Date("2020/08/09") #as.Date("2020/08/09")
 
 # Lose only the last day of data - use tail correction for reporting delay
 # Weekend data can be sketchy Extend the enddate if run on Monday morning
-reporting_delay=5
+reporting_delay=2
 enddate <-  Sys.Date()-reporting_delay
 #  Six week prediction 
 predtime = 48
@@ -1545,7 +1545,7 @@ if(interactive()&medrxiv){medout<-MedrxivPaper()}
 ###Assume that R and lethality are constants
 
 region="England"
-o_frac=0.2
+o_frac=0.0
 predEng<-Predictions(compEng,R_BestGuess$England,predtime,o_frac)
 
 #  Compartment predictions removed to Predictions.R
