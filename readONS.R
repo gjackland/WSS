@@ -16,3 +16,9 @@ incidence$NI = as.numeric(jnkC$X12[6:85])
 incidence$Scotland = as.numeric(jnkC$X17[6:85])
 plot(incidence)
 
+read.xlsx("covid19infectionsurveydatasets20211119scotland.xlsx",9)-> jnkC
+incidence<-data_frame(x=6:85)
+agepositive$Scotland = as.numeric(jnkC[2:3][7:47])
+plot(incidence)
+
+
