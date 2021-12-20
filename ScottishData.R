@@ -378,7 +378,7 @@ RawCFR=colSums(scotdeath[13:212,2:20])/colSums(scotage[1:200,2:20])
 #  Full Epidemic model.
 compScot <- Compartment(scotage, covidsimAge, RawCFR, comdat,2,nrow(scotage))
 #  Medium Term Projections
-predScot<-Predictions(compScot,R_BestGuess$Scotland,predtime,0.0)
+predScot<-Predictions(compScot,R_BestGuess$Scotland,predtime,population$Scotland)
 
 
 try(CC_write(predScot,"Scotland2",population$Scotland[1],R_BestGuess$Scotland,R_Quant$Scotland),rat$smoothScotland)

@@ -193,10 +193,10 @@ startdate <- as.Date("2020/08/09") #as.Date("2020/08/09")
 
 # Lose only the last day of data - use tail correction for reporting delay
 # Weekend data can be sketchy Extend the enddate if run on Monday morning
-reporting_delay=2
+reporting_delay=3
 enddate <-  Sys.Date()-reporting_delay
 #  Six week prediction 
-predtime = 48
+predtime = 100
 # Set the generation time
 genTime <- 5
 #  Dates for the plots
@@ -690,8 +690,8 @@ Hospital$UK$critdat <- na.locf(Hospital$UK$critdat)
 
 
 # Add the Welsh and Northern Ireland cases data
-regcases$Wales <- walesdat$allCases
-regcases$NI <- NIdat$allCases
+regcases$Wales <- walesdat$allCases[1:(enddate-startdate+1)]
+regcases$NI <- NIdat$allCases[1:(enddate-startdate+1)]
 
 
 # Remove the no longer needed input data
@@ -730,21 +730,21 @@ Kentdate <- as.integer(as.Date("2021/01/01")-startdate)
 
 # Approximate Kent by logistic rise around 2021/01/01
 # Same gen time, R+0.3 vs Wild  (0.3 is NOT lethality factor)
-for (i in 1:nrow(comdat)){
+for (i in 1:(nrow(comdat))){
   x= (i-Kentdate)*0.3/genTime
   comdat$Kent[i]=1.0/(1.0+exp(-x))
 }
 Indiadate <- as.integer(as.Date("2021/05/15")-startdate)
 # Approximate India by logistic rise around 2021/15/01: see covid19.sanger.
 # Same genTime R+0.4 vs Kent  AY4.2 assumes same as India
-for (i in 1:nrow(comdat)){
+for (i in 1:(nrow(comdat))){
   x= (i-Indiadate)*0.4/genTime
   comdat$India[i]=1.0/(1.0+exp(-x))
 }
 Omicrondate <- as.integer(as.Date("2021/12/15")-startdate)
 # Approximate Omicron by logistic rise around 2021/11/28: see covid19.sanger.
 # Same genTime R+1 vs India
-for (i in 1:nrow(comdat)){
+for (i in 1:(nrow(comdat))){
   x= (i-Omicrondate)*1.0/genTime
   comdat$Omicron[i]=1.0/(1.0+exp(-x))
 }
@@ -786,7 +786,7 @@ xcastage$'75+' <-casedat$`75_79`+casedat$`80_84`+casedat$`85_89`+casedat$`90+`
 # Combination required to go from 9 to 7 English regions
 regcases$NE_Yorks <- regcases$`North East` + regcases$`Yorkshire and The Humber`
 regcases$Midlands <- regcases$`East Midlands` + regcases$`West Midlands`
-regcases$England <- comdat$allCases
+regcases$England <- comdat$allCases[1:(enddate-startdate+1)]
 
 # Reorder regcases
 regcases<-regcases[,c(1,2,3,4,5,6,7,9,10,8,23,26,27,11,12,13,14,15,16,17,18,19,20,21,22,24,25,28,29,30)]
@@ -794,7 +794,7 @@ regcases<-regcases[,c(1,2,3,4,5,6,7,9,10,8,23,26,27,11,12,13,14,15,16,17,18,19,2
 # Set false positive adjustment at 0.004, extrapolate tests if the last few days are missing
 comdat$fpCases <- comdat$allCases-0.004*as.integer(comdat$tests)
 
-comdat$regions <- regcases$London + regcases$`South East` + regcases$`South West` +
+regcases$regions <- regcases$London + regcases$`South East` + regcases$`South West` +
                   regcases$NE_Yorks + regcases$Midlands + regcases$`North West` +
                   regcases$`East of England`
 
@@ -804,15 +804,14 @@ if(interactive()){
   plot(comdat$inputCases,x=comdat$date,xlab="Date",ylab="Cases")
   lines(comdat$allCases,x=comdat$date, col="green",lwd=2)
   lines(comdat$fpCases, x=comdat$date,col="red",lwd=2)
-  lines(comdat$regions, x=comdat$date,col="blue",lwd=2)
+  lines(regcases$regions, x=regcases$date,col="blue",lwd=2)
 
   # Same graph using ggplot - alpha sets a level of transparency
   # between 0 (opaque) to 1 (transparent)
   ggplot(comdat,aes(x=date)) +
     geom_point(aes(y=inputCases),alpha=0.5) +
     geom_line(aes(y=allCases), colour="green", size=1., alpha=0.5) +
-    geom_line(aes(y=fpCases),colour="red", size=1., alpha=0.5) +
-    geom_line(aes(y = regions), colour = "blue", size=1., alpha=0.5) +
+    geom_line(aes(y=fpCases),colour="red", size=1., alpha=0.5)  +
     xlab("Dates") + ylab("Cases") +
     theme_bw()
 }
@@ -966,7 +965,7 @@ for(i in ((genTime+1):length(dfR$itoR))){
   dfR$stratR[i]=1+ (comdat$allCases[i]-comdat$allCases[i-1])*genTime/mean(comdat$allCases[(i-1):i])
   dfR$fpR[i]=(1+(comdat$fpCases[i]-comdat$fpCases[i-1])*genTime/(comdat$fpCases[i-1]))
   dfR$bylogR[i]=1+log(comdat$allCases[i]/comdat$allCases[i-1])*genTime
-  dfR$regions[i]=1+log(comdat$regions[i]/comdat$regions[i-1])*genTime
+  dfR$regions[i]=1+log(regcases$regions[i]/regcases$regions[i-1])*genTime
   dfR$p00[i]=1+log(casedat$'00_04'[i]/casedat$'00_04'[i-1])*genTime
   dfR$p05[i]=1+log(casedat$'05_09'[i]/casedat$'05_09'[i-1])*genTime
   dfR$p10[i]=1+log(casedat$'10_14'[i]/casedat$'10_14'[i-1])*genTime
@@ -999,7 +998,6 @@ for(i in ((genTime+1):length(dfR$itoR))){
 dfR$smoothRlog <- smooth.spline(dfR$bylogR,df=20,w=sqrt(comdat$allCases))$y
 dfR$smoothRito <- smooth.spline(dfR$itoR,df=20,w=sqrt(comdat$allCases))$y
 dfR$smoothRstrat <- smooth.spline(dfR$stratR,df=20,w=sqrt(comdat$allCases))$y
-dfR$smoothRegions <- smooth.spline(dfR$regions,df=20,w=sqrt(comdat$regions))$y
 dfR$loessR <- predict(loess(bylogR~x,data=dfR,span=0.25))
 dfR[is.na(dfR)] <- 1.0
 dfR[dfR == Inf] <- 1.0
@@ -1555,7 +1553,7 @@ if(interactive()&medrxiv){medout<-MedrxivPaper()}
 ###Assume that R and lethality are constants
 
 region="England"
-predEng<-Predictions(compEng,R_BestGuess$England,predtime,comdat$Omicron[length(casedat$date)])
+predEng<-Predictions(compEng,R_BestGuess$England,predtime,population$England)
 
 
 #  Compartment predictions removed to Predictions.R
@@ -1590,7 +1588,7 @@ plot(Hospital$UK$critdat,x=Hospital$UK$date,ylab="ICU Occupation",xlab="Date",xl
 lines(rowSums(compEng$CRIT[2:20]),col="blue",x=compEng$CRIT$date)
 
 plot(rowSums(predEng$DEATH[2:20]),col="blue",x=predEng$DEATH$date, type="l",ylab="Deaths"
-     ,xlab="Date",xlim=c(startplot,endplot-11))
+     ,xlab="Date",xlim=c(startplot,endplot))
 points(rowSums(deathdat[2:20]),x=deathdat$date)
 }
 

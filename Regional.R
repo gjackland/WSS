@@ -154,25 +154,24 @@ NEY$date<-as.Date(NEY$date)
 #  Still use R from 7 regions...  CFR and vaccinations are assumed from National stats
 
 compLon<- Compartment(Lon,  covidsimAge, RawCFR, comdat,3,nrow(Lon))
-predLon<-Predictions(compLon,R_BestGuess$Lon,predtime)
+predLon<-Predictions(compLon,R_BestGuess$Lon,predtime,population$Lon)
 
 compNW<- Compartment(NW,  covidsimAge, RawCFR, comdat,3,nrow(NW))
-predNW<-Predictions(compNW,R_BestGuess$NW,predtime)
+predNW<-Predictions(compNW,R_BestGuess$NW,predtime,population$NW)
 
 compEE<- Compartment(EE,  covidsimAge, RawCFR, comdat,3,nrow(EE))
-predEE<-Predictions(compEE,R_BestGuess$EE,predtime)
+predEE<-Predictions(compEE,R_BestGuess$EE,predtime,population$EE)
 
 compSE<- Compartment(SE,  covidsimAge, RawCFR, comdat,3,nrow(SE))
-predSE<-Predictions(compSE,R_BestGuess$SE,predtime)
+predSE<-Predictions(compSE,R_BestGuess$SE,predtime,population$SE)
 
 compSW<- Compartment(SW,  covidsimAge, RawCFR, comdat,3,nrow(SW))
-predSW<-Predictions(compSW,R_BestGuess$SW,predtime)
+predSW<-Predictions(compSW,R_BestGuess$SW,predtime,population$SW)
 
 compMD<- Compartment(MD,  covidsimAge, RawCFR, comdat,3,nrow(MD))
-predMD<-Predictions(compMD,R_BestGuess$Midlands,predtime)
-
+predMD<-Predictions(compMD,R_BestGuess$Midlands,predtime,population$MD)
 compNEY<- Compartment(NEY,  covidsimAge, RawCFR, comdat,3,nrow(NEY))
-predNEY<-Predictions(compNEY,R_BestGuess$NEY,predtime)
+predNEY<-Predictions(compNEY,R_BestGuess$NEY,predtime,population$NEY)
 
 rm( SE, SW, EE, NEY, MD, Lon, NW, hSE, hSW, hEE, hNEY, hMD, hLon, hNW)
 

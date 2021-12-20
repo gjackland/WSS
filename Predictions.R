@@ -1,7 +1,8 @@
 ##Assume that R and lethality are constants
 
-Predictions <- function(input,R_input,predtime,frac_omicron = 0){
-  #Unpack input
+Predictions <- function(input,R_input,predtime,pop){
+  #Unpack input  Pred
+  R_input0=R_input
   input[is.na(input)]<-0
   DEATH <- input$DEATH
   RECOV <- input$RECOV
@@ -38,13 +39,14 @@ Predictions <- function(input,R_input,predtime,frac_omicron = 0){
   CriticalToCritRecov <- input$CriticalToCritRecov
   CritRecovToRecov <- input$CritRecovToRecov
  
-#  logtwo sets the growth rate of omicron.  tomicron is dominance date
-  logtwo = genTime
-  tomicron = genTime*log(1/frac_omicron - 1)
-  #  For loop over time, predCASE using R numbers
-  # enddateP is end of actual data - sometimes earlier than asked for
   lengthofdata <- nrow(CASE)
   enddateP<-CASE$date[lengthofdata]
+  NotS0=colSums(CASE[2:20])/pop[2:20]
+  #  Current prevalence of omicron
+  x= (lengthofdata-Omicrondate)*1.0/genTime
+  today_Omicron=1.0/(1.0+exp(-x))#  For loop over time, predCASE using R numbers
+  # enddateP is end of actual data - sometimes earlier than asked for
+  
   agerange <- (2:ncol(ILI))
   #  Initialise predCASE, the predicted values. These will be added to CASE, with the
   #   actual data retained in casedat
@@ -53,7 +55,7 @@ Predictions <- function(input,R_input,predtime,frac_omicron = 0){
 
   ipred=1
 
-   for (iday in ((lengthofdata+1):(lengthofdata+predtime+1))){
+  for (iday in ((lengthofdata+1):(lengthofdata+predtime+1))){
     #  Proportions become variant dependent.  ILI is case driven, so extra infectivity is automatic
     # from the data. ILI->SARI increases with variant.  CRIT is an NHS decision, not favoured for very old
     #  Need to increase CFR without exceeding 1.  Note inverse lethality isnt a simple % as CFR cant be >1
@@ -107,17 +109,19 @@ Predictions <- function(input,R_input,predtime,frac_omicron = 0){
     # R decays back to 1 with growth rate down 5% a day, faster if larger
     # R is the same in all age groups
     #  R_input is average of delta & omicron R_input =R_d*fracd+R_o*frac_o
-    if(R_input > 1.4) {R_input=(R_input-1)*0.95+1.0}
-    R_input=(R_input-1)*0.95+1.0
-
     #oooooooooo  Omicron fraction grows as 2 day doubling time
-    old_omicron=frac_omicron
-    frac_omicron=1/(1+exp((tomicron-ipred)/genTime))
-    new_omicron=frac_omicron-old_omicron
-    R_input = R_input+new_omicron*2.5
+    yesterday_Omicron=today_Omicron
+    x= (iday-Omicrondate)*1.0/genTime
+    today_Omicron=1.0/(1.0+exp(-x))
+    new_Omicron=today_Omicron-yesterday_Omicron
+    #  New omicron cases growing with R=3
+    if(R_input > 1.4) {R_input=(R_input-1)*0.95*(1.0+new_Omicron*2)+1.0}
+    R_input=(R_input-1)*0.95*(1.0+new_Omicron*2)+1.0
     #oooooooooo
+    NotS=colSums(predCASE[2:20])/pop[2:20]
+    NewNotS=(NotS-NotS0)/(1.0-NotS0)
     growthrate<-exp((R_input-1)/genTime)
-    predCASE[(ipred+1),(2:20)]<-predCASE[ipred,(2:20)]*growthrate
+    predCASE[(ipred+1),(2:20)]<-predCASE[ipred,(2:20)]*(1.0-NewNotS)*growthrate
     predCASE[ipred+1,1]<-enddateP+ipred
     ipred=ipred+1 
   }
