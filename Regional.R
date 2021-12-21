@@ -244,13 +244,19 @@ ratio$EE$death=sum(compEE$DEATH[recent_time,2:20])/sum(regdeaths$`East of Englan
 ratio$EE$newhosp=sum(rowSums(predEE$newSARI[recent_time,2:20]))/sum(Hospital$EE$newsaridat[recent_time])
 CCEE=CC_write(predEE,"East of England",population$EE[1],R_BestGuess$EE,R_Quant$EE,rat$smoothEE,ratio$EE,filename)
 
+
+# Cludge for Wales, NI - only write R and growthrate
+
+CCWal=CC_write(predEng,"Wales",population$Wales[1],R_BestGuess$Wales,R_Quant$Wales,rat$smoothWales,ratio$Eng,filename)
+CCNI=CC_write(predEng,"NI",population$NI[1],R_BestGuess$NI,R_Quant$NI,rat$smoothNI,ratio$Eng,filename)
+
+
 #Now combine all the sheets into one
 
-CC2=NIWal_write()
 
-CC<-rbind(CCEng,CCScot,CCNW,CCNEY,CCMD,CCLon,CCSW,CCSE,CCEE,CC2)
+CC<-rbind(CCEng,CCScot,CCNW,CCNEY,CCMD,CCLon,CCSW,CCSE,CCEE,CCWal,CCNI)
 
-write.xlsx(CC, file = "b6.xlsx", 
+write.xlsx(CC, file = "a.xlsx", 
            overwrite = TRUE,  sheetName = region, rowNames = FALSE)
 
 #  Monitoring plots for MTP deaths
@@ -268,38 +274,38 @@ lines(rowSums(predLon$DEATH[2:20]),x=predLon$DEATH$date,xlim=plot_date,col="yell
 
 plot(Hospital$MD$newsaridat,x=as.Date(Hospital$MD$date),ylab="MD Hospital Admissions",xlab="Date",xlim=plot_date)
 lines(rowSums(predMD$newSARI[2:20])/ratio$MD$newhosp,x=predMD$newSARI$date)
-plot(y=Hospital$NW$newsaridat,x=Hospital$UK$date,ylab="NW Hospital Admissions",xlab="Date",xlim=plot_date)
+plot(y=Hospital$NW$newsaridat,x=Hospital$NW$date,ylab="NW Hospital Admissions",xlab="Date",xlim=plot_date)
 lines(rowSums(predNW$newSARI[2:20])/ratio$NW$newhosp,x=predNW$newSARI$date)
-plot(y=Hospital$NEY$newsaridat,x=Hospital$UK$date,ylab="NEY Hospital Admissions",xlab="Date",xlim=plot_date)
+plot(y=Hospital$NEY$newsaridat,x=Hospital$NEY$date,ylab="NEY Hospital Admissions",xlab="Date",xlim=plot_date)
 lines(rowSums(predNEY$newSARI[2:20])/ratio$NEY$newhosp,x=predNEY$newSARI$date)
-plot(y=Hospital$EE$newsaridat,x=Hospital$UK$date,ylab="EE Hospital Admissions",xlab="Date",xlim=plot_date)
+plot(y=Hospital$EE$newsaridat,x=Hospital$EE$date,ylab="EE Hospital Admissions",xlab="Date",xlim=plot_date)
 lines(rowSums(predEE$newSARI[2:20])/ratio$EE$newhosp,x=predEE$newSARI$date)
-plot(y=Hospital$SE$newsaridat,x=Hospital$UK$date,ylab="SE Hospital Admissions",xlab="Date",xlim=plot_date)
+plot(y=Hospital$SE$newsaridat,x=Hospital$SE$date,ylab="SE Hospital Admissions",xlab="Date",xlim=plot_date)
 lines(rowSums(predSE$newSARI[2:20])/ratio$SE$newhosp,x=predSE$newSARI$date)
-plot(y=Hospital$SW$newsaridat,x=Hospital$UK$date,ylab="SW Hospital Admissions",xlab="Date",xlim=plot_date)
+plot(y=Hospital$SW$newsaridat,x=Hospital$SW$date,ylab="SW Hospital Admissions",xlab="Date",xlim=plot_date)
 lines(rowSums(predSW$newSARI[2:20])/ratio$SW$newhosp,x=predSW$newSARI$date)
 plot(y=Hospital$Lon$newsaridat,x=Hospital$Lon$date,ylab="Lon Hospital Admissions",xlab="Date")
 lines(rowSums(predLon$newSARI[2:20])/ratio$Lon$newhosp,x=predLon$newSARI$date)
 plot(Hospital$Scot$newsaridat,ylab="Scotland Hospital Admissions",xlab="Date")
-lines(rowSums(predScot$newSARI[2:20])/ratio$Scot$newhosp,x=predScot$newSARI$date)
+lines(rowSums(predScot$newSARI[2:20])/ratio$Scot$newhosp)
 
 
 plot(y=Hospital$Eng$saridat,x=Hospital$SW$date,ylab="England Hospital Cases",xlab="Date",xlim=plot_date)
 lines(rowSums(predEng$SARI[2:20]+predEng$CRIT[2:20]+predEng$CRITREC[2:20])/ratio$Eng$hosp,x=predEng$newSARI$date)
 plot(y=Hospital$MD$saridat,x=Hospital$MD$date,ylab="MD Hospital Cases",xlab="Date",xlim=plot_date)
-lines(rowSums(predMD$SARI[2:20]+predMD$CRIT[2:20]+predMD$CRITREC[2:20]),x=predMD$newSARI$date)
+lines(rowSums(predMD$SARI[2:20]+predMD$CRIT[2:20]+predMD$CRITREC[2:20])/ratio$MD$hosp,x=predMD$newSARI$date)
 plot(y=Hospital$NW$saridat,x=Hospital$NW$date,ylab="NW Hospital Cases",xlab="Date",xlim=plot_date)
-lines(rowSums(predNW$SARI[2:20]+predNW$CRIT[2:20]+predNW$CRITREC[2:20]),x=predNW$newSARI$date)
+lines(rowSums(predNW$SARI[2:20]+predNW$CRIT[2:20]+predNW$CRITREC[2:20])/ratio$NW$hosp,x=predNW$newSARI$date)
 plot(y=Hospital$NEY$saridat,x=Hospital$NEY$date,ylab="NEY Hospital Cases",xlab="Date",xlim=plot_date)
-lines(rowSums(predNEY$SARI[2:20]+predNEY$CRIT[2:20]+predNEY$CRITREC[2:20]),x=predNEY$newSARI$date)
+lines(rowSums(predNEY$SARI[2:20]+predNEY$CRIT[2:20]+predNEY$CRITREC[2:20])/ratio$NEY$hosp,x=predNEY$newSARI$date)
 plot(y=Hospital$EE$saridat,x=Hospital$EE$date,ylab="EE Hospital Cases",xlab="Date",xlim=plot_date)
-lines(rowSums(predEE$SARI[2:20]+predEE$CRIT[2:20]+predEE$CRITREC[2:20]),x=predEE$newSARI$date)
+lines(rowSums(predEE$SARI[2:20]+predEE$CRIT[2:20]+predEE$CRITREC[2:20])/ratio$EE$hosp,x=predEE$newSARI$date)
 plot(y=Hospital$SE$saridat,x=Hospital$SE$date,ylab="SE Hospital Cases",xlab="Date",xlim=plot_date)
-lines(rowSums(predSE$SARI[2:20]+predSE$CRIT[2:20]+predSE$CRITREC[2:20]),x=predSE$newSARI$date)
+lines(rowSums(predSE$SARI[2:20]+predSE$CRIT[2:20]+predSE$CRITREC[2:20])/ratio$SE$hosp,x=predSE$newSARI$date)
 plot(y=Hospital$SW$saridat,x=Hospital$SW$date,ylab="SW Hospital Cases",xlab="Date",xlim=plot_date)
-lines(rowSums(predSW$SARI[2:20]+predSW$CRIT[2:20]+predSW$CRITREC[2:20]),x=predSW$newSARI$date)
+lines(rowSums(predSW$SARI[2:20]+predSW$CRIT[2:20]+predSW$CRITREC[2:20])/ratio$SW$hosp,x=predSW$newSARI$date)
 plot(y=Hospital$Lon$saridat,x=Hospital$Lon$date,ylab="Lon Hospital Cases",xlab="Date",xlim=plot_date)
-lines(rowSums(predLon$SARI[2:20]+predLon$CRIT[2:20]+predLon$CRITREC[2:20]),x=predLon$newSARI$date)
+lines(rowSums(predLon$SARI[2:20]+predLon$CRIT[2:20]+predLon$CRITREC[2:20])/ratio$Lon$hosp,x=predLon$newSARI$date)
 
 
 

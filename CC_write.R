@@ -8,9 +8,9 @@ library(openxlsx)
 library(lubridate)
 
 CC_write <- function(CCcomp,region,pop,R_region,Q_region,Rseries,ratio,filename){
-# write from arbitrary start point to last day where there are cases
-startwrite=450
-endwrite=nrow(CCcomp$CASE)
+# write from arbitrary start point to six weeks time
+startwrite=470
+endwrite=nrow(regcases)+reporting_delay+43
 group <- "Edinburgh"
 model <-  "WSS"
 scenario <- "Nowcast"
@@ -61,7 +61,7 @@ CC <- data.frame(
   check.names = FALSE
 )
   CCtmp<-CC
-  #  R number Nowcast.  Error mainly comes from uncrtainty in GenTime
+  #  R number Nowcast.  Error mainly comes from uncertainty in GenTime
   CCtmp$Scenario="Nowcast"
   CCtmp$Geography=region
   CCtmp$ValueType="R"
@@ -78,7 +78,7 @@ CC <- data.frame(
     # Add the new row
     CC <- rbind(CC, CCtmp)
   }
-  #  Delete the first row - Crystal cast requires numerical order
+  d#  Delete the first row - Crystal cast requires numerical order
   CC <- CC[-c(1),]
 
   #  Hindcast for growth rate
@@ -100,24 +100,29 @@ CC <- data.frame(
     CC <- rbind(CC, CCtmp)
   }
 
-
+  if(region!="Wales"){
+   if(region!="NI"){
+}
 today <- Sys.Date()
 ageband <-  "All"
 CCtmp$Scenario="MTP"
 CCtmp$Geography=region
 CCtmp$ValueType="hospital_inc"
 #  Log. Errors from fluctuations time 4 for methodological uncertainty
-#  adjust for recent discrepancy
+#  adjust for recent discrepancies
 #  Would like regional admissions data, only have totals, but use them anyway
+#  Omicron uncertainty *10 on R, from 21/12/21
+R_error=1
 for (d in startwrite:endwrite){
-  if(CCcomp$CASE$date[d]>(today-reporting_delay)){ CCtmp$Scenario="MTP"}
+  if(CCcomp$CASE$date[d]>(today-reporting_delay)){ R_error=R_error+0.2/genTime
+                                                   CCtmp$Scenario="MTP"}
   CCtmp$Value = sum(CCcomp$newSARI[d,2:20])/ratio$newhosp
   NStoday = sum(CCcomp$newSARI[d,2:20])
-  CCtmp$"Quantile 0.05"=max(0,NStoday*(1-3*sqrt(sum(CCcomp$newSARI[(d-6):d,2:20])/7)/NStoday))/ratio$newhosp
-  CCtmp$"Quantile 0.25"=max(0,NStoday*(1-sqrt(sum(CCcomp$newSARI[(d-6):d,2:20])/7)/NStoday))/ratio$newhosp
+  CCtmp$"Quantile 0.05"=max(0,NStoday*(1-6*sqrt(sum(CCcomp$newSARI[(d-6):d,2:20])/7)*R_error/NStoday))/ratio$newhosp
+  CCtmp$"Quantile 0.25"=max(0,NStoday*(1-2*sqrt(sum(CCcomp$newSARI[(d-6):d,2:20])/7)*R_error/NStoday))/ratio$newhosp
   CCtmp$"Quantile 0.5"=CCtmp$Value
-  CCtmp$"Quantile 0.75"=NStoday*(1+sqrt(sum(CCcomp$newSARI[(d-6):d,2:20])/7)/NStoday)/ratio$newhosp
-  CCtmp$"Quantile 0.95"=NStoday*(1+3*sqrt(sum(CCcomp$newSARI[(d-6):d,2:20])/7)/NStoday)/ratio$newhosp
+  CCtmp$"Quantile 0.75"=NStoday*(1+4*sqrt(sum(CCcomp$newSARI[(d-6):d,2:20])/7)*R_error/NStoday)/ratio$newhosp
+  CCtmp$"Quantile 0.95"=NStoday*(1+12*sqrt(sum(CCcomp$newSARI[(d-6):d,2:20])/7)*R_error/NStoday)/ratio$newhosp
   CCtmp$"Day of Value" = day(CCcomp$newSARI$date[d])
   CCtmp$"Month of Value" = month(CCcomp$newSARI$date[d])
   CCtmp$"Year of Value" = year(CCcomp$newSARI$date[d])
@@ -126,14 +131,16 @@ for (d in startwrite:endwrite){
 }
 CCtmp$ValueType="type28_death_inc_line"
 CCtmp$Scenario="MTP"
+R_error=1
 for (d in startwrite:endwrite){
-  if(CCcomp$DEATH$date[d]>(today-reporting_delay)){ CCtmp$Scenario="MTP"}  
+  if(CCcomp$DEATH$date[d]>(today-reporting_delay)){ CCtmp$Scenario="MTP"
+                                                    R_error=R_error+0.2/genTime}  
   CCtmp$Value = sum(CCcomp$DEATH[d,2:20])/ratio$death
-  CCtmp$"Quantile 0.05"=max(0,CCtmp$Value*(1-sqrt(sum(CCcomp$DEATH[(d-6):d,2:20])/7)/CCtmp$Value))
-  CCtmp$"Quantile 0.25"=max(0,CCtmp$Value*(1-sqrt(sum(CCcomp$DEATH[(d-6):d,2:20])/7)/3/CCtmp$Value))
+  CCtmp$"Quantile 0.05"=max(0,CCtmp$Value*(1-sqrt(sum(CCcomp$DEATH[(d-6):d,2:20])/7)*3*R_error/CCtmp$Value))
+  CCtmp$"Quantile 0.25"=max(0,CCtmp$Value*(1-sqrt(sum(CCcomp$DEATH[(d-6):d,2:20])/7)*R_error/CCtmp$Value))
   CCtmp$"Quantile 0.5"=CCtmp$Value
-  CCtmp$"Quantile 0.75"=CCtmp$Value*(1+sqrt(sum(CCcomp$DEATH[(d-6):d,2:20])/7)/3/CCtmp$Value)
-  CCtmp$"Quantile 0.95"=CCtmp$Value*(1+sqrt(sum(CCcomp$DEATH[(d-6):d,2:20])/7)/CCtmp$Value)
+  CCtmp$"Quantile 0.75"=CCtmp$Value*(1+sqrt(sum(CCcomp$DEATH[(d-6):d,2:20])/7)*R_error/CCtmp$Value)
+  CCtmp$"Quantile 0.95"=CCtmp$Value*(1+sqrt(sum(CCcomp$DEATH[(d-6):d,2:20])/7)*3*R_error/CCtmp$Value)
   CCtmp$"Day of Value" = day(CCcomp$DEATH$date[d])
   CCtmp$"Month of Value" = month(CCcomp$DEATH$date[d])
   CCtmp$"Year of Value" = year(CCcomp$DEATH$date[d])
@@ -151,19 +158,19 @@ Missing_incidence=2.2
 scalefac=Missing_incidence
 CCtmp$ValueType="incidence"
 CCtmp$Scenario="Nowcast"
-R_error=0.0
+R_error=1.0
 for (d in startwrite:endwrite){
-  if(CCcomp$CASE$date[d]>(today-reporting_delay)){R_error=R_error+0.1/genTime
+  if(CCcomp$CASE$date[d]>(today-reporting_delay)){R_error=R_error+0.2/genTime
     CCtmp$Scenario="MTP"
     CCtmp$ValueType="infections_inc"
   }
   CASEtoday=sum(CCcomp$CASE[d,2:20])
   CCtmp$Value =   CASEtoday*scalefac
-  CCtmp$"Quantile 0.05"=max(0,CASEtoday*(1-0.3*(1+R_error)))*scalefac
-  CCtmp$"Quantile 0.25"=max(0,CASEtoday*(1-0.1*(1+R_error)))*scalefac
+  CCtmp$"Quantile 0.05"=max(0,CASEtoday*(1-0.3*R_error))*scalefac
+  CCtmp$"Quantile 0.25"=max(0,CASEtoday*(1-0.1*R_error))*scalefac
   CCtmp$"Quantile 0.5"=CASEtoday*scalefac
-  CCtmp$"Quantile 0.75"=CASEtoday*(1+0.1*(1+R_error))*scalefac
-  CCtmp$"Quantile 0.95"=CASEtoday*(1+0.3*(1+R_error))*scalefac
+  CCtmp$"Quantile 0.75"=CASEtoday*(1+0.1*R_error)*scalefac
+  CCtmp$"Quantile 0.95"=CASEtoday*(1+0.3*R_error)*scalefac
   CCtmp$"Day of Value" = day(CCcomp$CASE$date[d])
   CCtmp$"Month of Value" = month(CCcomp$CASE$date[d])
   CCtmp$"Year of Value" = year(CCcomp$CASE$date[d])
@@ -176,19 +183,19 @@ for (d in startwrite:endwrite){
 # There is some difficulty about the ONS data c/f e.g. https://www.medrxiv.org/content/10.1101/2021.02.09.21251411v1.full.pdf
 CCtmp$ValueType="prevalence"
 CCtmp$Scenario="Nowcast"
-R_error=0
-for (d in startwrite:(endwrite-4)){
-  if(CCcomp$CASE$date[d]>(today-reporting_delay)){R_error=R_error+0.1/genTime 
+R_error=1.0
+for (d in startwrite:(endwrite)){
+  if(CCcomp$CASE$date[d]>(today-reporting_delay)){R_error=R_error+0.2/genTime 
     CCtmp$Scenario="MTP"
     CCtmp$ValueType="prevalence_mtp"
   }
   PREV= sum(CCcomp$ILI[d,2:20]+CCcomp$SARI[d,2:20])+sum(CCcomp$CASE[d:(d+4),2:20])*Missing_incidence
   CCtmp$Value=PREV*Missing_prevalence/pop*100
-  CCtmp$"Quantile 0.05"=CCtmp$Value*(1.0-0.3*(1+R_error))
-  CCtmp$"Quantile 0.25"=CCtmp$Value*(1.0-0.1*(1+R_error))
+  CCtmp$"Quantile 0.05"=max(0,CCtmp$Value*(1.0-0.3*R_error))
+  CCtmp$"Quantile 0.25"=max(0,CCtmp$Value*(1.0-0.1*R_error))
   CCtmp$"Quantile 0.5"=CCtmp$Value
-  CCtmp$"Quantile 0.75"=CCtmp$Value*(1.0+0.1*(1+R_error))
-  CCtmp$"Quantile 0.95"=CCtmp$Value*(1.0+0.3*(1+R_error))
+  CCtmp$"Quantile 0.75"=CCtmp$Value*(1.0+0.1*R_error)
+  CCtmp$"Quantile 0.95"=CCtmp$Value*(1.0+0.3*R_error)
   CCtmp$"Day of Value" = day(CCcomp$ILI$date[d])
   CCtmp$"Month of Value" = month(CCcomp$ILI$date[d])
   CCtmp$"Year of Value" = year(CCcomp$ILI$date[d])
@@ -196,26 +203,13 @@ for (d in startwrite:(endwrite-4)){
   CC <- rbind(CC, CCtmp)
 }
 
-#  Extend for the last three days assuming derivative of CASE[d] is zero 
-for (d in (endwrite-3):endwrite){R_error=R_error+0.1/genTime
-  PREV= sum(CCcomp$ILI[d,2:20]+CCcomp$SARI[d,2:20])+sum(CCcomp$CASE[d,2:20]*5)*Missing_incidence
-  CCtmp$Value=PREV*Missing_prevalence/pop*100
-  CCtmp$"Quantile 0.05"=CCtmp$Value*(1.0-0.3*(1+R_error))
-  CCtmp$"Quantile 0.25"=CCtmp$Value*(1.0-0.1*(1+R_error))
-  CCtmp$"Quantile 0.5"=CCtmp$Value
-  CCtmp$"Quantile 0.75"=CCtmp$Value*(1.0+0.1*(1+R_error))
-  CCtmp$"Quantile 0.95"=CCtmp$Value*(1.0+0.3*(1+R_error))  
-  CCtmp$"Day of Value" = day(CCcomp$ILI$date[d])
-  CCtmp$"Month of Value" = month(CCcomp$ILI$date[d]) 
-  CCtmp$"Year of Value" = year(CCcomp$ILI$date[d])
-  # Add the new row
-  CC <- rbind(CC, CCtmp)  
-}
+# No need to do this provides Pred extends beyond endwrite Extend for the last three days assuming derivative of CASE[d] is zero 
+
 
 #  Crystalcast format output  
 
-
-
+#End Wales NI ifs
+}}
 
 try(
 if(file.exists(filename)){
@@ -225,5 +219,6 @@ writeData(wb,region,CC)
 saveWorkbook(wb,filename,overwrite = TRUE)
 } else {}
 )
+
 return(CC)
 }
