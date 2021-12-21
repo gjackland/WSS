@@ -418,8 +418,8 @@ lines(rowSums(predScot$newMILD[2:20]+predScot$newILI[2:20]),col="red",x=predScot
 plot(Hospital$Scot$newcritdat,x=Hospital$Scot$date,ylab="ICU Admissions",xlab="Date",las=2)
 lines(rowSums(predScot$newCRIT[2:20]),col="blue",x=predScot$newCRIT$date)
 
-lines(rowSums(predScot$DEATH[2:20]),col="blue",x=predScot$DEATH$date,type="l", ylab="Deaths",xlab="Date",las=2)
-plot(rowSums(scotdeath[2:20]),x=scotdeath$date,ylab="Deaths",xlab="Date")
+plot(rowSums(predScot$DEATH[2:20]),col="blue",x=predScot$DEATH$date,type="l", ylab="Deaths",xlab="Date",las=2)
+lines(rowSums(scotdeath[2:20]),x=scotdeath$date,ylab="Deaths",xlab="Date")
 lines(rowSums(predScot$DEATH[2:20]),x=predScot$DEATH$date,ylab="Deaths",col='red',xlab="Date")
 }
 

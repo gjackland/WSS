@@ -56,6 +56,7 @@ Predictions <- function(input,R_input,predtime,pop){
   ipred=1
 
   for (iday in ((lengthofdata+1):(lengthofdata+predtime+1))){
+   xday=xday+1
     #  Proportions become variant dependent.  ILI is case driven, so extra infectivity is automatic
     # from the data. ILI->SARI increases with variant.  CRIT is an NHS decision, not favoured for very old
     #  Need to increase CFR without exceeding 1.  Note inverse lethality isnt a simple % as CFR cant be >1
@@ -63,33 +64,34 @@ Predictions <- function(input,R_input,predtime,pop){
     
     newMILD[iday,agerange]=predCASE[ipred,agerange]*(1.0-pTtoI)+newMILD[iday,agerange]
     newILI[iday,agerange]=predCASE[ipred,agerange]*  pTtoI    +newILI[iday,agerange]
-    
+
     
     #  vectorize 
-  MtoR=outer(as.numeric(newMILD[iday,agerange]),MildToRecovery,FUN="*")
-  oldMILD[(iday:xday),agerange]=oldMILD[(iday:xday),agerange]+MtoR
+#  MtoR=outer(as.numeric(newMILD[iday,agerange]),MildToRecovery,FUN="*")
+#  oldMILD[(iday:xday),agerange]=oldMILD[(iday:xday),agerange]+MtoR
     for (iage in agerange){
+      MtoR = as.numeric(newMILD[iday-1,iage]) * MildToRecovery 
       # All todays new MILDs will all leave to REC across distribution
       # ILI will go to SARI and REC   Vaccination frozen on last day, not predicted
-      ItoS = as.numeric(newILI[iday,iage] * pItoS[iage-1] * (1.0-vacdat[nrow(vacdat),iage]*vacCFR)) *ILIToSARI  #  ItoS = as.numeric(newILI[iday,iage] *  pItoS[iage-1])     *ILIToSARI
-      ItoR = as.numeric(newILI[iday,iage] *(1.0-pItoS[iage-1])) *ILIToRecovery
+      ItoS = as.numeric(newILI[iday-1,iage] * pItoS[iage-1] * (1.0-vacdat[nrow(vacdat),iage]*vacCFR)) *ILIToSARI  #  ItoS = as.numeric(newILI[iday,iage] *  pItoS[iage-1])     *ILIToSARI
+      ItoR = as.numeric(newILI[iday-1,iage] *(1.0-pItoS[iage-1])) *ILIToRecovery
       newSARI[(iday:xday),iage]=newSARI[(iday:xday),iage]+ItoS
       oldILI[(iday:xday),iage]=oldILI[(iday:xday),iage]+ItoR+ItoS
       # SARI will go to REC, DEATH, CRIT
-      StoC = as.numeric(newSARI[iday,iage] *pStoC[iage-1]) *SARIToCritical
-      StoD = as.numeric(newSARI[iday,iage] *pStoD[iage-1])      *SARIToDeath
-      StoR = as.numeric(newSARI[iday,iage] *(1.0-pStoC[iage-1]-pStoD[iage-1]) )*SARIToRecovery
+      StoC = as.numeric(newSARI[iday-1,iage] *pStoC[iage-1]) *SARIToCritical
+      StoD = as.numeric(newSARI[iday-1,iage] *pStoD[iage-1])      *SARIToDeath
+      StoR = as.numeric(newSARI[iday-1,iage] *(1.0-pStoC[iage-1]-pStoD[iage-1]) )*SARIToRecovery
       newCRIT[(iday:xday),iage]=newCRIT[(iday:xday),iage]+StoC
       oldSARI[(iday:xday),iage]=oldSARI[(iday:xday),iage]+StoR+StoC+StoD
       
       # CRIT  goes to CRITREC DEATH
-      CtoD = as.numeric(newCRIT[iday,iage]*pCtoD[(iage-1)]) *CriticalToDeath
-      CtoCR = as.numeric(newCRIT[iday,iage]*(1.0-pCtoD[(iage-1)])) *CriticalToCritRecov
+      CtoD = as.numeric(newCRIT[iday-1,iage]*pCtoD[(iage-1)]) *CriticalToDeath
+      CtoCR = as.numeric(newCRIT[iday-1,iage]*(1.0-pCtoD[(iage-1)])) *CriticalToCritRecov
       newCRITREC[(iday:xday),iage]=newCRITREC[(iday:xday),iage]+CtoCR
       oldCRIT[(iday:xday),iage]=oldCRIT[(iday:xday),iage]+CtoD+CtoCR
       
       # CRITREC goes to RECOV
-      CRtoR = as.numeric(newCRITREC[iday,iage]) *CritRecovToRecov
+      CRtoR = as.numeric(newCRITREC[iday-1,iage]) *CritRecovToRecov
       oldCRITREC[(iday:xday),iage]=oldCRITREC[(iday:xday),iage]+CRtoR
       # DEATH and RECOV are cumulative, again anticipating where "new" will end up.
       DEATH[(iday:xday),iage]=DEATH[(iday:xday),iage]+CtoD+StoD
@@ -119,9 +121,12 @@ Predictions <- function(input,R_input,predtime,pop){
     R_input=(R_input-1)*0.95*(1.0+new_Omicron*2)+1.0
     #oooooooooo
     NotS=colSums(predCASE[2:20])/pop[2:20]
-    NewNotS=(NotS-NotS0)/(1.0-NotS0)
-    growthrate<-exp((R_input-1)/genTime)
-    predCASE[(ipred+1),(2:20)]<-predCASE[ipred,(2:20)]*(1.0-NewNotS)*growthrate
+    NewNotS=(NotS-NotS0)#/(1.0-NotS0)
+    S=1.0-NotS
+    S0=1.0-NotS0
+#    growthrate<-exp((R_input*NotS/NotS0-1)/genTime)
+    
+    predCASE[(ipred+1),(2:20)]<-predCASE[ipred,(2:20)]*exp((R_input*S/S0-1)/genTime)
     predCASE[ipred+1,1]<-enddateP+ipred
     ipred=ipred+1 
   }

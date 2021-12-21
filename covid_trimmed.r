@@ -54,6 +54,10 @@ options(scipen = 999)
 popdat<-c(67081234,3782330,4147413,4045114,3683680,4133158,4476630,4521975,4404100,4091543,4303967,4616017,4510851,3855818,3355381,3363906,2403759,1726223,1049866,609503)
 #  ONS population estimates per region by age
 #https://www.ons.gov.uk/peoplepopulationandcommunity/populationandmigration/populationprojections/datasets/regionsinenglandtable1
+# Missing incidence inferred from ONS model (moved from CC_write to be global variable)
+Missing_prevalence=1.0
+Missing_incidence=2.2
+
 population <- data.frame(
   "England"=c(56989570,3199741,3537022,3508137,3177717,
               3412241,3738878,3873273,3766573,3563040,3542921,3871312,3827564,
@@ -102,9 +106,12 @@ covidsimAge<-data.frame(
   "Prop_ILI_ByAge"=c(
     0.333122437,  0.333153617,	0.333001453, 0.332654731, 0.33181821, 0.330417289, 0.328732618, 0.326716425, 0.325130732, 0.322392505, 0.316971878, 0.312809664, 0.304540269, 0.300182488, 0.2919304, 0.283276936, 0.282323232, 0.282323232, 0.282323232
   ),
-  "Prop_SARI_ByAge"=c(
-    0.000557744, 0.000475283, 0.000877703, 0.001794658, 0.004006955, 0.007711884, 0.012167229, 0.017359248, 0.021140307, 0.027047193, 0.03708932, 0.039871236, 0.020788928, 0.017444452, 0.101605674, 0.142001415, 0.1747, 0.21, 0.25
-  ),
+ "Prop_SARI_ByAge"=c( 0.000557744, 0.000475283, 0.000877703, 0.001794658, 0.004006955, 0.007711884, 
+  0.012167229, 0.017359248, 0.021140307, 0.027047193, 0.03708932, 0.039871236, 0.020788928, 
+  0.017444452, 0.101605674, 0.142001415, 0.1747, 0.21, 0.25  ),
+# TEST"Prop_SARI_ByAge"=c( 0.0008, 0.000475283, 0.000477703, 0.001794658, 0.004006955, 0.007711884, 
+#                      0.012167229, 0.017359248, 0.021140307, 0.027047193, 0.03, 0.035, 0.06, 
+#                      0.08, 0.101605674, 0.142001415, 0.1747, 0.21, 0.25  ),
   "Prop_Critical_ByAge"=
     c(7.49444E-05, 6.38641E-05, 0.000117937, 0.000241149, 0.000538417, 0.00103625, 0.001634918, 0.002491477, 0.003467496, 0.005775292, 0.011995047, 0.021699771, 0.065590266, 0.082008084, 0.022603126, 0.008167778, 0.002560606, 0.002560606, 0.002560606
     ),
@@ -113,8 +120,8 @@ covidsimAge<-data.frame(
   ),
 # This is way out of line with the 20% https://journals.lww.com/ccmjournal/Fulltext/2021/02000/Improving_Survival_of_Critical_Care_Patients_With.5.aspx  https://ebn.bmj.com/content/early/2021/05/09/ebnurs-2020-103370
 #  52% is pre dexamethasone
-  "CFR_SARI_ByAge"=c(
-    0.125893251, 0.12261338, 0.135672867, 0.152667869, 0.174303077, 0.194187895, 0.209361731, 0.224432564, 0.237013516, 0.125, 0.125, 0.125, 0.125, 0.1257277, 0.37110474,  0.421151485, 0.5782234,  0.6455841,  0.6930401
+  "CFR_SARI_ByAge"=c(0.125893251, 0.12261338, 0.135672867, 0.152667869, 0.174303077, 0.194187895, 
+    0.209361731, 0.224432564, 0.237013516, 0.125, 0.125, 0.125, 0.125, 0.1257277, 0.37110474,  0.421151485, 0.5782234,  0.6455841,  0.6930401
   ),
   "CFR_ILI_ByAge"=c(
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  0,  0,  0),
@@ -125,8 +132,8 @@ covidsimAge<-data.frame(
   )
 # Admissions to April 30 0-5 839 6-17 831 18-65 42019 65-84 42640 85+ 20063
 # https://www.england.nhs.uk/statistics/statistical-work-areas/covid-19-hospital-activity/
-
-
+# TEST Adjust SARI to relate to actual admissions
+# covidsimAge$Prop_SARI_ByAge<-covidsimAge$Prop_Critical_ByAge*covidsimAge$Prop_Hosp_ByAge
 # Deatherror from colSums(deathdat[2:20])/colSums(casedat[2:20])/(colSums(DEATH[2:20]/colSums(newMILD[2:20]+newILI[2:20])))
 # IHR from Knock SM S9  CHR from Knock S8
 covidsimAge$Prop_Mild_ByAge= 1.0 - (covidsimAge$Prop_Critical_ByAge+covidsimAge$Prop_ILI_ByAge+covidsimAge$Prop_SARI_ByAge)
@@ -1580,12 +1587,12 @@ plot(Hospital$UK$saridat,x=Hospital$UK$date,ylab="Hospital Cases",xlab="Date",xl
 lines(rowSums(predEng$SARI[2:20]+predEng$CRIT[2:20]+predEng$CRITREC[2:20]),x=predEng$SARI$date,col='red')
 
 plot(rowSums(compEng$newMILD[2:20]+compEng$newILI[2:20]),xlim=c((startplot),endplot),col="blue",x=compEng$newMILD$date,type="l",xlab="Date",ylab="Cases")
-points(rowSums(predEng$CASE[2:20]),x=predEng$CASE$date)
+plot(rowSums(predEng$CASE[2:20]),x=predEng$CASE$date)
 lines(rowSums(compEng$newMILD[2:10]+compEng$newILI[2:10]),col="green",x=compEng$newMILD$date,type="l",xlab="Date",ylab="Cases")
 lines(rowSums(compEng$newMILD[11:20]+compEng$newILI[11:20]),col="red",x=compEng$newMILD$date,type="l",xlab="Date",ylab="Cases")
 
 plot(Hospital$UK$critdat,x=Hospital$UK$date,ylab="ICU Occupation",xlab="Date",xlim=c(startplot,endplot))
-lines(rowSums(compEng$CRIT[2:20]),col="blue",x=compEng$CRIT$date)
+lines(rowSums(predEng$CRIT[2:20]),col="blue",x=predEng$CRIT$date)
 
 plot(rowSums(predEng$DEATH[2:20]),col="blue",x=predEng$DEATH$date, type="l",ylab="Deaths"
      ,xlab="Date",xlim=c(startplot,endplot))
