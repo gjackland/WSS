@@ -41,7 +41,11 @@ Predictions <- function(input,R_input,predtime,pop){
  
   lengthofdata <- nrow(CASE)
   enddateP<-CASE$date[lengthofdata]
-  NotS0=colSums(CASE[2:20])/pop[2:20]
+  
+  NotS0=colSums(CASE[2:20])/pop[2:20]*Missing_incidence
+#  Boost R_input by the already susceptible.
+#  This is taken out again when incrementing cases using current notS  
+  R_input<-R_input/(1.0-NotS0)
   #  Current prevalence of omicron
   x= (lengthofdata-Omicrondate)*1.0/genTime
   today_Omicron=1.0/(1.0+exp(-x))#  For loop over time, predCASE using R numbers
@@ -108,25 +112,35 @@ Predictions <- function(input,R_input,predtime,pop){
     ##  Finally, estimate cases for tomorrow.  This uses an R value calculated above, but for CrystalCast purposes from
     ##  we can use MLP Rx.x as an input here
     
-    # R decays back to 1 with growth rate down 5% a day, faster if larger
-    # R is the same in all age groups
-    #  R_input is average of delta & omicron R_input =R_d*fracd+R_o*frac_o
+
     #oooooooooo  Omicron fraction grows as 2 day doubling time
     yesterday_Omicron=today_Omicron
     x= (iday-Omicrondate)*1.0/genTime
     today_Omicron=1.0/(1.0+exp(-x))
     new_Omicron=today_Omicron-yesterday_Omicron
-    #  New omicron cases growing with R=3
-    if(R_input > 1.4) {R_input=(R_input-1)*0.95*(1.0+new_Omicron*2)+1.0}
-    R_input=(R_input-1)*0.95*(1.0+new_Omicron*2)+1.0
-    #oooooooooo
-    NotS=colSums(predCASE[2:20])/pop[2:20]
-    NewNotS=(NotS-NotS0)#/(1.0-NotS0)
-    S=1.0-NotS
-    S0=1.0-NotS0
-#    growthrate<-exp((R_input*NotS/NotS0-1)/genTime)
+    #  New omicron cases growing with R=3  (test R=4)
+    #  For omicron, R_input gets bigger and bigger
+
+    #Newly not susceptible
     
-    predCASE[(ipred+1),(2:20)]<-predCASE[ipred,(2:20)]*exp((R_input*S/S0-1)/genTime)
+    NotS=colSums(predCASE[2:20])/pop[2:20]*Missing_incidence
+    
+    S=(1.0-NotS-NotS0)
+    #  Maximum immunity at 90%
+    S[S<0.1]=0.1
+    # R decays back to 1 with growth rate down 5% a day, faster if larger
+    # R is the same in all age groups
+    # This come from the network model as the epidemic behaviour becomes wavelike
+    # 5% is probably too slow, but more importantly the decay should (probably) 
+    # depend on the number of cases as that measures "breakthrough" into new regions
+    # 
+    #  R_input is average of delta & omicron R_input =R_d*fracd+R_o*frac_o
+    R_input=R_input*(1.0+new_Omicron*3)
+    if(sum(R_input*S)/19 > 1.4) {R_input=(R_input-1)*0.95+1.0}
+    R_input= ((R_input-1)*0.95+1.0)  
+    #  Infections not confined by age group - use an average
+    R_eff=sum(R_input*S)/19
+    predCASE[(ipred+1),(2:20)]<-predCASE[ipred,(2:20)]*exp((R_eff-1)/genTime)
     predCASE[ipred+1,1]<-enddateP+ipred
     ipred=ipred+1 
   }
