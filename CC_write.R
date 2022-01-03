@@ -102,7 +102,6 @@ CC <- data.frame(
 
   if(region!="Wales"){
    if(region!="NI"){
-}
 today <- Sys.Date()
 ageband <-  "All"
 CCtmp$Scenario="MTP"
