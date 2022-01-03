@@ -200,7 +200,7 @@ startdate <- as.Date("2020/08/09") #as.Date("2020/08/09")
 
 # Lose only the last day of data - use tail correction for reporting delay
 # Weekend data can be sketchy Extend the enddate if run on Monday morning
-reporting_delay=3
+reporting_delay=6
 enddate <-  Sys.Date()-reporting_delay
 #  Six week prediction 
 predtime = 100

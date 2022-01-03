@@ -102,7 +102,6 @@ CC <- data.frame(
 
   if(region!="Wales"){
    if(region!="NI"){
-}
 today <- Sys.Date()
 ageband <-  "All"
 CCtmp$Scenario="MTP"
@@ -208,7 +207,7 @@ for (d in startwrite:(endwrite)){
 
 #  Crystalcast format output  
 
-#End Wales NI ifs
+#End Wales NI exclusion ifs
 }}
 
 try(
