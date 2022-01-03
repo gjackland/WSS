@@ -200,7 +200,9 @@ startdate <- as.Date("2020/08/09") #as.Date("2020/08/09")
 
 # Lose only the last day of data - use tail correction for reporting delay
 # Weekend data can be sketchy Extend the enddate if run on Monday morning
-reporting_delay=6
+
+reporting_delay=5
+
 enddate <-  Sys.Date()-reporting_delay
 #  Six week prediction 
 predtime = 100
@@ -758,8 +760,9 @@ for (i in 1:(nrow(comdat))){
 
 rm(x)
 # Kent is Kentfac worse, india is Indiafac worse
-comdat$Kent<-comdat$Kent-comdat$India-comdat$Omicron
+
 comdat$India<-comdat$India - comdat$Omicron
+comdat$Kent<-comdat$Kent-comdat$India-comdat$Omicron
 comdat$lethality<-1.0+ Kentfac*comdat$Kent + Indiafac*comdat$India + Omicronfac*comdat$Omicron
 
 # Fix missing data to constant values
