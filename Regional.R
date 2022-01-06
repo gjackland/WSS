@@ -245,7 +245,8 @@ ratio$EE$newhosp=sum(rowSums(predEE$newSARI[recent_time,2:20]))/sum(Hospital$EE$
 CCEE=CC_write(predEE,"East of England",population$EE[1],R_BestGuess$EE,R_Quant$EE,rat$smoothEE,ratio$EE,filename)
 
 
-# Cludge for Wales, NI - only write R and growthrate - send predEng, CC_write will ignore it
+# Cludge for Wales, NI - only write R and growthrate, no MTPs - send predEng, CC_write will ignore it
+
 
 CCWal=CC_write(predEng,"Wales",population$Wales[1],R_BestGuess$Wales,R_Quant$Wales,rat$smoothWales,ratio$Eng,filename)
 CCNI=CC_write(predEng,"Northern Ireland",population$NI[1],R_BestGuess$NI,R_Quant$NI,rat$smoothNI,ratio$Eng,filename)
@@ -256,7 +257,7 @@ CCNI=CC_write(predEng,"Northern Ireland",population$NI[1],R_BestGuess$NI,R_Quant
 
 CC<-rbind(CCEng,CCScot,CCNW,CCNEY,CCMD,CCLon,CCSW,CCSE,CCEE,CCWal,CCNI)
 
-write.xlsx(CC, file = "a.xlsx", 
+write.xlsx(CC, file = "test.xlsx", 
            overwrite = TRUE,  sheetName = region, rowNames = FALSE)
 
 #  Monitoring plots for MTP deaths
