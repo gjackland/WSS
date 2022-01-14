@@ -699,8 +699,8 @@ Hospital$UK$critdat <- na.locf(Hospital$UK$critdat)
 
 
 # Add the Welsh and Northern Ireland cases data
-regcases$Wales <- walesdat$allCases[1:(enddate-startdate+1)]
-regcases$NI <- NIdat$allCases[1:(enddate-startdate+1)]
+regcases$Wales <- walesdat$allCases[1:(enddate-startdate)]
+regcases$NI <- NIdat$allCases[1:(enddate-startdate)]
 
 
 # Remove the no longer needed input data
@@ -717,7 +717,7 @@ if(interactive()){
     xlab("Date") + ylab("All cases")
 }
 
-# Scotland ail correction.  Assumes we read in all but the last row
+# Scotland tail correction.  Assumes we read in all but the last row
 if(enddate == (Sys.Date()-1)){
   scotdat$allCases[nrow(scotdat)]=scotdat$allCases[nrow(scotdat)]*1.05
   scotdat$allCases[nrow(scotdat)-1]=scotdat$allCases[nrow(scotdat)-1]*1.005
@@ -796,7 +796,7 @@ xcastage$'75+' <-casedat$`75_79`+casedat$`80_84`+casedat$`85_89`+casedat$`90+`
 # Combination required to go from 9 to 7 English regions
 regcases$NE_Yorks <- regcases$`North East` + regcases$`Yorkshire and The Humber`
 regcases$Midlands <- regcases$`East Midlands` + regcases$`West Midlands`
-regcases$England <- comdat$allCases[1:(enddate-startdate+1)]
+regcases$England <- comdat$allCases[1:(enddate-startdate)]
 
 # Reorder regcases
 regcases<-regcases[,c(1,2,3,4,5,6,7,9,10,8,23,26,27,11,12,13,14,15,16,17,18,19,20,21,22,24,25,28,29,30)]
