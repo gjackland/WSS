@@ -147,8 +147,10 @@ Compartment <- function(cases,  csimAge, rCFR, cdat, startc, endc){
     
     
  
-MtoR <- outer(as.numeric(newMILD[iday,agerange]),MildToRecovery,FUN="*")
-oldMILD[(iday:xday),agerange] <- oldMILD[(iday:xday),agerange]+MtoR
+#MtoR <- outer(as.numeric(newMILD[iday,agerange]),MildToRecovery,FUN="*")
+#oldMILD[(iday:xday),agerange] <- oldMILD[(iday:xday),agerange]+MtoR
+    MtoR = as.numeric(newMILD[iday-1,iage]) * MildToRecovery 
+    oldMILD[(iday:xday),iage]=oldMILD[(iday:xday),iage]+MtoR
     vacCFR <- 0.90 
     #Vaccine reduction in ILI-> SARI
 

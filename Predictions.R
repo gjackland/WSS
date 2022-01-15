@@ -75,10 +75,12 @@ Predictions <- function(input,R_input,predtime,pop){
 #  oldMILD[(iday:xday),agerange]=oldMILD[(iday:xday),agerange]+MtoR
     for (iage in agerange){
       MtoR = as.numeric(newMILD[iday-1,iage]) * MildToRecovery 
+      oldMILD[(iday:xday),iage]=oldMILD[(iday:xday),iage]+MtoR
       # All todays new MILDs will all leave to REC across distribution
-      # ILI will go to SARI and REC   Vaccination frozen on last day, not predicted
+      # ILI will go to SARI and REC   Vaccination frozen on last day, not predicted   Assumption is that boosters compensate for waning immunity
+   
       ItoS = as.numeric(newILI[iday-1,iage] * pItoS[iage-1] * (1.0-vacdat[nrow(vacdat),iage]*vacCFR)) *ILIToSARI  #  ItoS = as.numeric(newILI[iday,iage] *  pItoS[iage-1])     *ILIToSARI
-      ItoR = as.numeric(newILI[iday-1,iage] *(1.0-pItoS[iage-1])) *ILIToRecovery
+      ItoR = as.numeric(newILI[iday-1,iage] *(1.0-pItoS[iage-1]*(1.0-vacdat[nrow(vacdat),iage]*vacCFR))) *ILIToRecovery
       newSARI[(iday:xday),iage]=newSARI[(iday:xday),iage]+ItoS
       oldILI[(iday:xday),iage]=oldILI[(iday:xday),iage]+ItoR+ItoS
       # SARI will go to REC, DEATH, CRIT
@@ -183,5 +185,6 @@ Predictions <- function(input,R_input,predtime,pop){
   CriticalToDeath -> input$CriticalToDeath
   CriticalToCritRecov -> input$CriticalToCritRecov
   CritRecovToRecov -> input$CritRecovToRecov
+  S -> input$S
   return(input)
 }

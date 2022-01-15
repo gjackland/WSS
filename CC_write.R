@@ -10,7 +10,7 @@ library(lubridate)
 CC_write <- function(CCcomp,region,pop,R_region,Q_region,Rseries,ratio,filename){
 # write from arbitrary start point to six weeks time
 startwrite=470
-endwrite=nrow(regcases)+reporting_delay+43
+endwrite=nrow(regcases)+reporting_delay+44
 group <- "Edinburgh"
 model <-  "WSS"
 scenario <- "Nowcast"
@@ -159,7 +159,7 @@ CCtmp$ValueType="incidence"
 CCtmp$Scenario="Nowcast"
 R_error=1.0
 for (d in startwrite:endwrite){
-  if(CCcomp$CASE$date[d]>(today-reporting_delay)){R_error=R_error+0.2/genTime
+  if(CCcomp$CASE$date[d]>(today-reporting_delay)){R_error=R_error+0.3/genTime
     CCtmp$Scenario="MTP"
     CCtmp$ValueType="infections_inc"
   }

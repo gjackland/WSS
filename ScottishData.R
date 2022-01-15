@@ -409,14 +409,15 @@ plot(rowSums(plotCASE[2:20]),x=plotCASE$date)
 
 plot(rowSums(predScot$SARI[2:20]+predScot$CRIT[2:20]+predScot$CRITREC[2:20]),col="blue", 
      type='l',ylab="Scottish Hospital Beds",xlab="Date")
+lines(Hospital$Scot$saridat,ylab="Hospital",xlab="Date",las=2)
 
 plot(Hospital$Scot$newsaridat,x=Hospital$Scot$date,ylab="Scottish Hospital Admissions",xlab="Date")
 lines(rowSums(predScot$newSARI[2:20]),x=predScot$SARI$date,col='red')
 plot(rowSums(predScot$CASE[2:20]),x=predScot$CASE$date,ylab="Cases",xlab="Date")
 lines(rowSums(predScot$newMILD[2:20]+predScot$newILI[2:20]),col="red",x=predScot$newMILD$date)
 
-plot(Hospital$Scot$newcritdat,x=Hospital$Scot$date,ylab="ICU Admissions",xlab="Date",las=2)
-lines(rowSums(predScot$newCRIT[2:20]),col="blue",x=predScot$newCRIT$date)
+plot(Hospital$Scot$saridat,x=Hospital$Scot$date,ylab="Hospital",xlab="Date",las=2)
+plot(rowSums(predScot$SARI[2:20]),col="blue",x=predScot$newCRIT$date)
 
 plot(rowSums(predScot$DEATH[2:20]),col="blue",x=predScot$DEATH$date,type="l", ylab="Deaths",xlab="Date",las=2)
 lines(rowSums(scotdeath[2:20]),x=scotdeath$date,ylab="Deaths",xlab="Date")

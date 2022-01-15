@@ -194,10 +194,10 @@ total_admissions=sum(Hospital$Eng$newsaridat[recent_time])
 total_crit=sum(Hospital$UK$critdat[recent_time])
 ratio <-list()
 ratio$Eng$death=sum(predEng$DEATH[recent_time,2:20])/sum(regdeaths[recent_time,2:8])
-ratio$Eng$case=total_cases/sum(predEng$CASE[recent_time,2:20])
-ratio$Eng$newhosp=total_admissions/sum(compEng$newSARI[recent_time,2:20])
+ratio$Eng$case=sum(predEng$CASE[recent_time,2:20])/total_cases
+ratio$Eng$newhosp=sum(compEng$newSARI[recent_time,2:20])/total_admissions
 ratio$Eng$hosp=sum(rowSums(predEng$SARI[recent_time,2:20]+predEng$CRIT[recent_time,2:20]+predEng$CRITREC[recent_time,2:20]))/sum(Hospital$Eng$saridat[recent_time])
-ratio$Eng$crit=total_crit/sum(compEng$CRIT[recent_time,2:20])
+ratio$Eng$crit=sum(compEng$CRIT[recent_time,2:20])/total_crit
 
 #  Rescale big regional differences in hospitalization times.
 filename=paste("data/CCcompartment",Sys.Date(),"regions.xlsx")
@@ -257,13 +257,21 @@ CCNI=CC_write(predEng,"Northern Ireland",population$NI[1],R_BestGuess$NI,R_Quant
 
 CC<-rbind(CCEng,CCScot,CCNW,CCNEY,CCMD,CCLon,CCSW,CCSE,CCEE,CCWal,CCNI)
 
-write.xlsx(CC, file = "test.xlsx", 
+write.xlsx(CC, file = "corrected.xlsx", 
            overwrite = TRUE,  sheetName = region, rowNames = FALSE)
 
 #  Monitoring plots for MTP deaths
 
 plot_date<-c(plotdate[1],plotdate[2])
-ymax = max(tail(rowSums(predMD$DEATH[2:20]),n=100))*1.1
+ymax = max(tail(rowSums(predMD$CASE[2:20]),n=100))*1.1
+plot(rowSums(predMD$CASE[2:20]),x=predMD$CASE$date,xlim=plot_date,cex.axis=0.7,ylab="Regional CASE",xlab="Date") 
+lines(rowSums(predNEY$CASE[2:20]),x=predNEY$CASE$date,xlim=plot_date,col="red") 
+lines(rowSums(predNW$CASE[2:20]),x=predNW$CASE$date,xlim=plot_date,col="blue")  
+lines(rowSums(predSW$CASE[2:20]),x=predSW$CASE$date,xlim=plot_date,col="green")  
+lines(rowSums(predSE$CASE[2:20]),x=predSE$CASE$date,xlim=plot_date,col="orange")  
+lines(rowSums(predEE$CASE[2:20]),x=predEE$CASE$date,xlim=plot_date,col="violet")  
+lines(rowSums(predLon$CASE[2:20]),x=predLon$CASE$date,xlim=plot_date,col="yellow")  
+
 plot(rowSums(predMD$DEATH[2:20]),x=predMD$DEATH$date,xlim=plot_date,cex.axis=0.7,ylab="Regional Death",xlab="Date") 
 lines(rowSums(predNEY$DEATH[2:20]),x=predNEY$DEATH$date,xlim=plot_date,col="red") 
 lines(rowSums(predNW$DEATH[2:20]),x=predNW$DEATH$date,xlim=plot_date,col="blue")  
@@ -285,6 +293,10 @@ plot(y=Hospital$SE$newsaridat,x=Hospital$SE$date,ylab="SE Hospital Admissions",x
 lines(rowSums(predSE$newSARI[2:20])/ratio$SE$newhosp,x=predSE$newSARI$date)
 plot(y=Hospital$SW$newsaridat,x=Hospital$SW$date,ylab="SW Hospital Admissions",xlab="Date",xlim=plot_date)
 lines(rowSums(predSW$newSARI[2:20])/ratio$SW$newhosp,x=predSW$newSARI$date)
+
+
+
+
 plot(y=Hospital$Lon$newsaridat,x=Hospital$Lon$date,ylab="Lon Hospital Admissions",xlab="Date")
 lines(rowSums(predLon$newSARI[2:20])/ratio$Lon$newhosp,x=predLon$newSARI$date)
 plot(Hospital$Scot$newsaridat,ylab="Scotland Hospital Admissions",xlab="Date")
