@@ -208,6 +208,8 @@ enddate <-  Sys.Date()-reporting_delay
 predtime = 100
 # Set the generation time
 genTime <- 5
+# Omicron Gen time much lower
+gentime <- 3.5
 #  Dates for the plots
 plotdate <- as.Date(c("2020-09-22",as.character(enddate)))
 # Wanted to plot a Smooth spline discontinuous at
@@ -699,13 +701,9 @@ Hospital$UK$critdat <- na.locf(Hospital$UK$critdat)
 
 
 # Add the Welsh and Northern Ireland cases data
-<<<<<<< HEAD
-regcases$Wales <- walesdat$allCases[1:(enddate-startdate)]
-regcases$NI <- NIdat$allCases[1:(enddate-startdate)]
-=======
+
 regcases$Wales <- walesdat$allCases[1:nrow(regcases)]
 regcases$NI <- NIdat$allCases[1:nrow(regcases)]
->>>>>>> e5107f38712540664fe0c43ddd83a62a618ce50f
 
 
 # Remove the no longer needed input data
@@ -798,14 +796,11 @@ xcastage$'45_64' <-casedat$`45_49`+casedat$`50_54`+casedat$`55_59`+casedat$`60_6
 xcastage$'65_74' <-casedat$`65_69`+casedat$`70_74`
 xcastage$'75+' <-casedat$`75_79`+casedat$`80_84`+casedat$`85_89`+casedat$`90+`
 
-# Combination required to go from 9 to 7 English regions
+# Combination required to go from 9 to 7 English regions  regcases must be same length in all regions
 regcases$NE_Yorks <- regcases$`North East` + regcases$`Yorkshire and The Humber`
 regcases$Midlands <- regcases$`East Midlands` + regcases$`West Midlands`
-<<<<<<< HEAD
-regcases$England <- comdat$allCases[1:(enddate-startdate)]
-=======
 regcases$England <- comdat$allCases[1:nrow(regcases)]
->>>>>>> e5107f38712540664fe0c43ddd83a62a618ce50f
+
 
 # Reorder regcases
 regcases<-regcases[,c(1,2,3,4,5,6,7,9,10,8,23,26,27,11,12,13,14,15,16,17,18,19,20,21,22,24,25,28,29,30)]
@@ -1092,7 +1087,7 @@ dfR$piecewise[lock1:(unlock1-1)]=smoothR2$y
 dfR$piecewise[unlock1:(lock2-1)]=smoothR3$y
 dfR$piecewise[lock2:(unlock2-1)]=smoothR4$y
 dfR$piecewise[unlock2:length(dfR$itoR)]=smoothRend$y
-rm(smoothR1,smoothR2,smoothR3,smoothR4,smoothRend)
+rm(smoothR1,smoothR2,smoothR3,smoothR4,smoothRend,jnkR,jnkC)
 # Plot R estimate vs data and fits discontinuous at lockdown
 #  Have to move the Official R data back by 16 days !
 
@@ -1567,7 +1562,7 @@ if(interactive()&medrxiv){medout<-MedrxivPaper()}
 
 
 
-################################################################
+0.################################################################
 ###  Finally, Use all this to make predictions for England (Scotland & Regions in separate compartment.R code)
 ###Assume that R and lethality are constants
 
