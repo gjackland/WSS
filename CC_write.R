@@ -10,7 +10,7 @@ library(lubridate)
 CC_write <- function(CCcomp,region,pop,R_region,Q_region,Rseries,ratio,filename){
 # write from arbitrary start point to six weeks time
 startwrite=470
-endwrite=nrow(regcases)+reporting_delay+44
+endwrite=nrow(regcases)+reporting_delay+68
 group <- "Edinburgh"
 model <-  "WSS"
 scenario <- "Nowcast"

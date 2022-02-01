@@ -128,8 +128,8 @@ Predictions <- function(input,R_input,predtime,pop){
     NotS=colSums(predCASE[2:20])/pop[2:20]*Missing_incidence
     
     S=(1.0-NotS-NotS0)
-    #  Maximum immunity at 90%
-    S[S<0.1]=0.1
+    #  Maximum immunity from old infections only 20% as per IC report 49
+    S=S+NotS0*0.8
     # R decays back to 1 with growth rate down 5% a day, faster if larger
     # R is the same in all age groups
     # This come from the network model as the epidemic behaviour becomes wavelike

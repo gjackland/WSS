@@ -370,8 +370,8 @@ pckg <- package_show("covid-19-wider-impacts-deaths", as ="table")
 
 
 region="Scotland"
-##  CFR going down gets entangled with vaccine effect.  Use pre-vaccination values
-##  With 12 day delay from WSS. 
+##  CFR going down gets entangled with vaccine and variant effect.  Use pre-vaccination values
+##  and will adjust CFR later for vaccine/variant
 RawCFR=colSums(scotdeath[2:20])/colSums(scotage[2:20])
 RawCFR=colSums(scotdeath[13:212,2:20])/colSums(scotage[1:200,2:20])
 
