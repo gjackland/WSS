@@ -13,7 +13,6 @@
 #
 # http://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/
 #
-
 # Remove existing variables if in an interactive session.
 if(interactive()){
   rm(list = ls())
@@ -699,13 +698,9 @@ Hospital$UK$critdat <- na.locf(Hospital$UK$critdat)
 
 
 # Add the Welsh and Northern Ireland cases data
-<<<<<<< HEAD
-regcases$Wales <- walesdat$allCases[1:(enddate-startdate)]
-regcases$NI <- NIdat$allCases[1:(enddate-startdate)]
-=======
-regcases$Wales <- walesdat$allCases[1:nrow(regcases)]
-regcases$NI <- NIdat$allCases[1:nrow(regcases)]
->>>>>>> e5107f38712540664fe0c43ddd83a62a618ce50f
+
+regcases$Wales <- walesdat$allCases[1:(enddate-startdate+1)]
+regcases$NI <- NIdat$allCases[1:(enddate-startdate+1)]
 
 
 # Remove the no longer needed input data
@@ -801,11 +796,8 @@ xcastage$'75+' <-casedat$`75_79`+casedat$`80_84`+casedat$`85_89`+casedat$`90+`
 # Combination required to go from 9 to 7 English regions
 regcases$NE_Yorks <- regcases$`North East` + regcases$`Yorkshire and The Humber`
 regcases$Midlands <- regcases$`East Midlands` + regcases$`West Midlands`
-<<<<<<< HEAD
+ 
 regcases$England <- comdat$allCases[1:(enddate-startdate)]
-=======
-regcases$England <- comdat$allCases[1:nrow(regcases)]
->>>>>>> e5107f38712540664fe0c43ddd83a62a618ce50f
 
 # Reorder regcases
 regcases<-regcases[,c(1,2,3,4,5,6,7,9,10,8,23,26,27,11,12,13,14,15,16,17,18,19,20,21,22,24,25,28,29,30)]
