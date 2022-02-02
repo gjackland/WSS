@@ -13,7 +13,6 @@
 #
 # http://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/
 #
-
 # Remove existing variables if in an interactive session.
 if(interactive()){
   rm(list = ls())
@@ -702,9 +701,8 @@ Hospital$UK$critdat <- na.locf(Hospital$UK$critdat)
 
 # Add the Welsh and Northern Ireland cases data
 
-regcases$Wales <- walesdat$allCases[1:nrow(regcases)]
-regcases$NI <- NIdat$allCases[1:nrow(regcases)]
-
+regcases$Wales <- walesdat$allCases[1:(enddate-startdate+1)]
+regcases$NI <- NIdat$allCases[1:(enddate-startdate+1)]
 
 # Remove the no longer needed input data
 rm(ukcasedat,scotdailycases,scotdailycasesbyboard,jnk,coltypes,NIdat,walesdat,regagedat3)
@@ -799,6 +797,7 @@ xcastage$'75+' <-casedat$`75_79`+casedat$`80_84`+casedat$`85_89`+casedat$`90+`
 # Combination required to go from 9 to 7 English regions  regcases must be same length in all regions
 regcases$NE_Yorks <- regcases$`North East` + regcases$`Yorkshire and The Humber`
 regcases$Midlands <- regcases$`East Midlands` + regcases$`West Midlands`
+
 regcases$England <- comdat$allCases[1:nrow(regcases)]
 
 

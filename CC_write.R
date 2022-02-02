@@ -210,15 +210,14 @@ for (d in startwrite:(endwrite)){
 #End Wales NI exclusion ifs
 }}
 
-#  Omit this sections - interferes with Scenarios
-#if(file.exists(filename)){
-#try(
-#wb<-loadWorkbook(filename)
-#addWorksheet(wb,region)
-#writeData(wb,region,CC)
-#saveWorkbook(wb,filename,overwrite = TRUE)
-#} else {}
-#)
+try(
+if(file.exists(filename)){
+wb<-loadWorkbook(filename)
+addWorksheet(wb,region)
+writeData(wb,region,CC)
+saveWorkbook(wb,filename,overwrite = TRUE)
+} else {}
+)
 
 return(CC)
 }

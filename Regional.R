@@ -299,7 +299,7 @@ lines(rowSums(predSW$newSARI[2:20])/ratio$SW$newhosp,x=predSW$newSARI$date)
 
 plot(y=Hospital$Lon$newsaridat,x=Hospital$Lon$date,ylab="Lon Hospital Admissions",xlab="Date")
 lines(rowSums(predLon$newSARI[2:20])/ratio$Lon$newhosp,x=predLon$newSARI$date)
-plot(Hospital$Scot$newsaridat,ylab="Scotland Hospital Admissions",xlab="Date",xlim=c(400,600))
+plot(Hospital$Scot$newsaridat,ylab="Scotland Hospital Admissions",xlab="Date")
 lines(rowSums(predScot$newSARI[2:20])/ratio$Scot$newhosp)
 
 
