@@ -1562,7 +1562,7 @@ if(interactive()&medrxiv){medout<-MedrxivPaper()}
 
 
 
-0.################################################################
+################################################################
 ###  Finally, Use all this to make predictions for England (Scotland & Regions in separate compartment.R code)
 ###Assume that R and lethality are constants
 

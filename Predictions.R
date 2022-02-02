@@ -41,14 +41,14 @@ Predictions <- function(input,R_input,predtime,pop){
  
   lengthofdata <- nrow(CASE)
   enddateP<-CASE$date[lengthofdata]
-  
-  NotS0=colSums(CASE[2:20])/pop[2:20]*Missing_incidence
+  #  Maximum immunity from old infections only 20% as per IC report 49
+  NotS0=colSums(CASE[2:20])/pop[2:20]*Missing_incidence*0.2
 #  Boost R_input by the already susceptible.
 #  This is taken out again when incrementing cases using current notS  
   R_input<-R_input/(1.0-NotS0)
   #  Current prevalence of omicron
-  x= (lengthofdata-Omicrondate)*1.0/genTime
-  today_Omicron=1.0/(1.0+exp(-x))#  For loop over time, predCASE using R numbers
+  #x= (lengthofdata-Omicrondate)*1.0/genTime
+  #today_Omicron=1.0/(1.0+exp(-x))#  For loop over time, predCASE using R numbers
   # enddateP is end of actual data - sometimes earlier than asked for
   
   agerange <- (2:ncol(ILI))
@@ -116,10 +116,10 @@ Predictions <- function(input,R_input,predtime,pop){
     
 
     #oooooooooo  Omicron fraction grows as 2 day doubling time
-    yesterday_Omicron=today_Omicron
-    x= (iday-Omicrondate)*1.0/genTime
-    today_Omicron=1.0/(1.0+exp(-x))
-    new_Omicron=today_Omicron-yesterday_Omicron
+    #yesterday_Omicron=today_Omicron
+    #x= (iday-Omicrondate)*1.0/genTime
+    #today_Omicron=1.0/(1.0+exp(-x))
+    #new_Omicron=today_Omicron-yesterday_Omicron
     #  New omicron cases growing with R=3  (test R=4)
     #  For omicron, R_input gets bigger and bigger
 
@@ -128,8 +128,7 @@ Predictions <- function(input,R_input,predtime,pop){
     NotS=colSums(predCASE[2:20])/pop[2:20]*Missing_incidence
     
     S=(1.0-NotS-NotS0)
-    #  Maximum immunity from old infections only 20% as per IC report 49
-    S=S+NotS0*0.8
+
     # R decays back to 1 with growth rate down 5% a day, faster if larger
     # R is the same in all age groups
     # This come from the network model as the epidemic behaviour becomes wavelike
@@ -137,8 +136,9 @@ Predictions <- function(input,R_input,predtime,pop){
     # depend on the number of cases as that measures "breakthrough" into new regions
     # 
     #  R_input is average of delta & omicron R_input =R_d*fracd+R_o*frac_o
-    R_input=R_input*(1.0+new_Omicron*3)
-    if(sum(R_input*S)/19 > 1.4) {R_input=(R_input-1)*0.95+1.0}
+    #25/1/22 Omicron dominant - remove effect
+    #R_input=R_input*(1.0+new_Omicron*3)
+    #if(sum(R_input*S)/19 > 1.4) {R_input=(R_input-1)*0.95+1.0}
     R_input= ((R_input-1)*0.95+1.0)  
     #  Infections not confined by age group - use an average
     R_eff=sum(R_input*S)/19
