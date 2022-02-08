@@ -151,7 +151,9 @@ for (d in startwrite:endwrite){
 # Missing incidence is the undetected infections. primarily short-lived
 #  Quantiles for the prevalence & incidence represent perceived methodological not statistical errors.
 #  These need more detailed study!
-Missing_prevalence=1.0
+#  4/2/22 Prevalence has been running below ONS levels for several weeks, suspect the sensitivity is improved
+#  with delat/omicron having *much* higher viral loads
+Missing_prevalence=1.5
 Missing_incidence=2.2
 #scalefac=(100000/pop)*Missing_incidence convert to total numbers
 scalefac=Missing_incidence
@@ -190,11 +192,11 @@ for (d in startwrite:(endwrite)){
   }
   PREV= sum(CCcomp$ILI[d,2:20]+CCcomp$SARI[d,2:20])+sum(CCcomp$CASE[d:(d+4),2:20])*Missing_incidence
   CCtmp$Value=PREV*Missing_prevalence/pop*100
-  CCtmp$"Quantile 0.05"=max(0,CCtmp$Value*(1.0-0.3*R_error))
-  CCtmp$"Quantile 0.25"=max(0,CCtmp$Value*(1.0-0.1*R_error))
+  CCtmp$"Quantile 0.05"=max(0,CCtmp$Value*(1.0-R_error))
+  CCtmp$"Quantile 0.25"=max(0,CCtmp$Value*(1.0-0.3*R_error))
   CCtmp$"Quantile 0.5"=CCtmp$Value
-  CCtmp$"Quantile 0.75"=CCtmp$Value*(1.0+0.1*R_error)
-  CCtmp$"Quantile 0.95"=CCtmp$Value*(1.0+0.3*R_error)
+  CCtmp$"Quantile 0.75"=CCtmp$Value*(1.0+0.3*R_error)
+  CCtmp$"Quantile 0.95"=CCtmp$Value*(1.0+R_error)
   CCtmp$"Day of Value" = day(CCcomp$ILI$date[d])
   CCtmp$"Month of Value" = month(CCcomp$ILI$date[d])
   CCtmp$"Year of Value" = year(CCcomp$ILI$date[d])
