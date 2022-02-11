@@ -18,6 +18,10 @@ if(interactive()){
   rm(list = ls())
 }
 
+if(!interactive()){
+  options(error = function() traceback(2))
+}
+
 
 # Read packages used by the script
 library(readr, warn.conflicts = FALSE, quietly = TRUE)
@@ -41,6 +45,37 @@ setwd(".")
 
 # Turn off scientific notation.
 options(scipen = 999)
+
+# Load code to function to output to the web-ui interface
+# From stackoverflow: 6456501
+if(!exists("outputJSON", mode="function")) source("json_wss.R")
+
+# Get requested outputs from the web-ui. For the web-ui the
+# file must be "/data/input/inputFile.json".
+if(dir.exists("/data/input")){
+  infile <- "/data/input/inputFile.json"
+}else{
+  infile <- "data/sample-inputFile.json"
+}
+
+# Get input data from the web interface or a test file
+dataIn <- getInput(infile)
+
+# NOTE: These are the regions and subregions being asked for - data should be produced
+# that corresponds to these.  Add UI to avoid name clash with CrystalCast
+UI_region <- dataIn$region
+UI_subregion <- dataIn$subregion
+
+# Read these parameters to output again
+calibrationDate <- dataIn$parameters$calibrationDate
+calibrationCaseCount <- dataIn$parameters$calibrationCaseCount
+calibrationDeathCount <- dataIn$parameters$calibrationDeathCount
+interventionPeriods <- dataIn$parameters$interventionPeriods
+
+if(UI_region != "GB" || UI_subregion != "GB-ENG") {
+  # Any other regions are currently unsupported
+  if(! interactive()){quit(status=10)}
+}
 
 # Copy transition rates from covidsim.  There are three different functions for
 # ICDFs (Inverse Cumulative Distribution Function).  x-axis divided into 20 blocks of 5%.
@@ -103,13 +138,13 @@ population$NEY<-population$Yorks+population$NE
 population$UK<-popdat
 covidsimAge<-data.frame(
   "Prop_ILI_ByAge"=c(
-    0.333122437,  0.333153617,	0.333001453, 0.332654731, 0.33181821, 0.330417289, 0.328732618, 0.326716425, 0.325130732, 0.322392505, 0.316971878, 0.312809664, 0.304540269, 0.300182488, 0.2919304, 0.283276936, 0.282323232, 0.282323232, 0.282323232
+    0.333122437,  0.333153617,  0.333001453, 0.332654731, 0.33181821, 0.330417289, 0.328732618, 0.326716425, 0.325130732, 0.322392505, 0.316971878, 0.312809664, 0.304540269, 0.300182488, 0.2919304, 0.283276936, 0.282323232, 0.282323232, 0.282323232
   ),
- "Prop_SARI_ByAge"=c( 0.000557744, 0.000475283, 0.000877703, 0.001794658, 0.004006955, 0.007711884, 
-  0.012167229, 0.017359248, 0.021140307, 0.027047193, 0.03708932, 0.039871236, 0.020788928, 
+ "Prop_SARI_ByAge"=c( 0.000557744, 0.000475283, 0.000877703, 0.001794658, 0.004006955, 0.007711884,
+  0.012167229, 0.017359248, 0.021140307, 0.027047193, 0.03708932, 0.039871236, 0.020788928,
   0.017444452, 0.101605674, 0.142001415, 0.1747, 0.21, 0.25  ),
-# TEST"Prop_SARI_ByAge"=c( 0.0008, 0.000475283, 0.000477703, 0.001794658, 0.004006955, 0.007711884, 
-#                      0.012167229, 0.017359248, 0.021140307, 0.027047193, 0.03, 0.035, 0.06, 
+# TEST"Prop_SARI_ByAge"=c( 0.0008, 0.000475283, 0.000477703, 0.001794658, 0.004006955, 0.007711884,
+#                      0.012167229, 0.017359248, 0.021140307, 0.027047193, 0.03, 0.035, 0.06,
 #                      0.08, 0.101605674, 0.142001415, 0.1747, 0.21, 0.25  ),
   "Prop_Critical_ByAge"=
     c(7.49444E-05, 6.38641E-05, 0.000117937, 0.000241149, 0.000538417, 0.00103625, 0.001634918, 0.002491477, 0.003467496, 0.005775292, 0.011995047, 0.021699771, 0.065590266, 0.082008084, 0.022603126, 0.008167778, 0.002560606, 0.002560606, 0.002560606
@@ -119,7 +154,7 @@ covidsimAge<-data.frame(
   ),
 # This is way out of line with the 20% https://journals.lww.com/ccmjournal/Fulltext/2021/02000/Improving_Survival_of_Critical_Care_Patients_With.5.aspx  https://ebn.bmj.com/content/early/2021/05/09/ebnurs-2020-103370
 #  52% is pre dexamethasone
-  "CFR_SARI_ByAge"=c(0.125893251, 0.12261338, 0.135672867, 0.152667869, 0.174303077, 0.194187895, 
+  "CFR_SARI_ByAge"=c(0.125893251, 0.12261338, 0.135672867, 0.152667869, 0.174303077, 0.194187895,
     0.209361731, 0.224432564, 0.237013516, 0.125, 0.125, 0.125, 0.125, 0.1257277, 0.37110474,  0.421151485, 0.5782234,  0.6455841,  0.6930401
   ),
   "CFR_ILI_ByAge"=c(
@@ -203,7 +238,7 @@ startdate <- as.Date("2020/08/09") #as.Date("2020/08/09")
 reporting_delay=5
 
 enddate <-  Sys.Date()-reporting_delay
-#  Six week prediction 
+#  Six week prediction
 predtime = 100
 # Set the generation time
 genTime <- 5
@@ -696,7 +731,7 @@ Hospital$UK  <-  jnk %>%
                   arrange(date)
 Hospital$UK$saridat <- na.locf(Hospital$UK$saridat)
 Hospital$UK$newsaridat <- na.locf(Hospital$UK$newsaridat)
-Hospital$UK$critdat <- na.locf(Hospital$UK$critdat) 
+Hospital$UK$critdat <- na.locf(Hospital$UK$critdat)
 
 
 # Add the Welsh and Northern Ireland cases data
@@ -1484,31 +1519,6 @@ if(interactive()){
 
 }
 
-# Load code to function to output to the web-ui interface
-# From stackoverflow: 6456501
-if(!exists("outputJSON", mode="function")) source("json_wss.R")
-
-# Get requested outputs from the web-ui. For the web-ui the
-# file must be "/data/input/inputFile.json".
-if(dir.exists("/data/input")){
-  infile <- "/data/input/inputFile.json"
-}else{
-  infile <- "data/sample-inputFile.json"
-}
-
-# Get input data from the web interface or a test file
-dataIn <- getInput(infile)
-
-# NOTE: These are the regions and subregions being asked for - data should be produced
-# that corresponds to these.  Add UI to avoid name clash with CrystalCast
-UI_region <- dataIn$region
-UI_subregion <- dataIn$subregion
-
-# Read these parameters to output again
-calibrationDate <- dataIn$parameters$calibrationDate
-calibrationCaseCount <- dataIn$parameters$calibrationCaseCount
-calibrationDeathCount <- dataIn$parameters$calibrationDeathCount
-interventionPeriods <- dataIn$parameters$interventionPeriods
 
 # Beginning of time series
 t0 <-  min(dfR$date)
