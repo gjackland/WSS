@@ -156,7 +156,9 @@ nhsregion <- read_csv(trust, col_types = coltypes)
 # URL from which to pull the data
 scoturl <- "https://www.opendata.nhs.scot/dataset/b318bddf-a4dc-4262-971f-0ba329e09b87/resource/7fad90e5-6f19-455b-bc07-694a22f8d5dc/download/total_cases_by_hb_20210610.csv"
 
-# Define the columns
+# Define the columns Date	HB	HBQF	HBName	NewPositive	TotalCases	CrudeRatePositive	NewDeaths	TotalDeaths
+# CrudeRateDeaths	TotalPCROnly	NewPCROnly	TotalLFDOnly	NewLFDOnly	TotalLFDAndPCR	NewLFDAndPCR
+
 coltypes <- cols(
                   Date = col_date(format = "%Y%m%d"),
                   HB = col_character(),
@@ -168,8 +170,12 @@ coltypes <- cols(
                   NewDeaths = col_double(),
                   TotalDeaths = col_double(),
                   CrudeRateDeaths = col_double(),
-                  TotalNegative = col_double(),
-                  CrudeRateNegative = col_double()
+                  TotalPCROnly = col_double(),
+                  NewPCROnly = col_double(),
+                  TotalLFDOnly = col_double(),
+                  NewLFDOnly = col_double(),
+                  TotalLFDAndPCR = col_double(),
+                  NewLFDAndPCR = col_double()
                 )
 
 # Get the data
@@ -212,20 +218,18 @@ coltypes <- cols(
                 PositivePillar2 = col_double()
               )
 
-# Get the data
-scotdailycases = read_csv(dailycasesurl, col_types = coltypes)
 
 # Make the NHS boards the columns - DailyPositives are the values
 scotdailycases %>% select(date=Date,board=HBName, cases=DailyPositive)  %>%
-                   pivot_wider(names_from = board, values_from = cases) %>%
-                   filter(date >= startdate & date <= enddate )         %>%
-                   arrange(date) -> scotdailycasesbyboard
+  pivot_wider(names_from = board, values_from = cases) %>%
+  filter(date >= startdate & date <= enddate )         %>%
+  arrange(date) -> scotdailycasesbyboard
 
 # Hospital data
 scotdailycases %>% filter(HBName=="Scotland") %>%
-    select(date = Date, newcritdat = ICUAdmissions, newsaridat = HospitalAdmissions) %>%
-    filter(date >= startdate & date <= enddate) %>%
-    arrange(date) -> jnk
+  select(date = Date, newcritdat = ICUAdmissions, newsaridat = HospitalAdmissions) %>%
+  filter(date >= startdate & date <= enddate) %>%
+  arrange(date) -> jnk
 Hospital$Scot$date<-as.Date(jnk$date)
 Hospital$Scot$newcritdat<-jnk$newcritdat
 Hospital$Scot$newsaridat<-jnk$newsaridat
@@ -238,7 +242,8 @@ Hospital$Scot$newsaridat<-jnk$newsaridat
 # Data URL
 ageurl <- "https://www.opendata.nhs.scot/dataset/b318bddf-a4dc-4262-971f-0ba329e09b87/resource/9393bd66-5012-4f01-9bc5-e7a10accacf4/download/trend_agesex_20210610.csv"
 
-# Define the column types
+# Define the column typesDate	HB	HBQF	HBName	NewPositive	TotalCases	CrudeRatePositive	NewDeaths	TotalDeaths	CrudeRateDeaths	TotalPCROnly	NewPCROnly	TotalLFDOnly	NewLFDOnly	TotalLFDAndPCR	NewLFDAndPCR
+
 coltypes <- cols(
                 Date = col_date(format = "%Y%m%d"),
                 Country = col_character(),
@@ -248,12 +253,9 @@ coltypes <- cols(
                 AgeGroupQF = col_character(),
                 DailyPositive = col_double(),
                 CumulativePositive = col_double(),
-                CrudeRatePositive = col_double(),
                 DailyDeaths = col_double(),
                 CumulativeDeaths = col_double(),
-                CrudeRateDeaths = col_double(),
-                CumulativeNegative = col_double(),
-                CrudeRateNegative = col_double()
+                CrudeRateDeaths = col_double()
                 )
 
 # Get the data
@@ -273,9 +275,9 @@ ckanr_setup(url = "https://www.opendata.nhs.scot/")
 package_list(as="table")
 
 tags <- tag_list(as="table")
-#  Filter out the relevant columns
+#  Filter out the relevant columns  (Changed datastream from 10/02/2022)
 corona <- tag_show("coronavirus", as = "table")
-scotagedat[,c(1,3,5,7,8, 10,11)] %>% filter(Sex=="Total") %>% filter(Date>=casedat$date[1]) %>% filter(Date<=casedat$date[nrow(casedat)])->jnk 
+scotagedat[,c(1,3,5,7,8, 9,10)] %>% filter(Sex=="Total") %>% filter(Date>=casedat$date[1]) %>% filter(Date<=casedat$date[nrow(casedat)])->jnk 
 jnk %>% filter(AgeGroup == "0 to 14") -> jnk2
 
 #  Scottish data is in broader age groups.  To be compatible with the code,
@@ -360,6 +362,12 @@ scotdeath[is.na(scotdeath)] <- 0.01
 scotdeath[scotdeath==Inf] <- 0.01
 scotdeath[scotdeath==-Inf] <- 0.01
 pckg <- package_show("covid-19-wider-impacts-deaths", as ="table")
+
+#More Scottish data wrangling to deal with LFT non-reporting in 2022
+#for(i in startLFT:length(regcases$Scotland))
+#{
+#  scotage[i,2:20]=scotage[i,2:20]*scotLFT[i-startLFT+1] 
+#}  
 
 
 #  Compartment section from WSS.

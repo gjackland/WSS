@@ -1,6 +1,8 @@
 # 
 read.xlsx("covid19infectionsurveydatasets20211119scotland.xlsx",3)-> jnkC
 
+read.xlsx("CLL/AnonCLL20211122.xlsx",3)-> jnkC
+
 positivity<-data_frame(x=6:85)
 positivity$England = as.numeric(jnkC$X2[6:85])
 positivity$Wales = as.numeric(jnkC$X7[6:85])

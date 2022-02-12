@@ -18,7 +18,49 @@ if(interactive()){
   rm(list = ls())
 }
 
+# From Jan 6th  2022 Need to multiply cases in Scotland by fraction which are LFT and not reported, because, Scotland
+#  Enter this array by hand copied from https://www.gov.scot/publications/coronavirus-covid-19-trends-in-daily-data/
+# Another problem : Weekend behaviour of LFT is completely different to PCR
 
+scotLFTdate=as.Date("2022-01-04")
+scotLFT=c(1.293420813,
+          1.343442503,
+          1.433965723,
+          1.59664,
+          1.404836272,
+          1.538198682,
+          1.676304654,
+          1.802372539,
+          1.942521083,
+          2.00643463,
+          1.991803279,
+          2.768200089,
+          2.892537313,
+          2.275040171,
+          2.236599892,
+          2.410636149,
+          2.533882441,
+          2.423975488,
+          3.133303208,
+          3.530809859,
+          2.456302279,
+          2.496229261,
+          2.442126514,
+          2.643055006,
+          2.385268029,
+          3.909030544,
+          3.554981203,
+          2.503012048,
+          2.539437055,
+          2.332421756,
+          2.729468599,
+          2.37595582,
+          3.080063627,
+          3.374045802
+)
+# Assume a smooth increase in LFT/PCR ratio over time, and that PCR weekend effect is unchanged
+scotLFT <- smooth.spline(scotLFT, df = 4)$y
+scotLFT=scotLFT/scotLFT
 # Read packages used by the script
 library(readr, warn.conflicts = FALSE, quietly = TRUE)
 library(dplyr, warn.conflicts = FALSE, quietly = TRUE)
@@ -226,6 +268,8 @@ unlock2 <- unlock2+test_delay
 unlock3 <- unlock3+test_delay
 
 sagedelay <- 16 # Delay in producing R-number, for plots
+#  Initiate list for Hospital data
+Hospital<-list()
 
 # Total cases, deaths, tests England
 casesurl <- paste0(baseurl,
@@ -426,20 +470,6 @@ coltypes <-  cols(
 # This still returns contents as a list so you will have to rummage around to extract the actual contents that you require in
 # the data structure returned.
 
-
-# Read in the Scottish deaths and case data
-scotdat <-  read_csv(file = scoturl, col_types = coltypes)
-
-# Transform the data
-scotdat <- scotdat %>%  select(date,
-                               allCases = newCasesBySpecimenDate,
-                               allDeaths = newDeaths28DaysByDeathDate,
-                               inputCases = newCasesBySpecimenDate,
-                               fpCases = newCasesBySpecimenDate) %>%
-                        filter(date >= startdate &
-                               date <= enddate ) %>%
-                        arrange(date)
-
 # Wales data https://api.coronavirus.data.gov.uk/v2/data?areaType=nation&areaCode=W92000004&metric=newCasesBySpecimenDate&metric=newDeaths28DaysByDeathDate&format=csv
 
 walesurl <-  paste0(baseurl,
@@ -600,35 +630,28 @@ coltypes <- cols(
 # Read in the data - this data is obtained by a different script.
 Rest <- read_csv(file="data/R_estimate.csv", col_types = coltypes)
 
-# Scottish Daily Case Trends By Health Board moved to ScottishData
-#
-# See: https://www.opendata.nhs.scot/dataset/covid-19-in-scotland/resource/2dd8534b-0a6f-4744-9253-9565d62f96c2
-#
 
-# URL from which to pull the data
+# Scottish URL from which to pull the data
 dailycasesurl = "https://www.opendata.nhs.scot/dataset/b318bddf-a4dc-4262-971f-0ba329e09b87/resource/2dd8534b-0a6f-4744-9253-9565d62f96c2/download/trend_hb_20210610.csv"
 
-# Column types
+# Column types  Amended 10/02/2022
 coltypes <- cols(
   Date = col_date(format = "%Y%m%d"),
   HB = col_character(),
   HBName = col_character(),
   DailyPositive = col_double(),
   CumulativePositive = col_double(),
-  CrudeRatePositive = col_double(),
-  CrudeRate7DayPositive = col_double(),
+  DailyPositivePCROnly = col_double(),
+  CumulativePositivePCROnly = col_double(),
+  DailyPositiveLFDOnly = col_double(),
+  CumulativePositiveLFDOnly = col_double(),
+  DailyPositivePCRAndLFD = col_double(),
+  CumulativePositivePCRAndLFD = col_double(),
   DailyDeaths = col_double(),
   CumulativeDeaths = col_double(),
   CrudeRateDeaths = col_double(),
-  DailyNegative = col_double(),
-  CumulativeNegative = col_double(),
-  CrudeRateNegative = col_double(),
-  TotalTests = col_double(),
   PositiveTests = col_double(),
-  PositivePercentage = col_double(),
-  PositivePercentage7Day = col_double(),
-  TotalPillar1 = col_double(),
-  TotalPillar2 = col_double(),
+  PositiveTestsLFDOnly = col_double(),
   HospitalAdmissions = col_double(),
   HospitalAdmissionsQF = col_character(),
   ICUAdmissions = col_double(),
@@ -637,8 +660,25 @@ coltypes <- cols(
   PositivePillar2 = col_double()
 )
 
-# Get the Scottish daily cases by health board data
+
+# Get the data
 scotdailycases = read_csv(dailycasesurl, col_types = coltypes)
+
+# Make the NHS boards the columns - DailyPositives are the values of PCR+LFT from 10/02/2022
+scotdailycases %>% select(date=Date,board=HBName, cases=DailyPositive)  %>%
+  pivot_wider(names_from = board, values_from = cases) %>%
+  filter(date >= startdate & date <= enddate )         %>%
+  arrange(date) -> scotdailycasesbyboard
+
+# Hospital data
+scotdailycases %>% filter(HBName=="Scotland") %>%
+  select(date = Date, newcritdat = ICUAdmissions, newsaridat = HospitalAdmissions) %>%
+  filter(date >= startdate & date <= enddate) %>%
+  arrange(date) -> jnk
+Hospital$Scot$date<-as.Date(jnk$date)
+Hospital$Scot$newcritdat<-jnk$newcritdat
+Hospital$Scot$newsaridat<-jnk$newsaridat
+
 
 # Make the NHS boards the columns - DailyPositives are the values
 scotdailycasesbyboard <- scotdailycases   %>%
@@ -688,7 +728,7 @@ coltypes <-  cols(
 # Get the hospital data
 
 jnk <- read_csv(HospitalUrl, col_types = coltypes)
-Hospital<-list()
+
 Hospital$UK <- tibble()
 Hospital$UK  <-  jnk %>%
                   select(date = date, saridat = hospitalCases, newsaridat = newAdmissions, critdat=covidOccupiedMVBeds) %>%
@@ -704,8 +744,8 @@ Hospital$UK$critdat <- na.locf(Hospital$UK$critdat)
 regcases$Wales <- walesdat$allCases[1:(enddate-startdate+1)]
 regcases$NI <- NIdat$allCases[1:(enddate-startdate+1)]
 
-# Remove the no longer needed input data
-rm(ukcasedat,scotdailycases,scotdailycasesbyboard,jnk,coltypes,NIdat,walesdat,regagedat3)
+# Remove the no longer needed input data  Keep Scottish data for SCottishData.R
+rm(ukcasedat,jnk,coltypes,NIdat,walesdat,regagedat3)
 rm(HospitalUrl,deathurl,casesurl,scoturl,walesurl,NIurl,ageurl,baseurl,regurl,regurl2,regurl3,ukcaseurl,vacurl)
 
 # Plot all cases against date: Used for the paper, uncomment to recreate
@@ -720,8 +760,6 @@ if(interactive()){
 
 # Scotland tail correction.  Assumes we read in all but the last row
 if(enddate == (Sys.Date()-1)){
-  scotdat$allCases[nrow(scotdat)]=scotdat$allCases[nrow(scotdat)]*1.05
-  scotdat$allCases[nrow(scotdat)-1]=scotdat$allCases[nrow(scotdat)-1]*1.005
   regcases[nrow(regcases),2:ncol(regcases)]=regcases[nrow(regcases),2:ncol(regcases)]*1.05
   regcases[nrow(regcases-1),2:ncol(regcases)]=regcases[nrow(regcases-1),2:ncol(regcases)]*1.005
   regcases[nrow(regcases),2:ncol(regcases)]=regcases[nrow(regcases),2:ncol(regcases)]*1.05
@@ -771,13 +809,11 @@ comdat$lethality<-1.0+ Kentfac*comdat$Kent + Indiafac*comdat$India + Omicronfac*
 casedat <- na.locf(casedat)
 comdat <- na.locf(comdat)
 regcases <- na.locf(regcases)
-scotdat <- na.locf(scotdat)
 
 # Remove weekend effect, assuming each weekday has same number of cases over the
 # epidemic, and national averages hold regionally.  Also, smooth data through Xmas.
 #  Pulled out comdat & scotdat to a function. Regions need to deal with tibble
 comdat$allCases <- Weekend(comdat$allCases)
-scotdat$allCases <- Weekend(scotdat$allCases)
 for (area in 2:length(regcases)){
   regcases[area]<-Weekend(regcases %>% pull(area))
 }
@@ -799,8 +835,11 @@ regcases$NE_Yorks <- regcases$`North East` + regcases$`Yorkshire and The Humber`
 regcases$Midlands <- regcases$`East Midlands` + regcases$`West Midlands`
 
 regcases$England <- comdat$allCases[1:nrow(regcases)]
-
-
+#Fix missing LFT data from scotland  Not required again from 10/02/2022
+#startLFT=as.integer(scotLFTdate-startdate)
+#for(i in startLFT:length(regcases$Scotland)){
+#  regcases$Scotland[i]=regcases$Scotland[i]*scotLFT[i-startLFT+1] 
+#}  
 # Reorder regcases
 regcases<-regcases[,c(1,2,3,4,5,6,7,9,10,8,23,26,27,11,12,13,14,15,16,17,18,19,20,21,22,24,25,28,29,30)]
 
@@ -840,7 +879,7 @@ RawCFR=colSums(deathdat[12:211,2:20])/colSums(casedat[1:200,2:20])
 
 #  Compartment model now done with a function.  Last two inputs are indices giving date range
 #  The compartments will not be correct until the cases have time to filter through all sections, which may be several months for, e.g oldCRITREC
-compEng <- Compartment(casedat,  covidsimAge, RawCFR, comdat, 2,nrow(casedat))
+ compEng <- Compartment(casedat,  covidsimAge, RawCFR, comdat, 2,nrow(casedat))
 
 
 # Do not unpack the values returned, access compartment quantities via comp$ list construct
