@@ -62,9 +62,6 @@ scotLFT=c(1.293420813,
 scotLFT <- smooth.spline(scotLFT, df = 4)$y
 scotLFT=scotLFT/scotLFT
 
-if(!interactive()){
-  options(error = function() traceback(2))
-}
 # Read packages used by the script
 library(readr, warn.conflicts = FALSE, quietly = TRUE)
 library(dplyr, warn.conflicts = FALSE, quietly = TRUE)
@@ -87,37 +84,6 @@ setwd(".")
 
 # Turn off scientific notation.
 options(scipen = 999)
-
-# Load code to function to output to the web-ui interface
-# From stackoverflow: 6456501
-if(!exists("outputJSON", mode="function")) source("json_wss.R")
-
-# Get requested outputs from the web-ui. For the web-ui the
-# file must be "/data/input/inputFile.json".
-if(dir.exists("/data/input")){
-  infile <- "/data/input/inputFile.json"
-}else{
-  infile <- "data/sample-inputFile.json"
-}
-
-# Get input data from the web interface or a test file
-dataIn <- getInput(infile)
-
-# NOTE: These are the regions and subregions being asked for - data should be produced
-# that corresponds to these.  Add UI to avoid name clash with CrystalCast
-UI_region <- dataIn$region
-UI_subregion <- dataIn$subregion
-
-# Read these parameters to output again
-calibrationDate <- dataIn$parameters$calibrationDate
-calibrationCaseCount <- dataIn$parameters$calibrationCaseCount
-calibrationDeathCount <- dataIn$parameters$calibrationDeathCount
-interventionPeriods <- dataIn$parameters$interventionPeriods
-
-if(UI_region != "GB" || UI_subregion != "GB-ENG") {
-  # Any other regions are currently unsupported
-  if(! interactive()){quit(status=10)}
-}
 
 # Copy transition rates from covidsim.  There are three different functions for
 # ICDFs (Inverse Cumulative Distribution Function).  x-axis divided into 20 blocks of 5%.
@@ -873,8 +839,8 @@ regcases$England <- comdat$allCases[1:nrow(regcases)]
 #Fix missing LFT data from scotland  Not required again from 10/02/2022
 #startLFT=as.integer(scotLFTdate-startdate)
 #for(i in startLFT:length(regcases$Scotland)){
-#  regcases$Scotland[i]=regcases$Scotland[i]*scotLFT[i-startLFT+1] 
-#}  
+#  regcases$Scotland[i]=regcases$Scotland[i]*scotLFT[i-startLFT+1]
+#}
 # Reorder regcases
 regcases<-regcases[,c(1,2,3,4,5,6,7,9,10,8,23,26,27,11,12,13,14,15,16,17,18,19,20,21,22,24,25,28,29,30)]
 
@@ -1558,48 +1524,6 @@ if(interactive()){
 
 }
 
-
-# Beginning of time series
-t0 <-  min(dfR$date)
-
-# Get the days for which data will be output
-days <- as.integer(dfR$date - t0)
-
-# Labels are optional
-myCritRecov <- as.integer(rowSums(compEng$CRITREC[2:20]))
-myCritical <- as.integer(rowSums(compEng$CRIT[2:20]))
-myILI <- as.integer(rowSums(compEng$ILI[2:20]))
-myMild <- as.integer(rowSums(compEng$MILD[2:20]))
-mySARI <-  as.integer(rowSums(compEng$SARI[2:20]))
-mynewCritRecov <- as.integer(rowSums(compEng$newCRITREC[2:20]))
-mynewCritical <- as.integer(rowSums(compEng$newCRIT[2:20]))
-mynewILI <- as.integer(rowSums(compEng$newILI[2:20]))
-mynewMild <- as.integer(rowSums(compEng$newMILD[2:20]))
-mynewSARI <-  as.integer(rowSums(compEng$newSARI[2:20]))
-outputJSON(myt0 = t0,
-           mydaysarray = days,
-           myregion = UI_region,
-           mysubregion = UI_subregion, # see https://en.wikipedia.org/wiki/ISO_3166-2:GB
-           mycalibrationCaseCount = calibrationCaseCount,
-           mycalibrationDate = calibrationDate,
-           mycalibrationDeathCount = calibrationDeathCount,
-           myr0 = NA,
-           myinterventionPeriods= interventionPeriods,
-           myCritRecov = myCritRecov,
-           myCritical = myCritical,
-           myILI = myILI,
-           myMild = myMild,
-           myR = dfR$piecewise,
-           mySARI = as.integer(rowSums(compEng$SARI[2:20])),
-           mycumCritRecov = cumsum(mynewCritRecov),
-           mycumCritical = cumsum(mynewCritical),
-           mycumILI = cumsum(mynewILI),
-           mycumMild = cumsum(mynewMild),
-           mycumSARI = cumsum(mynewSARI),
-           myincDeath = as.integer(rowSums(compEng$DEATH[2:20]))
-)
-
-
 #####  Figures and analysis for https://www.medrxiv.org/content/10.1101/2021.04.14.21255385v1
 # Date not encapsulated and may become broken because of hard coded dates
 # Nothing should be returned or changed by this analysis
@@ -1653,10 +1577,3 @@ plot(rowSums(predEng$DEATH[2:20]),col="blue",x=predEng$DEATH$date, type="l",ylab
      ,xlab="Date",xlim=c(startplot,endplot))
 points(rowSums(deathdat[2:20]),x=deathdat$date)
 }
-
-# This needs to be the last routine called for the UI, by default it returns
-# success (0), if there is no success setStatus() should be called. By default
-# it will return -1 but you can set a value setStatus(1). Any non-zero value
-# will indicate a problem.  For interactive work "quit" can end Rstudio session altogether
-if(! interactive()){quit(status=returnStatus())}
-
