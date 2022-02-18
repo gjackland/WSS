@@ -56,16 +56,13 @@ if(connector_region != "GB" || connector_subregion != "GB-ENG") {
 }
 
 source("covid_trimmed.r")
+result <- compEng
 
 # Beginning of time series
 t0 <-  min(dfR$date)
 
 # Get the days for which data will be output
 days <- as.integer(dfR$date - t0)
-
-if(connector_subregion == "GB-ENG") {
-    result <- compEng
-}
 
 extractSums <- function(column) {
    return(as.integer(rowSums(column[2:20])))
