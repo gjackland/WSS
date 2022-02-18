@@ -50,13 +50,18 @@ calibrationCaseCount <- dataIn$parameters$calibrationCaseCount
 calibrationDeathCount <- dataIn$parameters$calibrationDeathCount
 interventionPeriods <- dataIn$parameters$interventionPeriods
 
-if(connector_region != "GB" || connector_subregion != "GB-ENG") {
+if(connector_region != "GB" || !connector_subregion %in% c("GB-ENG", "GB-SCT")) {
   # Any other regions are currently unsupported
   if(! interactive()){quit(status=10)}
 }
 
 source("covid_trimmed.r")
 result <- compEng
+
+if(connector_subregion == "GB-SCT") {
+    source("ScottishData.R")
+    result <- compScot
+}
 
 # Beginning of time series
 t0 <-  min(dfR$date)
