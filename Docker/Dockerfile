@@ -5,8 +5,8 @@ FROM r-base:4.1.2
 RUN apt-get update -y && \
     apt-get install -y libxml2-dev \
     libssl-dev \
-    libcurl4-openssl-dev && \
-    install2.r --error \
+    libcurl4-openssl-dev
+RUN install2.r --error \
     devtools \
     readr \
     dplyr \
@@ -16,7 +16,8 @@ RUN apt-get update -y && \
     zoo \
     RColorBrewer \
     jsonlite \
-    openxlsx
+    openxlsx \
+    ckanr
 
 # Copy the code to the root directory of the image
 ADD ./*.R ./*.r ./
