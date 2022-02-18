@@ -63,17 +63,15 @@ t0 <-  min(dfR$date)
 # Get the days for which data will be output
 days <- as.integer(dfR$date - t0)
 
+if(connector_subregion == "GB-ENG") {
+    result <- compEng
+}
+
+extractSums <- function(column) {
+   return(as.integer(rowSums(column[2:20])))
+}
+
 # Labels are optional
-myCritRecov <- as.integer(rowSums(compEng$CRITREC[2:20]))
-myCritical <- as.integer(rowSums(compEng$CRIT[2:20]))
-myILI <- as.integer(rowSums(compEng$ILI[2:20]))
-myMild <- as.integer(rowSums(compEng$MILD[2:20]))
-mySARI <-  as.integer(rowSums(compEng$SARI[2:20]))
-mynewCritRecov <- as.integer(rowSums(compEng$newCRITREC[2:20]))
-mynewCritical <- as.integer(rowSums(compEng$newCRIT[2:20]))
-mynewILI <- as.integer(rowSums(compEng$newILI[2:20]))
-mynewMild <- as.integer(rowSums(compEng$newMILD[2:20]))
-mynewSARI <-  as.integer(rowSums(compEng$newSARI[2:20]))
 outputJSON(myt0 = t0,
            mydaysarray = days,
            myregion = connector_region,
@@ -83,18 +81,18 @@ outputJSON(myt0 = t0,
            mycalibrationDeathCount = calibrationDeathCount,
            myr0 = NA,
            myinterventionPeriods= interventionPeriods,
-           myCritRecov = myCritRecov,
-           myCritical = myCritical,
-           myILI = myILI,
-           myMild = myMild,
+           myCritRecov = extractSums(result$CRITREC),
+           myCritical = extractSums(result$CRIT),
+           myILI = extractSums(result$ILI),
+           myMild = extractSums(result$MILD),
            myR = dfR$piecewise,
-           mySARI = as.integer(rowSums(compEng$SARI[2:20])),
-           mycumCritRecov = cumsum(mynewCritRecov),
-           mycumCritical = cumsum(mynewCritical),
-           mycumILI = cumsum(mynewILI),
-           mycumMild = cumsum(mynewMild),
-           mycumSARI = cumsum(mynewSARI),
-           myincDeath = as.integer(rowSums(compEng$DEATH[2:20]))
+           mySARI = extractSums(result$SARI),
+           mycumCritRecov = cumsum(extractSums(result$newCRITREC)),
+           mycumCritical = cumsum(extractSums(result$newCRIT)),
+           mycumILI = cumsum(extractSums(result$newILI)),
+           mycumMild = cumsum(extractSums(result$newMILD)),
+           mycumSARI = cumsum(extractSums(result$newSARI)),
+           myincDeath = extractSums(result$DEATH)
 )
 
 # This needs to be the last routine called for the connector, by default it returns
