@@ -19,6 +19,6 @@ services:
   validate:
     image: 3scale/ajv
     volumes:
-      - ./schema.json:/data/schema.json
+      - ./output-schema.json:/data/schema.json
       - ./output:/data/output
     command: validate -s schema.json -d output/data.json

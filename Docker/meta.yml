@@ -1,0 +1,22 @@
+wss:
+  name: WSS
+  origin: University of Edinburgh / University of Cambridge
+  imageURL: docker.pkg.github.com/gjackland/wss/wss-connector:latest
+  enabled: true
+  metaURLs:
+    code: https://github.com/gjackland/WSS
+    paper: https://doi.org/10.1101/2021.04.14.21255385
+  description: |
+    Weight scale and shift code for covid epidemic modelling.
+  supportedParameters: []
+  supportedRegions:
+    GB:
+      - GB-ENG
+      - GB-SCT
+      - E40000003
+      - E40000005
+      - E40000006
+      - E40000007
+      - E40000008
+      - E40000009
+      - E40000010
