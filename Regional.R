@@ -177,7 +177,7 @@ rm( SE, SW, EE, NEY, MD, Lon, NW, hSE, hSW, hEE, hNEY, hMD, hLon, hNW)
 
 # recent scaling factors for MTPs, 
 total_time = min(nrow(deathdat),nrow(casedat),length(Hospital$UK$date))
-recent_time<-(total_time-50):total_time-reporting_delay
+recent_time<-(total_time-14-reporting_delay):(total_time-reporting_delay)
 #Ratios
 Hospital$Eng$newsaridat=Hospital$NEY$newsaridat+Hospital$NW$newsaridat+
   Hospital$MD$newsaridat+Hospital$EE$newsaridat+
@@ -261,7 +261,7 @@ write.xlsx(CC, file = "corrected.xlsx",
            overwrite = TRUE,  sheetName = region, rowNames = FALSE)
 
 #  Monitoring plots for MTP deaths
-
+plotdate[2]<-plotdate[2]+50
 plot_date<-c(plotdate[1],plotdate[2])
 ymax = max(tail(rowSums(predMD$CASE[2:20]),n=100))*1.1
 plot(rowSums(predMD$CASE[2:20]),x=predMD$CASE$date,xlim=plot_date,cex.axis=0.7,ylab="Regional CASE",xlab="Date") 
@@ -303,8 +303,10 @@ plot(Hospital$Scot$newsaridat,ylab="Scotland Hospital Admissions",xlab="Date",xl
 lines(rowSums(predScot$newSARI[2:20])/ratio$Scot$newhosp)
 
 
-plot(y=Hospital$Eng$saridat,x=Hospital$SW$date,ylab="England Hospital Cases",xlab="Date",xlim=plot_date)
+plot(y=Hospital$Eng$saridat,x=Hospital$Eng$date,ylab="England Hospital Cases",xlab="Date",xlim=plot_date)
 lines(rowSums(predEng$SARI[2:20]+predEng$CRIT[2:20]+predEng$CRITREC[2:20])/ratio$Eng$hosp,x=predEng$newSARI$date)
+plot(y=Hospital$Scot$saridat,x=Hospital$Scot$date,ylab="Scotland Hospital Cases",xlab="Date",xlim=plot_date)
+lines(rowSums(predScot$SARI[2:20]+predScot$CRIT[2:20]+predScot$CRITREC[2:20])/ratio$Scot$hosp,x=predScot$newSARI$date)
 plot(y=Hospital$MD$saridat,x=Hospital$MD$date,ylab="MD Hospital Cases",xlab="Date",xlim=plot_date)
 lines(rowSums(predMD$SARI[2:20]+predMD$CRIT[2:20]+predMD$CRITREC[2:20])/ratio$MD$hosp,x=predMD$newSARI$date)
 plot(y=Hospital$NW$saridat,x=Hospital$NW$date,ylab="NW Hospital Cases",xlab="Date",xlim=plot_date)
@@ -329,3 +331,4 @@ sum(na.locf(Hospital$NEY$saridat)+Hospital$NW$saridat+Hospital$EE$saridat+Hospit
 sum(rowSums(compEng$SARI[2:20]+compEng$CRIT[2:20]+compEng$CRITREC[2:20]))
 sum(na.locf(Hospital$Eng$newsaridat))
 sum(na.locf(compEng$newSARI[2:20]))
+

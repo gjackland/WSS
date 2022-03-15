@@ -251,7 +251,7 @@ predtime = 100
 # Set the generation time
 genTime <- 5
 # Omicron Gen time much lower
-gentime <- 3.5
+gentime <- 4.0
 #  Dates for the plots
 plotdate <- as.Date(c("2020-09-22",as.character(enddate)))
 # Wanted to plot a Smooth spline discontinuous at
