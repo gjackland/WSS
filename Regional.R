@@ -176,8 +176,9 @@ predNEY<-Predictions(compNEY,R_BestGuess$NEY,predtime,population$NEY)
 rm( SE, SW, EE, NEY, MD, Lon, NW, hSE, hSW, hEE, hNEY, hMD, hLon, hNW)
 
 # recent scaling factors for MTPs, 
+# With omicron and confirmatory PCR changes, shorten recent_timescale
 total_time = min(nrow(deathdat),nrow(casedat),length(Hospital$UK$date))
-recent_time<-(total_time-50):total_time-reporting_delay
+recent_time<-(total_time-14-reporting_delay):total_time-reporting_delay
 #Ratios
 Hospital$Eng$newsaridat=Hospital$NEY$newsaridat+Hospital$NW$newsaridat+
   Hospital$MD$newsaridat+Hospital$EE$newsaridat+
@@ -261,7 +262,7 @@ write.xlsx(CC, file = "corrected.xlsx",
            overwrite = TRUE,  sheetName = region, rowNames = FALSE)
 
 #  Monitoring plots for MTP deaths
-
+if(interactive()){
 plot_date<-c(plotdate[1],plotdate[2])
 ymax = max(tail(rowSums(predMD$CASE[2:20]),n=100))*1.1
 plot(rowSums(predMD$CASE[2:20]),x=predMD$CASE$date,xlim=plot_date,cex.axis=0.7,ylab="Regional CASE",xlab="Date") 
@@ -299,14 +300,14 @@ lines(rowSums(predSW$newSARI[2:20])/ratio$SW$newhosp,x=predSW$newSARI$date)
 
 plot(y=Hospital$Lon$newsaridat,x=Hospital$Lon$date,ylab="Lon Hospital Admissions",xlab="Date")
 lines(rowSums(predLon$newSARI[2:20])/ratio$Lon$newhosp,x=predLon$newSARI$date)
-plot(Hospital$Scot$newsaridat,ylab="Scotland Hospital Admissions",xlab="Date",xlim=c(400,600))
+plot(Hospital$Scot$newsaridat,ylab="Scotland Hospital Admissions",xlab="Date",xlim=c(450,565))
 lines(rowSums(predScot$newSARI[2:20])/ratio$Scot$newhosp)
 
 
 plot(y=Hospital$Eng$saridat,x=Hospital$SW$date,ylab="England Hospital Cases",xlab="Date",xlim=plot_date)
 lines(rowSums(predEng$SARI[2:20]+predEng$CRIT[2:20]+predEng$CRITREC[2:20])/ratio$Eng$hosp,x=predEng$newSARI$date)
-plot(y=Hospital$MD$saridat,x=Hospital$MD$date,ylab="MD Hospital Cases",xlab="Date",xlim=plot_date)
-lines(rowSums(predMD$SARI[2:20]+predMD$CRIT[2:20]+predMD$CRITREC[2:20])/ratio$MD$hosp,x=predMD$newSARI$date)
+lines(y=Hospital$MD$saridat,x=Hospital$MD$date,ylab="MD Hospital Cases",xlab="Date",xlim=plot_date)
+plot(rowSums(predMD$SARI[2:20]+predMD$CRIT[2:20]+predMD$CRITREC[2:20])/ratio$MD$hosp,x=predMD$newSARI$date)
 plot(y=Hospital$NW$saridat,x=Hospital$NW$date,ylab="NW Hospital Cases",xlab="Date",xlim=plot_date)
 lines(rowSums(predNW$SARI[2:20]+predNW$CRIT[2:20]+predNW$CRITREC[2:20])/ratio$NW$hosp,x=predNW$newSARI$date)
 plot(y=Hospital$NEY$saridat,x=Hospital$NEY$date,ylab="NEY Hospital Cases",xlab="Date",xlim=plot_date)
@@ -329,3 +330,5 @@ sum(na.locf(Hospital$NEY$saridat)+Hospital$NW$saridat+Hospital$EE$saridat+Hospit
 sum(rowSums(compEng$SARI[2:20]+compEng$CRIT[2:20]+compEng$CRITREC[2:20]))
 sum(na.locf(Hospital$Eng$newsaridat))
 sum(na.locf(compEng$newSARI[2:20]))
+}
+

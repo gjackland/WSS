@@ -110,21 +110,41 @@ CCtmp$ValueType="hospital_inc"
 #  Log. Errors from fluctuations time 4 for methodological uncertainty
 #  adjust for recent discrepancies
 #  Would like regional admissions data, only have totals, but use them anyway
-#  Omicron uncertainty *10 on R, from 21/12/21
+#  in addition to R-uncertainty, add uncertainty in missing_incidence from Feb2022 due to
+#  removal of confirmatory PCR tests
 R_error=1
 for (d in startwrite:endwrite){
   if(CCcomp$CASE$date[d]>(today-reporting_delay)){ R_error=R_error+0.2/genTime
-                                                   CCtmp$Scenario="MTP"}
+  CCtmp$Scenario="MTP"}
   CCtmp$Value = sum(CCcomp$newSARI[d,2:20])/ratio$newhosp
   NStoday = sum(CCcomp$newSARI[d,2:20])
-  CCtmp$"Quantile 0.05"=max(0,NStoday*(1-6*sqrt(sum(CCcomp$newSARI[(d-6):d,2:20])/7)*R_error/NStoday))/ratio$newhosp
-  CCtmp$"Quantile 0.25"=max(0,NStoday*(1-2*sqrt(sum(CCcomp$newSARI[(d-6):d,2:20])/7)*R_error/NStoday))/ratio$newhosp
+  CCtmp$"Quantile 0.05"=max(0,NStoday*0.7/(1+18*sqrt(sum(CCcomp$newSARI[(d-6):d,2:20])/7)*R_error/NStoday))/ratio$newhosp
+  CCtmp$"Quantile 0.25"=max(0,NStoday*0.9/(1+6*sqrt(sum(CCcomp$newSARI[(d-6):d,2:20])/7)*R_error/NStoday))/ratio$newhosp
   CCtmp$"Quantile 0.5"=CCtmp$Value
-  CCtmp$"Quantile 0.75"=NStoday*(1+4*sqrt(sum(CCcomp$newSARI[(d-6):d,2:20])/7)*R_error/NStoday)/ratio$newhosp
-  CCtmp$"Quantile 0.95"=NStoday*(1+12*sqrt(sum(CCcomp$newSARI[(d-6):d,2:20])/7)*R_error/NStoday)/ratio$newhosp
+  CCtmp$"Quantile 0.75"=NStoday*1.1*(1+6*sqrt(sum(CCcomp$newSARI[(d-6):d,2:20])/7)*R_error/NStoday)/ratio$newhosp
+  CCtmp$"Quantile 0.95"=NStoday*1.3*(1+18*sqrt(sum(CCcomp$newSARI[(d-6):d,2:20])/7)*R_error/NStoday)/ratio$newhosp
   CCtmp$"Day of Value" = day(CCcomp$newSARI$date[d])
   CCtmp$"Month of Value" = month(CCcomp$newSARI$date[d])
   CCtmp$"Year of Value" = year(CCcomp$newSARI$date[d])
+  # Add the new row
+  CC <- rbind(CC, CCtmp)
+}
+
+CCtmp$ValueType="hospital_prev"
+# Prevalence uncertainty is huge. Issues with nosocomial cases missing in data, 
+# residence times depending on bed supply - so just guess
+for (d in startwrite:endwrite){
+  CCtmp$Scenario="MTP"
+  occupancy=sum(CCcomp$SARI[d,2:20]+CCcomp$CRIT[d,2:20]+CCcomp$CRITREC[d,2:20])
+  CCtmp$Value = occupancy/ratio$hosp
+  CCtmp$"Quantile 0.05"=CCtmp$Value/3
+  CCtmp$"Quantile 0.25"=CCtmp$Value/1.6
+  CCtmp$"Quantile 0.5"=CCtmp$Value
+  CCtmp$"Quantile 0.75"=CCtmp$Value*1.6
+  CCtmp$"Quantile 0.95"=CCtmp$Value*3
+  CCtmp$"Day of Value" = day(CCcomp$SARI$date[d])
+  CCtmp$"Month of Value" = month(CCcomp$SARI$date[d])
+  CCtmp$"Year of Value" = year(CCcomp$SARI$date[d])
   # Add the new row
   CC <- rbind(CC, CCtmp)
 }
@@ -167,8 +187,8 @@ for (d in startwrite:endwrite){
   }
   CASEtoday=sum(CCcomp$CASE[d,2:20])
   CCtmp$Value =   CASEtoday*scalefac
-  CCtmp$"Quantile 0.05"=max(0,CASEtoday*(1-0.3*R_error))*scalefac
-  CCtmp$"Quantile 0.25"=max(0,CASEtoday*(1-0.1*R_error))*scalefac
+  CCtmp$"Quantile 0.05"=max(0,CASEtoday/(1+0.3*R_error))*scalefac
+  CCtmp$"Quantile 0.25"=max(0,CASEtoday/(1+0.1*R_error))*scalefac
   CCtmp$"Quantile 0.5"=CASEtoday*scalefac
   CCtmp$"Quantile 0.75"=CASEtoday*(1+0.1*R_error)*scalefac
   CCtmp$"Quantile 0.95"=CASEtoday*(1+0.3*R_error)*scalefac
@@ -192,8 +212,8 @@ for (d in startwrite:(endwrite)){
   }
   PREV= sum(CCcomp$ILI[d,2:20]+CCcomp$SARI[d,2:20])+sum(CCcomp$CASE[d:(d+4),2:20])*Missing_incidence
   CCtmp$Value=PREV*Missing_prevalence/pop*100
-  CCtmp$"Quantile 0.05"=max(0,CCtmp$Value*(1.0-R_error))
-  CCtmp$"Quantile 0.25"=max(0,CCtmp$Value*(1.0-0.3*R_error))
+  CCtmp$"Quantile 0.05"=max(0,CCtmp$Value/(1.0+R_error))
+  CCtmp$"Quantile 0.25"=max(0,CCtmp$Value/(1.0+0.3*R_error))
   CCtmp$"Quantile 0.5"=CCtmp$Value
   CCtmp$"Quantile 0.75"=CCtmp$Value*(1.0+0.3*R_error)
   CCtmp$"Quantile 0.95"=CCtmp$Value*(1.0+R_error)
