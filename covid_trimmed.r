@@ -251,7 +251,7 @@ predtime = 100
 # Set the generation time
 genTime <- 5
 # Omicron Gen time much lower
-gentime <- 3.5
+gentime <- 4.0
 #  Dates for the plots
 plotdate <- as.Date(c("2020-09-22",as.character(enddate)))
 # Wanted to plot a Smooth spline discontinuous at
@@ -537,6 +537,7 @@ coltypes <-  cols(
 
 # Read in the regional case and death data
 regdat <-  read_csv(file = regurl, col_types = coltypes)
+
 
 # Transform the data
 regcases <- regdat %>%  select(date, areaName, areaCode,

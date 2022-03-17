@@ -9,7 +9,7 @@
 # Function Definition - naming function variables to ensure it is not taking
 # values from the calling space
 # Inherits vacdat from covid_trimmed
-Compartment <- function(cases,  csimAge, rCFR, cdat, startc, endc){
+Compartment <- function(cases, csimAge, rCFR, cdat, startc, endc){
   
   # Create a list to output various data frames
   out <- list()
@@ -111,6 +111,9 @@ Compartment <- function(cases,  csimAge, rCFR, cdat, startc, endc){
   cpow <- 1.0-apow-bpow
   afac <- 1.0
   bfac <- 1.2
+#  Adjust for omicron data - more hospitalisation, fewer deaths  
+  afac <- 1.2
+  bfac <- 1.5
   cfac <- 1.0/afac/bfac
   cdat$lethality<-na.locf(cdat$lethality)
     for (iday in (startc:endc)){
