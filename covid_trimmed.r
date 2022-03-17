@@ -538,6 +538,7 @@ coltypes <-  cols(
 # Read in the regional case and death data
 regdat <-  read_csv(file = regurl, col_types = coltypes)
 
+
 # Transform the data
 regcases <- regdat %>%  select(date, areaName, areaCode,
                                Cases = newCasesBySpecimenDate) %>%

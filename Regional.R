@@ -177,7 +177,7 @@ rm( SE, SW, EE, NEY, MD, Lon, NW, hSE, hSW, hEE, hNEY, hMD, hLon, hNW)
 
 # recent scaling factors for MTPs, 
 total_time = min(nrow(deathdat),nrow(casedat),length(Hospital$UK$date))
-recent_time<-(total_time-14-reporting_delay):(total_time-reporting_delay)
+recent_time<-(total_time-7-reporting_delay-1):(total_time-reporting_delay-1)
 #Ratios
 Hospital$Eng$newsaridat=Hospital$NEY$newsaridat+Hospital$NW$newsaridat+
   Hospital$MD$newsaridat+Hospital$EE$newsaridat+
@@ -199,8 +199,6 @@ ratio$Eng$newhosp=sum(compEng$newSARI[recent_time,2:20])/total_admissions
 ratio$Eng$hosp=sum(rowSums(predEng$SARI[recent_time,2:20]+predEng$CRIT[recent_time,2:20]+predEng$CRITREC[recent_time,2:20]))/sum(Hospital$Eng$saridat[recent_time])
 ratio$Eng$crit=sum(compEng$CRIT[recent_time,2:20])/total_crit
 
-#  Rescale big regional differences in hospitalization times.
-filename=paste("data/CCcompartment",Sys.Date(),"regions.xlsx")
 
 CCEng=CC_write(predEng,"England",population$England[1],R_BestGuess$England,R_Quant$England,rat$smoothEngland,ratio$Eng,filename)
 
@@ -294,16 +292,13 @@ lines(rowSums(predSE$newSARI[2:20])/ratio$SE$newhosp,x=predSE$newSARI$date)
 plot(y=Hospital$SW$newsaridat,x=Hospital$SW$date,ylab="SW Hospital Admissions",xlab="Date",xlim=plot_date)
 lines(rowSums(predSW$newSARI[2:20])/ratio$SW$newhosp,x=predSW$newSARI$date)
 
-
-
-
 plot(y=Hospital$Lon$newsaridat,x=Hospital$Lon$date,ylab="Lon Hospital Admissions",xlab="Date")
 lines(rowSums(predLon$newSARI[2:20])/ratio$Lon$newhosp,x=predLon$newSARI$date)
 plot(Hospital$Scot$newsaridat,ylab="Scotland Hospital Admissions",xlab="Date",xlim=c(400,600))
 lines(rowSums(predScot$newSARI[2:20])/ratio$Scot$newhosp)
 
 
-plot(y=Hospital$Eng$saridat,x=Hospital$Eng$date,ylab="England Hospital Cases",xlab="Date",xlim=plot_date)
+plot(y=Hospital$Eng$saridat,x=Hospital$EE$date,ylab="England Hospital Cases",xlab="Date",xlim=plot_date)
 lines(rowSums(predEng$SARI[2:20]+predEng$CRIT[2:20]+predEng$CRITREC[2:20])/ratio$Eng$hosp,x=predEng$newSARI$date)
 plot(y=Hospital$Scot$saridat,x=Hospital$Scot$date,ylab="Scotland Hospital Cases",xlab="Date",xlim=plot_date)
 lines(rowSums(predScot$SARI[2:20]+predScot$CRIT[2:20]+predScot$CRITREC[2:20])/ratio$Scot$hosp,x=predScot$newSARI$date)

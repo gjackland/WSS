@@ -156,7 +156,7 @@ for (d in startwrite:endwrite){
 #  with delat/omicron having *much* higher viral loads
 #  Missing Prevalence increases sharply with the withdrawal of free testing
 #  Change by factor of 2 in England & Wales fitted to ONS (DJW offline) from startwrite in 2022.  
-Missing_prevalence=1.5
+Missing_prevalence=1.3
 Missing_incidence=2.2
 scalefac=Missing_incidence
 if(region!="Scotland"){
@@ -193,8 +193,8 @@ CCtmp$Scenario="Nowcast"
 R_error=0.2
 for (d in startwrite:(endwrite)){
   if(CCcomp$CASE$date[d]>(today-reporting_delay)){R_error=R_error+0.2/genTime 
-    CCtmp$Scenario="MTP"
-    CCtmp$ValueType="prevalence_mtp"
+  CCtmp$Scenario="MTP"
+  CCtmp$ValueType="prevalence_mtp"
   }
   PREV= sum(CCcomp$ILI[d,2:20]+CCcomp$SARI[d,2:20])+sum(CCcomp$CASE[d:(d+4),2:20])*scalefac
   CCtmp$Value=PREV*Missing_prevalence/pop*100
@@ -212,6 +212,27 @@ for (d in startwrite:(endwrite)){
 
 # No need to do this provides Pred extends beyond endwrite Extend for the last three days assuming derivative of CASE[d] is zero 
 
+CCtmp$ValueType="hospital_prev"
+CCtmp$Scenario="MTP"
+R_error=0.2
+for (d in startwrite:(endwrite)){
+  if(CCcomp$CASE$date[d]>(today-reporting_delay)){R_error=R_error+0.2/genTime 
+  CCtmp$Scenario="MTP"
+  CCtmp$ValueType="hospital_prev"
+  }
+  OCC = sum(CCcomp$SARI[d,2:20]+CCcomp$CRIT[d,2:20]+CCcomp$CRITREC[d,2:20])/ratio$hosp
+  CCtmp$Value=OCC
+  CCtmp$"Quantile 0.05"=OCC/(1.0+3*R_error)
+  CCtmp$"Quantile 0.25"=OCC/(1.0+R_error)
+  CCtmp$"Quantile 0.5"=OCC
+  CCtmp$"Quantile 0.75"=OCC*(1.0+0.5*R_error)
+  CCtmp$"Quantile 0.95"=OCC*(1.0+1.5*R_error)
+  CCtmp$"Day of Value" = day(CCcomp$SARI$date[d])
+  CCtmp$"Month of Value" = month(CCcomp$SARI$date[d])
+  CCtmp$"Year of Value" = year(CCcomp$SARI$date[d])
+  # Add the new row
+  CC <- rbind(CC, CCtmp)
+}
 
 #  Crystalcast format output  
 
