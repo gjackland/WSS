@@ -253,7 +253,7 @@ genTime <- 5
 # Omicron Gen time much lower
 gentime <- 4.0
 #  Dates for the plots
-plotdate <- as.Date(c("2020-09-22",as.character(enddate)))
+plotdate <- as.Date(c(as.character(startdate),as.character(enddate)))
 # Wanted to plot a Smooth spline discontinuous at
 # UK lockdown Oct 31 (day 98) -Dec 2  (day 130) Jan 6 (day 165)  (day 1 = July 25)
 lock1 <- as.integer(as.Date("2020/10/31")-startdate)
@@ -1106,7 +1106,8 @@ rat$smoothGlasgow <-smooth.spline(jnkR,df=spdf,w=sqrt(jnkC))$y
 rat$smoothLon <-smooth.spline(rat$London,df=spdf,w=sqrt(regcases$London))$y
 smoothweightR$date<-comdat$date
 smoothweightRfp$date<-dfR$date
-
+#  Piecewise R between lockdowns only if its within the startdate-enddate period
+if(lock1>1){
 smoothR1<-smooth.spline(dfR$bylogR[1:(lock1-1)],df=lock1/14)
 smoothR1$date<-dfR$date[1:lock1-1]
 smoothR2<-smooth.spline(dfR$bylogR[lock1:(unlock1-1)],df=(unlock1-lock1)/14)
@@ -1127,6 +1128,7 @@ dfR$piecewise[lock1:(unlock1-1)]=smoothR2$y
 dfR$piecewise[unlock1:(lock2-1)]=smoothR3$y
 dfR$piecewise[lock2:(unlock2-1)]=smoothR4$y
 dfR$piecewise[unlock2:length(dfR$itoR)]=smoothRend$y
+
 rm(smoothR1,smoothR2,smoothR3,smoothR4,smoothRend,jnkR,jnkC)
 # Plot R estimate vs data and fits discontinuous at lockdown
 #  Have to move the Official R data back by 16 days !
@@ -1166,7 +1168,7 @@ if(interactive()){
        title("R, England"),ylim=c(0.6,1.6),xlim=plotdate,cex.lab=1.6, cex.axis=1.6, cex.main=1.6, cex.sub=1.6)
   lines(Rest$England_LowerBound,x=Rest$Date-sagedelay,lwd=2)
   lines(y=Rest$England_UpperBound,x=Rest$Date-sagedelay,lwd=2)
-  lines(dfR$piecewise,col="violet",lwd=3,x=dfR$date)
+  if(exists("dfR$piecewise")){lines(dfR$piecewise,col="violet",lwd=3,x=dfR$date)}
   lines(smoothweightR$y,col="blue",lwd=3,x=dfR$date)
   lines(predict(loess(itoR ~ x, data=dfR,span=0.3,weight=sqrt(comdat$allCases))),col='green',x=dfR$date,lwd=3)
   #lines(predict(loess(itoR ~ x, data=dfR,span=0.3)),col='green',x=dfR$date)
@@ -1225,7 +1227,8 @@ if(interactive()){
                                 y = predict(loess(bylogR ~ x, data = dfR, span = 0.3, weight = sqrt(comdat$allCases)))),
               aes(x = x, y = y), colour = "violet", size = 1.25)
 
-} # End interactive session
+}# End piecewise R for 2020 lockdowns calculate and plot section
+}# End interactive session
 
 
 R_BestGuess <- list()
@@ -1470,8 +1473,7 @@ if(interactive()){
   sum(Predict$SmoothRito)
   sum(Predict$smoothcasesR)
 
-  plot(comdat$allCases,x=Predict$date,xlab="Date",ylab="Cases backdeduced from R"
-       ,xlim=c(Predict$date[(startpred+10)],Predict$date[350]))
+  plot(comdat$allCases,x=Predict$date,xlab="Date",ylab="Cases backdeduced from R")
   lines(Predict$c,x=Predict$date, col="black",lwd=2)
   lines(Predict$SmoothRlog,x=Predict$date, col="blue",lwd=2)
   lines(Predict$SmoothRito,x=Predict$date, col="violet",lwd=2)
@@ -1560,13 +1562,13 @@ PREV<-compEng$ILI[2:20]+compEng$SARI[2:20]+compEng$CRIT[2:20]+compEng$MILD[2:20]
 plot(rowSums(predEng$CASE[2:20]))
 lines(rowSums(PREV[1:19])/20)
 
-plot(Hospital$UK$newsaridat,x=Hospital$UK$date, ylab="Hospital Admission",xlab="Date",xlim=c(startplot,endplot-11                                                                                                ))
+plot(Hospital$UK$newsaridat,x=Hospital$UK$date, ylab="Hospital Admission",xlab="Date",xlim=c(startplot,endplot-180                                                                                                ))
 lines(rowSums(compEng$newSARI[2:20]),x=compEng$newSARI$date,col="blue")
 lines(rowSums(predEng$newSARI[2:20]),x=compEng$newSARI$date,col="red")
-plot(Hospital$UK$saridat,x=Hospital$UK$date,ylab="Hospital Cases",xlab="Date",xlim=c((startplot),endplot))
-lines(rowSums(predEng$SARI[2:20]+predEng$CRIT[2:20]+predEng$CRITREC[2:20]),x=predEng$SARI$date,col='red')
+plot(Hospital$UK$saridat,x=Hospital$UK$date,ylab="Hospital Cases",xlab="Date",xlim=c((startplot),(endplot-200)))
+lines(0.7*rowSums(predEng$SARI[2:20]+predEng$CRIT[2:20]+predEng$CRITREC[2:20]),x=predEng$SARI$date,col='red')
 
-plot(rowSums(compEng$newMILD[2:20]+compEng$newILI[2:20]),xlim=c((startplot),endplot),col="blue",x=compEng$newMILD$date,type="l",xlab="Date",ylab="Cases")
+plot(rowSums(compEng$newMILD[2:20]+compEng$newILI[2:20]),xlim=c((startplot),(endplot-100)),col="blue",x=compEng$newMILD$date,type="l",xlab="Date",ylab="Cases")
 plot(rowSums(predEng$CASE[2:20]),x=predEng$CASE$date)
 lines(rowSums(compEng$newMILD[2:10]+compEng$newILI[2:10]),col="green",x=compEng$newMILD$date,type="l",xlab="Date",ylab="Cases")
 lines(rowSums(compEng$newMILD[11:20]+compEng$newILI[11:20]),col="red",x=compEng$newMILD$date,type="l",xlab="Date",ylab="Cases")
@@ -1574,7 +1576,8 @@ lines(rowSums(compEng$newMILD[11:20]+compEng$newILI[11:20]),col="red",x=compEng$
 plot(Hospital$UK$critdat,x=Hospital$UK$date,ylab="ICU Occupation",xlab="Date",xlim=c(startplot,endplot))
 lines(rowSums(predEng$CRIT[2:20]),col="blue",x=predEng$CRIT$date)
 
-plot(rowSums(predEng$DEATH[2:20]),col="blue",x=predEng$DEATH$date, type="l",ylab="Deaths"
-     ,xlab="Date",xlim=c(startplot,endplot))
+plot(1.1*rowSums(predEng$DEATH[2:20]),col="blue",x=predEng$DEATH$date, type="l",ylab="Deaths"
+     ,xlab="Date",xlim=c(startplot,endplot-160))
 points(rowSums(deathdat[2:20]),x=deathdat$date)
 }
+

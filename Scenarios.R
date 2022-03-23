@@ -5,17 +5,17 @@
 # Edit xlsx file to change MTP to MTP R0.7
 R_Scenario=0.7
 XX=data.frame()
-# Runup to Jan 25th
-midLon<-Predictions(compLon,R_BestGuess$Lon,10,population$Lon)
-midNW<-Predictions(compNW,R_BestGuess$NW,10,population$NW)
-midScot<-Predictions(compScot,R_BestGuess$Scotland,10,population$Scotland)
-midEng<-Predictions(compEng,R_BestGuess$England,10,population$England)
-midEE<-Predictions(compEE,R_BestGuess$EE,10,population$EE)
-midSE<-Predictions(compSE,R_BestGuess$SE,10,population$SE)
-midSW<-Predictions(compSW,R_BestGuess$SW,10,population$SW)
-midMD<-Predictions(compMD,R_BestGuess$MD,10,population$MD)
-midNEY<-Predictions(compNEY,R_BestGuess$NEY,10,population$NEY)
-Rs=c(0.7, 0.9, 1.1, 1.3)
+# Runup to scenario 
+midLon<-Predictions(compLon,R_BestGuess$Lon,5,population$Lon)
+midNW<-Predictions(compNW,R_BestGuess$NW,5,population$NW)
+midScot<-Predictions(compScot,R_BestGuess$Scotland,5,population$Scotland)
+midEng<-Predictions(compEng,R_BestGuess$England,5,population$England)
+midEE<-Predictions(compEE,R_BestGuess$EE,5,population$EE)
+midSE<-Predictions(compSE,R_BestGuess$SE,5,population$SE)
+midSW<-Predictions(compSW,R_BestGuess$SW,5,population$SW)
+midMD<-Predictions(compMD,R_BestGuess$MD,5,population$MD)
+midNEY<-Predictions(compNEY,R_BestGuess$NEY,5,population$NEY)
+Rs=c(0.9, 1.1, 1.4, 1.7)
 for (R_Scenario in Rs ){
   spredLon<-Predictions(midLon,R_Scenario,predtime,population$Lon)
   spredNW<-Predictions(midNW,R_Scenario,predtime,population$NW)
@@ -29,7 +29,8 @@ for (R_Scenario in Rs ){
 
 # recent scaling factors for MTPs, 
 total_time = min(nrow(deathdat),nrow(casedat),length(Hospital$UK$date))
-recent_time<-(total_time-50):total_time-reporting_delay
+recent_time<-(total_time-7-reporting_delay):(total_time-reporting_delay-1)
+
 #Ratios
 Hospital$Eng$newsaridat=Hospital$NEY$newsaridat+Hospital$NW$newsaridat+
   Hospital$MD$newsaridat+Hospital$EE$newsaridat+
@@ -110,6 +111,7 @@ XX[XX=="HelloMum"]<-"prevalence_mtp"
 }
 oldXX<-XX
 XX %>% filter(across(everything(), ~ !grepl("Nowcast", .))) -> X4
+# Bind scenarios with MTPs
 XXX<-rbind(CC,X4)
 write.xlsx(XXX, file = "exscenario.xlsx", 
            overwrite = TRUE,   rowNames = FALSE)

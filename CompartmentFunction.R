@@ -13,7 +13,7 @@ Compartment <- function(cases, csimAge, rCFR, cdat, startc, endc){
   
   # Create a list to output various data frames
   out <- list()
-  
+
   # CASE is the input cases which get WSS'ed.
   # CASE=cases produces estimates for the data used.
   CASE <- cases
