@@ -169,9 +169,7 @@ covidsimAge<-data.frame(
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  0,  0,  0),
   "Prop_Hosp_ByAge"=c(0.03, 0.0026 ,  0.00084 , 0.00042 ,0.00080, 0.0026, 0.0040 , 0.0063 , 0.012,  0.019,  0.023,  0.040,  0.096,  0.10,  0.24 ,  0.50, 0.6, 0.7,0.8),
   "Case_Hosp_ByAge"=c( 0.039,  0.001,  0.006,  0.009,  0.026 , 0.040,  0.042  ,0.045,  0.050,  0.074,  0.138,  0.198,  0.247,  0.414,  0.638,  1.000,1.00 ,1.00 ,1.00),
-"Deatherror"=c(0.32060231, 0.17841065, 0.05670156, 0.02800124, 0.01342003, 0.01179716, 0.01460613, 0.01983603, 0.02779927, 0.08124622, 0.09198597,
-   0.15295026, 0.22286942, 1.13541013, 1.12529118, 1.91515160, 1.97455542, 2.15335157, 2.23153492 )
-  )
+"Deatherror"=c(0.32060231, 0.17841065, 0.05670156, 0.02800124, 0.01342003, 0.01179716, 0.01460613, 0.01983603, 0.02779927, 0.08124622, 0.09198597,   0.15295026, 0.22286942, 1.13541013, 1.12529118, 1.91515160, 1.97455542, 2.15335157, 2.23153492 ) )
 # Admissions to April 30 0-5 839 6-17 831 18-65 42019 65-84 42640 85+ 20063
 # https://www.england.nhs.uk/statistics/statistical-work-areas/covid-19-hospital-activity/
 # TEST Adjust SARI to relate to actual admissions
@@ -881,7 +879,7 @@ RawCFR=colSums(deathdat[12:211,2:20])/colSums(casedat[1:200,2:20])
 
 #  Compartment model now done with a function.  Last two inputs are indices giving date range
 #  The compartments will not be correct until the cases have time to filter through all sections, which may be several months for, e.g oldCRITREC
- compEng <- Compartment(casedat,  covidsimAge, RawCFR, comdat, 2,nrow(casedat))
+ compEng <- Compartment(casedat, covidsimAge, RawCFR, comdat,2,nrow(casedat))
 
 
 # Do not unpack the values returned, access compartment quantities via comp$ list construct
@@ -1036,9 +1034,9 @@ for(i in ((genTime+1):length(dfR$itoR))){
   dfR$p65[i]=1+log(casedat$'65_69'[i]/casedat$'65_69'[i-1])*genTime
   dfR$p70[i]=1+log(casedat$'70_74'[i]/casedat$'70_74'[i-1])*genTime
   dfR$p75[i]=1+log(casedat$'75_79'[i]/casedat$'75_79'[i-1])*genTime
-    dfR$p80[i]=1+log(casedat$'80_84'[i]/casedat$'80_84'[i-1])*genTime
-   dfR$p85[i]=1+log(casedat$'85_89'[i]/casedat$'85_89'[i-1])*genTime
-   dfR$p90[i]=1+log(casedat$'90+'[i]/casedat$'90+'[i-1])*genTime
+  dfR$p80[i]=1+log(casedat$'80_84'[i]/casedat$'80_84'[i-1])*genTime
+  dfR$p85[i]=1+log(casedat$'85_89'[i]/casedat$'85_89'[i-1])*genTime
+  dfR$p90[i]=1+log(casedat$'90+'[i]/casedat$'90+'[i-1])*genTime
 #   Same from CrystalCast age groupings
    dfR$x05[i]=1+log(xcastage$`05_14`[i]/xcastage$`05_14`[i-1])*genTime
    dfR$x15[i]=1+log(xcastage$`15_24`[i]/xcastage$`15_24`[i-1])*genTime
@@ -1056,7 +1054,6 @@ dfR$loessR <- predict(loess(bylogR~x,data=dfR,span=0.25))
 dfR[is.na(dfR)] <- 1.0
 dfR[dfR == Inf] <- 1.0
 dfR[dfR == -Inf] <- 1.0
-
 
 # Set day 1, for plotting purposes
 for (i in 3:nrow(dfR)){dfR[i,1] <- dfR[i,2]}
@@ -1529,11 +1526,8 @@ if(interactive()){
 # Date not encapsulated and may become broken because of hard coded dates
 # Nothing should be returned or changed by this analysis
 
-
 medrxiv<-FALSE
 if(interactive()&medrxiv){medout<-MedrxivPaper()}
-
-
 
 ################################################################
 ###  Finally, Use all this to make predictions for England (Scotland & Regions in separate compartment.R code)
