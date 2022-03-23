@@ -9,8 +9,8 @@ library(lubridate)
 
 CC_write <- function(CCcomp,region,pop,R_region,Q_region,Rseries,ratio,filename){
 # write from arbitrary start point to six weeks time
-startwrite=542
-endwrite=nrow(regcases)+reporting_delay+50
+startwrite=556
+endwrite=nrow(regcases)+reporting_delay+45
 group <- "Edinburgh"
 model <-  "WSS"
 scenario <- "Nowcast"
@@ -78,7 +78,7 @@ CC <- data.frame(
     # Add the new row
     CC <- rbind(CC, CCtmp)
   }
-  d#  Delete the first row - Crystal cast requires numerical order
+  #  Delete the first row - Crystal cast requires numerical order
   CC <- CC[-c(1),]
 
   #  Hindcast for growth rate
@@ -133,24 +133,6 @@ for (d in startwrite:endwrite){
   CC <- rbind(CC, CCtmp)
 }
 
-CCtmp$ValueType="hospital_prev"
-# Prevalence uncertainty is huge. Issues with nosocomial cases missing in data, 
-# residence times depending on bed supply - so just guess
-for (d in startwrite:endwrite){
-  CCtmp$Scenario="MTP"
-  occupancy=sum(CCcomp$SARI[d,2:20]+CCcomp$CRIT[d,2:20]+CCcomp$CRITREC[d,2:20])
-  CCtmp$Value = occupancy/ratio$hosp
-  CCtmp$"Quantile 0.05"=CCtmp$Value/3
-  CCtmp$"Quantile 0.25"=CCtmp$Value/1.6
-  CCtmp$"Quantile 0.5"=CCtmp$Value
-  CCtmp$"Quantile 0.75"=CCtmp$Value*1.6
-  CCtmp$"Quantile 0.95"=CCtmp$Value*3
-  CCtmp$"Day of Value" = day(CCcomp$SARI$date[d])
-  CCtmp$"Month of Value" = month(CCcomp$SARI$date[d])
-  CCtmp$"Year of Value" = year(CCcomp$SARI$date[d])
-  # Add the new row
-  CC <- rbind(CC, CCtmp)
-}
 CCtmp$ValueType="type28_death_inc_line"
 CCtmp$Scenario="MTP"
 R_error=0.2

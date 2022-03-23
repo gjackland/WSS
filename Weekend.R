@@ -23,10 +23,13 @@ for(i in 1:length(cdat)){
   indexday <- (i-1)%%7+1
   cdat[i] <- cdat[i]/days[indexday]
 }
+#  Xmas correction 2020
+if(startdate<XMas){
 Xmasav <- sum(cdat[XMstart:XMend])/XMdays
 Xmasgrad <- cdat[XMend]-cdat[XMstart]
 for (i in XMstart:XMend){
   cdat[i]=Xmasav-Xmasgrad*(((XMend+XMstart)/2)-i)/XMdays
+}
 }
 return(cdat)
 }
