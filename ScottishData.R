@@ -378,10 +378,8 @@ pckg <- package_show("covid-19-wider-impacts-deaths", as ="table")
 
 
 region="Scotland"
-##  CFR going down gets entangled with vaccine and variant effect.  Use pre-vaccination values
-##  inherited from England and will adjust CFR later for vaccine/variant
-## RawCFR=colSums(scotdeath[2:20])/colSums(scotage[2:20])
-
+##  CFR gets entangled with vaccine and variant effect.  Use pre-vaccination values
+##  wild-type inherited from England and will adjust CFR later for vaccine/variant
 
 #  Full Epidemic model.
 compScot <- Compartment(scotage, covidsimAge, RawCFR, comdat,2,nrow(scotage))

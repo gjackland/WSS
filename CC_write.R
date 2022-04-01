@@ -9,8 +9,8 @@ library(lubridate)
 
 CC_write <- function(CCcomp,region,pop,R_region,Q_region,Rseries,ratio,filename){
 # write from arbitrary start point to six weeks time
-startwrite=556
-endwrite=nrow(regcases)+reporting_delay+45
+startwrite=length(CCcomp$CASE$date)-180
+endwrite=nrow(regcases)+reporting_delay+4
 group <- "Edinburgh"
 model <-  "WSS"
 scenario <- "Nowcast"
@@ -227,11 +227,11 @@ for (d in startwrite:(endwrite)){
   }
   OCC = sum(CCcomp$SARI[d,2:20]+CCcomp$CRIT[d,2:20]+CCcomp$CRITREC[d,2:20])/ratio$hosp
   CCtmp$Value=OCC
-  CCtmp$"Quantile 0.05"=OCC/(1.0+3*R_error)
-  CCtmp$"Quantile 0.25"=OCC/(1.0+R_error)
+  CCtmp$"Quantile 0.05"=OCC/(1.0+R_error)
+  CCtmp$"Quantile 0.25"=OCC/(1.0+0.33*R_error)
   CCtmp$"Quantile 0.5"=OCC
-  CCtmp$"Quantile 0.75"=OCC*(1.0+0.5*R_error)
-  CCtmp$"Quantile 0.95"=OCC*(1.0+1.5*R_error)
+  CCtmp$"Quantile 0.75"=OCC*(1.0+0.25*R_error)
+  CCtmp$"Quantile 0.95"=OCC*(1.0+0.75*R_error)
   CCtmp$"Day of Value" = day(CCcomp$SARI$date[d])
   CCtmp$"Month of Value" = month(CCcomp$SARI$date[d])
   CCtmp$"Year of Value" = year(CCcomp$SARI$date[d])
