@@ -22,45 +22,8 @@ if(interactive()){
 #  Enter this array by hand copied from https://www.gov.scot/publications/coronavirus-covid-19-trends-in-daily-data/
 # Another problem : Weekend behaviour of LFT is completely different to PCR
 
-scotLFTdate=as.Date("2022-01-04")
-scotLFT=c(1.293420813,
-          1.343442503,
-          1.433965723,
-          1.59664,
-          1.404836272,
-          1.538198682,
-          1.676304654,
-          1.802372539,
-          1.942521083,
-          2.00643463,
-          1.991803279,
-          2.768200089,
-          2.892537313,
-          2.275040171,
-          2.236599892,
-          2.410636149,
-          2.533882441,
-          2.423975488,
-          3.133303208,
-          3.530809859,
-          2.456302279,
-          2.496229261,
-          2.442126514,
-          2.643055006,
-          2.385268029,
-          3.909030544,
-          3.554981203,
-          2.503012048,
-          2.539437055,
-          2.332421756,
-          2.729468599,
-          2.37595582,
-          3.080063627,
-          3.374045802
-)
-# Assume a smooth increase in LFT/PCR ratio over time, and that PCR weekend effect is unchanged
-scotLFT <- smooth.spline(scotLFT, df = 4)$y
-scotLFT=scotLFT/scotLFT
+#  Italian data is here ... https://github.com/InPhyT/COVID19-Italy-Integrated-Surveillance-Data
+
 
 # Read packages used by the script
 library(readr, warn.conflicts = FALSE, quietly = TRUE)
@@ -85,9 +48,7 @@ setwd(".")
 # Turn off scientific notation.
 options(scipen = 999)
 
-# Copy transition rates from covidsim.  There are three different functions for
-# ICDFs (Inverse Cumulative Distribution Function).  x-axis divided into 20 blocks of 5%.
-# Will need to invert this.  Recent versions include a "Stepdown" state which seems to entail dying in CRITREC
+# Copy transition rates from covidsim.  
 #  https://www.imperial.ac.uk/mrc-global-infectious-disease-analysis/covid-19/report-41-rtm/
 # PropSARI taken from Knock et al to increase smoothly with age
 # Over 80 adjusted to fit national death reports
@@ -168,8 +129,8 @@ covidsimAge<-data.frame(
   "CFR_ILI_ByAge"=c(
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  0,  0,  0),
   "Prop_Hosp_ByAge"=c(0.03, 0.0026 ,  0.00084 , 0.00042 ,0.00080, 0.0026, 0.0040 , 0.0063 , 0.012,  0.019,  0.023,  0.040,  0.096,  0.10,  0.24 ,  0.50, 0.6, 0.7,0.8),
-  "Case_Hosp_ByAge"=c( 0.039,  0.001,  0.006,  0.009,  0.026 , 0.040,  0.042  ,0.045,  0.050,  0.074,  0.138,  0.198,  0.247,  0.414,  0.638,  1.000,1.00 ,1.00 ,1.00),
-"Deatherror"=c(0.32060231, 0.17841065, 0.05670156, 0.02800124, 0.01342003, 0.01179716, 0.01460613, 0.01983603, 0.02779927, 0.08124622, 0.09198597,   0.15295026, 0.22286942, 1.13541013, 1.12529118, 1.91515160, 1.97455542, 2.15335157, 2.23153492 ) )
+  "Case_Hosp_ByAge"=c( 0.039,  0.001,  0.006,  0.009,  0.026 , 0.040,  0.042  ,0.045,  0.050,  0.074,  0.138,  0.198,  0.247,  0.414,  0.638,  
+                       1.000,1.00 ,1.00 ,1.00) )
 # Admissions to April 30 0-5 839 6-17 831 18-65 42019 65-84 42640 85+ 20063
 # https://www.england.nhs.uk/statistics/statistical-work-areas/covid-19-hospital-activity/
 # TEST Adjust SARI to relate to actual admissions
@@ -177,59 +138,6 @@ covidsimAge<-data.frame(
 # Deatherror from colSums(deathdat[2:20])/colSums(casedat[2:20])/(colSums(DEATH[2:20]/colSums(newMILD[2:20]+newILI[2:20])))
 # IHR from Knock SM S9  CHR from Knock S8
 covidsimAge$Prop_Mild_ByAge= 1.0 - (covidsimAge$Prop_Critical_ByAge+covidsimAge$Prop_ILI_ByAge+covidsimAge$Prop_SARI_ByAge)
-covidsimICDF<-data.frame(
-  "MildToRecovery_icdf"=c(
-    0, 0.341579599, 0.436192391, 0.509774887, 0.574196702, 0.633830053, 0.690927761, 0.74691114, 0.802830695, 0.859578883, 0.918015187, 0.97906363, 1.043815683, 1.113669859, 1.190557274, 1.277356871, 1.378761429, 1.50338422, 1.670195767, 1.938414132, 2.511279379
-  ),
-  "ILIToRecovery_icdf"=c(
-    0, 0.341579599, 0.436192391, 0.509774887, 0.574196702, 0.633830053, 0.690927761, 0.74691114, 0.802830695, 0.859578883, 0.918015187, 0.97906363, 1.043815683, 1.113669859, 1.190557274, 1.277356871, 1.378761429, 1.50338422, 1.670195767, 1.938414132, 2.511279379
-  ),
-  "ILIToSARI_icdf"=c(
-    0, 0.341579599, 0.436192391, 0.509774887, 0.574196702, 0.633830053, 0.690927761, 0.74691114, 0.802830695, 0.859578883, 0.918015187, 0.97906363, 1.043815683, 1.113669859, 1.190557274, 1.277356871, 1.378761429, 1.50338422, 1.670195767, 1.938414132, 2.511279379
-  ),
-  "SARIToRecovery_icdf"=c(
-    0, 0.634736097, 1.217461548, 1.805695261, 2.41206761, 3.044551205, 3.71010552, 4.415905623, 5.170067405, 5.982314035, 6.864787504, 7.833196704, 8.908589322, 10.12027655, 11.51100029, 13.14682956, 15.13821107, 17.69183155, 21.27093904, 27.35083955, 41.35442157
-  ),
-  "SARIToDeath_icdf"=c(
-    0, 1.703470233, 2.39742257, 2.970367222, 3.491567676, 3.988046604, 4.474541783, 4.960985883, 5.455292802, 5.964726999, 6.496796075, 7.06004732, 7.665014091, 8.325595834, 9.061367792, 9.901900127, 10.8958347, 12.133068, 13.81280888, 16.56124574, 22.5803431
-  ),
-  "SARIToCritical_icdf"=c(
-    0, 0.108407687, 0.220267228, 0.337653773, 0.46159365, 0.593106462, 0.733343356, 0.88367093, 1.045760001, 1.221701998, 1.414175806, 1.62669998, 1.864032461, 2.132837436, 2.442868902, 2.809242289, 3.257272257, 3.834402667, 4.647120033, 6.035113821, 9.253953212
-  ),
-  "CriticalToCritRecov_icdf"=c(
-    0, 1.308310071, 1.87022015, 2.338694632, 2.76749788, 3.177830401, 3.581381361, 3.986127838, 4.398512135, 4.824525291, 5.270427517, 5.743406075, 6.252370864, 6.809125902, 7.430338867, 8.141231404, 8.983341913, 10.03350866, 11.46214198, 13.80540164, 18.95469153
-  ),
-  "CriticalToDeath_icdf"=c(
-    0, 1.60649128, 2.291051747, 2.860938008, 3.382077741, 3.880425012, 4.37026577, 4.861330415, 5.361460943, 5.877935626, 6.4183471, 6.991401405, 7.607881726, 8.282065409, 9.034104744, 9.894486491, 10.91341144, 12.18372915, 13.9113346, 16.74394356, 22.96541429
-  ),
-  "CritRecovToRecov_icdf"=c(
-    0, 0.133993315, 0.265922775, 0.402188416, 0.544657341, 0.694774487, 0.853984373, 1.023901078, 1.206436504, 1.403942719, 1.619402771, 1.856711876, 2.121118605, 2.419957988, 2.763950408, 3.169692564, 3.664959893, 4.301777536, 5.196849239, 6.7222126, 10.24997697
-  )
-  )
-## covidsim has 17 agegroups.  We need 19, assume same params for 85_89 & 90+ as for 80+
-# Data from Knock et al  case-> Hosp Triage -> ICU DEath|Hosp Death |ICU Death in Stepdown
-Knock<-t(data.frame(
-"00_04" = c( 0.039, 0.243, 0.039, 0.282, 0.091, 0),
-"05_09" = c( 0.001, 0.289, 0.037, 0.286, 0.083, 0),
-"10_14" = c( 0.006, 0.338, 0.035, 0.291, 0.077, 0),
-"15_19"= c( 0.009, 0.389, 0.035, 0.299, 0.074, 0),
-"20_24"= c( 0.026, 0.443, 0.036, 0.310, 0.074, 0),
-"25_29" = c(0.040, 0.503, 0.039, 0.328, 0.076, 0),
-"30_34"= c( 0.042, 0.570, 0.045, 0.353, 0.080, 0),
-"35_39" = c(0.045, 0.653, 0.055, 0.390, 0.086, 0),
-"40_44"= c( 0.050, 0.756, 0.074, 0.446, 0.093, 0),
-"45_49" = c(0.074, 0.866, 0.107, 0.520, 0.102, 0),
-"50_54" = c(0.138, 0.954, 0.157, 0.604, 0.117, 0),
-"55_59" = c(0.198, 1.000, 0.238, 0.705, 0.148, 0),
-"60_64" = c(0.247, 0.972, 0.353, 0.806, 0.211, 0),
-"65_69" = c(0.414, 0.854, 0.502, 0.899, 0.332, 0),
-"70_74" = c(0.638, 0.645, 0.675, 0.969, 0.526, 0),
-"75_79" = c(1.000, 0.402, 0.832, 1.000, 0.753, 0),
-"80_84" =c( 0.873, 0.107, 1.000, 0.918, 1.000, 0),
-"85_89" =c( 0.873, 0.107, 1.000, 0.918, 1.000, 0),
-"90+" =c( 0.873, 0.107, 1.000, 0.918, 1.000, 0)
-)
-)
 
 #### Read data ####
 # Base URL to get the UK government data
@@ -835,11 +743,7 @@ regcases$NE_Yorks <- regcases$`North East` + regcases$`Yorkshire and The Humber`
 regcases$Midlands <- regcases$`East Midlands` + regcases$`West Midlands`
 
 regcases$England <- comdat$allCases[1:nrow(regcases)]
-#Fix missing LFT data from scotland  Not required again from 10/02/2022
-#startLFT=as.integer(scotLFTdate-startdate)
-#for(i in startLFT:length(regcases$Scotland)){
-#  regcases$Scotland[i]=regcases$Scotland[i]*scotLFT[i-startLFT+1]
-#}
+
 # Reorder regcases
 regcases<-regcases[,c(1,2,3,4,5,6,7,9,10,8,23,26,27,11,12,13,14,15,16,17,18,19,20,21,22,24,25,28,29,30)]
 
