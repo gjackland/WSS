@@ -42,7 +42,7 @@ Predictions <- function(input,R_input,predtime,pop){
   lengthofdata <- nrow(CASE)
   enddateP<-CASE$date[lengthofdata]
   #  Maximum immunity from old infections only 20% as per IC report 49
-  NotS0=colSums(CASE[2:20])/pop[2:20]*Missing_incidence*0.2
+  NotS0=min(1.0,colSums(CASE[2:20])/pop[2:20]*Missing_incidence)*0.2
 #  Boost R_input by the already susceptible.
 #  This is taken out again when incrementing cases using current notS  
   R_input<-R_input/(1.0-NotS0)
