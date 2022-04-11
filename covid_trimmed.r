@@ -236,7 +236,8 @@ Knock<-t(data.frame(
 baseurl <- "https://api.coronavirus.data.gov.uk/v2/data?"
 
 # Start and end date - the date to collect data from
-startdate <- as.Date("2020/08/09") #as.Date("2020/08/09")
+# First month or so will be equilibration, especially if started at a time of high caseload
+startdate <- as.Date("2021/03/09") #as.Date("2020/08/09")
 
 # Lose only the last day of data - use tail correction for reporting delay
 # Weekend data can be sketchy Extend the enddate if run on Monday morning
@@ -739,11 +740,13 @@ Hospital$UK$newsaridat <- na.locf(Hospital$UK$newsaridat)
 Hospital$UK$critdat <- na.locf(Hospital$UK$critdat)
 
 
-# Add the Welsh and Northern Ireland cases data
+# Add the Welsh and Northern Ireland cases data, 
 
 regcases$Wales <- walesdat$allCases[1:(enddate-startdate+1)]
 regcases$NI <- NIdat$allCases[1:(enddate-startdate+1)]
-
+#remove random new Scottish "region"
+within(regcases, rm("Golden Jubilee National Hospital"))->jnk
+regcases<-jnk
 # Remove the no longer needed input data  Keep Scottish data for SCottishData.R
 rm(ukcasedat,jnk,coltypes,NIdat,walesdat,regagedat3)
 rm(HospitalUrl,deathurl,casesurl,scoturl,walesurl,NIurl,ageurl,baseurl,regurl,regurl2,regurl3,ukcaseurl,vacurl)
@@ -805,7 +808,6 @@ comdat$Kent<-comdat$Kent-comdat$India-comdat$Omicron
 comdat$lethality<-1.0+ Kentfac*comdat$Kent + Indiafac*comdat$India + Omicronfac*comdat$Omicron
 
 # Fix missing data to constant values
-
 casedat <- na.locf(casedat)
 comdat <- na.locf(comdat)
 regcases <- na.locf(regcases)
@@ -868,7 +870,7 @@ if(interactive()){
     theme_bw()
 }
 ##  CFR going down gets entangled with vaccine effect.  Use pre-vaccination values
-##  With 12 day delay from WSS.
+##  With 12 day delay from WSS.  this assumes original startdate 09/08/2020
 RawCFR=colSums(deathdat[12:211,2:20])/colSums(casedat[1:200,2:20])
 
 
@@ -876,6 +878,12 @@ RawCFR=colSums(deathdat[12:211,2:20])/colSums(casedat[1:200,2:20])
 # giving people who would have died.  Alternative would be time dependent CFR
 # RawCFR=colSums(deathdat[2:20]/(1-vacdat[2:20]*vacCFR))/colSums(casedat[2:ncol(casedat)])
 
+
+# Hardcode rawCFR for wild type data - this allows start date to be brought forward
+RawCFR = c(
+0.00006476028, 0.00005932501, 0.00004474461, 0.00007174780, 0.00011668950, 0.00020707650, 0.00045082861, 0.00083235867, 
+0.00135192176, 0.00274650970, 0.00466541696, 0.00847207527, 0.01470736106, 0.05199837337, 0.08980941759, 0.15752935748, 
+  0.22651139233, 0.27821927091, 0.32550659352 )
 
 #  Compartment model now done with a function.  Last two inputs are indices giving date range
 #  The compartments will not be correct until the cases have time to filter through all sections, which may be several months for, e.g oldCRITREC
@@ -1233,8 +1241,8 @@ R_Quant <- list()
 ### Smoothing Filters
 s1 <- 0.05
 s2 <- 0.1
-s3 <- 0.2
-s4 <- 0.3
+s3 <- 0.15
+s4 <- 0.2
 
 
 tmp <-estimate_R(dfR$bylogR,dfR$date,comdat$allCases)
@@ -1463,7 +1471,7 @@ Predict$SmoothRito =Predict$SmoothRito*sum(comdat$allCases)/sum(Predict$SmoothRi
 Predict$SmoothRlog=Predict$SmoothRlog*sum(comdat$allCases)/sum(Predict$SmoothRlog)
 Predict$MeanR=Predict$MeanR*sum(comdat$allCases)/sum(Predict$MeanR)
 
-if(interactive()){
+if(interactive()&FALSE){
 
   sum(Predict$MeanR)
   sum(Predict$SmoothRlog)
@@ -1571,7 +1579,7 @@ plot(Hospital$UK$critdat,x=Hospital$UK$date,ylab="ICU Occupation",xlab="Date",xl
 lines(rowSums(predEng$CRIT[2:20]),col="blue",x=predEng$CRIT$date)
 
 plot(1.1*rowSums(predEng$DEATH[2:20]),col="blue",x=predEng$DEATH$date, type="l",ylab="Deaths"
-     ,xlab="Date",xlim=c(startplot,endplot-160))
+     ,xlab="Date",xlim=c(startplot,endplot-60))
 points(rowSums(deathdat[2:20]),x=deathdat$date)
 }
 
