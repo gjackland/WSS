@@ -10,7 +10,7 @@ library(lubridate)
 CC_write <- function(CCcomp,region,pop,R_region,Q_region,Rseries,ratio,filename){
 # write from arbitrary start point to six weeks time
 startwrite=length(CCcomp$CASE$date)-180
-endwrite=nrow(regcases)+reporting_delay+4
+endwrite=nrow(regcases)+reporting_delay+48
 group <- "Edinburgh"
 model <-  "WSS"
 scenario <- "Nowcast"
@@ -161,8 +161,8 @@ for (d in startwrite:endwrite){
 #  with delat/omicron having *much* higher viral loads
 #  Missing Prevalence increases sharply with the withdrawal of free testing
 #  Change by factor of 2 in England & Wales fitted to ONS (DJW offline) from startwrite in 2022.  
-Missing_prevalence=1.3
-Missing_incidence=2.2
+Missing_prevalence=1.3*1.5
+Missing_incidence=2.2*1.5
 scalefac=Missing_incidence
 if(region!="Scotland"){
   if(region!="Northern Ireland") {scalefac=scalefac*2}

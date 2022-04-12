@@ -42,12 +42,12 @@ Predictions <- function(input,R_input,predtime,pop){
   lengthofdata <- nrow(CASE)
   enddateP<-CASE$date[lengthofdata]
   #  Maximum immunity from old infections only 20% as per IC report 49
-  NotS0=min(1.0,colSums(CASE[2:20])/pop[2:20]*Missing_incidence)*0.2
+  NotS0=min(1.0,colSums(CASE[2:20])/pop[2:20])*0.2
 #  Boost R_input by the already susceptible.
 #  This is taken out again when incrementing cases using current notS  
   #  Removed 12/4 with omicron complete R_input<-R_input/(1.0-NotS0)
   #  For 12/4, given issues with case data, drive predictions using ONS R_value
-  R_input=rat$smoothONS[length(rat$smoothONS)]
+  #  R_input=rat$smoothONS[length(rat$smoothONS)]
   #  Current prevalence of omicron
   #x= (lengthofdata-Omicrondate)*1.0/genTime
   #today_Omicron=1.0/(1.0+exp(-x))#  For loop over time, predCASE using R numbers
@@ -71,7 +71,6 @@ Predictions <- function(input,R_input,predtime,pop){
     newMILD[iday,agerange]=predCASE[ipred,agerange]*(1.0-pTtoI)+newMILD[iday,agerange]
     newILI[iday,agerange]=predCASE[ipred,agerange]*  pTtoI    +newILI[iday,agerange]
 
-    
     #  vectorize 
 #  MtoR=outer(as.numeric(newMILD[iday,agerange]),MildToRecovery,FUN="*")
 #  oldMILD[(iday:xday),agerange]=oldMILD[(iday:xday),agerange]+MtoR
@@ -127,7 +126,7 @@ Predictions <- function(input,R_input,predtime,pop){
 
     #Newly not susceptible
     
-    NotS=colSums(predCASE[2:20])/pop[2:20]*Missing_incidence
+    NotS=colSums(predCASE[2:20])/pop[2:20]
     
     S=(1.0-NotS-NotS0)
 

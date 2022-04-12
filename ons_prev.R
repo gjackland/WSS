@@ -21,9 +21,12 @@ scot_prev<-c(0.05,0.05,0.05,0.07,0.11,0.19, 0.21, 0.41,0.62,0.57,0.71,0.90,0.75,
              1.14,1.36,1.25,1.18,1.06,1.44,1.58,1.24,1.27,1.45,1.50,2.57,4.52,5.65,4.49,3.11,
              3.52,4.01, 4.17, 4.57, 5.33,5.70,7.15,9.00,8.57,7.54)*scotpop/100
 
-approx(eng_prev,n=7*length(eng_prev))$y %>% tail(nrow(comdat))-> comdat$ons_prev
-approx(scot_prev,n=7*length(scot_prev))$y%>% tail(nrow(comdat))-> comdat$scot_ons_prev
+approx(eng_prev,n=7*length(eng_prev))$y %>% tail(nrow(comdat))-> comdat$Eng_ons_prev
+approx(scot_prev,n=7*length(scot_prev))$y%>% tail(nrow(comdat))-> comdat$Scot_ons_prev
 
+comdat$Eng_ons_shift[1:(nrow(comdat)-12)]<-comdat$Eng_ons_prev[13:nrow(comdat)]
 
+comdat$Scot_ons_shift[1:(nrow(comdat)-8)]<-comdat$Scot_ons_prev[9:nrow(comdat)]
 
-
+comdat$Missing_incidence=(comdat$Eng_ons_shift/regcases$England)
+comdat$Scot_Missing_incidence=(comdat$Scot_ons_shift/regcases$Scotland)

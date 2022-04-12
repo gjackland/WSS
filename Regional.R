@@ -206,7 +206,7 @@ total_cases=sum(casedat[recent_time,2:20])
 total_admissions=sum(Hospital$Eng$newsaridat[recent_time])
 total_crit=sum(Hospital$UK$critdat[recent_time])
 ratio <-list()
-ratio$Eng$death=sum(predEng$DEATH[recent_time,2:20])/sum(regdeaths[recent_time,2:8])
+ratio$Eng$death=sum(predEng$DEATH[recent_time,2:20])/sum(regdeaths[recent_time,2:10])
 ratio$Eng$case=sum(predEng$CASE[recent_time,2:20])/total_cases
 ratio$Eng$newhosp=sum(rowSums(predEng$newSARI[recent_time,2:20]))/total_admissions
 ratio$Eng$hosp=sum(rowSums(predEng$SARI[recent_time,2:20]+predEng$CRIT[recent_time,2:20]+predEng$CRITREC[recent_time,2:20]))/sum(Hospital$Eng$saridat[recent_time])
