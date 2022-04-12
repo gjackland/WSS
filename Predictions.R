@@ -71,7 +71,6 @@ Predictions <- function(input,R_input,predtime,pop){
     newMILD[iday,agerange]=predCASE[ipred,agerange]*(1.0-pTtoI)+newMILD[iday,agerange]
     newILI[iday,agerange]=predCASE[ipred,agerange]*  pTtoI    +newILI[iday,agerange]
 
-    
     #  vectorize 
 #  MtoR=outer(as.numeric(newMILD[iday,agerange]),MildToRecovery,FUN="*")
 #  oldMILD[(iday:xday),agerange]=oldMILD[(iday:xday),agerange]+MtoR
