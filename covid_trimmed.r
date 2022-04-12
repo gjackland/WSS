@@ -18,8 +18,20 @@ if(interactive()){
   rm(list = ls())
 }
 
+<<<<<<< HEAD
 #  Italian data is here ... https://github.com/InPhyT/COVID19-Italy-Integrated-Surveillance-Data
 
+=======
+# From Jan 6th  2022 Need to multiply cases in Scotland by fraction which are LFT and not reported, because, Scotland
+#  Enter this array by hand copied from https://www.gov.scot/publications/coronavirus-covid-19-trends-in-daily-data/
+# Another problem : Weekend behaviour of LFT is completely different to PCR
+
+
+#  Italian data is here ... https://github.com/InPhyT/COVID19-Italy-Integrated-Surveillance-Data
+
+
+
+>>>>>>> 63d76a0af6eaa9dd1fca0685e2c5e90623bcce7c
 # Read packages used by the script
 library(readr, warn.conflicts = FALSE, quietly = TRUE)
 library(dplyr, warn.conflicts = FALSE, quietly = TRUE)
