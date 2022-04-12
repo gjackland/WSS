@@ -45,7 +45,9 @@ Predictions <- function(input,R_input,predtime,pop){
   NotS0=min(1.0,colSums(CASE[2:20])/pop[2:20]*Missing_incidence)*0.2
 #  Boost R_input by the already susceptible.
 #  This is taken out again when incrementing cases using current notS  
-  R_input<-R_input/(1.0-NotS0)
+  #  Removed 12/4 with omicron complete R_input<-R_input/(1.0-NotS0)
+  #  For 12/4, given issues with case data, drive predictions using ONS R_value
+  R_input=rat$smoothONS[length(rat$smoothONS)]
   #  Current prevalence of omicron
   #x= (lengthofdata-Omicrondate)*1.0/genTime
   #today_Omicron=1.0/(1.0+exp(-x))#  For loop over time, predCASE using R numbers
@@ -141,8 +143,10 @@ Predictions <- function(input,R_input,predtime,pop){
     #if(sum(R_input*S)/19 > 1.4) {R_input=(R_input-1)*0.95+1.0}
     R_input= ((R_input-1)*0.95+1.0)  
     #  Infections not confined by age group - use an average
+    #  Assume Omicron established by 12/4/22 - immunity built into R_input
+    S=1
     R_eff=sum(R_input*S)/19
-    predCASE[(ipred+1),(2:20)]<-predCASE[ipred,(2:20)]*exp((R_eff-1)/genTime)
+    predCASE[(ipred+1),(2:20)]<-predCASE[ipred,(2:20)]*exp((R_input-1)/genTime)
     predCASE[ipred+1,1]<-enddateP+ipred
     ipred=ipred+1 
   }

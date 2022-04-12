@@ -22,45 +22,6 @@ if(interactive()){
 #  Enter this array by hand copied from https://www.gov.scot/publications/coronavirus-covid-19-trends-in-daily-data/
 # Another problem : Weekend behaviour of LFT is completely different to PCR
 
-scotLFTdate=as.Date("2022-01-04")
-scotLFT=c(1.293420813,
-          1.343442503,
-          1.433965723,
-          1.59664,
-          1.404836272,
-          1.538198682,
-          1.676304654,
-          1.802372539,
-          1.942521083,
-          2.00643463,
-          1.991803279,
-          2.768200089,
-          2.892537313,
-          2.275040171,
-          2.236599892,
-          2.410636149,
-          2.533882441,
-          2.423975488,
-          3.133303208,
-          3.530809859,
-          2.456302279,
-          2.496229261,
-          2.442126514,
-          2.643055006,
-          2.385268029,
-          3.909030544,
-          3.554981203,
-          2.503012048,
-          2.539437055,
-          2.332421756,
-          2.729468599,
-          2.37595582,
-          3.080063627,
-          3.374045802
-)
-# Assume a smooth increase in LFT/PCR ratio over time, and that PCR weekend effect is unchanged
-scotLFT <- smooth.spline(scotLFT, df = 4)$y
-scotLFT=scotLFT/scotLFT
 
 # Read packages used by the script
 library(readr, warn.conflicts = FALSE, quietly = TRUE)
@@ -237,7 +198,7 @@ baseurl <- "https://api.coronavirus.data.gov.uk/v2/data?"
 
 # Start and end date - the date to collect data from
 # First month or so will be equilibration, especially if started at a time of high caseload
-startdate <- as.Date("2021/03/09") #as.Date("2020/08/09")
+startdate <- as.Date("2021/05/09") #as.Date("2020/08/09")
 
 # Lose only the last day of data - use tail correction for reporting delay
 # Weekend data can be sketchy Extend the enddate if run on Monday morning
@@ -952,7 +913,7 @@ smoothcases <- smooth.spline(comdat$allCases, df = 20)
 ninit <- as.numeric(1:nrow(comdat))/as.numeric(1:nrow(comdat))
 dfR <- data.frame(x=1.0:length(comdat$date),
                   date=comdat$date, itoR=ninit, stratR=ninit, rawR=ninit,  fpR=ninit,  weeklyR=ninit,  bylogR=ninit,
-                  p00=ninit,  p05=ninit,  p10=ninit,  p15=ninit,  p20=ninit,  p25=ninit,  p30=ninit,
+                  ONS=ninit, p00=ninit,  p05=ninit,  p10=ninit,  p15=ninit,  p20=ninit,  p25=ninit,  p30=ninit,
                   p35=ninit,  p40=ninit,  p45=ninit,  p50=ninit,  p55=ninit,  p60=ninit,  p65=ninit,
                   p70=ninit,  p75=ninit,  p80=ninit,  p85=ninit,  p90=ninit, x05=ninit, x15=ninit,
                   x25=ninit, x45=ninit, x65=ninit, x75=ninit, regions=ninit, smoothcasesR=ninit)
@@ -969,6 +930,34 @@ if(any(compEng$CASE==0)){
   }
 }
 rat <- regcases
+#Add in ONSdata by hand.  for 12/4 use this to get R
+engpop=56989570
+scotpop=5475660
+eng_prev<-c(
+  0.05,0.05,0.05,0.07,0.11,0.19,0.21,0.41,0.62,
+  0.79,1.04,1.13,1.20,1.22,1.16,0.96,0.88,
+  1.04,1.18,1.47,2.06,2.08,1.88,1.87,1.55,
+  1.28,0.88,0.69,0.45,0.37,0.29,0.30,0.27,
+  0.30, 0.21,0.17, 0.10,0.08, 0.07,0.09, 0.09,
+  0.16, 0.18,0.19, 0.22,0.39,0.61,1.06,1.36,
+  1.57,1.32,1.33,1.28,1.39,1.41,1.38,1.28,
+  1.14,1.21,1.44,1.63,1.79,2.02,2.02,1.70,1.51,
+  1.58,1.65,1.64,1.72,2.21,2.83,3.71,6.00,
+  6.85,5.47,4.82,4.83,5.18,4.49,3.84,3.55,
+  3.80,4.87,6.39,7.56,7.60)*engpop/100
+scot_prev<-c(0.05,0.05,0.05,0.07,0.11,0.19, 0.21, 0.41,0.62,0.57,0.71,0.90,0.75,
+             0.64,0.87,0.78,0.82,1.00,0.71,0.69,0.87,1.06,0.99,0.92,0.88,
+             0.67,0.55,0.45,0.30,0.31,0.37,0.41,0.32,0.25,0.20,0.18,0.16,
+             0.13,0.08,0.05,0.16,0.15,0.18,0.17,0.46,0.68,1.01,1.14,1.24,
+             0.94,0.82,0.53,0.49,0.70,1.32,2.23,2.29,2.28,1.85,1.61,1.26,
+             1.14,1.36,1.25,1.18,1.06,1.44,1.58,1.24,1.27,1.45,1.50,2.57,4.52,5.65,4.49,3.11,
+             3.52,4.01, 4.17, 4.57, 5.33,5.70,7.15,9.00,8.57,7.54)*scotpop/100
+
+approx(eng_prev,n=7*length(eng_prev))$y %>% tail(nrow(comdat))-> comdat$ons_prev
+approx(scot_prev,n=7*length(scot_prev))$y%>% tail(nrow(comdat))-> comdat$scot_ons_prev
+
+
+
 for(i in (2:nrow(regcases))    ){
   rat[i, 2:ncol(regcases)] <- 1 + log(regcases[i, 2:ncol(regcases)]/regcases[(i-1), 2:ncol(regcases)])*genTime
 }
@@ -1025,6 +1014,7 @@ for(i in ((genTime+1):length(dfR$itoR))){
   dfR$stratR[i]=1+ (comdat$allCases[i]-comdat$allCases[i-1])*genTime/mean(comdat$allCases[(i-1):i])
   dfR$fpR[i]=(1+(comdat$fpCases[i]-comdat$fpCases[i-1])*genTime/(comdat$fpCases[i-1]))
   dfR$bylogR[i]=1+log(comdat$allCases[i]/comdat$allCases[i-1])*genTime
+  dfR$ONS[i]=1+log(comdat$ons_prev[i]/comdat$ons_prev[i-1])*genTime
   dfR$regions[i]=1+log(regcases$regions[i]/regcases$regions[i-1])*genTime
   dfR$p00[i]=1+log(casedat$'00_04'[i]/casedat$'00_04'[i-1])*genTime
   dfR$p05[i]=1+log(casedat$'05_09'[i]/casedat$'05_09'[i-1])*genTime
@@ -1091,6 +1081,7 @@ smoothweightR <- smooth.spline(dfR$bylogR,df=spdf,w=sqrt(comdat$allCases))
 smoothweightRstrat <- smooth.spline(dfR$stratR,df=spdf,w=sqrt(comdat$allCases))
 smoothweightRito <- smooth.spline(dfR$itoR,df=spdf,w=sqrt(comdat$allCases))
 smoothweightRfp <- smooth.spline(dfR$fpR,df=spdf,w=sqrt(comdat$fpCases))
+rat$smoothONS <- smooth.spline(dfR$ONS,df=spdf,w=sqrt(comdat$ons_prev))$y
 rat$smoothScotland <- smooth.spline(rat$Scotland,df=spdf,w=sqrt(regcases$Scotland))$y
 rat$smoothNW <-smooth.spline(rat$`North West`,df=spdf,w=sqrt(regcases$`North West`))$y
 rat$smoothNEY <-smooth.spline(rat$NE_Yorks,df=spdf,w=sqrt(regcases$NE_Yorks))$y
@@ -1241,8 +1232,8 @@ R_Quant <- list()
 ### Smoothing Filters
 s1 <- 0.05
 s2 <- 0.1
-s3 <- 0.15
-s4 <- 0.2
+s3 <- 0.2
+s4 <- 0.3
 
 
 tmp <-estimate_R(dfR$bylogR,dfR$date,comdat$allCases)
@@ -1578,7 +1569,7 @@ lines(rowSums(compEng$newMILD[11:20]+compEng$newILI[11:20]),col="red",x=compEng$
 plot(Hospital$UK$critdat,x=Hospital$UK$date,ylab="ICU Occupation",xlab="Date",xlim=c(startplot,endplot))
 lines(rowSums(predEng$CRIT[2:20]),col="blue",x=predEng$CRIT$date)
 
-plot(1.1*rowSums(predEng$DEATH[2:20]),col="blue",x=predEng$DEATH$date, type="l",ylab="Deaths"
+plot(rowSums(predEng$DEATH[2:20]),col="blue",x=predEng$DEATH$date, type="l",ylab="Deaths"
      ,xlab="Date",xlim=c(startplot,endplot-60))
 points(rowSums(deathdat[2:20]),x=deathdat$date)
 }
