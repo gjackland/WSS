@@ -41,8 +41,9 @@ Predictions <- function(input,R_input,predtime,pop){
  
   lengthofdata <- nrow(CASE)
   enddateP<-CASE$date[lengthofdata]
-  #  Maximum immunity from old infections only 20% as per IC report 49
+  #  Maximum immunity from old infections only 20% as per IC report 49, by age group
   NotS0=min(1.0,colSums(CASE[2:20])/pop[2:20]*Missing_incidence)*0.2
+  S=1.0-NotS0
 #  Boost R_input by the already susceptible.
 #  This is taken out again when incrementing cases using current notS  
   R_input<-R_input/(1.0-NotS0)
@@ -122,11 +123,9 @@ Predictions <- function(input,R_input,predtime,pop){
     #  New omicron cases growing with R=3  (test R=4)
     #  For omicron, R_input gets bigger and bigger
 
-    #Newly not susceptible
-    
-    NotS=colSums(predCASE[2:20])/pop[2:20]*Missing_incidence
-    
-    S=(1.0-NotS-NotS0)
+    # Update number of susceptibles by Newly not susceptible
+    NotS=(predCASE[iday,2:20])/pop[2:20]*Missing_incidence
+    S=(S-NotS)
 
     # R decays back to 1 with growth rate down 5% a day, faster if larger
     # R is the same in all age groups
