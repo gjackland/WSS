@@ -22,6 +22,7 @@ if(interactive()){
 #  Enter this array by hand copied from https://www.gov.scot/publications/coronavirus-covid-19-trends-in-daily-data/
 # Another problem : Weekend behaviour of LFT is completely different to PCR
 
+
 #  Italian data is here ... https://github.com/InPhyT/COVID19-Italy-Integrated-Surveillance-Data
 
 
@@ -41,111 +42,23 @@ source("Predictions.R")
 source("age_pdfplot.R")
 source("Weekend.R")
 source("CC_write.R")
-
+source("covidSimData.R")
 # Set the working directory to be the same as to where the script is run from.
 setwd(".")
 
 # Turn off scientific notation.
 options(scipen = 999)
 
-# Copy transition rates from covidsim.  
-#  https://www.imperial.ac.uk/mrc-global-infectious-disease-analysis/covid-19/report-41-rtm/
-# PropSARI taken from Knock et al to increase smoothly with age
-# Over 80 adjusted to fit national death reports
-# CFR_SARI cut c.f covidsim for intermediate ages because more serious cases go via CRIT
-# UK population by age https://www.ons.gov.uk/peoplepopulationandcommunity/populationandmigration/populationestimates/datasets/populationestimatesforukenglandandwalesscotlandandnorthernireland
-popdat<-c(67081234,3782330,4147413,4045114,3683680,4133158,4476630,4521975,4404100,4091543,4303967,4616017,4510851,3855818,3355381,3363906,2403759,1726223,1049866,609503)
-#  ONS population estimates per region by age
-#https://www.ons.gov.uk/peoplepopulationandcommunity/populationandmigration/populationprojections/datasets/regionsinenglandtable1
-# Missing incidence inferred from ONS model (moved from CC_write to be global variable)
-Missing_prevalence=1.0
-Missing_incidence=2.2
-
-population <- data.frame(
-  "England"=c(56989570,3199741,3537022,3508137,3177717,
-              3412241,3738878,3873273,3766573,3563040,3542921,3871312,3827564,
-              3302144,2818833,2832803,2119239,1453202,909572,535358),
-  "NE"=c(2681149,137097,154195,156681,148629,170939,173895,
-         172727,163340,151146,154343,181209,193111,176408,151087,
-         148964,105013,74505,44484,23379),
-  "NW"=c(7395093,416449,458725,454524,
-         414109,452192,483195,496081,471598,433582,443823,508030,
-         509524,444826,377061,382122,277200,192637,114829,64587),
-  "Yorks"=c(5548941,308644,340930,
-            341248,322455,360851,366596,364471,345539,321312,331519,
-            378151,374542,331591,284620,286100,208605,144814,88607,48348),
-  "EM"=c(4917711,264339,296895,297062,
-         279881,310193,307943,310511,301307,287345,301274,343517,
-         343502,298132,260088,265897,197209,129095,78728,44794),
-  "WM"=c(6024811,348437,382020,378605,
-         350855,383156,407210,405697,379330,354065,360907,404454,
-         397278,339529,296082,294805,232009,158862,96415,55097),
-  "EE"=c(6312979,355635,398437,395598,
-         339798,325756,366991,399596,407771,399357,402382,438271,
-         434586,374081,325178,339205,256233,173570,112856,67679),
-  "Lon"=c(9095459,582490,605204,561365,
-             485920,560277,763720,819377,781076,695268,602324,571429,
-             520757,419558,327896,283856,207035,150959,96744,60205),
-  "SE"=c(9282330,501455,574647,590311,
-         525005,519183,536663,559528,582547,595850,603652,651177,
-         644634,549839,468026,486072,371793,253386,165101,103462),
-  "SW"=c(5731097,285196,325970,332744,
-         311065,329696,332666,345285,334066,325116,342698,395074,
-         409631,368181,328796,345781,264143,175374,111810,67807),
-  "Scotland"=c(5475660,261674,292754,303417,
-               280757,333740,370972,381258,357430,330569,337259,389238,
-               400834,360684,305248,289590,204947,143858,86413,45018),
-  "Wales"=c(3174970, 160688, 180503, 187819, 173842, 200210,
-  202513, 201034, 186338, 177662,183427, 215927,223724,
-202578, 180391, 183716, 135819, 91798,55843, 31138 ),
-"NI"=c(1910623,116146,127557,129856,114652,111442,118998
-,126555,125362,120465,120391,130049,129139
-,112714,92622,82889,67237,44075,26191,14283)
-)
-population$MD<-population$EM+population$WM
-population$NEY<-population$Yorks+population$NE
-population$UK<-popdat
-covidsimAge<-data.frame(
-  "Prop_ILI_ByAge"=c(
-    0.333122437,  0.333153617,  0.333001453, 0.332654731, 0.33181821, 0.330417289, 0.328732618, 0.326716425, 0.325130732, 0.322392505, 0.316971878, 0.312809664, 0.304540269, 0.300182488, 0.2919304, 0.283276936, 0.282323232, 0.282323232, 0.282323232
-  ),
- "Prop_SARI_ByAge"=c( 0.000557744, 0.000475283, 0.000877703, 0.001794658, 0.004006955, 0.007711884,
-  0.012167229, 0.017359248, 0.021140307, 0.027047193, 0.03708932, 0.039871236, 0.020788928,
-  0.017444452, 0.101605674, 0.142001415, 0.1747, 0.21, 0.25  ),
-# TEST"Prop_SARI_ByAge"=c( 0.0008, 0.000475283, 0.000477703, 0.001794658, 0.004006955, 0.007711884,
-#                      0.012167229, 0.017359248, 0.021140307, 0.027047193, 0.03, 0.035, 0.06,
-#                      0.08, 0.101605674, 0.142001415, 0.1747, 0.21, 0.25  ),
-  "Prop_Critical_ByAge"=
-    c(7.49444E-05, 6.38641E-05, 0.000117937, 0.000241149, 0.000538417, 0.00103625, 0.001634918, 0.002491477, 0.003467496, 0.005775292, 0.011995047, 0.021699771, 0.065590266, 0.082008084, 0.022603126, 0.008167778, 0.002560606, 0.002560606, 0.002560606
-    ),
-  "CFR_Critical_ByAge"=c(
-    0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896, 0.5234896
-  ),
-# This is way out of line with the 20% https://journals.lww.com/ccmjournal/Fulltext/2021/02000/Improving_Survival_of_Critical_Care_Patients_With.5.aspx  https://ebn.bmj.com/content/early/2021/05/09/ebnurs-2020-103370
-#  52% is pre dexamethasone
-  "CFR_SARI_ByAge"=c(0.125893251, 0.12261338, 0.135672867, 0.152667869, 0.174303077, 0.194187895,
-    0.209361731, 0.224432564, 0.237013516, 0.125, 0.125, 0.125, 0.125, 0.1257277, 0.37110474,  0.421151485, 0.5782234,  0.6455841,  0.6930401
-  ),
-  "CFR_ILI_ByAge"=c(
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  0,  0,  0),
-  "Prop_Hosp_ByAge"=c(0.03, 0.0026 ,  0.00084 , 0.00042 ,0.00080, 0.0026, 0.0040 , 0.0063 , 0.012,  0.019,  0.023,  0.040,  0.096,  0.10,  0.24 ,  0.50, 0.6, 0.7,0.8),
-  "Case_Hosp_ByAge"=c( 0.039,  0.001,  0.006,  0.009,  0.026 , 0.040,  0.042  ,0.045,  0.050,  0.074,  0.138,  0.198,  0.247,  0.414,  0.638,  
-                       1.000,1.00 ,1.00 ,1.00) )
-# Admissions to April 30 0-5 839 6-17 831 18-65 42019 65-84 42640 85+ 20063
-# https://www.england.nhs.uk/statistics/statistical-work-areas/covid-19-hospital-activity/
-# TEST Adjust SARI to relate to actual admissions
-# covidsimAge$Prop_SARI_ByAge<-covidsimAge$Prop_Critical_ByAge*covidsimAge$Prop_Hosp_ByAge
-# Deatherror from colSums(deathdat[2:20])/colSums(casedat[2:20])/(colSums(DEATH[2:20]/colSums(newMILD[2:20]+newILI[2:20])))
-# IHR from Knock SM S9  CHR from Knock S8
-covidsimAge$Prop_Mild_ByAge= 1.0 - (covidsimAge$Prop_Critical_ByAge+covidsimAge$Prop_ILI_ByAge+covidsimAge$Prop_SARI_ByAge)
-
 #### Read data ####
+# distributions and populations
+covidsimAge<-covidSimData()
+population<-getPop()
 # Base URL to get the UK government data
 baseurl <- "https://api.coronavirus.data.gov.uk/v2/data?"
 
 # Start and end date - the date to collect data from
 # First month or so will be equilibration, especially if started at a time of high caseload
-startdate <- as.Date("2021/03/09") #as.Date("2020/08/09")
+startdate <- as.Date("2021/05/09") #as.Date("2020/08/09")
 
 # Lose only the last day of data - use tail correction for reporting delay
 # Weekend data can be sketchy Extend the enddate if run on Monday morning
@@ -856,7 +769,7 @@ smoothcases <- smooth.spline(comdat$allCases, df = 20)
 ninit <- as.numeric(1:nrow(comdat))/as.numeric(1:nrow(comdat))
 dfR <- data.frame(x=1.0:length(comdat$date),
                   date=comdat$date, itoR=ninit, stratR=ninit, rawR=ninit,  fpR=ninit,  weeklyR=ninit,  bylogR=ninit,
-                  p00=ninit,  p05=ninit,  p10=ninit,  p15=ninit,  p20=ninit,  p25=ninit,  p30=ninit,
+                  ONS=ninit, p00=ninit,  p05=ninit,  p10=ninit,  p15=ninit,  p20=ninit,  p25=ninit,  p30=ninit,
                   p35=ninit,  p40=ninit,  p45=ninit,  p50=ninit,  p55=ninit,  p60=ninit,  p65=ninit,
                   p70=ninit,  p75=ninit,  p80=ninit,  p85=ninit,  p90=ninit, x05=ninit, x15=ninit,
                   x25=ninit, x45=ninit, x65=ninit, x75=ninit, regions=ninit, smoothcasesR=ninit)
@@ -873,6 +786,34 @@ if(any(compEng$CASE==0)){
   }
 }
 rat <- regcases
+#Add in ONSdata by hand.  for 12/4 use this to get R
+engpop=56989570
+scotpop=5475660
+eng_prev<-c(
+  0.05,0.05,0.05,0.07,0.11,0.19,0.21,0.41,0.62,
+  0.79,1.04,1.13,1.20,1.22,1.16,0.96,0.88,
+  1.04,1.18,1.47,2.06,2.08,1.88,1.87,1.55,
+  1.28,0.88,0.69,0.45,0.37,0.29,0.30,0.27,
+  0.30, 0.21,0.17, 0.10,0.08, 0.07,0.09, 0.09,
+  0.16, 0.18,0.19, 0.22,0.39,0.61,1.06,1.36,
+  1.57,1.32,1.33,1.28,1.39,1.41,1.38,1.28,
+  1.14,1.21,1.44,1.63,1.79,2.02,2.02,1.70,1.51,
+  1.58,1.65,1.64,1.72,2.21,2.83,3.71,6.00,
+  6.85,5.47,4.82,4.83,5.18,4.49,3.84,3.55,
+  3.80,4.87,6.39,7.56,7.60)*engpop/100
+scot_prev<-c(0.05,0.05,0.05,0.07,0.11,0.19, 0.21, 0.41,0.62,0.57,0.71,0.90,0.75,
+             0.64,0.87,0.78,0.82,1.00,0.71,0.69,0.87,1.06,0.99,0.92,0.88,
+             0.67,0.55,0.45,0.30,0.31,0.37,0.41,0.32,0.25,0.20,0.18,0.16,
+             0.13,0.08,0.05,0.16,0.15,0.18,0.17,0.46,0.68,1.01,1.14,1.24,
+             0.94,0.82,0.53,0.49,0.70,1.32,2.23,2.29,2.28,1.85,1.61,1.26,
+             1.14,1.36,1.25,1.18,1.06,1.44,1.58,1.24,1.27,1.45,1.50,2.57,4.52,5.65,4.49,3.11,
+             3.52,4.01, 4.17, 4.57, 5.33,5.70,7.15,9.00,8.57,7.54)*scotpop/100
+
+approx(eng_prev,n=7*length(eng_prev))$y %>% tail(nrow(comdat))-> comdat$ons_prev
+approx(scot_prev,n=7*length(scot_prev))$y%>% tail(nrow(comdat))-> comdat$scot_ons_prev
+
+
+
 for(i in (2:nrow(regcases))    ){
   rat[i, 2:ncol(regcases)] <- 1 + log(regcases[i, 2:ncol(regcases)]/regcases[(i-1), 2:ncol(regcases)])*genTime
 }
@@ -929,6 +870,7 @@ for(i in ((genTime+1):length(dfR$itoR))){
   dfR$stratR[i]=1+ (comdat$allCases[i]-comdat$allCases[i-1])*genTime/mean(comdat$allCases[(i-1):i])
   dfR$fpR[i]=(1+(comdat$fpCases[i]-comdat$fpCases[i-1])*genTime/(comdat$fpCases[i-1]))
   dfR$bylogR[i]=1+log(comdat$allCases[i]/comdat$allCases[i-1])*genTime
+  dfR$ONS[i]=1+log(comdat$ons_prev[i]/comdat$ons_prev[i-1])*genTime
   dfR$regions[i]=1+log(regcases$regions[i]/regcases$regions[i-1])*genTime
   dfR$p00[i]=1+log(casedat$'00_04'[i]/casedat$'00_04'[i-1])*genTime
   dfR$p05[i]=1+log(casedat$'05_09'[i]/casedat$'05_09'[i-1])*genTime
@@ -995,6 +937,7 @@ smoothweightR <- smooth.spline(dfR$bylogR,df=spdf,w=sqrt(comdat$allCases))
 smoothweightRstrat <- smooth.spline(dfR$stratR,df=spdf,w=sqrt(comdat$allCases))
 smoothweightRito <- smooth.spline(dfR$itoR,df=spdf,w=sqrt(comdat$allCases))
 smoothweightRfp <- smooth.spline(dfR$fpR,df=spdf,w=sqrt(comdat$fpCases))
+rat$smoothONS <- smooth.spline(dfR$ONS,df=spdf,w=sqrt(comdat$ons_prev))$y
 rat$smoothScotland <- smooth.spline(rat$Scotland,df=spdf,w=sqrt(regcases$Scotland))$y
 rat$smoothNW <-smooth.spline(rat$`North West`,df=spdf,w=sqrt(regcases$`North West`))$y
 rat$smoothNEY <-smooth.spline(rat$NE_Yorks,df=spdf,w=sqrt(regcases$NE_Yorks))$y
@@ -1145,8 +1088,8 @@ R_Quant <- list()
 ### Smoothing Filters
 s1 <- 0.05
 s2 <- 0.1
-s3 <- 0.15
-s4 <- 0.2
+s3 <- 0.2
+s4 <- 0.3
 
 
 tmp <-estimate_R(dfR$bylogR,dfR$date,comdat$allCases)
@@ -1482,7 +1425,7 @@ lines(rowSums(compEng$newMILD[11:20]+compEng$newILI[11:20]),col="red",x=compEng$
 plot(Hospital$UK$critdat,x=Hospital$UK$date,ylab="ICU Occupation",xlab="Date",xlim=c(startplot,endplot))
 lines(rowSums(predEng$CRIT[2:20]),col="blue",x=predEng$CRIT$date)
 
-plot(1.1*rowSums(predEng$DEATH[2:20]),col="blue",x=predEng$DEATH$date, type="l",ylab="Deaths"
+plot(rowSums(predEng$DEATH[2:20]),col="blue",x=predEng$DEATH$date, type="l",ylab="Deaths"
      ,xlab="Date",xlim=c(startplot,endplot-60))
 points(rowSums(deathdat[2:20]),x=deathdat$date)
 }
