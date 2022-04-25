@@ -32,7 +32,7 @@ The code is in pure R and developed in and best run through Rstudio.  There are 
 Workflow:
 
 1. Run **Covid_trimmed.R.**  This sets up the global parameters for the UK, calculates all R. parameters, generates plots for interactive monitoring, and does the compartment simulation for England, including medium term predictions.  
-1. Legacy code from the WSS paper calculating CFR variation with time may be called from `medrxiv.R` and `age_pdfplot.R`, but these must be called by editing the calls in the code to:
+2. Legacy code from the WSS paper calculating CFR variation with time may be called from `medrxiv.R` and `age_pdfplot.R`, but these must be called by editing the calls in the code to:
    ```R
    medout <- MedrxivPaper()
    ```
@@ -40,10 +40,15 @@ Workflow:
    ```R
    pdfpo <- TRUE
    ```
-1. Run **ScottishData.R**. This reads data from the Scottish government, reformats it, and runs the compartment model.  The code ends with some monitoring plots
-1. Run **CC_write.R**. to obtain R-numbers, growth rates, England and Scotland compartment model data in CrystalCast format
-1. Run **Regional.R**. to read data and obtain compartment model data for 7 NHS England Regions in CrystalCast format.
-1. **Sanity check**. R-numbers can be sensitive to late posting on recent cases, and wrong R-numbers tip over into the medium term predictions.  Before believing anything, always check the last few days of input case data for anomalies.  The parameter "enddate" can be increased to eliminate incomplete data.  If R is sensitive to enddate, there is a data problem.
+3. Run **ScottishData.R**. This reads data from the Scottish government, reformats it, and runs the compartment model.  The code ends with some monitoring plots
+4. Run **Regional.R**. to read data and obtain compartment model data for 7 NHS England Regions, and write outputs in CrystalCast format.
+5. **Sanity check**. R-numbers can be sensitive to late posting on recent cases, and wrong R-numbers tip over into the medium term predictions.  Medium term predictions are very sensitive to the calculated parameters R_BestGuess$.   Before believing anything, always check these and if not sensible investigate the last few days of input case data for anomalies.  The parameter "enddate" can be increased to eliminate incomplete data.  If R is sensitive to enddate, there is a data problem.
+
+scenarios - where a range of initial values for R_BestGuess$ are set rather than calculated - can be run using the Scenarios.R code.
+
+## Predictions for SPI-MO and JBC
+
+WSS is part of the suite of codes contributing to UK and Scottish government real-time  modelling
 
 ## Licensing
 
