@@ -132,6 +132,7 @@ Predictions <- function(input,R_input,predtime,pop){
     #NotS=(predCASE[iday,2:20])/pop[2:20]*Missing_incidence
     #S=(S-NotS)
 
+
     # R decays back to 1 with growth rate down 5% a day, faster if larger
     # R is the same in all age groups
     # This come from the network model as the epidemic behaviour becomes wavelike
