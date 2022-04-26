@@ -126,7 +126,7 @@ Predictions <- function(input,R_input,predtime,pop){
     #new_Omicron=today_Omicron-yesterday_Omicron
     #  New omicron cases growing with R=3  (test R=4)
     #  For omicron, R_input gets bigger and bigger
-
+ 
 
     # Update number of susceptibles by Newly not susceptible
     NotS=(predCASE[iday,2:20])/pop[2:20]*Missing_incidence
