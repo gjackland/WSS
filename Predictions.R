@@ -126,11 +126,11 @@ Predictions <- function(input,R_input,predtime,pop){
     #new_Omicron=today_Omicron-yesterday_Omicron
     #  New omicron cases growing with R=3  (test R=4)
     #  For omicron, R_input gets bigger and bigger
+ 
 
-
-    # Update number of susceptibles by Newly not susceptible
-    NotS=(predCASE[iday,2:20])/pop[2:20]*Missing_incidence
-    S=(S-NotS)
+    # Infection immunity from omicron weak and cancelled out by waning immunity
+    #NotS=(predCASE[iday,2:20])/pop[2:20]*Missing_incidence
+    #S=(S-NotS)
 
     # R decays back to 1 with growth rate down 5% a day, faster if larger
     # R is the same in all age groups
