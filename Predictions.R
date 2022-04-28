@@ -43,7 +43,7 @@ Predictions <- function(input,R_input,predtime,pop){
   enddateP<-CASE$date[lengthofdata]
 
   #  Maximum pre-existing immunity from old infections only 20% as per IC report 49, by age group
-  NotS0=min(1.0,colSums(CASE[2:20])/pop[2:20]*Missing_incidence)*0.2
+  NotS0=min(1.0,colSums(CASE[2:20])/pop[2:20])*0.2
   S=1.0-NotS0
 
 #  Boost R_input by the already susceptible.
@@ -119,18 +119,7 @@ Predictions <- function(input,R_input,predtime,pop){
     ##  we can use MLP Rx.x as an input here
     
 
-    #oooooooooo  Omicron fraction grows as 2 day doubling time
-    #yesterday_Omicron=today_Omicron
-    #x= (iday-Omicrondate)*1.0/genTime
-    #today_Omicron=1.0/(1.0+exp(-x))
-    #new_Omicron=today_Omicron-yesterday_Omicron
-    #  New omicron cases growing with R=3  (test R=4)
-    #  For omicron, R_input gets bigger and bigger
 
-
-    # Update number of susceptibles by Newly not susceptible
-    NotS=(predCASE[iday,2:20])/pop[2:20]*Missing_incidence
-    S=(S-NotS)
 
     # R decays back to 1 with growth rate down 5% a day, faster if larger
     # R is the same in all age groups
@@ -138,15 +127,11 @@ Predictions <- function(input,R_input,predtime,pop){
     # 5% is probably too slow, but more importantly the decay should (probably) 
     # depend on the number of cases as that measures "breakthrough" into new regions
     # 
-    #  R_input is average of delta & omicron R_input =R_d*fracd+R_o*frac_o
-    #25/1/22 Omicron dominant - remove effect
-    #R_input=R_input*(1.0+new_Omicron*3)
-    #if(sum(R_input*S)/19 > 1.4) {R_input=(R_input-1)*0.95+1.0}
+
     R_input= ((R_input-1)*0.95+1.0)  
     #  Infections not confined by age group - use an average
     #  Assume Omicron established by 12/4/22 - immunity built into R_input
-    S=1
-    R_eff=sum(R_input*S)/19
+    R_eff=sum(R_input)/19
     predCASE[(ipred+1),(2:20)]<-predCASE[ipred,(2:20)]*exp((R_input-1)/genTime)
     predCASE[ipred+1,1]<-enddateP+ipred
     ipred=ipred+1 
