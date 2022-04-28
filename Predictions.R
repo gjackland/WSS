@@ -115,11 +115,9 @@ Predictions <- function(input,R_input,predtime,pop){
     CRIT[iday,agerange]=CRIT[iday,agerange]+newCRIT[iday,agerange]-oldCRIT[iday,agerange]+CRIT[(iday-1),agerange]
     CRITREC[iday,agerange]=CRITREC[iday,agerange]+newCRITREC[iday,agerange]-oldCRITREC[iday,agerange]+CRITREC[(iday-1),agerange]
     #
-    ##  Finally, estimate cases for tomorrow.  This uses an R value calculated above, but for CrystalCast purposes from
-    ##  we can use MLP Rx.x as an input here
+    ##  Finally, estimate cases for tomorrow.  This uses an R value calculated above, but for CrystalCast purposes
+    ##  we can use MLP Rx.x as an input here. Previous code assuming burgeoning omicron-induced immunity removed
     
-
-
 
     # R decays back to 1 with growth rate down 5% a day, faster if larger
     # R is the same in all age groups
