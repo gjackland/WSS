@@ -63,7 +63,7 @@ startdate <- as.Date("2021/05/09") #as.Date("2020/08/09")
 # Lose only the last day of data - use tail correction for reporting delay
 # Weekend data can be sketchy Extend the enddate if run on Monday morning
 
-reporting_delay=5
+reporting_delay=6
 
 enddate <-  Sys.Date()-reporting_delay
 #  Six week prediction
@@ -561,10 +561,11 @@ Hospital$UK$newsaridat <- na.locf(Hospital$UK$newsaridat)
 Hospital$UK$critdat <- na.locf(Hospital$UK$critdat)
 
 
-# Add the Welsh and Northern Ireland cases data, 
+# Add the Welsh and Northern Ireland cases data,  no age stratifications 
+# Problems can occur here if these are updates before/after UK
 
-regcases$Wales <- walesdat$allCases[1:(enddate-startdate+1)]
-regcases$NI <- NIdat$allCases[1:(enddate-startdate+1)]
+regcases$Wales <- walesdat$allCases#[1:(enddate-startdate+1)]
+regcases$NI <- NIdat$allCases#[1:(enddate-startdate+1)]
 #remove random new Scottish "region"
 within(regcases, rm("Golden Jubilee National Hospital"))->jnk
 regcases<-jnk
@@ -800,14 +801,14 @@ eng_prev<-c(
   1.14,1.21,1.44,1.63,1.79,2.02,2.02,1.70,1.51,
   1.58,1.65,1.64,1.72,2.21,2.83,3.71,6.00,
   6.85,5.47,4.82,4.83,5.18,4.49,3.84,3.55,
-  3.80,4.87,6.39,7.56,7.60)*engpop/100
+  3.80,4.87,6.39,7.56,7.60,6.92)*engpop/100
 scot_prev<-c(0.05,0.05,0.05,0.07,0.11,0.19, 0.21, 0.41,0.62,0.57,0.71,0.90,0.75,
              0.64,0.87,0.78,0.82,1.00,0.71,0.69,0.87,1.06,0.99,0.92,0.88,
              0.67,0.55,0.45,0.30,0.31,0.37,0.41,0.32,0.25,0.20,0.18,0.16,
              0.13,0.08,0.05,0.16,0.15,0.18,0.17,0.46,0.68,1.01,1.14,1.24,
              0.94,0.82,0.53,0.49,0.70,1.32,2.23,2.29,2.28,1.85,1.61,1.26,
              1.14,1.36,1.25,1.18,1.06,1.44,1.58,1.24,1.27,1.45,1.50,2.57,4.52,5.65,4.49,3.11,
-             3.52,4.01, 4.17, 4.57, 5.33,5.70,7.15,9.00,8.57,7.54)*scotpop/100
+             3.52,4.01, 4.17, 4.57, 5.33,5.70,7.15,9.00,8.57,7.54,5.98)*scotpop/100
 
 approx(eng_prev,n=7*length(eng_prev))$y %>% tail(nrow(comdat))-> comdat$ons_prev
 approx(scot_prev,n=7*length(scot_prev))$y%>% tail(nrow(comdat))-> comdat$scot_ons_prev
@@ -933,11 +934,11 @@ nospl <- 8
 spdf <- length(dfR$rawR)/14
 lospan <- 0.3
 
-smoothweightR <- smooth.spline(dfR$bylogR,df=spdf,w=sqrt(comdat$allCases))
-smoothweightRstrat <- smooth.spline(dfR$stratR,df=spdf,w=sqrt(comdat$allCases))
-smoothweightRito <- smooth.spline(dfR$itoR,df=spdf,w=sqrt(comdat$allCases))
-smoothweightRfp <- smooth.spline(dfR$fpR,df=spdf,w=sqrt(comdat$fpCases))
-rat$smoothONS <- smooth.spline(dfR$ONS,df=spdf,w=sqrt(comdat$ons_prev))$y
+smoothweightR <- smooth.spline(dfR$bylogR,df=spdf,w=sqrt(comdat$allCases))$y
+smoothweightRstrat <- smooth.spline(dfR$stratR,df=spdf,w=sqrt(comdat$allCases))$y
+smoothweightRito <- smooth.spline(dfR$itoR,df=spdf,w=sqrt(comdat$allCases))$y
+dfR$smoothweightRfp <- smooth.spline(dfR$fpR,df=spdf,w=sqrt(comdat$fpCases))$y
+dfR$smoothONS <- smooth.spline(dfR$ONS,df=spdf,w=sqrt(comdat$ons_prev))$y
 rat$smoothScotland <- smooth.spline(rat$Scotland,df=spdf,w=sqrt(regcases$Scotland))$y
 rat$smoothNW <-smooth.spline(rat$`North West`,df=spdf,w=sqrt(regcases$`North West`))$y
 rat$smoothNEY <-smooth.spline(rat$NE_Yorks,df=spdf,w=sqrt(regcases$NE_Yorks))$y
@@ -956,8 +957,6 @@ jnkR=rat$`NHS Greater Glasgow and Clyde`
 jnkC=regcases$`NHS Greater Glasgow and Clyde`
 rat$smoothGlasgow <-smooth.spline(jnkR,df=spdf,w=sqrt(jnkC))$y
 rat$smoothLon <-smooth.spline(rat$London,df=spdf,w=sqrt(regcases$London))$y
-smoothweightR$date<-comdat$date
-smoothweightRfp$date<-dfR$date
 #  Piecewise R between lockdowns only if its within the startdate-enddate period
 if(lock1>1){
 smoothR1<-smooth.spline(dfR$bylogR[1:(lock1-1)],df=lock1/14)
@@ -988,7 +987,7 @@ rm(smoothR1,smoothR2,smoothR3,smoothR4,smoothRend,jnkR,jnkC)
 #  All cases and Regions
 if(interactive()){
 
-  plot(smoothweightR$y,ylab="Regional R-number",xlab="Date",x=dfR$date)
+  plot(dfR$smoothweightR,ylab="Regional R-number",xlab="Date",x=dfR$date)
 
   for (i in 8:17){
     lines(smooth.spline(na.omit(dfR[i]),df=20)$y,col=i,x=dfR$date[!is.na(dfR[i])])
@@ -1008,7 +1007,7 @@ if(interactive()){
   }
 
   # Generate the graph
-  data.frame(x=dfR$date, y=smoothweightR$y) %>%
+  data.frame(x=dfR$date, y=dfR$smoothweightR) %>%
     ggplot(aes(x, y)) + geom_point(alpha = 0.5) +
     theme_bw()  + xlab("Date") + ylab("Regional R-number") +
     geom_line(data=d,aes(x = x, y = y, colour = type, linetype = type) )
@@ -1016,12 +1015,12 @@ if(interactive()){
   # remove temporary tibble
   rm(d)
 
-  plot(dfR$bylogR,x=smoothweightR$date,ylab="R-number",xlab="",
+  plot(dfR$bylogR,x=dfR$date,ylab="R-number",xlab="",
        title("R, England"),ylim=c(0.6,1.6),xlim=plotdate,cex.lab=1.6, cex.axis=1.6, cex.main=1.6, cex.sub=1.6)
   lines(Rest$England_LowerBound,x=Rest$Date-sagedelay,lwd=2)
   lines(y=Rest$England_UpperBound,x=Rest$Date-sagedelay,lwd=2)
   if(exists("dfR$piecewise")){lines(dfR$piecewise,col="violet",lwd=3,x=dfR$date)}
-  lines(smoothweightR$y,col="blue",lwd=3,x=dfR$date)
+  lines(dfR$smoothweightR,col="blue",lwd=3,x=dfR$date)
   lines(predict(loess(itoR ~ x, data=dfR,span=0.3,weight=sqrt(comdat$allCases))),col='green',x=dfR$date,lwd=3)
   #lines(predict(loess(itoR ~ x, data=dfR,span=0.3)),col='green',x=dfR$date)
   lines(predict(loess(bylogR ~ x, data=dfR,span=0.3,weight=sqrt(comdat$allCases))),col='red',x=dfR$date,lwd=3)
@@ -1037,7 +1036,7 @@ if(interactive()){
                     fill = "red",
                     colour = "black"), alpha = 0.1, inherit.aes = FALSE, show.legend = FALSE) +
     geom_line(data = dfR, aes(x = date, y = piecewise), colour = "violet", size = 1.25) +
-    geom_line(data = data.frame(x = dfR$date, y = smoothweightR$y), aes(x = x, y = y), colour = "blue", size = 1.25) +
+    geom_line(data = data.frame(x = dfR$date, y = dfR$smoothweightR), aes(x = x, y = y), colour = "blue", size = 1.25) +
     geom_line(data = data.frame(x = dfR$date,
                                 y = predict(loess(itoR ~ x, data = dfR, span = 0.3, weight = sqrt(comdat$allCases)))),
               aes(x = x, y = y), colour = "green", size = 1.25) +
@@ -1047,7 +1046,7 @@ if(interactive()){
     theme(plot.title = element_text(hjust = 0.5))
 
 
-  plot(dfR$piecewise,x=smoothweightR$date,ylab="R-number",xlab="",
+  plot(dfR$piecewise,x=dfR$smoothweightR,ylab="R-number",xlab="",
        title("R, England"),ylim=c(0.6,1.4),xlim=plotdate,cex.lab=1.5, cex.axis=1.5, cex.main=1.5, cex.sub=1.6)
   lines(Rest$England_LowerBound,x=(Rest$Date-sagedelay))
   lines(y=Rest$England_UpperBound,x=Rest$Date-sagedelay)
@@ -1091,44 +1090,44 @@ s2 <- 0.1
 s3 <- 0.2
 s4 <- 0.3
 
-
-tmp <-estimate_R(dfR$bylogR,dfR$date,comdat$allCases)
+#  Daily stats are quite messed up since end of PCR testing.  Use smoothed R estimates for Quartiles
+tmp <-estimate_R(rat$smoothEngland,dfR$date,comdat$allCases)
 R_BestGuess$England <-tmp[1]
 R_Quant$England <-tmp[2:6]
 
 
-tmp <-estimate_R(rat$Scotland,rat$date,regcases$Scotland)
+tmp <-estimate_R(rat$smoothScotland,rat$date,regcases$Scotland)
 R_BestGuess$Scotland <-tmp[1]
 R_Quant$Scotland <-tmp[2:6]
 
-tmp <-estimate_R(rat$London,rat$date,regcases$London)
+tmp <-estimate_R(rat$smoothLon,rat$date,regcases$London)
 R_BestGuess$Lon <-tmp[1]
 R_Quant$Lon <-tmp[2:6]
 
-tmp <-estimate_R(rat$Midlands,rat$date,regcases$Midlands)
+tmp <-estimate_R(rat$smoothMD,rat$date,regcases$Midlands)
 R_BestGuess$Midlands <-tmp[1]
 R_Quant$Midlands <-tmp[2:6]
 
-tmp <-estimate_R(rat$'North West',rat$date,regcases$'North West')
+tmp <-estimate_R(rat$smoothNW,rat$date,regcases$'North West')
 R_BestGuess$NW <-tmp[1]
 R_Quant$NW <-tmp[2:6]
 
-tmp <-estimate_R(rat$NE_Yorks,rat$date,regcases$NE_Yorks)
+tmp <-estimate_R(rat$smoothNEY,rat$date,regcases$NE_Yorks)
 R_BestGuess$NEY <-tmp[1]
 R_Quant$NEY <-tmp[2:6]
 
-tmp <-estimate_R(rat$`East of England`,rat$date,regcases$`East of England`)
+tmp <-estimate_R(rat$smoothEE,rat$date,regcases$`East of England`)
 R_BestGuess$EE <-tmp[1]
 R_Quant$EE <-tmp[2:6]
 
-tmp <-estimate_R(rat$`South East`,rat$date,regcases$`South East`)
+tmp <-estimate_R(rat$smoothSE,rat$date,regcases$`South East`)
 R_BestGuess$SE <-tmp[1]
 R_Quant$SE <-tmp[2:6]
-tmp <-estimate_R(rat$`South West`,rat$date,regcases$`South West`)
+tmp <-estimate_R(rat$smoothSW,rat$date,regcases$`South West`)
 R_BestGuess$SW <-tmp[1]
 R_Quant$SW <-tmp[2:6]
 
-tmp <-estimate_R(rat$Wales,rat$date,regcases$Wales)
+tmp <-estimate_R(rat$smoothWales,rat$date,regcases$Wales)
 R_BestGuess$Wales <-tmp[1]
 R_Quant$Wales <-tmp[2:6]
 
@@ -1136,15 +1135,15 @@ tmp <-estimate_R(dfR$regions,dfR$date,regcases$England)
 R_BestGuess$Regions <-tmp[1]
 R_Quant$Regions <-tmp[2:6]
 
-tmp <-estimate_R(rat$NI,rat$date,regcases$NI)
+tmp <-estimate_R(rat$smoothNI,rat$date,regcases$NI)
 R_BestGuess$NI <-tmp[1]
 R_Quant$NI <-tmp[2:6]
 
-tmp <-estimate_R(rat$`NHS Lothian`,rat$date,regcases$NI)
+tmp <-estimate_R(rat$smoothLothian,rat$date,regcases$NI)
 R_BestGuess$Lothian <-tmp[1]
 R_Quant$Lothian <-tmp[2:6]
 
-tmp <-estimate_R(rat$`NHS Greater Glasgow and Clyde`,rat$date,regcases$NI)
+tmp <-estimate_R(rat$smoothGlasgow,rat$date,regcases$NI)
 R_BestGuess$Glasgow <-tmp[1]
 R_Quant$Glasgow <-tmp[2:6]
 
@@ -1230,7 +1229,7 @@ R_Quant$x75 <-tmp[2:6]
 
 if(interactive()){
 
-  plot(smoothweightR$y,ylab="R-number",xlab="Day",ylim=c(0.5,1.6))
+  plot(dfR$smoothweightR,ylab="R-number",xlab="Day",ylim=c(0.5,1.6))
   #  Plot R continuous with many splines.
   for (ismooth in 4:30){
     #  lines(smooth.spline(dfR$bylogR,df=ismooth,w=sqrt(comdat$allCases)))
@@ -1250,7 +1249,7 @@ if(interactive()){
   }
 
   # plot the data
-  data.frame(x = smoothweightR$x,y = smoothweightR$y) %>%
+  data.frame(x = dfR$date,y = dfR$smoothweightR) %>%
   ggplot(aes(x = x, y = y)) + geom_point(alpha = 0.25) +
   theme_bw() + xlab("Day") + ylab("R-number") +
   geom_line(data = d, aes(x = x, y = y, colour = factor(type)), alpha = 0.25, show.legend = FALSE)

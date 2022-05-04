@@ -19,7 +19,7 @@ version <- 0.1
 today <- today()
 ageband <-  "All"
 # Region should be inherited from most recent CCcompartment run, e.g. region <- "Scotland"
-valuetype <- "R"
+Valuetype <- "R"
 
 #  Initiate CC with Scotland default - overwrite later
 
@@ -37,7 +37,7 @@ CC <- data.frame(
   "Year of Value" = year(enddate),
   AgeBand = ageband,
   Geography = region,
-  ValueType = valuetype,
+  ValueType = Valuetype,
   Value = R_region,
   "Quantile 0.05" = Q_region[1],
   "Quantile 0.1" = "",
@@ -61,17 +61,19 @@ CC <- data.frame(
   check.names = FALSE
 )
   CCtmp<-CC
+#  systemic uncertainty estimate (fractional)  
+  sigma=0.1
   #  R number Nowcast.  Error mainly comes from uncertainty in GenTime
   CCtmp$Scenario="Nowcast"
   CCtmp$Geography=region
   CCtmp$ValueType="R"
   for (d in startwrite:(length(Rseries)-3)){
     CCtmp$Value = Rseries[d]
-    CCtmp$"Quantile 0.05"=min(Rseries[(d-3):(d+3)])-0.15
-    CCtmp$"Quantile 0.25"=min(Rseries[(d-3):(d+3)])-0.075
+    CCtmp$"Quantile 0.05"=min(Rseries[(d-3):(d+3)])*0.85
+    CCtmp$"Quantile 0.25"=min(Rseries[(d-3):(d+3)])*0.925
     CCtmp$"Quantile 0.5"=Rseries[d]
-    CCtmp$"Quantile 0.75"=max(Rseries[(d-3):(d+3)])+0.075
-    CCtmp$"Quantile 0.95"=max(Rseries[(d-3):(d+3)])+0.15
+    CCtmp$"Quantile 0.75"=max(Rseries[(d-3):(d+3)])*1.075
+    CCtmp$"Quantile 0.95"=max(Rseries[(d-3):(d+3)])*1.15
     CCtmp$"Day of Value" = day(rat$date[d])
     CCtmp$"Month of Value" = month(rat$date[d])
     CCtmp$"Year of Value" = year(rat$date[d])
@@ -113,19 +115,23 @@ CCtmp$ValueType="hospital_inc"
 
 #  in addition to R-uncertainty, add uncertainty in missing_incidence from Feb2022 due to
 #  removal of confirmatory PCR tests
-
-R_error=0.2
+#
+#  Uncertainty in two parts - in data collection +-10%, R_number cumulative projection.  sqrt capped at 0 - assuming random walk.
+# 0 would mean the infection dies out faster than the generation time, which might happen from large R uncertainty.  
+#
+R_error=  exp(  (sqrt(1.0+Q_region-R_region)-1.0)  /genTime)
+cum_error=R_error
 
 for (d in startwrite:endwrite){
-  if(CCcomp$CASE$date[d]>(today-reporting_delay)){ R_error=R_error+0.2/genTime
-  CCtmp$Scenario="MTP"}
+  if(CCcomp$CASE$date[d]>(today-reporting_delay)){
+  CCtmp$Scenario="MTP"
+  cum_error=cum_error*R_error}
   CCtmp$Value = sum(CCcomp$newSARI[d,2:20])/ratio$newhosp
-  NStoday = sum(CCcomp$newSARI[d,2:20])
-  CCtmp$"Quantile 0.05"=max(0,NStoday*0.7/(1+18*sqrt(sum(CCcomp$newSARI[(d-6):d,2:20])/7)*R_error/NStoday))/ratio$newhosp
-  CCtmp$"Quantile 0.25"=max(0,NStoday*0.9/(1+6*sqrt(sum(CCcomp$newSARI[(d-6):d,2:20])/7)*R_error/NStoday))/ratio$newhosp
+  CCtmp$"Quantile 0.05"=max(0,CCtmp$Value*cum_error[1]*(1.0-3*sigma))
+  CCtmp$"Quantile 0.25"=max(0,CCtmp$Value*cum_error[2]*(1.0-sigma))
   CCtmp$"Quantile 0.5"=CCtmp$Value
-  CCtmp$"Quantile 0.75"=NStoday*1.1*(1+6*sqrt(sum(CCcomp$newSARI[(d-6):d,2:20])/7)*R_error/NStoday)/ratio$newhosp
-  CCtmp$"Quantile 0.95"=NStoday*1.3*(1+18*sqrt(sum(CCcomp$newSARI[(d-6):d,2:20])/7)*R_error/NStoday)/ratio$newhosp
+  CCtmp$"Quantile 0.75"=CCtmp$Value*cum_error[4]*(1.0+sigma)
+  CCtmp$"Quantile 0.95"=CCtmp$Value*cum_error[5]*(1.0+3*sigma)
   CCtmp$"Day of Value" = day(CCcomp$newSARI$date[d])
   CCtmp$"Month of Value" = month(CCcomp$newSARI$date[d])
   CCtmp$"Year of Value" = year(CCcomp$newSARI$date[d])
@@ -135,17 +141,18 @@ for (d in startwrite:endwrite){
 
 CCtmp$ValueType="type28_death_inc_line"
 CCtmp$Scenario="MTP"
-R_error=0.2
+
+cum_error=R_error
 for (d in startwrite:endwrite){
-  if(CCcomp$DEATH$date[d]>(today-reporting_delay)){ CCtmp$Scenario="MTP"
-                                                    R_error=R_error+0.2/genTime}  
+  if(CCcomp$DEATH$date[d]>(today-reporting_delay)){ 
+    CCtmp$Scenario="MTP"
+    cum_error=cum_error*R_error}
   CCtmp$Value = sum(CCcomp$DEATH[d,2:20])/ratio$death
-  NStoday=sum(CCcomp$DEATH[d,2:20])
-  CCtmp$"Quantile 0.05"=max(0,NStoday/(1+sqrt(sum(CCcomp$DEATH[(d-6):d,2:20])/7)*12*R_error/NStoday))/ratio$death
-  CCtmp$"Quantile 0.25"=max(0,NStoday/(1+sqrt(sum(CCcomp$DEATH[(d-6):d,2:20])/7)*4*R_error/NStoday))/ratio$death
+  CCtmp$"Quantile 0.05"=max(0,CCtmp$Value*cum_error[1]*(1.0-3*sigma))
+  CCtmp$"Quantile 0.25"=max(0,CCtmp$Value*cum_error[2]*(1.0-sigma))
   CCtmp$"Quantile 0.5"=CCtmp$Value
-  CCtmp$"Quantile 0.75"=NStoday*(1+sqrt(sum(CCcomp$DEATH[(d-6):d,2:20])/7)*4*R_error/NStoday)/ratio$death
-  CCtmp$"Quantile 0.95"=NStoday*(1+sqrt(sum(CCcomp$DEATH[(d-6):d,2:20])/7)*12*R_error/NStoday)/ratio$death
+  CCtmp$"Quantile 0.75"=CCtmp$Value*cum_error[4]*(1.0*sigma)
+  CCtmp$"Quantile 0.95"=CCtmp$Value*cum_error[5]*(1.0+3*sigma)
   CCtmp$"Day of Value" = day(CCcomp$DEATH$date[d])
   CCtmp$"Month of Value" = month(CCcomp$DEATH$date[d])
   CCtmp$"Year of Value" = year(CCcomp$DEATH$date[d])
@@ -164,25 +171,22 @@ for (d in startwrite:endwrite){
 Missing_prevalence=1.3*1.5
 Missing_incidence=2.2*1.5
 scalefac=Missing_incidence
-if(region!="Scotland"){
-  if(region!="Northern Ireland") {scalefac=scalefac*2}
-}
 
 CCtmp$ValueType="incidence"
 CCtmp$Scenario="Nowcast"
-R_error=0.2
+cum_error=R_error
 for (d in startwrite:endwrite){
-  if(CCcomp$CASE$date[d]>(today-reporting_delay)){R_error=R_error+0.2/genTime
+  if(CCcomp$CASE$date[d]>(today-reporting_delay)){
     CCtmp$Scenario="MTP"
     CCtmp$ValueType="infections_inc"
+    cum_error=cum_error*R_error
   }
-  CASEtoday=sum(CCcomp$CASE[d,2:20])
-  CCtmp$Value =   CASEtoday*scalefac
-  CCtmp$"Quantile 0.05"=max(0,CASEtoday/(1+3*R_error))*scalefac
-  CCtmp$"Quantile 0.25"=max(0,CASEtoday/(1+R_error))*scalefac
-  CCtmp$"Quantile 0.5"=CASEtoday*scalefac
-  CCtmp$"Quantile 0.75"=CASEtoday*(1+R_error)*scalefac
-  CCtmp$"Quantile 0.95"=CASEtoday*(1+3*R_error)*scalefac
+  CCtmp$Value = sum(CCcomp$CASE[d,2:20])*Missing_incidence
+  CCtmp$"Quantile 0.05"=max(0,CCtmp$Value*cum_error[1]*(1.0-3*sigma))
+  CCtmp$"Quantile 0.25"=max(0,CCtmp$Value*cum_error[2]*(1.0-sigma))
+  CCtmp$"Quantile 0.5"=CCtmp$Value
+  CCtmp$"Quantile 0.75"=CCtmp$Value*cum_error[4]*(1.0+sigma)
+  CCtmp$"Quantile 0.95"=CCtmp$Value*cum_error[5]*(1.0+3*sigma)
   CCtmp$"Day of Value" = day(CCcomp$CASE$date[d])
   CCtmp$"Month of Value" = month(CCcomp$CASE$date[d])
   CCtmp$"Year of Value" = year(CCcomp$CASE$date[d])
@@ -195,19 +199,20 @@ for (d in startwrite:endwrite){
 # There is some difficulty about the ONS data c/f e.g. https://www.medrxiv.org/content/10.1101/2021.02.09.21251411v1.full.pdf
 CCtmp$ValueType="prevalence"
 CCtmp$Scenario="Nowcast"
-R_error=0.2
+cum_error=R_error
 for (d in startwrite:(endwrite)){
-  if(CCcomp$CASE$date[d]>(today-reporting_delay)){R_error=R_error+0.2/genTime 
+  if(CCcomp$CASE$date[d]>(today-reporting_delay)){
   CCtmp$Scenario="MTP"
   CCtmp$ValueType="prevalence_mtp"
+  cum_error=cum_error*R_error
   }
   PREV= sum(CCcomp$ILI[d,2:20]+CCcomp$SARI[d,2:20])+sum(CCcomp$CASE[d:(d+4),2:20])*scalefac
   CCtmp$Value=PREV*Missing_prevalence/pop*100
-  CCtmp$"Quantile 0.05"=CCtmp$Value/(1.0+3*R_error)
-  CCtmp$"Quantile 0.25"=CCtmp$Value/(1.0+R_error)
+  CCtmp$"Quantile 0.05"=max(0,CCtmp$Value*cum_error[1]*(1.0-3*sigma))
+  CCtmp$"Quantile 0.25"=max(0,CCtmp$Value*cum_error[2]*(1.0-sigma))
   CCtmp$"Quantile 0.5"=CCtmp$Value
-  CCtmp$"Quantile 0.75"=CCtmp$Value*(1.0+0.5*R_error)
-  CCtmp$"Quantile 0.95"=CCtmp$Value*(1.0+1.5*R_error)
+  CCtmp$"Quantile 0.75"=CCtmp$Value*cum_error[4]*(1.0+sigma)
+  CCtmp$"Quantile 0.95"=CCtmp$Value*cum_error[5]*(1.0+3*sigma)
   CCtmp$"Day of Value" = day(CCcomp$ILI$date[d])
   CCtmp$"Month of Value" = month(CCcomp$ILI$date[d])
   CCtmp$"Year of Value" = year(CCcomp$ILI$date[d])
@@ -219,19 +224,20 @@ for (d in startwrite:(endwrite)){
 
 CCtmp$ValueType="hospital_prev"
 CCtmp$Scenario="MTP"
-R_error=0.2
+cum_error=R_error
 for (d in startwrite:(endwrite)){
-  if(CCcomp$CASE$date[d]>(today-reporting_delay)){R_error=R_error+0.2/genTime 
+  if(CCcomp$CASE$date[d]>(today-reporting_delay)){
   CCtmp$Scenario="MTP"
   CCtmp$ValueType="hospital_prev"
+  cum_error=cum_error*R_error
   }
   OCC = sum(CCcomp$SARI[d,2:20]+CCcomp$CRIT[d,2:20]+CCcomp$CRITREC[d,2:20])/ratio$hosp
   CCtmp$Value=OCC
-  CCtmp$"Quantile 0.05"=OCC/(1.0+R_error)
-  CCtmp$"Quantile 0.25"=OCC/(1.0+0.33*R_error)
-  CCtmp$"Quantile 0.5"=OCC
-  CCtmp$"Quantile 0.75"=OCC*(1.0+0.25*R_error)
-  CCtmp$"Quantile 0.95"=OCC*(1.0+0.75*R_error)
+  CCtmp$"Quantile 0.05"=max(0,CCtmp$Value*cum_error[1]*(1.0-3*sigma))
+  CCtmp$"Quantile 0.25"=max(0,CCtmp$Value*cum_error[2]*(1.0-sigma))
+  CCtmp$"Quantile 0.5"=CCtmp$Value
+  CCtmp$"Quantile 0.75"=CCtmp$Value*cum_error[4]*(1.0+sigma)
+  CCtmp$"Quantile 0.95"=CCtmp$Value*cum_error[5]*(1.0+3*sigma)
   CCtmp$"Day of Value" = day(CCcomp$SARI$date[d])
   CCtmp$"Month of Value" = month(CCcomp$SARI$date[d])
   CCtmp$"Year of Value" = year(CCcomp$SARI$date[d])
@@ -243,16 +249,5 @@ for (d in startwrite:(endwrite)){
 
 #End Wales NI exclusion ifs
 }}
-
-#  Omit this sections - interferes with Scenarios
-#if(file.exists(filename)){
-#try(
-#wb<-loadWorkbook(filename)
-#addWorksheet(wb,region)
-#writeData(wb,region,CC)
-#saveWorkbook(wb,filename,overwrite = TRUE)
-#} else {}
-#)
-
 return(CC)
 }
