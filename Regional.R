@@ -191,7 +191,8 @@ total_time = min(nrow(deathdat),nrow(casedat),length(Hospital$UK$date))
 
 recent_time<-(total_time-7-reporting_delay):(total_time-reporting_delay-1)
 
-#Ratios
+#Ratios:  For MTPs we scale the various quantities to fit the most recent time data
+#   This automatically compensates for any slowish-varying trends of increased virulence, better treatment waning immunity etc.
 Hospital$Eng$newsaridat=Hospital$NEY$newsaridat+Hospital$NW$newsaridat+
   Hospital$MD$newsaridat+Hospital$EE$newsaridat+
   Hospital$SE$newsaridat+Hospital$SW$newsaridat+

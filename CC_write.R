@@ -62,7 +62,7 @@ CC <- data.frame(
 )
   CCtmp<-CC
 #  systemic uncertainty estimate (fractional)  
-  sigma=0.1
+  sigma=0.15
   #  R number Nowcast.  Error mainly comes from uncertainty in GenTime
   CCtmp$Scenario="Nowcast"
   CCtmp$Geography=region
@@ -151,7 +151,7 @@ for (d in startwrite:endwrite){
   CCtmp$"Quantile 0.05"=max(0,CCtmp$Value*cum_error[1]*(1.0-3*sigma))
   CCtmp$"Quantile 0.25"=max(0,CCtmp$Value*cum_error[2]*(1.0-sigma))
   CCtmp$"Quantile 0.5"=CCtmp$Value
-  CCtmp$"Quantile 0.75"=CCtmp$Value*cum_error[4]*(1.0*sigma)
+  CCtmp$"Quantile 0.75"=CCtmp$Value*cum_error[4]*(1.0+sigma)
   CCtmp$"Quantile 0.95"=CCtmp$Value*cum_error[5]*(1.0+3*sigma)
   CCtmp$"Day of Value" = day(CCcomp$DEATH$date[d])
   CCtmp$"Month of Value" = month(CCcomp$DEATH$date[d])
@@ -168,9 +168,9 @@ for (d in startwrite:endwrite){
 #  with delat/omicron having *much* higher viral loads
 #  Missing Prevalence increases sharply with the withdrawal of free testing
 #  Change by factor of 2 in England & Wales fitted to ONS (DJW offline) from startwrite in 2022.  
-Missing_prevalence=1.3*1.5
-Missing_incidence=2.2*1.5
-scalefac=Missing_incidence
+Missing_prevalence=2.2
+Missing_incidence=2.2
+
 
 CCtmp$ValueType="incidence"
 CCtmp$Scenario="Nowcast"
@@ -206,7 +206,7 @@ for (d in startwrite:(endwrite)){
   CCtmp$ValueType="prevalence_mtp"
   cum_error=cum_error*R_error
   }
-  PREV= sum(CCcomp$ILI[d,2:20]+CCcomp$SARI[d,2:20])+sum(CCcomp$CASE[d:(d+4),2:20])*scalefac
+  PREV= sum(CCcomp$ILI[d,2:20]+CCcomp$SARI[d,2:20])+sum(CCcomp$CASE[d:(d+4),2:20])*Missing_prevalence
   CCtmp$Value=PREV*Missing_prevalence/pop*100
   CCtmp$"Quantile 0.05"=max(0,CCtmp$Value*cum_error[1]*(1.0-3*sigma))
   CCtmp$"Quantile 0.25"=max(0,CCtmp$Value*cum_error[2]*(1.0-sigma))
