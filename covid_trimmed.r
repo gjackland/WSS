@@ -564,8 +564,12 @@ Hospital$UK$critdat <- na.locf(Hospital$UK$critdat)
 # Add the Welsh and Northern Ireland cases data,  no age stratifications 
 # Problems can occur here if these are updates before/after UK
 
-regcases$Wales <- walesdat$allCases#[1:(enddate-startdate+1)]
-regcases$NI <- NIdat$allCases#[1:(enddate-startdate+1)]
+regcases$Wales <- walesdat$allCases[1:nrow(regcases)]
+regcases$NI <- NIdat$allCases[1:nrow(regcases)]
+na.locf(regcases$Wales)
+na.locf(regcases$NI)
+
+
 #remove random new Scottish "region"
 within(regcases, rm("Golden Jubilee National Hospital"))->jnk
 regcases<-jnk

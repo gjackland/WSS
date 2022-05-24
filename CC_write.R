@@ -9,7 +9,7 @@ library(lubridate)
 
 CC_write <- function(CCcomp,region,pop,R_region,Q_region,Rseries,ratio,filename){
 # write from arbitrary start point to six weeks time
-startwrite=length(CCcomp$CASE$date)-180
+startwrite=length(CCcomp$CASE$date)-40
 endwrite=nrow(regcases)+reporting_delay+48
 group <- "Edinburgh"
 model <-  "WSS"
@@ -160,7 +160,7 @@ for (d in startwrite:endwrite){
   CC <- rbind(CC, CCtmp)
 }
 #  Incidence is per 100000
-# Missing_prevalence, deduced from ONS, is the undetected ongoing cases
+# Missing_prevalence, deduced weekly by hand from ONS, is the undetected ongoing cases
 # Missing incidence is the undetected infections. primarily short-lived
 #  Quantiles for the prevalence & incidence represent perceived methodological not statistical errors.
 #  These need more detailed study!
@@ -206,8 +206,9 @@ for (d in startwrite:(endwrite)){
   CCtmp$ValueType="prevalence_mtp"
   cum_error=cum_error*R_error
   }
-  PREV= sum(CCcomp$ILI[d,2:20]+CCcomp$SARI[d,2:20])+sum(CCcomp$CASE[d:(d+4),2:20])*Missing_prevalence
-  CCtmp$Value=PREV*Missing_prevalence/pop*100
+#  Prevalence just from projected caseload and mean duration.   Not adjusted by severity/duration  
+  PREV= sum(CCcomp$CASE[d:(d+12),2:20])*Missing_prevalence
+  CCtmp$Value=PREV/pop*100
   CCtmp$"Quantile 0.05"=max(0,CCtmp$Value*cum_error[1]*(1.0-3*sigma))
   CCtmp$"Quantile 0.25"=max(0,CCtmp$Value*cum_error[2]*(1.0-sigma))
   CCtmp$"Quantile 0.5"=CCtmp$Value
