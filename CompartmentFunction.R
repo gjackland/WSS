@@ -112,7 +112,7 @@ Compartment <- function(cases, csimAge, rCFR, cdat, startc, endc){
   afac <- 1.0
   bfac <- 1.2
 #  Adjust for omicron data - more hospitalisation, fewer deaths  
-  afac <- 1.2
+  afac <- 1.1
   bfac <- 1.5
   cfac <- 1.0/afac/bfac
   cdat$lethality<-na.locf(cdat$lethality)
@@ -161,16 +161,16 @@ Compartment <- function(cases, csimAge, rCFR, cdat, startc, endc){
       # All todays new MILDs will all leave to REC across distribution
       # multiple by vaccination and its CFR reduction
       # ILI will go to SA/RI and REC
-      day_vacdat=vacdat[min(iday,nrow(vacdat)),iage]
-      ItoS <-  as.numeric(newILI[iday,iage] * pItoS[iage-1] * (1.0-day_vacdat*vacCFR)) *ILIToSARI
+      day_vacdat=1.0-as.numeric(vacdat[min(iday,nrow(vacdat)),iage])*vacCFR
+      ItoS <-  as.numeric(newILI[iday,iage] *     pItoS[iage-1]*day_vacdat ) *ILIToSARI
       # Replace with vaccine effect
       # ItoS = as.numeric(newILI[iday,iage] * pItoS[iage-1])  *ILIToSARI
-      ItoR <-  as.numeric(newILI[iday,iage] *(1.0-pItoS[iage-1])) *ILIToRecovery
+      ItoR <-  as.numeric(newILI[iday,iage] *(1.0-pItoS[iage-1]*day_vacdat) ) *ILIToRecovery
       newSARI[(iday:xday),iage] <- newSARI[(iday:xday),iage]+ItoS
       oldILI[(iday:xday),iage] <- oldILI[(iday:xday),iage]+ItoR+ItoS
       # SARI will go to REC, DEATH, CRIT
 
-      #  Assume vaccination only reduces ILI-> SARI  CFR is thth StoD/StoC death rate by 0%
+      #  Assume vaccination only reduces ILI-> SARI  CFR is the StoD/StoC death rate by 0%
       # Once you are Severely Ill (hospitalised) chance of recovery is unaffected
       StoC <-  as.numeric(newSARI[iday,iage] *pStoC[iage-1]  )*SARIToCritical
       StoD <-  as.numeric(newSARI[iday,iage] *pStoD[iage-1]  )*SARIToDeath
