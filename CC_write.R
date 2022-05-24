@@ -9,7 +9,7 @@ library(lubridate)
 
 CC_write <- function(CCcomp,region,pop,R_region,Q_region,Rseries,ratio,filename){
 # write from arbitrary start point to six weeks time
-startwrite=length(CCcomp$CASE$date)-180
+startwrite=length(CCcomp$CASE$date)-150
 endwrite=nrow(regcases)+reporting_delay+48
 group <- "Edinburgh"
 model <-  "WSS"
@@ -168,8 +168,8 @@ for (d in startwrite:endwrite){
 #  with delat/omicron having *much* higher viral loads
 #  Missing Prevalence increases sharply with the withdrawal of free testing
 #  Change by factor of 2 in England & Wales fitted to ONS (DJW offline) from startwrite in 2022.  
-Missing_prevalence=2.2
-Missing_incidence=2.2
+Missing_prevalence=1.3*7.5
+Missing_incidence=Missing_prevalence
 
 
 CCtmp$ValueType="incidence"
@@ -182,11 +182,11 @@ for (d in startwrite:endwrite){
     cum_error=cum_error*R_error
   }
   CCtmp$Value = sum(CCcomp$CASE[d,2:20])*Missing_incidence
-  CCtmp$"Quantile 0.05"=max(0,CCtmp$Value*cum_error[1]*(1.0-3*sigma))
-  CCtmp$"Quantile 0.25"=max(0,CCtmp$Value*cum_error[2]*(1.0-sigma))
+  CCtmp$"Quantile 0.05"=max(0,CCtmp$Value*cum_error[1]*(1.0-4*sigma))
+  CCtmp$"Quantile 0.25"=max(0,CCtmp$Value*cum_error[2]*(1.0-1.5*sigma))
   CCtmp$"Quantile 0.5"=CCtmp$Value
-  CCtmp$"Quantile 0.75"=CCtmp$Value*cum_error[4]*(1.0+sigma)
-  CCtmp$"Quantile 0.95"=CCtmp$Value*cum_error[5]*(1.0+3*sigma)
+  CCtmp$"Quantile 0.75"=CCtmp$Value*cum_error[4]*(1.0+1.5*sigma)
+  CCtmp$"Quantile 0.95"=CCtmp$Value*cum_error[5]*(1.0+4*sigma)
   CCtmp$"Day of Value" = day(CCcomp$CASE$date[d])
   CCtmp$"Month of Value" = month(CCcomp$CASE$date[d])
   CCtmp$"Year of Value" = year(CCcomp$CASE$date[d])
@@ -200,14 +200,14 @@ for (d in startwrite:endwrite){
 CCtmp$ValueType="prevalence"
 CCtmp$Scenario="Nowcast"
 cum_error=R_error
-for (d in startwrite:(endwrite)){
+for (d in (startwrite+20):(endwrite)){
   if(CCcomp$CASE$date[d]>(today-reporting_delay)){
   CCtmp$Scenario="MTP"
   CCtmp$ValueType="prevalence_mtp"
   cum_error=cum_error*R_error
   }
-  PREV= sum(CCcomp$ILI[d,2:20]+CCcomp$SARI[d,2:20])+sum(CCcomp$CASE[d:(d+4),2:20])*Missing_prevalence
-  CCtmp$Value=PREV*Missing_prevalence/pop*100
+  PREV= sum(CCcomp$CASE[(d-12):(d),2:20])*Missing_prevalence
+  CCtmp$Value=PREV/pop*100
   CCtmp$"Quantile 0.05"=max(0,CCtmp$Value*cum_error[1]*(1.0-3*sigma))
   CCtmp$"Quantile 0.25"=max(0,CCtmp$Value*cum_error[2]*(1.0-sigma))
   CCtmp$"Quantile 0.5"=CCtmp$Value
