@@ -214,55 +214,55 @@ ratio$Eng$newhosp=sum(rowSums(predEng$newSARI[recent_time,2:20]))/total_admissio
 ratio$Eng$hosp=sum(rowSums(predEng$SARI[recent_time,2:20]+predEng$CRIT[recent_time,2:20]+predEng$CRITREC[recent_time,2:20]))/sum(Hospital$Eng$saridat[recent_time])
 ratio$Eng$crit=sum(compEng$CRIT[recent_time,2:20])/total_crit
 
+ONS_MI=comdat$Missing_incidence[nrow(comdat)]
 
-CCEng=CC_write(predEng,"England",population$England[1],R_BestGuess$England,R_Quant$England,rat$smoothEngland,ratio$Eng,filename)
-
+CCEng=CC_write(predEng,"England",population$England[1],R_BestGuess$England,R_Quant$England,rat$smoothEngland,ratio$Eng,ONS_MI)
 ratio$Scot$death=sum(predScot$DEATH[recent_time,2:20])/sum(scotdeath[recent_time,2:20])
 ratio$Scot$hosp=sum(rowSums(predScot$SARI[recent_time,2:20]+predScot$CRIT[recent_time,2:20]+predScot$CRITREC[recent_time,2:20]))/sum(Hospital$Scot$saridat[recent_time])
 ratio$Scot$newhosp=sum(rowSums(predScot$newSARI[recent_time,2:20]))/sum(Hospital$Scot$newsaridat[recent_time])
-CCScot=CC_write(predScot,"Scotland",population$Scotland[1],R_BestGuess$Scotland,R_Quant$NW,rat$smoothScotland,ratio$Scot,filename)
+CCScot=CC_write(predScot,"Scotland",population$Scotland[1],R_BestGuess$Scotland,R_Quant$NW,rat$smoothScotland,ratio$Scot,ONS_MI)
 
 ratio$NW$death=sum(predNW$DEATH[recent_time,2:20])/sum(regdeaths$`North West`[recent_time])
 ratio$NW$hosp=sum(rowSums(predNW$SARI[recent_time,2:20]+predNW$CRIT[recent_time,2:20]+predNW$CRITREC[recent_time,2:20]))/sum(Hospital$NW$saridat[recent_time])
 ratio$NW$newhosp=sum(rowSums(predNW$newSARI[recent_time,2:20]))/sum(Hospital$NW$newsaridat[recent_time])
-CCNW=CC_write(predNW,"North West",population$NW[1],R_BestGuess$NW,R_Quant$NW,rat$smoothNW,ratio$NW,filename)
+CCNW=CC_write(predNW,"North West",population$NW[1],R_BestGuess$NW,R_Quant$NW,rat$smoothNW,ratio$NW,ONS_MI)
 
 ratio$NEY$death=sum(predNEY$DEATH[recent_time,2:20])/sum(regdeaths$NEY[recent_time])
 ratio$NEY$hosp=sum(rowSums(predNEY$SARI[recent_time,2:20]+predNEY$CRIT[recent_time,2:20]+predNEY$CRITREC[recent_time,2:20]))/sum(Hospital$NEY$saridat[recent_time])
 ratio$NEY$newhosp=sum(rowSums(predNEY$newSARI[recent_time,2:20]))/sum(Hospital$NEY$newsaridat[recent_time])
-CCNEY=CC_write(predNEY,"North East and Yorkshire",population$NEY[1],R_BestGuess$NEY,R_Quant$NEY,rat$smoothNEY,ratio$NEY,filename)
+CCNEY=CC_write(predNEY,"North East and Yorkshire",population$NEY[1],R_BestGuess$NEY,R_Quant$NEY,rat$smoothNEY,ratio$NEY,ONS_MI)
 
 ratio$MD$death=sum(predMD$DEATH[recent_time,2:20])/sum(regdeaths$MD[recent_time])
 ratio$MD$hosp=sum(rowSums(predMD$SARI[recent_time,2:20]+predMD$CRIT[recent_time,2:20]+predMD$CRITREC[recent_time,2:20]))/sum(Hospital$MD$saridat[recent_time])
 ratio$MD$newhosp=sum(rowSums(predMD$newSARI[recent_time,2:20]))/sum(Hospital$MD$newsaridat[recent_time])
-CCMD=CC_write(predMD,"Midlands",population$MD[1],R_BestGuess$Midlands,R_Quant$Midlands,rat$smoothMD,ratio$MD,filename)
+CCMD=CC_write(predMD,"Midlands",population$MD[1],R_BestGuess$Midlands,R_Quant$Midlands,rat$smoothMD,ratio$MD,ONS_MI)
 
 ratio$Lon$death=sum(predLon$DEATH[recent_time,2:20])/sum(regdeaths$London[recent_time])
 ratio$Lon$hosp=sum(rowSums(predLon$SARI[recent_time,2:20]+predLon$CRIT[recent_time,2:20]+predLon$CRITREC[recent_time,2:20]))/sum(Hospital$Lon$saridat[recent_time])
 ratio$Lon$newhosp=sum(rowSums(predLon$newSARI[recent_time,2:20]))/sum(Hospital$Lon$newsaridat[recent_time])
-CCLon=CC_write(predLon,"London",population$Lon[1],R_BestGuess$Lon,R_Quant$Lon,rat$smoothLon,ratio$Lon,filename)
+CCLon=CC_write(predLon,"London",population$Lon[1],R_BestGuess$Lon,R_Quant$Lon,rat$smoothLon,ratio$Lon,ONS_MI)
 
 ratio$SW$death=sum(predSW$DEATH[recent_time,2:20])/sum(regdeaths$`South West`[recent_time])
 ratio$SW$hosp=sum(rowSums(predSW$SARI[recent_time,2:20]+predSW$CRIT[recent_time,2:20]+predSW$CRITREC[recent_time,2:20]))/sum(Hospital$SW$saridat[recent_time])
 ratio$SW$newhosp=sum(rowSums(predSW$newSARI[recent_time,2:20]))/sum(Hospital$SW$newsaridat[recent_time])
-CCSW=CC_write(predSW,"South West",population$SW[1],R_BestGuess$SW,R_Quant$SW,rat$smoothSW,ratio$SW,filename)
+CCSW=CC_write(predSW,"South West",population$SW[1],R_BestGuess$SW,R_Quant$SW,rat$smoothSW,ratio$SW,ONS_MI)
 
 ratio$SE$hosp=sum(rowSums(predSE$SARI[recent_time,2:20]+predSE$CRIT[recent_time,2:20]+predSE$CRITREC[recent_time,2:20]))/sum(Hospital$SE$saridat[recent_time])
 ratio$SE$death=sum(predSE$DEATH[recent_time,2:20])/sum(regdeaths$`South East`[recent_time])
 ratio$SE$newhosp=sum(rowSums(predSE$newSARI[recent_time,2:20]))/sum(Hospital$SE$newsaridat[recent_time])
-CCSE=CC_write(predSE,"South East",population$SE[1],R_BestGuess$SE,R_Quant$SE,rat$smoothSE,ratio$SE,filename)
+CCSE=CC_write(predSE,"South East",population$SE[1],R_BestGuess$SE,R_Quant$SE,rat$smoothSE,ratio$SE,ONS_MI)
 
 ratio$EE$hosp=sum(rowSums(predEE$SARI[recent_time,2:20]+predEE$CRIT[recent_time,2:20]+predEE$CRITREC[recent_time,2:20]))/sum(Hospital$EE$saridat[recent_time])
 ratio$EE$death=sum(predEE$DEATH[recent_time,2:20])/sum(regdeaths$`East of England`[recent_time])
 ratio$EE$newhosp=sum(rowSums(predEE$newSARI[recent_time,2:20]))/sum(Hospital$EE$newsaridat[recent_time])
-CCEE=CC_write(predEE,"East of England",population$EE[1],R_BestGuess$EE,R_Quant$EE,rat$smoothEE,ratio$EE,filename)
+CCEE=CC_write(predEE,"East of England",population$EE[1],R_BestGuess$EE,R_Quant$EE,rat$smoothEE,ratio$EE,ONS_MI)
 
 
 # Cludge for Wales, NI - only write R and growthrate, no MTPs - send predEng, CC_write will ignore it
 
 
-CCWal=CC_write(predEng,"Wales",population$Wales[1],R_BestGuess$Wales,R_Quant$Wales,rat$smoothWales,ratio$Eng,filename)
-CCNI=CC_write(predEng,"Northern Ireland",population$NI[1],R_BestGuess$NI,R_Quant$NI,rat$smoothNI,ratio$Eng,filename)
+CCWal=CC_write(predEng,"Wales",population$Wales[1],R_BestGuess$Wales,R_Quant$Wales,rat$smoothWales,ratio$Eng,ONS_MI)
+CCNI=CC_write(predEng,"Northern Ireland",population$NI[1],R_BestGuess$NI,R_Quant$NI,rat$smoothNI,ratio$Eng,ONS_MI)
 
 
 #Now combine all the sheets into one

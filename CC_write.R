@@ -7,7 +7,7 @@
 library(openxlsx)
 library(lubridate)
 
-CC_write <- function(CCcomp,region,pop,R_region,Q_region,Rseries,ratio,filename){
+CC_write <- function(CCcomp,region,pop,R_region,Q_region,Rseries,ratio,Missing_incidence){
 # write from arbitrary start point to six weeks time
 
 
@@ -64,6 +64,7 @@ CC <- data.frame(
   check.names = FALSE
 )
   CCtmp<-CC
+ 
 #  systemic uncertainty estimate (fractional)  
   sigma=0.15
   #  R number Nowcast.  Error mainly comes from uncertainty in GenTime
@@ -85,7 +86,7 @@ CC <- data.frame(
   }
   #  Delete the first row - Crystal cast requires numerical order
   CC <- CC[-c(1),]
-
+ 
   #  Hindcast for growth rate
   CCtmp$Scenario="Nowcast"
   CCtmp$Geography=region
@@ -162,6 +163,7 @@ for (d in startwrite:endwrite){
   # Add the new row
   CC <- rbind(CC, CCtmp)
 }
+
 #  Incidence is per 100000
 # Missing_prevalence, deduced weekly by hand from ONS, is the undetected ongoing cases
 # Missing incidence is the undetected infections. primarily short-lived
@@ -171,9 +173,9 @@ for (d in startwrite:endwrite){
 #  with delat/omicron having *much* higher viral loads
 #  Missing Prevalence increases sharply with the withdrawal of free testing
 #  Change by factor of 2 in England & Wales fitted to ONS (DJW offline) from startwrite in 2022.  
-Missing_prevalence=1.3*7.5
-Missing_incidence=Missing_prevalence
-
+#Missing_prevalence=1.3*7.5
+#Missing_incidence=Missing_prevalence
+# 31/5/2022 Missing incidence estimated from ONS prevalence data in covid_trimmed
 
 CCtmp$ValueType="incidence"
 CCtmp$Scenario="Nowcast"
@@ -184,6 +186,7 @@ for (d in startwrite:endwrite){
     CCtmp$ValueType="infections_inc"
     cum_error=cum_error*R_error
   }
+
   CCtmp$Value = sum(CCcomp$CASE[d,2:20])*Missing_incidence
   CCtmp$"Quantile 0.05"=max(0,CCtmp$Value*cum_error[1]*(1.0-4*sigma))
   CCtmp$"Quantile 0.25"=max(0,CCtmp$Value*cum_error[2]*(1.0-1.5*sigma))
@@ -209,8 +212,7 @@ for (d in (startwrite+20):(endwrite)){
   CCtmp$ValueType="prevalence_mtp"
   cum_error=cum_error*R_error
   }
-
-  PREV= sum(CCcomp$CASE[(d-12):(d),2:20])*Missing_prevalence
+  PREV= sum(CCcomp$CASE[(d-12):(d),2:20])*Missing_incidence
 
   CCtmp$Value=PREV/pop*100
   CCtmp$"Quantile 0.05"=max(0,CCtmp$Value*cum_error[1]*(1.0-3*sigma))
@@ -256,3 +258,4 @@ for (d in startwrite:(endwrite)){
 }}
 return(CC)
 }
+

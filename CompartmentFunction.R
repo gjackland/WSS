@@ -10,7 +10,7 @@
 # values from the calling space
 # Inherits vacdat from covid_trimmed
 Compartment <- function(cases, csimAge, rCFR, cdat, startc, endc){
-  
+
   # Create a list to output various data frames
   out <- list()
 
@@ -24,8 +24,8 @@ Compartment <- function(cases, csimAge, rCFR, cdat, startc, endc){
   #  Choose to use lognormal with logsd=logmean/4.0.  Data not available to do better
   #  Mean stay in Hospital = Sum(Cases)/Sum(admissions) = 10 days
   #  In model  sum(SARI[2:20]+CRIT[2:20]+CRITREC[2:20])/sum(newSARI[2:20])
-  logmean <- log(6.0)
-  MildToRecovery <- dlnorm(1:cdflength, logmean,  logmean/8.0) # These "Milds" are never recorded
+  logmean <- log(7.0)
+  MildToRecovery <- dlnorm(1:cdflength, logmean,  logmean/8.0) # These "Milds" are never recorded except by ONS
   logmean <- log(7.0)
   ILIToRecovery <- dlnorm(1:cdflength, logmean,  logmean/4.0)
   #  Fit  shift & scale from ILI to SARI
@@ -144,19 +144,19 @@ Compartment <- function(cases, csimAge, rCFR, cdat, startc, endc){
     
     xday <- iday+cdflength-1
     agerange <- (2:ncol(ILI))
-    
-    newMILD[iday,agerange] <- CASE[iday,agerange]*(1.0-pTtoI)+newMILD[iday,agerange]
+#  Add all the missing incidence into mild by scaling from ONS prev.    
+    newMILD[iday,agerange] <- CASE[iday,agerange]*(1.0-pTtoI)+newMILD[iday,agerange]+CASE[iday,agerange]*(cdat$Missing_incidence[iday]-1.0)
     newILI[iday,agerange] <- CASE[iday,agerange]*  pTtoI    +newILI[iday,agerange]
     
     
  
 #MtoR <- outer(as.numeric(newMILD[iday,agerange]),MildToRecovery,FUN="*")
 #oldMILD[(iday:xday),agerange] <- oldMILD[(iday:xday),agerange]+MtoR
+    for (iage in agerange){
     MtoR = as.numeric(newMILD[iday-1,iage]) * MildToRecovery 
-    oldMILD[(iday:xday),iage]=oldMILD[(iday:xday),iage]+MtoR
+    oldMILD[(iday:xday),iage]=oldMILD[(iday:xday),iage]+MtoR}
     vacCFR <- 0.90 
-    #Vaccine reduction in ILI-> SARI
-
+    #Vaccine reduction in ILI-> SARaw 
     for (iage in agerange){
       # All todays new MILDs will all leave to REC across distribution
       # multiple by vaccination and its CFR reduction

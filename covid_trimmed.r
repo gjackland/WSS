@@ -58,11 +58,10 @@ baseurl <- "https://api.coronavirus.data.gov.uk/v2/data?"
 
 # Start and end date - the date to collect data from
 # First month or so will be equilibration, especially if started at a time of high caseload
-startdate <- as.Date("2021/05/09") #as.Date("2020/08/09")
+startdate <- as.Date("2021/08/11") #as.Date("2020/08/09")
 
 # Lose only the last day of data - use tail correction for reporting delay
-# Weekend data can be sketchy Extend the enddate if run on Monday morning
-
+# Weekend data can be sketchy Extend the enddate if run on Monday morning8
 reporting_delay=6
 
 enddate <-  Sys.Date()-reporting_delay
@@ -707,8 +706,70 @@ RawCFR = c(
 0.00135192176, 0.00274650970, 0.00466541696, 0.00847207527, 0.01470736106, 0.05199837337, 0.08980941759, 0.15752935748, 
   0.22651139233, 0.27821927091, 0.32550659352 )
 
+#Add in ONSdata by hand.  for 12/4 use this to get R
+engpop=56989570
+scotpop=5475660
+eng_prev<-c(
+  0.05,0.05,0.05,0.07,0.11,0.19,0.21,0.41,0.62,
+  0.79,1.04,1.13,1.20,1.22,1.16,0.96,0.88,
+  1.04,1.18,1.47,2.06,2.08,1.88,1.87,1.55,
+  1.28,0.88,0.69,0.45,0.37,0.29,0.30,0.27,
+  0.30, 0.21,0.17, 0.10,0.08, 0.07,0.09, 0.09,
+  0.16, 0.18,0.19, 0.22,0.39,0.61,1.06,1.36,
+  1.57,1.32,1.33,1.28,1.39,1.41,1.38,1.28,
+  1.14,1.21,1.44,1.63,1.79,2.02,2.02,1.70,1.51,
+  1.58,1.65,1.64,1.72,2.21,2.83,3.71,6.00,
+  6.85,5.47,4.82,4.83,5.18,4.49,3.84,3.55,
+  3.80,4.87,6.39,7.56,7.60,6.92,5.90,4.42,2.91,2.21,1.90,1.60)*engpop/100
+scot_prev<-c(0.05,0.05,0.05,0.07,0.11,0.19, 0.21, 0.41,0.62,0.57,0.71,0.90,0.75,
+             0.64,0.87,0.78,0.82,1.00,0.71,0.69,0.87,1.06,0.99,0.92,0.88,
+             0.67,0.55,0.45,0.30,0.31,0.37,0.41,0.32,0.25,0.20,0.18,0.16,
+             0.13,0.08,0.05,0.16,0.15,0.18,0.17,0.46,0.68,1.01,1.14,1.24,
+             0.94,0.82,0.53,0.49,0.70,1.32,2.23,2.29,2.28,1.85,1.61,1.26,
+             1.14,1.36,1.25,1.18,1.06,1.44,1.58,1.24,1.27,1.45,1.50,2.57,4.52,5.65,4.49,3.11,
+             3.52,4.01, 4.17, 4.57, 5.33,5.70,7.15,9.00,8.57,7.54,5.98,5.35,4.14,3.55,
+             3.01,2.32,2.57)*scotpop/100
+
+#  Put the ONS prevalence data into the comdat array  
+# ONS is delayed in reporting, and averaged over the previous week.
+# By peak matching, this can be about 10 days
+
+ons_delay=nrow(comdat)-7
+
+approx(eng_prev,n=7*length(eng_prev))$y%>% tail(ons_delay)-> jnk
+jnk[ons_delay:(ons_delay+7)]=jnk[ons_delay]
+comdat$Eng_ons_prev<-jnk
+approx(scot_prev,n=7*length(scot_prev))$y%>% tail(ons_delay)-> jnk
+jnk[ons_delay:(ons_delay+7)]=jnk[ons_delay]
+comdat$Scot_ons_prev<-jnk
+comdat$Eng_ons_prev[(ons_delay+1):nrow(comdat)]=comdat$Eng_ons_prev[ons_delay]
+comdat$Scot_ons_prev[(ons_delay+1):nrow(comdat)]=comdat$Scot_ons_prev[ons_delay]
+comdat$Eng_ons_inc[1:(nrow(comdat))]<-0.0
+comdat$Scot_ons_inc[1:(nrow(comdat))]<-0.0
+
+#  Factor of 14 days infectious to convert prevalence to incidence.  Also delays it
+
+comdat$Eng_ons_inc[1:(nrow(comdat)-14)]<-comdat$Eng_ons_prev[15:nrow(comdat)]/14
+comdat$Scot_ons_inc[1:(nrow(comdat)-14)]<-comdat$Scot_ons_prev[15:nrow(comdat)]/14
+#  Extrapolate final 14 days from end of ONS data
+xtmp=1:14
+Engfit<-lm(comdat$Eng_ons_inc[(nrow(comdat)-27):(nrow(comdat)-14)]~xtmp)
+Engslope=Engfit$coefficients[2]
+Engstart=comdat$Eng_ons_inc[(nrow(comdat)-14)]
+Scotfit<-lm(comdat$Scot_ons_inc[(nrow(comdat)-27):(nrow(comdat)-14)]~xtmp)
+Scotslope=Scotfit$coefficients[2]
+Scotstart=comdat$Scot_ons_inc[(nrow(comdat)-14)]
+for(iday in 1:14){
+  comdat$Eng_ons_inc[(nrow(comdat)-14+iday)]=Engstart+iday*Engslope
+  comdat$Scot_ons_inc[(nrow(comdat)-14+iday)]=Scotstart+iday*Scotslope
+}
+
+comdat$Missing_incidence=smooth.spline((comdat$Eng_ons_inc/regcases$England),df=6)$y
+comdat$Scot_Missing_incidence=smooth.spline((comdat$Scot_ons_inc/regcases$Scotland),df=6)$y
+
 #  Compartment model now done with a function.  Last two inputs are indices giving date range
-#  The compartments will not be correct until the cases have time to filter through all sections, which may be several months for, e.g oldCRITREC
+#  The compartments will not be correct until the cases have time to filter through all sections,
+#  which may be several months for, e.g oldCRITREC
  compEng <- Compartment(casedat, covidsimAge, RawCFR, comdat,2,nrow(casedat))
 
 
@@ -791,33 +852,6 @@ if(any(compEng$CASE==0)){
   }
 }
 rat <- regcases
-#Add in ONSdata by hand.  for 12/4 use this to get R
-engpop=56989570
-scotpop=5475660
-eng_prev<-c(
-  0.05,0.05,0.05,0.07,0.11,0.19,0.21,0.41,0.62,
-  0.79,1.04,1.13,1.20,1.22,1.16,0.96,0.88,
-  1.04,1.18,1.47,2.06,2.08,1.88,1.87,1.55,
-  1.28,0.88,0.69,0.45,0.37,0.29,0.30,0.27,
-  0.30, 0.21,0.17, 0.10,0.08, 0.07,0.09, 0.09,
-  0.16, 0.18,0.19, 0.22,0.39,0.61,1.06,1.36,
-  1.57,1.32,1.33,1.28,1.39,1.41,1.38,1.28,
-  1.14,1.21,1.44,1.63,1.79,2.02,2.02,1.70,1.51,
-  1.58,1.65,1.64,1.72,2.21,2.83,3.71,6.00,
-  6.85,5.47,4.82,4.83,5.18,4.49,3.84,3.55,
-  3.80,4.87,6.39,7.56,7.60,6.92)*engpop/100
-scot_prev<-c(0.05,0.05,0.05,0.07,0.11,0.19, 0.21, 0.41,0.62,0.57,0.71,0.90,0.75,
-             0.64,0.87,0.78,0.82,1.00,0.71,0.69,0.87,1.06,0.99,0.92,0.88,
-             0.67,0.55,0.45,0.30,0.31,0.37,0.41,0.32,0.25,0.20,0.18,0.16,
-             0.13,0.08,0.05,0.16,0.15,0.18,0.17,0.46,0.68,1.01,1.14,1.24,
-             0.94,0.82,0.53,0.49,0.70,1.32,2.23,2.29,2.28,1.85,1.61,1.26,
-             1.14,1.36,1.25,1.18,1.06,1.44,1.58,1.24,1.27,1.45,1.50,2.57,4.52,5.65,4.49,3.11,
-             3.52,4.01, 4.17, 4.57, 5.33,5.70,7.15,9.00,8.57,7.54,5.98)*scotpop/100
-
-approx(eng_prev,n=7*length(eng_prev))$y %>% tail(nrow(comdat))-> comdat$ons_prev
-approx(scot_prev,n=7*length(scot_prev))$y%>% tail(nrow(comdat))-> comdat$scot_ons_prev
-
-
 
 for(i in (2:nrow(regcases))    ){
   rat[i, 2:ncol(regcases)] <- 1 + log(regcases[i, 2:ncol(regcases)]/regcases[(i-1), 2:ncol(regcases)])*genTime
@@ -875,7 +909,7 @@ for(i in ((genTime+1):length(dfR$itoR))){
   dfR$stratR[i]=1+ (comdat$allCases[i]-comdat$allCases[i-1])*genTime/mean(comdat$allCases[(i-1):i])
   dfR$fpR[i]=(1+(comdat$fpCases[i]-comdat$fpCases[i-1])*genTime/(comdat$fpCases[i-1]))
   dfR$bylogR[i]=1+log(comdat$allCases[i]/comdat$allCases[i-1])*genTime
-  dfR$ONS[i]=1+log(comdat$ons_prev[i]/comdat$ons_prev[i-1])*genTime
+  dfR$ONS[i]=1+log(comdat$Eng_ons_prev[i]/comdat$Eng_ons_prev[i-1])*genTime
   dfR$regions[i]=1+log(regcases$regions[i]/regcases$regions[i-1])*genTime
   dfR$p00[i]=1+log(casedat$'00_04'[i]/casedat$'00_04'[i-1])*genTime
   dfR$p05[i]=1+log(casedat$'05_09'[i]/casedat$'05_09'[i-1])*genTime
@@ -942,7 +976,7 @@ smoothweightR <- smooth.spline(dfR$bylogR,df=spdf,w=sqrt(comdat$allCases))$y
 smoothweightRstrat <- smooth.spline(dfR$stratR,df=spdf,w=sqrt(comdat$allCases))$y
 smoothweightRito <- smooth.spline(dfR$itoR,df=spdf,w=sqrt(comdat$allCases))$y
 dfR$smoothweightRfp <- smooth.spline(dfR$fpR,df=spdf,w=sqrt(comdat$fpCases))$y
-dfR$smoothONS <- smooth.spline(dfR$ONS,df=spdf,w=sqrt(comdat$ons_prev))$y
+dfR$smoothONS <- smooth.spline(dfR$ONS,df=spdf,w=sqrt(comdat$Eng_ons_prev))$y
 rat$smoothScotland <- smooth.spline(rat$Scotland,df=spdf,w=sqrt(regcases$Scotland))$y
 rat$smoothNW <-smooth.spline(rat$`North West`,df=spdf,w=sqrt(regcases$`North West`))$y
 rat$smoothNEY <-smooth.spline(rat$NE_Yorks,df=spdf,w=sqrt(regcases$NE_Yorks))$y
