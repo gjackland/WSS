@@ -30,14 +30,7 @@ Predictions <- function(input,R_input,predtime,pop){
   MildToRecovery <-  input$MildToRecovery
   xday <- input$xday
   vacCFR <- input$vacCFR
-  ILIToSARI <-  input$ILIToSARI
-  ILIToRecovery <- input$ILIToRecovery
-  SARIToCritical <- input$SARIToCritical
-  SARIToDeath <- input$SARIToDeath
-  SARIToRecovery <-  input$SARIToRecovery
-  CriticalToDeath <- input$CriticalToDeath
-  CriticalToCritRecov <- input$CriticalToCritRecov
-  CritRecovToRecov <- input$CritRecovToRecov
+ 
  
   lengthofdata <- nrow(CASE)
   enddateP<-CASE$date[lengthofdata]
@@ -165,14 +158,6 @@ Predictions <- function(input,R_input,predtime,pop){
   MildToRecovery ->  input$MildToRecovery
   xday -> input$xday
   vacCFR -> input$vacCFR
-  ILIToSARI ->  input$ILIToSARI
-  ILIToRecovery -> input$ILIToRecovery
-  SARIToCritical -> input$SARIToCritical
-  SARIToDeath -> input$SARIToDeath
-  SARIToRecovery ->  input$SARIToRecovery
-  CriticalToDeath -> input$CriticalToDeath
-  CriticalToCritRecov -> input$CriticalToCritRecov
-  CritRecovToRecov -> input$CritRecovToRecov
   S -> input$S
   return(input)
 }

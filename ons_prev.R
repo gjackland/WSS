@@ -1,4 +1,4 @@
-#from August 7th
+#from August 7th   Remember to update data here and in covid_trimmed
 library(dplyr, warn.conflicts = FALSE, quietly = TRUE)
 engpop=56989570
 scotpop=5475660

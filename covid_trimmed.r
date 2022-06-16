@@ -13,10 +13,7 @@
 #
 # http://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/
 #
-# Remove existing variables if in an interactive session.
-if(interactive()){
-  rm(list = ls())
-}
+
 
 # From Jan 6th  2022 Need to multiply cases in Scotland by fraction which are LFT and not reported, because, Scotland
 #  Enter this array by hand copied from https://www.gov.scot/publications/coronavirus-covid-19-trends-in-daily-data/
@@ -68,10 +65,7 @@ reporting_delay=6
 enddate <-  Sys.Date()-reporting_delay
 #  Six week prediction
 predtime = 100
-# Set the generation time
-genTime <- 5
-# Omicron Gen time much lower
-gentime <- 4.0
+
 #  Dates for the plots
 plotdate <- as.Date(c(as.character(startdate),as.character(enddate)))
 # Wanted to plot a Smooth spline discontinuous at
@@ -595,27 +589,25 @@ if(enddate == (Sys.Date()-1)){
   regcases[nrow(regcases-1),2:ncol(regcases)]=regcases[nrow(regcases-1),2:ncol(regcases)]*1.005
 }
 
-# Add variant data to comdat  Kentfac tells us how much more virulent the variant is
+# Add variant data to comdat  Kentfac tells us how much more lethal the variant is
 # Numbers are fitted to death and hospitalisation data
 comdat$Kent <- 0.0
 comdat$India <- 0.0
 comdat$Omicron <- 0.0
-Kentfac <- 0.4
-Indiafac <- 0.9
-Omicronfac <- 0.0
+
 Kentdate <- as.integer(as.Date("2021/01/01")-startdate)
 
 # Approximate Kent by logistic rise around 2021/01/01
-# Same gen time, R+0.3 vs Wild  (0.3 is NOT lethality factor)
+# Same gen time, R+KEnttrans vs Wild  (transmission, NOT lethality factor)
 for (i in 1:(nrow(comdat))){
-  x= (i-Kentdate)*0.3/genTime
+  x= (i-Kentdate)*Kenttrans/genTime
   comdat$Kent[i]=1.0/(1.0+exp(-x))
 }
 Indiadate <- as.integer(as.Date("2021/05/15")-startdate)
 # Approximate India by logistic rise around 2021/15/01: see covid19.sanger.
-# Same genTime R+0.4 vs Kent  AY4.2 assumes same as India
+# Same genTime R+Indiatrans vs Kent  AY4.2 assumes same as India
 for (i in 1:(nrow(comdat))){
-  x= (i-Indiadate)*0.4/genTime
+  x= (i-Indiadate)*Indiatrans/genTime
   comdat$India[i]=1.0/(1.0+exp(-x))
 }
 Omicrondate <- as.integer(as.Date("2021/12/15")-startdate)
@@ -691,9 +683,9 @@ if(interactive()){
     xlab("Dates") + ylab("Cases") +
     theme_bw()
 }
-##  CFR going down gets entangled with vaccine effect.  Use pre-vaccination values
-##  With 12 day delay from WSS.  this assumes original startdate 09/08/2020
-RawCFR=colSums(deathdat[12:211,2:20])/colSums(casedat[1:200,2:20])
+##  Case Fatality ratio was determined from initial period 
+##   this assumed original startdate 09/08/2020 so is deprecated
+##RawCFR=colSums(deathdat[12:211,2:20])/colSums(casedat[1:200,2:20])
 
 
 # Get mean age-related CFR across the whole pandemic, with adjustment for vaccination
@@ -701,15 +693,11 @@ RawCFR=colSums(deathdat[12:211,2:20])/colSums(casedat[1:200,2:20])
 # RawCFR=colSums(deathdat[2:20]/(1-vacdat[2:20]*vacCFR))/colSums(casedat[2:ncol(casedat)])
 
 
-# Hardcode rawCFR for wild type data - this allows start date to be brought forward
-RawCFR = c(
-0.00006476028, 0.00005932501, 0.00004474461, 0.00007174780, 0.00011668950, 0.00020707650, 0.00045082861, 0.00083235867, 
-0.00135192176, 0.00274650970, 0.00466541696, 0.00847207527, 0.01470736106, 0.05199837337, 0.08980941759, 0.15752935748, 
-  0.22651139233, 0.27821927091, 0.32550659352 )
 
 #  Compartment model now done with a function.  Last two inputs are indices giving date range
 #  The compartments will not be correct until the cases have time to filter through all sections, which may be several months for, e.g oldCRITREC
- compEng <- Compartment(casedat, covidsimAge, RawCFR, comdat,2,nrow(casedat))
+ 
+compEng <- Compartment(casedat, covidsimAge, RawCFR, comdat,2,nrow(casedat))
 
 
 # Do not unpack the values returned, access compartment quantities via comp$ list construct
@@ -791,29 +779,8 @@ if(any(compEng$CASE==0)){
   }
 }
 rat <- regcases
-#Add in ONSdata by hand.  for 12/4 use this to get R
-engpop=56989570
-scotpop=5475660
-eng_prev<-c(
-  0.05,0.05,0.05,0.07,0.11,0.19,0.21,0.41,0.62,
-  0.79,1.04,1.13,1.20,1.22,1.16,0.96,0.88,
-  1.04,1.18,1.47,2.06,2.08,1.88,1.87,1.55,
-  1.28,0.88,0.69,0.45,0.37,0.29,0.30,0.27,
-  0.30, 0.21,0.17, 0.10,0.08, 0.07,0.09, 0.09,
-  0.16, 0.18,0.19, 0.22,0.39,0.61,1.06,1.36,
-  1.57,1.32,1.33,1.28,1.39,1.41,1.38,1.28,
-  1.14,1.21,1.44,1.63,1.79,2.02,2.02,1.70,1.51,
-  1.58,1.65,1.64,1.72,2.21,2.83,3.71,6.00,
-  6.85,5.47,4.82,4.83,5.18,4.49,3.84,3.55,
-  3.80,4.87,6.39,7.56,7.60,6.92)*engpop/100
-scot_prev<-c(0.05,0.05,0.05,0.07,0.11,0.19, 0.21, 0.41,0.62,0.57,0.71,0.90,0.75,
-             0.64,0.87,0.78,0.82,1.00,0.71,0.69,0.87,1.06,0.99,0.92,0.88,
-             0.67,0.55,0.45,0.30,0.31,0.37,0.41,0.32,0.25,0.20,0.18,0.16,
-             0.13,0.08,0.05,0.16,0.15,0.18,0.17,0.46,0.68,1.01,1.14,1.24,
-             0.94,0.82,0.53,0.49,0.70,1.32,2.23,2.29,2.28,1.85,1.61,1.26,
-             1.14,1.36,1.25,1.18,1.06,1.44,1.58,1.24,1.27,1.45,1.50,2.57,4.52,5.65,4.49,3.11,
-             3.52,4.01, 4.17, 4.57, 5.33,5.70,7.15,9.00,8.57,7.54,5.98)*scotpop/100
 
+#  Add ONS data to comdat$
 approx(eng_prev,n=7*length(eng_prev))$y %>% tail(nrow(comdat))-> comdat$ons_prev
 approx(scot_prev,n=7*length(scot_prev))$y%>% tail(nrow(comdat))-> comdat$scot_ons_prev
 
