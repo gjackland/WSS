@@ -69,18 +69,7 @@ Compartment <- function(cases, csimAge, rCFR, cdat, startc, endc){
   # Current values will typically be negative, as they are sums of people leaving the compartment
   # Nobody changes age band.  Vectorize over distributions
   
-  # Age dependent transition probabilities a->ILI b->SARI c->Death
-  # apow+bpow+cpow=1 gives a fit to death data, not accounting for variant & vaccination effect
-  # bpow/bfac conditions the hospital admissions by age Distribution is Approx U65=65-85=2 * 85+
-  apow <- 0.15
-  bpow <- 0.4
-  cpow <- 1.0-apow-bpow
-  afac <- 1.0
-  bfac <- 1.2
-#  Adjust for omicron data - more hospitalisation, fewer deaths  
-  afac <- 1.1
-  bfac <- 1.5
-  cfac <- 1.0/afac/bfac
+
   cdat$lethality<-na.locf(cdat$lethality)
     for (iday in (startc:endc)){
     # Update current vaccine/variant lethality if available    

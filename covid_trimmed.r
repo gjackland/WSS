@@ -53,18 +53,7 @@ population<-getPop()
 # Base URL to get the UK government data
 baseurl <- "https://api.coronavirus.data.gov.uk/v2/data?"
 
-# Start and end date - the date to collect data from
-# First month or so will be equilibration, especially if started at a time of high caseload
-startdate <- as.Date("2021/05/09") #as.Date("2020/08/09")
 
-# Lose only the last day of data - use tail correction for reporting delay
-# Weekend data can be sketchy Extend the enddate if run on Monday morning
-
-reporting_delay=6
-
-enddate <-  Sys.Date()-reporting_delay
-#  Six week prediction
-predtime = 100
 
 #  Dates for the plots
 plotdate <- as.Date(c(as.character(startdate),as.character(enddate)))
@@ -1055,11 +1044,7 @@ if(interactive()){
 
 R_BestGuess <- list()
 R_Quant <- list()
-### Smoothing Filters
-s1 <- 0.05
-s2 <- 0.1
-s3 <- 0.2
-s4 <- 0.3
+
 
 #  Daily stats are quite messed up since end of PCR testing.  Use smoothed R estimates for Quartiles
 tmp <-estimate_R(rat$smoothEngland,dfR$date,comdat$allCases)
