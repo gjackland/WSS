@@ -13,10 +13,7 @@
 #
 # http://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/
 #
-# Remove existing variables if in an interactive session.
-if(interactive()){
-  rm(list = ls())
-}
+
 
 # From Jan 6th  2022 Need to multiply cases in Scotland by fraction which are LFT and not reported, because, Scotland
 #  Enter this array by hand copied from https://www.gov.scot/publications/coronavirus-covid-19-trends-in-daily-data/
@@ -56,21 +53,9 @@ population<-getPop()
 # Base URL to get the UK government data
 baseurl <- "https://api.coronavirus.data.gov.uk/v2/data?"
 
-# Start and end date - the date to collect data from
-# First month or so will be equilibration, especially if started at a time of high caseload
-startdate <- as.Date("2021/08/11") #as.Date("2020/08/09")
 
-# Lose only the last day of data - use tail correction for reporting delay
-# Weekend data can be sketchy Extend the enddate if run on Monday morning8
-reporting_delay=6
+# Start and end date - in getParms
 
-enddate <-  Sys.Date()-reporting_delay
-#  Six week prediction
-predtime = 100
-# Set the generation time
-genTime <- 5
-# Omicron Gen time much lower
-gentime <- 4.0
 #  Dates for the plots
 plotdate <- as.Date(c(as.character(startdate),as.character(enddate)))
 # Wanted to plot a Smooth spline discontinuous at
@@ -594,27 +579,25 @@ if(enddate == (Sys.Date()-1)){
   regcases[nrow(regcases-1),2:ncol(regcases)]=regcases[nrow(regcases-1),2:ncol(regcases)]*1.005
 }
 
-# Add variant data to comdat  Kentfac tells us how much more virulent the variant is
+# Add variant data to comdat  Kentfac tells us how much more lethal the variant is
 # Numbers are fitted to death and hospitalisation data
 comdat$Kent <- 0.0
 comdat$India <- 0.0
 comdat$Omicron <- 0.0
-Kentfac <- 0.4
-Indiafac <- 0.9
-Omicronfac <- 0.0
+
 Kentdate <- as.integer(as.Date("2021/01/01")-startdate)
 
 # Approximate Kent by logistic rise around 2021/01/01
-# Same gen time, R+0.3 vs Wild  (0.3 is NOT lethality factor)
+# Same gen time, R+KEnttrans vs Wild  (transmission, NOT lethality factor)
 for (i in 1:(nrow(comdat))){
-  x= (i-Kentdate)*0.3/genTime
+  x= (i-Kentdate)*Kenttrans/genTime
   comdat$Kent[i]=1.0/(1.0+exp(-x))
 }
 Indiadate <- as.integer(as.Date("2021/05/15")-startdate)
 # Approximate India by logistic rise around 2021/15/01: see covid19.sanger.
-# Same genTime R+0.4 vs Kent  AY4.2 assumes same as India
+# Same genTime R+Indiatrans vs Kent  AY4.2 assumes same as India
 for (i in 1:(nrow(comdat))){
-  x= (i-Indiadate)*0.4/genTime
+  x= (i-Indiadate)*Indiatrans/genTime
   comdat$India[i]=1.0/(1.0+exp(-x))
 }
 Omicrondate <- as.integer(as.Date("2021/12/15")-startdate)
@@ -690,9 +673,9 @@ if(interactive()){
     xlab("Dates") + ylab("Cases") +
     theme_bw()
 }
-##  CFR going down gets entangled with vaccine effect.  Use pre-vaccination values
-##  With 12 day delay from WSS.  this assumes original startdate 09/08/2020
-RawCFR=colSums(deathdat[12:211,2:20])/colSums(casedat[1:200,2:20])
+##  Case Fatality ratio was determined from initial period 
+##   this assumed original startdate 09/08/2020 so is deprecated
+##RawCFR=colSums(deathdat[12:211,2:20])/colSums(casedat[1:200,2:20])
 
 
 # Get mean age-related CFR across the whole pandemic, with adjustment for vaccination
@@ -700,11 +683,6 @@ RawCFR=colSums(deathdat[12:211,2:20])/colSums(casedat[1:200,2:20])
 # RawCFR=colSums(deathdat[2:20]/(1-vacdat[2:20]*vacCFR))/colSums(casedat[2:ncol(casedat)])
 
 
-# Hardcode rawCFR for wild type data - this allows start date to be brought forward
-RawCFR = c(
-0.00006476028, 0.00005932501, 0.00004474461, 0.00007174780, 0.00011668950, 0.00020707650, 0.00045082861, 0.00083235867, 
-0.00135192176, 0.00274650970, 0.00466541696, 0.00847207527, 0.01470736106, 0.05199837337, 0.08980941759, 0.15752935748, 
-  0.22651139233, 0.27821927091, 0.32550659352 )
 
 #Add in ONSdata by hand.  for 12/4 use this to get R
 engpop=56989570
@@ -767,10 +745,12 @@ for(iday in 1:14){
 comdat$Missing_incidence=smooth.spline((comdat$Eng_ons_inc/regcases$England),df=6)$y
 comdat$Scot_Missing_incidence=smooth.spline((comdat$Scot_ons_inc/regcases$Scotland),df=6)$y
 
-#  Compartment model now done with a function.  Last two inputs are indices giving date range
+#  Compartment model done with a function.  Last two inputs are indices giving date range
+
 #  The compartments will not be correct until the cases have time to filter through all sections,
 #  which may be several months for, e.g oldCRITREC
  compEng <- Compartment(casedat, covidsimAge, RawCFR, comdat,2,nrow(casedat))
+
 
 
 # Do not unpack the values returned, access compartment quantities via comp$ list construct
@@ -852,6 +832,12 @@ if(any(compEng$CASE==0)){
   }
 }
 rat <- regcases
+
+
+#  Add ONS data to comdat$
+approx(eng_prev,n=7*length(eng_prev))$y %>% tail(nrow(comdat))-> comdat$ons_prev
+approx(scot_prev,n=7*length(scot_prev))$y%>% tail(nrow(comdat))-> comdat$scot_ons_prev
+
 
 for(i in (2:nrow(regcases))    ){
   rat[i, 2:ncol(regcases)] <- 1 + log(regcases[i, 2:ncol(regcases)]/regcases[(i-1), 2:ncol(regcases)])*genTime
@@ -1122,11 +1108,7 @@ if(interactive()){
 
 R_BestGuess <- list()
 R_Quant <- list()
-### Smoothing Filters
-s1 <- 0.05
-s2 <- 0.1
-s3 <- 0.2
-s4 <- 0.3
+
 
 #  Daily stats are quite messed up since end of PCR testing.  Use smoothed R estimates for Quartiles
 tmp <-estimate_R(rat$smoothEngland,dfR$date,comdat$allCases)

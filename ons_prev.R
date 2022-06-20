@@ -1,3 +1,4 @@
+# This source is for testing only -  main workflow uses getParms
 #from August 7th 2020 
 library(dplyr, warn.conflicts = FALSE, quietly = TRUE)
 engpop=56989570

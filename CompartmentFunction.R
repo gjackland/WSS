@@ -17,42 +17,8 @@ Compartment <- function(cases, csimAge, rCFR, cdat, startc, endc){
   # CASE is the input cases which get WSS'ed.
   # CASE=cases produces estimates for the data used.
   CASE <- cases
-  cdflength <- 50
+ #  Lognormals gone to getParms
   
-  #  Time dependences of transitions - assumed age independent
-  #  Make cdflength day cdfs.  these are same for all age groups, but fractions Prop/CFR vary
-  #  Choose to use lognormal with logsd=logmean/4.0.  Data not available to do better
-  #  Mean stay in Hospital = Sum(Cases)/Sum(admissions) = 10 days
-  #  In model  sum(SARI[2:20]+CRIT[2:20]+CRITREC[2:20])/sum(newSARI[2:20])
-  logmean <- log(7.0)
-  MildToRecovery <- dlnorm(1:cdflength, logmean,  logmean/8.0) # These "Milds" are never recorded except by ONS
-  logmean <- log(7.0)
-  ILIToRecovery <- dlnorm(1:cdflength, logmean,  logmean/4.0)
-  #  Fit  shift & scale from ILI to SARI
-  logmean <- log(5.0)
-  ILIToSARI <- dlnorm(1:cdflength, logmean,  logmean/2.0)
-  logmean <- log(9.0)
-  SARIToRecovery <- dlnorm(1:cdflength, logmean,  logmean/2.0)
-  logmean <- log(6.0)
-  SARIToDeath <- dlnorm(1:cdflength, logmean,  logmean/2.0)
-  logmean <- log(4.0)
-  SARIToCritical <- dlnorm(1:cdflength, logmean,  logmean/2.0)
-  logmean <- log(7.5) # legman time spent on ICU, 7.5 days from Faes, note mean!=logmean
-  CriticalToCritRecov <- dlnorm(1:cdflength, logmean,  logmean/4.0)
-  CriticalToDeath <- dlnorm(1:cdflength, logmean,  logmean/4.0)
-  logmean <- log(8.0) #  Stay in hospital post ICU - needs evidence
-  CritRecovToRecov <- dlnorm(1:cdflength, logmean,  logmean/4.0)
-  
-  #  Normalise these time distributions
-  MildToRecovery <- MildToRecovery/sum(MildToRecovery)
-  ILIToRecovery <- ILIToRecovery/sum(ILIToRecovery)
-  ILIToSARI <- ILIToSARI/sum(ILIToSARI)
-  SARIToRecovery <- SARIToRecovery/sum(SARIToRecovery)
-  SARIToDeath <- SARIToDeath/sum(SARIToDeath)
-  SARIToCritical <- SARIToCritical/sum(SARIToCritical)
-  CriticalToCritRecov <- CriticalToCritRecov/sum(CriticalToCritRecov)
-  CriticalToDeath <- CriticalToDeath/sum(CriticalToDeath)
-  CritRecovToRecov <- CritRecovToRecov/sum(CritRecovToRecov)
   #  Follow infections through ILI (Case) - SARI (Hospital) - Crit (ICU) - CritRecov (Hospital)- Deaths
   
   #  Zero dataframes.
@@ -103,18 +69,7 @@ Compartment <- function(cases, csimAge, rCFR, cdat, startc, endc){
   # Current values will typically be negative, as they are sums of people leaving the compartment
   # Nobody changes age band.  Vectorize over distributions
   
-  # Age dependent transition probabilities a->ILI b->SARI c->Death
-  # apow+bpow+cpow=1 gives a fit to death data, not accounting for variant & vaccination effect
-  # bpow/bfac conditions the hospital admissions by age Distribution is Approx U65=65-85=2 * 85+
-  apow <- 0.15
-  bpow <- 0.4
-  cpow <- 1.0-apow-bpow
-  afac <- 1.0
-  bfac <- 1.2
-#  Adjust for omicron data - more hospitalisation, fewer deaths  
-  afac <- 1.1
-  bfac <- 1.5
-  cfac <- 1.0/afac/bfac
+
   cdat$lethality<-na.locf(cdat$lethality)
     for (iday in (startc:endc)){
     # Update current vaccine/variant lethality if available    
@@ -228,14 +183,7 @@ Compartment <- function(cases, csimAge, rCFR, cdat, startc, endc){
   out$MildToRecovery <- MildToRecovery
   out$xday <-  xday
   out$vacCFR <-  vacCFR
-  out$ILIToSARI <- ILIToSARI
-  out$ILIToRecovery <-  ILIToRecovery
-  out$SARIToCritical <-  SARIToCritical
-  out$SARIToDeath <- SARIToDeath
-  out$SARIToRecovery <-  SARIToRecovery
-  out$CriticalToDeath <-  CriticalToDeath
-  out$CriticalToCritRecov <-  CriticalToCritRecov
-  out$CritRecovToRecov <- CritRecovToRecov
+
   return(out)
   
 }# End of compartment function

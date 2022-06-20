@@ -30,14 +30,7 @@ Predictions <- function(input,R_input,predtime,pop){
   MildToRecovery <-  input$MildToRecovery
   xday <- input$xday
   vacCFR <- input$vacCFR
-  ILIToSARI <-  input$ILIToSARI
-  ILIToRecovery <- input$ILIToRecovery
-  SARIToCritical <- input$SARIToCritical
-  SARIToDeath <- input$SARIToDeath
-  SARIToRecovery <-  input$SARIToRecovery
-  CriticalToDeath <- input$CriticalToDeath
-  CriticalToCritRecov <- input$CriticalToCritRecov
-  CritRecovToRecov <- input$CritRecovToRecov
+ 
  
   lengthofdata <- nrow(CASE)
   enddateP<-CASE$date[lengthofdata]
@@ -126,7 +119,7 @@ Predictions <- function(input,R_input,predtime,pop){
     # depend on the number of cases as that measures "breakthrough" into new regions
     # 
 
-    R_input= ((R_input-1)*0.95+1.0)  
+    R_input= ((R_input-1)*R_decay+1.0)  
     #  Infections not confined by age group - use an average
     #  Assume Omicron established by 12/4/22 - immunity built into R_input
     R_eff=sum(R_input)/19
@@ -165,14 +158,6 @@ Predictions <- function(input,R_input,predtime,pop){
   MildToRecovery ->  input$MildToRecovery
   xday -> input$xday
   vacCFR -> input$vacCFR
-  ILIToSARI ->  input$ILIToSARI
-  ILIToRecovery -> input$ILIToRecovery
-  SARIToCritical -> input$SARIToCritical
-  SARIToDeath -> input$SARIToDeath
-  SARIToRecovery ->  input$SARIToRecovery
-  CriticalToDeath -> input$CriticalToDeath
-  CriticalToCritRecov -> input$CriticalToCritRecov
-  CritRecovToRecov -> input$CritRecovToRecov
   S -> input$S
   return(input)
 }
