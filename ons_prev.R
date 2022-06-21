@@ -14,7 +14,7 @@ eng_prev<-c(
   1.14,1.21,1.44,1.63,1.79,2.02,2.02,1.70,1.51,
   1.58,1.65,1.64,1.72,2.21,2.83,3.71,6.00,
   6.85,5.47,4.82,4.83,5.18,4.49,3.84,3.55,
-  3.80,4.87,6.39,7.56,7.60,6.92,5.90,4.42,2.91,2.21,1.90,1.60)*engpop/100
+  3.80,4.87,6.39,7.56,7.60,6.92,5.90,4.42,2.91,2.21,1.90,1.60,1.44,1.46,2.07)*engpop/100
 scot_prev<-c(0.05,0.05,0.05,0.07,0.11,0.19, 0.21, 0.41,0.62,0.57,0.71,0.90,0.75,
              0.64,0.87,0.78,0.82,1.00,0.71,0.69,0.87,1.06,0.99,0.92,0.88,
              0.67,0.55,0.45,0.30,0.31,0.37,0.41,0.32,0.25,0.20,0.18,0.16,
@@ -22,7 +22,7 @@ scot_prev<-c(0.05,0.05,0.05,0.07,0.11,0.19, 0.21, 0.41,0.62,0.57,0.71,0.90,0.75,
              0.94,0.82,0.53,0.49,0.70,1.32,2.23,2.29,2.28,1.85,1.61,1.26,
              1.14,1.36,1.25,1.18,1.06,1.44,1.58,1.24,1.27,1.45,1.50,2.57,4.52,5.65,4.49,3.11,
              3.52,4.01, 4.17, 4.57, 5.33,5.70,7.15,9.00,8.57,7.54,5.98,5.35,4.14,3.55,
-             3.01,2.32,2.57)*scotpop/100
+             3.01,2.32,2.57,2.01,2.36,3.36)*scotpop/100
 
 #  Put the ONS prevalence data into the comdat array
 approx(eng_prev,n=7*length(eng_prev))$y%>% tail(nrow(comdat))-> comdat$Eng_ons_prev
@@ -53,5 +53,7 @@ lines(smooth.spline(regcases$England,df=10)$y)
 comdat$Missing_incidence=smooth.spline((comdat$Eng_ons_inc/regcases$England),df=20)$y
 
 comdat$Scot_Missing_incidence=smooth.spline((comdat$Scot_ons_inc/regcases$Scotland),df=20)$y
-
-
+plot(comdat$Scot_Missing_incidence)
+plot(comdat$Missing_incidence)
+lines(regcases$Scotland
+     )

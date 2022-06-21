@@ -742,13 +742,15 @@ for(iday in 1:14){
   comdat$Scot_ons_inc[(nrow(comdat)-14+iday)]=Scotstart+iday*Scotslope
 }
 
-comdat$Missing_incidence=smooth.spline((comdat$Eng_ons_inc/regcases$England),df=6)$y
+comdat$Missing_incidence=smooth.spline((comdat$Eng_ons_inc/rowSums(casedat[2:20])),df=6)$y
 comdat$Scot_Missing_incidence=smooth.spline((comdat$Scot_ons_inc/regcases$Scotland),df=6)$y
 
 #  Compartment model done with a function.  Last two inputs are indices giving date range
 
 #  The compartments will not be correct until the cases have time to filter through all sections,
 #  which may be several months for, e.g oldCRITREC
+#  From mid 2022, Compartment will account for underreporting by adjusting the casedat to fit with the shifted & extrapolated ONS values 
+
  compEng <- Compartment(casedat, covidsimAge, RawCFR, comdat,2,nrow(casedat))
 
 

@@ -72,6 +72,9 @@ NEY=YH
 MD[2:20]=EM[2:20]+WM[2:20]
 NEY[2:20]=NE[2:20]+YH[2:20]
 
+
+
+
 #  Hospital data only available by 7 NHS regions.  obvs.
 
 SWhospurl="https://api.coronavirus.data.gov.uk/v2/data?areaType=nhsRegion&areaCode=E40000006&metric=hospitalCases&metric=newAdmissions&format=csv"
@@ -153,6 +156,7 @@ NEY$date<-as.Date(NEY$date)
 
 #  Still use R from 7 regions...  CFR and vaccinations are assumed from National stats
 
+
 compLon<- Compartment(Lon,  covidsimAge, RawCFR, comdat,3,nrow(Lon))
 predLon<-Predictions(compLon,R_BestGuess$Lon,predtime,population$Lon)
 
@@ -220,7 +224,7 @@ CCEng=CC_write(predEng,"England",population$England[1],R_BestGuess$England,R_Qua
 ratio$Scot$death=sum(predScot$DEATH[recent_time,2:20])/sum(scotdeath[recent_time,2:20])
 ratio$Scot$hosp=sum(rowSums(predScot$SARI[recent_time,2:20]+predScot$CRIT[recent_time,2:20]+predScot$CRITREC[recent_time,2:20]))/sum(Hospital$Scot$saridat[recent_time])
 ratio$Scot$newhosp=sum(rowSums(predScot$newSARI[recent_time,2:20]))/sum(Hospital$Scot$newsaridat[recent_time])
-CCScot=CC_write(predScot,"Scotland",population$Scotland[1],R_BestGuess$Scotland,R_Quant$NW,rat$smoothScotland,ratio$Scot,ONS_MI)
+CCScot=CC_write(predScot,"Scotland",population$Scotland[1],R_BestGuess$Scotland,R_Quant$Scotland,rat$smoothScotland,ratio$Scot,ONS_MI)
 
 ratio$NW$death=sum(predNW$DEATH[recent_time,2:20])/sum(regdeaths$`North West`[recent_time])
 ratio$NW$hosp=sum(rowSums(predNW$SARI[recent_time,2:20]+predNW$CRIT[recent_time,2:20]+predNW$CRITREC[recent_time,2:20]))/sum(Hospital$NW$saridat[recent_time])
@@ -352,7 +356,7 @@ lines(rowSums(predLon$SARI[2:20]+predLon$CRIT[2:20]+predLon$CRITREC[2:20])/ratio
 #Admissions Uk total and by region
 sum(na.locf(Hospital$Eng$saridat))
 sum(na.locf(Hospital$UK$saridat))
-sum(na.locf(Hospital$NEY$saridat)+Hospital$NW$saridat+Hospital$EE$saridat+Hospital$MD$saridat+Hospital$Lon$saridat+Hospital$SE$saridat+Hospital$SW$saridat+Hospital$Scot$saridat+na.locf(Hospital$Wal$saridat)+na.locf(Hospital$NI$saridat))
+sum(na.locf(Hospital$NEY$saridat+Hospital$NW$saridat+Hospital$EE$saridat+Hospital$MD$saridat+Hospital$Lon$saridat+Hospital$SE$saridat+Hospital$SW$saridat))+sum(na.locf(Hospital$Scot$saridat))+sum(na.locf(Hospital$Wal$saridat))+sum(na.locf(Hospital$NI$saridat))
 sum(rowSums(compEng$SARI[2:20]+compEng$CRIT[2:20]+compEng$CRITREC[2:20]))
 sum(na.locf(Hospital$Eng$newsaridat))
 sum(na.locf(compEng$newSARI[2:20]))
