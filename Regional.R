@@ -189,7 +189,7 @@ predSE$SARI[2:20][predSE$SARI[2:20] < 0] <- 0.0
 # With omicron and confirmatory PCR changes, shorten recent_timescale
 total_time = min(nrow(deathdat),nrow(casedat),length(Hospital$UK$date))
 
-recent_time<-(total_time-7-reporting_delay):(total_time-reporting_delay-1)
+recent_time<-(total_time-28-reporting_delay):(total_time-reporting_delay-1)
 
 #Ratios:  For MTPs we scale the various quantities to fit the most recent time data
 #   This automatically compensates for any slowish-varying trends of increased virulence, better treatment waning immunity etc.
@@ -220,7 +220,7 @@ CCEng=CC_write(predEng,"England",population$England[1],R_BestGuess$England,R_Qua
 ratio$Scot$death=sum(predScot$DEATH[recent_time,2:20])/sum(scotdeath[recent_time,2:20])
 ratio$Scot$hosp=sum(rowSums(predScot$SARI[recent_time,2:20]+predScot$CRIT[recent_time,2:20]+predScot$CRITREC[recent_time,2:20]))/sum(Hospital$Scot$saridat[recent_time])
 ratio$Scot$newhosp=sum(rowSums(predScot$newSARI[recent_time,2:20]))/sum(Hospital$Scot$newsaridat[recent_time])
-CCScot=CC_write(predScot,"Scotland",population$Scotland[1],R_BestGuess$Scotland,R_Quant$NW,rat$smoothScotland,ratio$Scot,ONS_MI)
+CCScot=CC_write(predScot,"Scotland",population$Scotland[1],R_BestGuess$Scotland,R_Quant$Scotland,rat$smoothScotland,ratio$Scot,ONS_MI)
 
 ratio$NW$death=sum(predNW$DEATH[recent_time,2:20])/sum(regdeaths$`North West`[recent_time])
 ratio$NW$hosp=sum(rowSums(predNW$SARI[recent_time,2:20]+predNW$CRIT[recent_time,2:20]+predNW$CRITREC[recent_time,2:20]))/sum(Hospital$NW$saridat[recent_time])

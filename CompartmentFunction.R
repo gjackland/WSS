@@ -17,6 +17,7 @@ Compartment <- function(cases, csimAge, rCFR, cdat, startc, endc){
   # CASE is the input cases which get WSS'ed.
   # CASE=cases produces estimates for the data used.
   CASE <- cases
+  CASE[2:20]<-CASE[2:20]*cdat$Missing_incidence
  #  Lognormals gone to getParms
   
   #  Follow infections through ILI (Case) - SARI (Hospital) - Crit (ICU) - CritRecov (Hospital)- Deaths
