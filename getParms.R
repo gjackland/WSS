@@ -1,10 +1,11 @@
 # Start and end date - the date to collect data from
 # First month or so will be equilibration, especially if started at a time of high caseload
-startdate <- as.Date("2021/05/09") #as.Date("2020/08/09")
+startdate <- as.Date("2020/08/09") #as.Date("2020/08/09")
 
 # Lose only the last day of data - use tail correction for reporting delay
 # Weekend data can be sketchy Extend the enddate if run on Monday morning
-reporting_delay=9
+#  May need to rerun with longer delay for Scottish reporting
+reporting_delay=11
 enddate <-  Sys.Date()-reporting_delay
 #  Six week prediction
 predtime = 100
@@ -83,6 +84,8 @@ logmean <- log(6.0)
 #Add in ONSdata by hand.  this provides a check on the Case-based R
   engpop=56989570
   scotpop=5475660
+  walespop=3174970
+  nipop=1910623
   eng_prev<-c(
     0.05,0.05,0.05,0.07,0.11,0.19,0.21,0.41,0.62,
     0.79,1.04,1.13,1.20,1.22,1.16,0.96,0.88,
@@ -94,12 +97,36 @@ logmean <- log(6.0)
     1.14,1.21,1.44,1.63,1.79,2.02,2.02,1.70,1.51,
     1.58,1.65,1.64,1.72,2.21,2.83,3.71,6.00,
     6.85,5.47,4.82,4.83,5.18,4.49,3.84,3.55,
-    3.80,4.87,6.39,7.56,7.60,6.92,5.90,4.42,2.91,2.21,1.90,1.60,1.44,1.46,2.07)*engpop/100
+    3.80,4.87,6.39,7.56,7.60,6.92,5.90,4.42,2.91,2.21,1.90,1.60,1.44,1.46,2.07,2.50,3.35)*engpop/100
   scot_prev<-c(0.05,0.05,0.05,0.07,0.11,0.19, 0.21, 0.41,0.62,0.57,0.71,0.90,0.75,
                0.64,0.87,0.78,0.82,1.00,0.71,0.69,0.87,1.06,0.99,0.92,0.88,
                0.67,0.55,0.45,0.30,0.31,0.37,0.41,0.32,0.25,0.20,0.18,0.16,
                0.13,0.08,0.05,0.16,0.15,0.18,0.17,0.46,0.68,1.01,1.14,1.24,
                0.94,0.82,0.53,0.49,0.70,1.32,2.23,2.29,2.28,1.85,1.61,1.26,
                1.14,1.36,1.25,1.18,1.06,1.44,1.58,1.24,1.27,1.45,1.50,2.57,4.52,5.65,4.49,3.11,
-               3.52,4.01, 4.17, 4.57, 5.33,5.70,7.15,9.00,8.57,7.54,5.98,5.35,4.14,3.55,3.01,2.32,2.57,2.01,2.36,3.36)*scotpop/100
+               3.52,4.01, 4.17, 4.57, 5.33,5.70,7.15,9.00,8.57,7.54,5.98,5.35,4.14,3.55,3.01,2.32,2.57,
+               2.01,2.36,3.36,4.76,5.47)*scotpop/100
+  onsurl="https://www.ons.gov.uk/visualisations/dvc2050/region/datadownload.xlsx"
+#NRS data startin 30/12/19
+  scot_week_death(10,  53,  256,  587,638,  636,
+  499,  388,  302,  211,  111,  75,  48,  41,  28,  10,  7,  3,  4,  3,  1,  0,  3,  3,
+  2,  2,  7,  9,  19,  24,  66,  93,  157,  184,  248,  215,  215,  204,  197,  172,
+  163,  154,  334,  333,  397,  388,  325,  270,  245,  191,  121,  81,  46,  48,  27,  20,
+  15,  15,  9,  4,  5,  2,  6,  7,  4,  10,  15,  17,  26,  39,  48,  36,
+  48,  38,  35,  39,  48,  65,  123,  146,  117,  113,  123,  115,  117,  112,  95,  78,
+  73,  67,  63,  54,  43,  36,  52,  98,  97,  78,  76,  43,  48,  47,  63,  65,
+  76,  116,  96,  84,  70,  73,  49,  43,  33,  30,  26,  13,  23,  22,  33)
   
+#onsdat <-  read_excel(onsurl)
+#  Would like to read these in but ONS datasheets aren't consistent.
+# read_excel("https://www.ons.gov.uk/visualisations/dvc2050/region/datadownload.xlsx")
+#download.file("https://www.ons.gov.uk/visualisations/dvc2050/region/datadownload.xlsx", destfile = "ons.xlsx")
+jnk=read_excel("ons.xlsx",sheet="England",col_names=FALSE,skip=4)
+eng_auto<-na.trim(jnk[[2]])*engpop/100
+jnk=read_excel("ons.xlsx",sheet="Scotland",col_names=FALSE,skip=4)
+scot_auto<-na.trim(jnk[[2]])*scotpop/100
+jnk=read_excel("ons.xlsx",sheet="Wales",col_names=FALSE,skip=4)
+wales_auto<-na.trim(jnk[[2]])*walespop/100
+jnk=read_excel("ons.xlsx",sheet="Northern Ireland",col_names=FALSE,skip=4)
+ni_auto<-na.trim(jnk[[2]])*nipop/100
+

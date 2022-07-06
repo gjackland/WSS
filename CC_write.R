@@ -131,11 +131,11 @@ for (d in startwrite:endwrite){
   CCtmp$Scenario="MTP"
   cum_error=cum_error*R_error}
   CCtmp$Value = sum(CCcomp$newSARI[d,2:20])/ratio$newhosp
-  CCtmp$"Quantile 0.05"=max(0,CCtmp$Value*cum_error[1]*(1.0-3*sigma))
+  CCtmp$"Quantile 0.05"=max(0,CCtmp$Value*cum_error[1]*(1.0-2.5*sigma))
   CCtmp$"Quantile 0.25"=max(0,CCtmp$Value*cum_error[2]*(1.0-sigma))
   CCtmp$"Quantile 0.5"=CCtmp$Value
   CCtmp$"Quantile 0.75"=CCtmp$Value*cum_error[4]*(1.0+sigma)
-  CCtmp$"Quantile 0.95"=CCtmp$Value*cum_error[5]*(1.0+3*sigma)
+  CCtmp$"Quantile 0.95"=CCtmp$Value*cum_error[5]*(1.0+2.5*sigma)
   CCtmp$"Day of Value" = day(CCcomp$newSARI$date[d])
   CCtmp$"Month of Value" = month(CCcomp$newSARI$date[d])
   CCtmp$"Year of Value" = year(CCcomp$newSARI$date[d])
@@ -187,7 +187,7 @@ for (d in startwrite:endwrite){
     cum_error=cum_error*R_error
   }
 
-  CCtmp$Value = sum(CCcomp$CASE[d,2:20])*Missing_incidence
+  CCtmp$Value = sum(CCcomp$CASE[d,2:20])
   CCtmp$"Quantile 0.05"=max(0,CCtmp$Value*cum_error[1]*(1.0-4*sigma))
   CCtmp$"Quantile 0.25"=max(0,CCtmp$Value*cum_error[2]*(1.0-1.5*sigma))
   CCtmp$"Quantile 0.5"=CCtmp$Value
@@ -202,6 +202,7 @@ for (d in startwrite:endwrite){
 #  Missing prevalence covers discrepancy between ONS and case data
 #  Also assume a five day delay between infection and test.
 #  Prevalence is a percentage who would test positive
+#From 22/06 CASEs alerady contain missing incidence
 # There is some difficulty about the ONS data c/f e.g. https://www.medrxiv.org/content/10.1101/2021.02.09.21251411v1.full.pdf
 CCtmp$ValueType="prevalence"
 CCtmp$Scenario="Nowcast"
@@ -212,7 +213,7 @@ for (d in (startwrite+20):(endwrite)){
   CCtmp$ValueType="prevalence_mtp"
   cum_error=cum_error*R_error
   }
-  PREV= sum(CCcomp$CASE[(d-12):(d),2:20])*Missing_incidence
+  PREV= sum(CCcomp$CASE[(d-12):(d),2:20])
 
   CCtmp$Value=PREV/pop*100
   CCtmp$"Quantile 0.05"=max(0,CCtmp$Value*cum_error[1]*(1.0-3*sigma))

@@ -167,15 +167,9 @@ coltypes <- cols(
                   NewPositive = col_double(),
                   TotalCases = col_double(),
                   CrudeRatePositive = col_double(),
-                  NewDeaths = col_double(),
-                  TotalDeaths = col_double(),
-                  CrudeRateDeaths = col_double(),
                   TotalPCROnly = col_double(),
-                  NewPCROnly = col_double(),
                   TotalLFDOnly = col_double(),
-                  NewLFDOnly = col_double(),
-                  TotalLFDAndPCR = col_double(),
-                  NewLFDAndPCR = col_double()
+                  TotalLFDAndPCR = col_double()
                 )
 
 # Get the data
@@ -194,7 +188,6 @@ coltypes <- cols(
                 Date = col_date(format = "%Y%m%d"),
                 HB = col_character(),
                 HBName = col_character(),
-                DailyPositive = col_double(),
                 CumulativePositive = col_double(),
                 CrudeRatePositive = col_double(),
                 CrudeRate7DayPositive = col_double(),
@@ -361,6 +354,12 @@ scotage[scotage==-Inf] <- 0.01
 scotdeath[is.na(scotdeath)] <- 0.01
 scotdeath[scotdeath==Inf] <- 0.01
 scotdeath[scotdeath==-Inf] <- 0.01
+
+#Read in from frozen file since Scotland stopped publishing death data.  This may have to be updated by hand from NRS data
+scotdeath2=read.csv("scotdeath2.csv")
+scotdeath2 %>% filter(date>= startdate) %>% filter(date <= enddate) -> jnk2
+
+scotdeath[2:20]=jnk2[3:21]
 pckg <- package_show("covid-19-wider-impacts-deaths", as ="table")
 
 #More Scottish data wrangling to deal with LFT non-reporting in 2022
