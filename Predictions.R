@@ -118,8 +118,8 @@ Predictions <- function(input,R_input,predtime,pop){
     # 5% is probably too slow, but more importantly the decay should (probably) 
     # depend on the number of cases as that measures "breakthrough" into new regions
     # 
-
-    R_input= ((R_input-1)*R_decay+1.0)  
+    #Assume third omicron wave will follow pattern of previous two
+    R_input=  ((R_input-1.0)*R_decay+1.0)  #((R_input-1)*R_decay+1.0)  
     #  Infections not confined by age group - use an average
     #  Assume Omicron established by 12/4/22 - immunity built into R_input
     R_eff=sum(R_input)/19

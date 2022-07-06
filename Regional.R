@@ -193,7 +193,7 @@ predSE$SARI[2:20][predSE$SARI[2:20] < 0] <- 0.0
 # With omicron and confirmatory PCR changes, shorten recent_timescale
 total_time = min(nrow(deathdat),nrow(casedat),length(Hospital$UK$date))
 
-recent_time<-(total_time-28-reporting_delay):(total_time-reporting_delay-1)
+recent_time<-(total_time-21-reporting_delay):(total_time-reporting_delay-1)
 
 #Ratios:  For MTPs we scale the various quantities to fit the most recent time data
 #   This automatically compensates for any slowish-varying trends of increased virulence, better treatment waning immunity etc.
@@ -269,12 +269,12 @@ CCWal=CC_write(predEng,"Wales",population$Wales[1],R_BestGuess$Wales,R_Quant$Wal
 CCNI=CC_write(predEng,"Northern Ireland",population$NI[1],R_BestGuess$NI,R_Quant$NI,rat$smoothNI,ratio$Eng,ONS_MI)
 
 
-#Now combine all the sheets into one
+#Now combine all the sheets into one.  Remove CCNI until get the case data.
 
 
-CC<-rbind(CCEng,CCScot,CCNW,CCNEY,CCMD,CCLon,CCSW,CCSE,CCEE,CCWal,CCNI)
+CC<-rbind(CCEng,CCScot,CCNW,CCNEY,CCMD,CCLon,CCSW,CCSE,CCEE,CCWal)
 
-write.xlsx(CC, file = "corrected.xlsx", 
+write.xlsx(CC, file = "CC.xlsx", 
            overwrite = TRUE,  sheetName = region, rowNames = FALSE)
 
 
@@ -289,7 +289,8 @@ lines(rowSums(predNW$CASE[2:20]),x=predNW$CASE$date,xlim=plot_date,col="blue")
 lines(rowSums(predSW$CASE[2:20]),x=predSW$CASE$date,xlim=plot_date,col="green")  
 lines(rowSums(predSE$CASE[2:20]),x=predSE$CASE$date,xlim=plot_date,col="orange")  
 lines(rowSums(predEE$CASE[2:20]),x=predEE$CASE$date,xlim=plot_date,col="violet")  
-lines(rowSums(predLon$CASE[2:20]),x=predLon$CASE$date,xlim=plot_date,col="yellow")  
+lines(rowSums(predLon$CASE[2:20]),x=predLon$CASE$date,xlim=plot_date,col="yellow") 
+lines(rowSums(predScot$CASE[2:20]),x=predScot$CASE$date,xlim=plot_date,col="black") 
 
 plot(rowSums(predMD$DEATH[2:20]),x=predMD$DEATH$date,xlim=plot_date,cex.axis=0.7,ylab="Regional Death",xlab="Date") 
 lines(rowSums(predNEY$DEATH[2:20]),x=predNEY$DEATH$date,xlim=plot_date,col="red") 
@@ -298,6 +299,7 @@ lines(rowSums(predSW$DEATH[2:20]),x=predSW$DEATH$date,xlim=plot_date,col="green"
 lines(rowSums(predSE$DEATH[2:20]),x=predSE$DEATH$date,xlim=plot_date,col="orange")  
 lines(rowSums(predEE$DEATH[2:20]),x=predEE$DEATH$date,xlim=plot_date,col="violet")  
 lines(rowSums(predLon$DEATH[2:20]),x=predLon$DEATH$date,xlim=plot_date,col="yellow")  
+lines(rowSums(predScot$DEATH[2:20]),x=predScot$DEATH$date,xlim=plot_date,col="yellow")  
 
 
 plot(Hospital$MD$newsaridat,x=as.Date(Hospital$MD$date),ylab="MD Hospital Admissions",xlab="Date",xlim=plot_date)
@@ -313,7 +315,7 @@ lines(rowSums(predSE$newSARI[2:20])/ratio$SE$newhosp,x=predSE$newSARI$date)
 plot(y=Hospital$SW$newsaridat,x=Hospital$SW$date,ylab="SW Hospital Admissions",xlab="Date",xlim=plot_date)
 lines(rowSums(predSW$newSARI[2:20])/ratio$SW$newhosp,x=predSW$newSARI$date)
 
-plot(y=Hospital$Lon$newsaridat,x=Hospital$Lon$date,ylab="Lon Hospital Admissions",xlab="Date")
+plot(y=Hospital$Lon$newsaridat,x=Hospital$Lon$date,ylab="Lon Hospital Admissions",xlab="Date",xlim=plot_date)
 lines(rowSums(predLon$newSARI[2:20])/ratio$Lon$newhosp,x=predLon$newSARI$date)
 plot(Hospital$Scot$newsaridat,ylab="Scotland Hospital Admissions",xlab="Date")
 lines(rowSums(predScot$newSARI[2:20])/ratio$Scot$newhosp)

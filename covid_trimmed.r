@@ -31,7 +31,7 @@ library(ggplot2, warn.conflicts = FALSE, quietly = TRUE)
 library(lubridate, warn.conflicts = FALSE, quietly = TRUE)
 library(zoo, warn.conflicts = FALSE, quietly = TRUE)
 library(RColorBrewer, warn.conflicts = FALSE, quietly = TRUE)
-
+library("readxl")
 
 source("CompartmentFunction.R")
 source("medrxiv.R")
@@ -250,19 +250,19 @@ deathdat <- deathdat %>%
 # Scotland data https://api.coronavirus.data.gov.uk/v2/data?areaType=nation&areaCode=S92000003&metric=newCasesBySpecimenDate&metric=newDeaths28DaysByDeathDate&metric=newDeaths28DaysByPublishDate&format=csv
 # https://www.opendata.nhs.scot/dataset/covid-19-in-scotland/resource/9393bd66-5012-4f01-9bc5-e7a10accacf4
 
-scoturl <-  paste0(baseurl,
-                   "areaType=nation&",
-                   "areaCode=S92000003&",
-                   "metric=newDeaths28DaysByDeathDate&",
-                   "metric=newCasesBySpecimenDate&",
-                   "metric=newDeaths28DaysByPublishDate&",
-                   "format=csv")
-coltypes <-  cols(
-  date = col_date(format = "%Y-%m-%d"),
-  newCasesBySpecimenDate = col_number(),
-  newDeaths28DaysByPublishDate = col_number(),
-  newDeaths28DaysByDeathDate = col_number()
-)
+#scoturl <-  paste0(baseurl,
+#                   "areaType=nation&",
+#                   "areaCode=S92000003&",
+#                   "metric=newDeaths28DaysByDeathDate&",
+#                   "metric=newCasesBySpecimenDate&",
+#                   "metric=newDeaths28DaysByPublishDate&",
+#                   "format=csv")
+#coltypes <-  cols(
+ # date = col_date(format = "%Y-%m-%d"),
+#  newCasesBySpecimenDate = col_number(),
+#  newDeaths28DaysByPublishDate = col_number(),
+#  newDeaths28DaysByDeathDate = col_number()
+#)
 #  Trying and failing to get data from PHS
 #scotdeaths<- read.csv(file="https://www.opendata.nhs.scot/api/3/action/datastore_search?resource_id=9393bd66-5012-4f01-9bc5-e7a10accacf4")
 #
@@ -311,6 +311,7 @@ NIurl <-  paste0(baseurl,
 
 
 # Read in the NI deaths and case data
+# Not ethese are not reported sine 19/05/22
 NIdat <-  read_csv(file = NIurl, col_types = coltypes)
 
 # Transform the data
@@ -559,7 +560,7 @@ within(regcases, rm("Golden Jubilee National Hospital"))->jnk
 regcases<-jnk
 # Remove the no longer needed input data  Keep Scottish data for SCottishData.R
 rm(ukcasedat,jnk,coltypes,NIdat,walesdat,regagedat3)
-rm(HospitalUrl,deathurl,casesurl,scoturl,walesurl,NIurl,ageurl,baseurl,regurl,regurl2,regurl3,ukcaseurl,vacurl)
+rm(HospitalUrl,deathurl,casesurl,walesurl,NIurl,ageurl,baseurl,regurl,regurl2,regurl3,ukcaseurl,vacurl)
 
 # Plot all cases against date: Used for the paper, uncomment to recreate
 if(interactive()){
@@ -571,13 +572,6 @@ if(interactive()){
     xlab("Date") + ylab("All cases")
 }
 
-# Scotland tail correction.  Assumes we read in all but the last row
-if(enddate == (Sys.Date()-1)){
-  regcases[nrow(regcases),2:ncol(regcases)]=regcases[nrow(regcases),2:ncol(regcases)]*1.05
-  regcases[nrow(regcases-1),2:ncol(regcases)]=regcases[nrow(regcases-1),2:ncol(regcases)]*1.005
-  regcases[nrow(regcases),2:ncol(regcases)]=regcases[nrow(regcases),2:ncol(regcases)]*1.05
-  regcases[nrow(regcases-1),2:ncol(regcases)]=regcases[nrow(regcases-1),2:ncol(regcases)]*1.005
-}
 
 # Add variant data to comdat  Kentfac tells us how much more lethal the variant is
 # Numbers are fitted to death and hospitalisation data
@@ -655,7 +649,9 @@ comdat$fpCases <- comdat$allCases-0.004*as.integer(comdat$tests)
 regcases$regions <- regcases$London + regcases$`South East` + regcases$`South West` +
                   regcases$NE_Yorks + regcases$Midlands + regcases$`North West` +
                   regcases$`East of England`
-
+regcases$Scotland[412]=2495
+regcases$Scotland[413]=2595
+regcases$Scotland[414]=2695
 # Plot only if running interactively
 if(interactive()){
 
@@ -684,30 +680,7 @@ if(interactive()){
 
 
 
-#Add in ONSdata by hand.  for 12/4 use this to get R
-engpop=56989570
-scotpop=5475660
-eng_prev<-c(
-  0.05,0.05,0.05,0.07,0.11,0.19,0.21,0.41,0.62,
-  0.79,1.04,1.13,1.20,1.22,1.16,0.96,0.88,
-  1.04,1.18,1.47,2.06,2.08,1.88,1.87,1.55,
-  1.28,0.88,0.69,0.45,0.37,0.29,0.30,0.27,
-  0.30, 0.21,0.17, 0.10,0.08, 0.07,0.09, 0.09,
-  0.16, 0.18,0.19, 0.22,0.39,0.61,1.06,1.36,
-  1.57,1.32,1.33,1.28,1.39,1.41,1.38,1.28,
-  1.14,1.21,1.44,1.63,1.79,2.02,2.02,1.70,1.51,
-  1.58,1.65,1.64,1.72,2.21,2.83,3.71,6.00,
-  6.85,5.47,4.82,4.83,5.18,4.49,3.84,3.55,
-  3.80,4.87,6.39,7.56,7.60,6.92,5.90,4.42,2.91,2.21,1.90,1.60)*engpop/100
-scot_prev<-c(0.05,0.05,0.05,0.07,0.11,0.19, 0.21, 0.41,0.62,0.57,0.71,0.90,0.75,
-             0.64,0.87,0.78,0.82,1.00,0.71,0.69,0.87,1.06,0.99,0.92,0.88,
-             0.67,0.55,0.45,0.30,0.31,0.37,0.41,0.32,0.25,0.20,0.18,0.16,
-             0.13,0.08,0.05,0.16,0.15,0.18,0.17,0.46,0.68,1.01,1.14,1.24,
-             0.94,0.82,0.53,0.49,0.70,1.32,2.23,2.29,2.28,1.85,1.61,1.26,
-             1.14,1.36,1.25,1.18,1.06,1.44,1.58,1.24,1.27,1.45,1.50,2.57,4.52,5.65,4.49,3.11,
-             3.52,4.01, 4.17, 4.57, 5.33,5.70,7.15,9.00,8.57,7.54,5.98,5.35,4.14,3.55,
-             3.01,2.32,2.57)*scotpop/100
-
+#Add in ONSdata by hand in getParms.  for 12/4 use this to get R
 #  Put the ONS prevalence data into the comdat array  
 # ONS is delayed in reporting, and averaged over the previous week.
 # By peak matching, this can be about 10 days
@@ -817,7 +790,7 @@ smoothcases <- smooth.spline(comdat$allCases, df = 20)
 ninit <- as.numeric(1:nrow(comdat))/as.numeric(1:nrow(comdat))
 dfR <- data.frame(x=1.0:length(comdat$date),
                   date=comdat$date, itoR=ninit, stratR=ninit, rawR=ninit,  fpR=ninit,  weeklyR=ninit,  bylogR=ninit,
-                  ONS=ninit, p00=ninit,  p05=ninit,  p10=ninit,  p15=ninit,  p20=ninit,  p25=ninit,  p30=ninit,
+                  ONSEng=ninit, ONSScot=ninit, p00=ninit,  p05=ninit,  p10=ninit,  p15=ninit,  p20=ninit,  p25=ninit,  p30=ninit,
                   p35=ninit,  p40=ninit,  p45=ninit,  p50=ninit,  p55=ninit,  p60=ninit,  p65=ninit,
                   p70=ninit,  p75=ninit,  p80=ninit,  p85=ninit,  p90=ninit, x05=ninit, x15=ninit,
                   x25=ninit, x45=ninit, x65=ninit, x75=ninit, regions=ninit, smoothcasesR=ninit)
@@ -897,7 +870,8 @@ for(i in ((genTime+1):length(dfR$itoR))){
   dfR$stratR[i]=1+ (comdat$allCases[i]-comdat$allCases[i-1])*genTime/mean(comdat$allCases[(i-1):i])
   dfR$fpR[i]=(1+(comdat$fpCases[i]-comdat$fpCases[i-1])*genTime/(comdat$fpCases[i-1]))
   dfR$bylogR[i]=1+log(comdat$allCases[i]/comdat$allCases[i-1])*genTime
-  dfR$ONS[i]=1+log(comdat$Eng_ons_prev[i]/comdat$Eng_ons_prev[i-1])*genTime
+  dfR$ONSEng[i]=1+log(comdat$Eng_ons_inc[i]/comdat$Eng_ons_inc[i-1])*genTime
+  dfR$ONSScot[i]=1+log(comdat$Scot_ons_inc[i]/comdat$Scot_ons_inc[i-1])*genTime
   dfR$regions[i]=1+log(regcases$regions[i]/regcases$regions[i-1])*genTime
   dfR$p00[i]=1+log(casedat$'00_04'[i]/casedat$'00_04'[i-1])*genTime
   dfR$p05[i]=1+log(casedat$'05_09'[i]/casedat$'05_09'[i-1])*genTime
@@ -964,7 +938,8 @@ smoothweightR <- smooth.spline(dfR$bylogR,df=spdf,w=sqrt(comdat$allCases))$y
 smoothweightRstrat <- smooth.spline(dfR$stratR,df=spdf,w=sqrt(comdat$allCases))$y
 smoothweightRito <- smooth.spline(dfR$itoR,df=spdf,w=sqrt(comdat$allCases))$y
 dfR$smoothweightRfp <- smooth.spline(dfR$fpR,df=spdf,w=sqrt(comdat$fpCases))$y
-dfR$smoothONS <- smooth.spline(dfR$ONS,df=spdf,w=sqrt(comdat$Eng_ons_prev))$y
+dfR$smoothONSEng <- smooth.spline(dfR$ONSEng,df=spdf,w=sqrt(comdat$Eng_ons_prev))$y
+dfR$smoothONSScot <- smooth.spline(dfR$ONSScot,df=spdf,w=sqrt(comdat$Scot_ons_prev))$y
 rat$smoothScotland <- smooth.spline(rat$Scotland,df=spdf,w=sqrt(regcases$Scotland))$y
 rat$smoothNW <-smooth.spline(rat$`North West`,df=spdf,w=sqrt(regcases$`North West`))$y
 rat$smoothNEY <-smooth.spline(rat$NE_Yorks,df=spdf,w=sqrt(regcases$NE_Yorks))$y
@@ -1119,6 +1094,9 @@ R_Quant$England <-tmp[2:6]
 
 
 tmp <-estimate_R(rat$smoothScotland,rat$date,regcases$Scotland)
+#  Scottish data reporting is so delayed in summer 2022 that its better to use ONS
+
+tmp <-estimate_R(dfR$smoothONSScot,rat$date,regcases$Scotland)
 R_BestGuess$Scotland <-tmp[1]
 R_Quant$Scotland <-tmp[2:6]
 
