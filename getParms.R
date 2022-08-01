@@ -1,11 +1,22 @@
+
+
+# Read packages used by all scripts
+library(readr, warn.conflicts = FALSE, quietly = TRUE)
+library(dplyr, warn.conflicts = FALSE, quietly = TRUE)
+library(tidyr, warn.conflicts = FALSE, quietly = TRUE)
+library(ggplot2, warn.conflicts = FALSE, quietly = TRUE)
+library(lubridate, warn.conflicts = FALSE, quietly = TRUE)
+library(zoo, warn.conflicts = FALSE, quietly = TRUE)
+library(RColorBrewer, warn.conflicts = FALSE, quietly = TRUE)
+library("readxl")
 # Start and end date - the date to collect data from
 # First month or so will be equilibration, especially if started at a time of high caseload
-startdate <- as.Date("2020/08/09") #as.Date("2020/08/09")
+startdate <- as.Date("2021/08/09") #as.Date("2020/08/09")
 
 # Lose only the last day of data - use tail correction for reporting delay
 # Weekend data can be sketchy Extend the enddate if run on Monday morning
 #  May need to rerun with longer delay for Scottish reporting
-reporting_delay=11
+reporting_delay=8
 enddate <-  Sys.Date()-reporting_delay
 #  Six week prediction
 predtime = 100
@@ -14,10 +25,9 @@ predtime = 100
   #  Choose to use lognormal with logsd=logmean/4.0.  Data not available to do better
   #  Mean stay in Hospital = Sum(Cases)/Sum(admissions) = 10 days
 # Set the generation time in days (coverts growth rate to R)
-genTime <- 5.0
-# Omicron Gen time much lower
+# Omicron Gen time and R_decay much lower
 gentime <- 4.0
-R_decay=0.95
+R_decay=0.9
 #   Lethality of variants
 Kentfac <- 0.4
 Indiafac <- 0.9
@@ -97,7 +107,7 @@ logmean <- log(6.0)
     1.14,1.21,1.44,1.63,1.79,2.02,2.02,1.70,1.51,
     1.58,1.65,1.64,1.72,2.21,2.83,3.71,6.00,
     6.85,5.47,4.82,4.83,5.18,4.49,3.84,3.55,
-    3.80,4.87,6.39,7.56,7.60,6.92,5.90,4.42,2.91,2.21,1.90,1.60,1.44,1.46,2.07,2.50,3.35,3.95,5.27)*engpop/100
+    3.80,4.87,6.39,7.56,7.60,6.92,5.90,4.42,2.91,2.21,1.90,1.60,1.44,1.46,2.07,2.50,3.35,3.95,5.27,5.77,4.83)*engpop/100
   scot_prev<-c(0.05,0.05,0.05,0.07,0.11,0.19, 0.21, 0.41,0.62,0.57,0.71,0.90,0.75,
                0.64,0.87,0.78,0.82,1.00,0.71,0.69,0.87,1.06,0.99,0.92,0.88,
                0.67,0.55,0.45,0.30,0.31,0.37,0.41,0.32,0.25,0.20,0.18,0.16,
@@ -105,9 +115,9 @@ logmean <- log(6.0)
                0.94,0.82,0.53,0.49,0.70,1.32,2.23,2.29,2.28,1.85,1.61,1.26,
                1.14,1.36,1.25,1.18,1.06,1.44,1.58,1.24,1.27,1.45,1.50,2.57,4.52,5.65,4.49,3.11,
                3.52,4.01, 4.17, 4.57, 5.33,5.70,7.15,9.00,8.57,7.54,5.98,5.35,4.14,3.55,3.01,2.32,2.57,
-               2.01,2.36,3.36,4.76,5.47,5.94,6,34)*scotpop/100
+               2.01,2.36,3.36,4.76,5.47,5.94,6.34,6.48,5.17)*scotpop/100
   onsurl="https://www.ons.gov.uk/visualisations/dvc2050/region/datadownload.xlsx"
-#NRS data startin 30/12/19
+  #NRS data startin 30/12/19
   scot_week_death<-c(10,  53,  256,  587,638,  636,
   499,  388,  302,  211,  111,  75,  48,  41,  28,  10,  7,  3,  4,  3,  1,  0,  3,  3,
   2,  2,  7,  9,  19,  24,  66,  93,  157,  184,  248,  215,  215,  204,  197,  172,

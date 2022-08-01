@@ -254,7 +254,18 @@ coltypes <- cols(
 # Get the data
 scotagedat <- read_csv(ageurl, col_types = coltypes)
 
+
+#Read in from  file since Scotland stopped publishing death data on June 2nd.  
+#This may have to be updated by hand from NRS data startin at row 23 (June 6th)
+nrsdeath=read.csv("NRS_agedeath2022.csv")
+nrsdeath1<-nrsdeath[22:nrow(nrsdeath),]
+nrsdeathday <- nrsdeath1[rep(seq_len(nrow(nrsdeath1)), each=7),]
+nrsdeathday[5:11] = nrsdeathday[5:11]/7.0
+pckg <- package_show("covid-19-wider-impacts-deaths", as ="table")
+
 # Querying CKAN -----------------------------------------------------------
+
+
 
 
 # install and load the package
@@ -271,32 +282,43 @@ tags <- tag_list(as="table")
 #  Filter out the relevant columns  (Changed datastream from 10/02/2022)
 corona <- tag_show("coronavirus", as = "table")
 scotagedat[,c(1,3,5,7,8, 9,10)] %>% filter(Sex=="Total") %>% filter(Date>=casedat$date[1]) %>% filter(Date<=casedat$date[nrow(casedat)])->jnk 
-jnk %>% filter(AgeGroup == "0 to 14") -> jnk2
+
+
 
 #  Scottish data is in broader age groups.  To be compatible with the code,
 #  subdivide it  into 5 year bands.  Use the UK casedat & deathdat to set 
 #  up correct array sizes, and the demographics
 
-jnk2$DailyPositive<-Weekend(jnk2$DailyPositive)
+
+
 scotage <-casedat
 scotdeath <-deathdat
 
 #  Fractions in each 5 year age group same as in England (casedat)
 sum24=sum(casedat[2:4])
-
+jnk %>% filter(AgeGroup == "0 to 14") -> jnk2
+jnk2$DailyPositive<-Weekend(jnk2$DailyPositive)
+jnkna=length(jnk2$DailyDeaths[(jnk2$Date>"2022-06-01")])
+jnk2$DailyDeaths[(jnk2$Date>"2022-06-01")] <-nrsdeathday[1:jnkna,6]
 scotage$'05_09' <-jnk2$DailyPositive*sum(casedat$`05_09`)/sum24
 scotage$`00_04` <- jnk2$DailyPositive*sum(casedat$`00_04`)/sum24
 scotage$`10_14` <- jnk2$DailyPositive*sum(casedat$`10_14`)/sum24
 scotdeath$'05_09' <-jnk2$DailyDeaths *sum(casedat$`05_09`)/sum24
 scotdeath$`00_04` <- jnk2$DailyDeaths*sum(casedat$`00_04`)/sum24
 scotdeath$`10_14` <- jnk2$DailyDeaths*sum(casedat$`10_14`)/sum24
+
 jnk %>% filter(AgeGroup == "15 to 19") -> jnk2
+jnk2$DailyDeaths[(jnk2$Date>"2022-06-01")] <-nrsdeathday[1:jnkna,7]
 scotage$`15_19` <- Weekend(jnk2$DailyPositive)
-scotdeath$`15_19` <- jnk2$DailyDeaths
+scotdeath$`15_19` <- jnk2$DailyDeaths*sum(casedat$`15_19`)/sum24
+
 jnk %>% filter(AgeGroup == "20 to 24") -> jnk2
+jnk2$DailyDeaths[(jnk2$Date>"2022-06-01")] <-nrsdeathday[1:jnkna,7]
 scotage$`20_24` <- Weekend(jnk2$DailyPositive)
-scotdeath$`20_24` <- jnk2$DailyDeaths
+scotdeath$`20_24` <- jnk2$DailyDeaths*sum(casedat$`20_24`)/sum24
+
 jnk %>% filter(AgeGroup == "25 to 44") -> jnk2
+jnk2$DailyDeaths[(jnk2$Date>"2022-06-01")] <-nrsdeathday[1:jnkna,7]
 temp <- Weekend(jnk2$DailyPositive)
 sum24=sum(casedat[7:10])
 scotage$`25_29` <- temp*sum(casedat$`25_29`)/sum24
@@ -308,6 +330,7 @@ scotdeath$`30_34` <- jnk2$DailyDeaths*sum(casedat$`30_34`)/sum24
 scotdeath$`35_39` <- jnk2$DailyDeaths*sum(casedat$`35_39`)/sum24
 scotdeath$`40_44` <- jnk2$DailyDeaths*sum(casedat$`40_44`)/sum24
 jnk %>% filter(AgeGroup == "45 to 64") -> jnk2
+jnk2$DailyDeaths[(jnk2$Date>"2022-06-01")] <-nrsdeathday[1:jnkna,8]
 
 temp <- Weekend(jnk2$DailyPositive)
 sum24=sum(casedat[11:14])
@@ -324,6 +347,7 @@ scotdeath$`60_64` <- jnk2$DailyDeaths*sum(casedat$`60_64`)/sum24
 
 # so few deaths in younger groups, use case numbers as proxy. For over 65 use actual deaths
 jnk %>% filter(AgeGroup == "65 to 74") -> jnk2
+jnk2$DailyDeaths[(jnk2$Date>"2022-06-01")] <-nrsdeathday[1:jnkna,9]
 sum24=sum(casedat[15:16])
 sumRIP=sum(deathdat[15:16])
 temp <- Weekend(jnk2$DailyPositive)
@@ -332,6 +356,7 @@ scotage$`70_74` <- temp*sum(casedat$`70_74`)/sum24
 scotdeath$`65_69` <- jnk2$DailyDeaths*sum(deathdat$`65_69`)/sumRIP
 scotdeath$`70_74` <- jnk2$DailyDeaths*sum(deathdat$`70_74`)/sumRIP
 jnk %>% filter(AgeGroup == "75 to 84") -> jnk2
+jnk2$DailyDeaths[(jnk2$Date>"2022-06-01")] <-nrsdeathday[1:jnkna,10]
 temp <- Weekend(jnk2$DailyPositive)
 sum24=sum(casedat[17:18])
 sumRIP=sum(deathdat[17:18])
@@ -340,6 +365,7 @@ scotage$`80_84` <- temp*sum(casedat$`80_84`)/sum24
 scotdeath$`75_79` <- jnk2$DailyDeaths*sum(deathdat$`75_79`)/sumRIP
 scotdeath$`80_84` <- jnk2$DailyDeaths*sum(deathdat$`80_84`)/sumRIP
 jnk %>% filter(AgeGroup == "85plus") -> jnk2
+jnk2$DailyDeaths[(jnk2$Date>"2022-06-01")] <-nrsdeathday[1:jnkna,11]
 sum24=sum(casedat[19:20])
 sumRIP=sum(deathdat[19:20])
 temp <- Weekend(jnk2$DailyPositive)
@@ -348,25 +374,8 @@ scotage$`90+` <- temp*sum(casedat$`90+`)/sum24
 scotdeath$`85_89` <- jnk2$DailyDeaths*sum(deathdat$`85_89`)/sumRIP
 scotdeath$`90+` <- jnk2$DailyDeaths*sum(deathdat$`90+`)/sumRIP
 rm(sum24,sumRIP,jnk,jnk2,temp)
-scotage[is.na(scotage)] <- 0.01
-scotage[scotage==Inf] <- 0.01
-scotage[scotage==-Inf] <- 0.01
-scotdeath[is.na(scotdeath)] <- 0.01
-scotdeath[scotdeath==Inf] <- 0.01
-scotdeath[scotdeath==-Inf] <- 0.01
 
-#Read in from frozen file since Scotland stopped publishing death data.  This may have to be updated by hand from NRS data
-#scotdeath2=read.csv("scotdeath2.csv")
-#scotdeath2 %>% filter(date>= startdate) %>% filter(date <= enddate) -> jnk2
 
-#scotdeath[2:20]=jnk2[3:21]
-pckg <- package_show("covid-19-wider-impacts-deaths", as ="table")
-
-#More Scottish data wrangling to deal with LFT non-reporting in 2022
-#for(i in startLFT:length(regcases$Scotland))
-#{
-#  scotage[i,2:20]=scotage[i,2:20]*scotLFT[i-startLFT+1] 
-#}  
 
 
 #  Compartment section from WSS.
