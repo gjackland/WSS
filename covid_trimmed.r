@@ -23,16 +23,6 @@
 #  Italian data is here ... https://github.com/InPhyT/COVID19-Italy-Integrated-Surveillance-Data
 
 
-# Read packages used by the script
-library(readr, warn.conflicts = FALSE, quietly = TRUE)
-library(dplyr, warn.conflicts = FALSE, quietly = TRUE)
-library(tidyr, warn.conflicts = FALSE, quietly = TRUE)
-library(ggplot2, warn.conflicts = FALSE, quietly = TRUE)
-library(lubridate, warn.conflicts = FALSE, quietly = TRUE)
-library(zoo, warn.conflicts = FALSE, quietly = TRUE)
-library(RColorBrewer, warn.conflicts = FALSE, quietly = TRUE)
-library("readxl")
-
 source("CompartmentFunction.R")
 source("medrxiv.R")
 source("Predictions.R")
@@ -649,9 +639,6 @@ comdat$fpCases <- comdat$allCases-0.004*as.integer(comdat$tests)
 regcases$regions <- regcases$London + regcases$`South East` + regcases$`South West` +
                   regcases$NE_Yorks + regcases$Midlands + regcases$`North West` +
                   regcases$`East of England`
-regcases$Scotland[412]=2495
-regcases$Scotland[413]=2595
-regcases$Scotland[414]=2695
 # Plot only if running interactively
 if(interactive()){
 
