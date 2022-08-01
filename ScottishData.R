@@ -356,10 +356,10 @@ scotdeath[scotdeath==Inf] <- 0.01
 scotdeath[scotdeath==-Inf] <- 0.01
 
 #Read in from frozen file since Scotland stopped publishing death data.  This may have to be updated by hand from NRS data
-scotdeath2=read.csv("scotdeath2.csv")
-scotdeath2 %>% filter(date>= startdate) %>% filter(date <= enddate) -> jnk2
+#scotdeath2=read.csv("scotdeath2.csv")
+#scotdeath2 %>% filter(date>= startdate) %>% filter(date <= enddate) -> jnk2
 
-scotdeath[2:20]=jnk2[3:21]
+#scotdeath[2:20]=jnk2[3:21]
 pckg <- package_show("covid-19-wider-impacts-deaths", as ="table")
 
 #More Scottish data wrangling to deal with LFT non-reporting in 2022
