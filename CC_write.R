@@ -73,8 +73,8 @@ CC <- data.frame(
   CCtmp$ValueType="R"
   for (d in startwrite:(length(Rseries)-3)){
     CCtmp$Value = Rseries[d]
-    CCtmp$"Quantile 0.05"=min(Rseries[(d-3):(d+3)])*0.85
-    CCtmp$"Quantile 0.25"=min(Rseries[(d-3):(d+3)])*0.925
+    CCtmp$"Quantile 0.05"=min(min(Rseries[(d-3):(d+3)])*0.85,0)
+    CCtmp$"Quantile 0.25"=min(min(Rseries[(d-3):(d+3)])*0.925,0)
     CCtmp$"Quantile 0.5"=Rseries[d]
     CCtmp$"Quantile 0.75"=max(Rseries[(d-3):(d+3)])*1.075
     CCtmp$"Quantile 0.95"=max(Rseries[(d-3):(d+3)])*1.15
