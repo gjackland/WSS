@@ -541,9 +541,15 @@ Hospital$UK$critdat <- na.locf(Hospital$UK$critdat)
 
 regcases$Wales <- walesdat$allCases[1:nrow(regcases)]
 regcases$NI <- NIdat$allCases[1:nrow(regcases)]
-na.locf(regcases$Wales)
-na.locf(regcases$NI)
-
+regcases$Wales<-na.locf(regcases$Wales)
+regcases$NI<-na.locf(regcases$NI)
+#  Welsh data typically a few day late - adjust after the crazy big drop
+fixwales=((length(regcases$Wales)-5):length(regcases$Wales))
+ffix<-FALSE
+for (i in fixwales){
+if(regcases$Wales[i]/regcases$Wales[i-1]<0.5){ffix=TRUE}
+  if(ffix){regcases$Wales[i]=regcases$Wales[i-1]}
+}
 
 #remove random new Scottish "region"
 within(regcases, rm("Golden Jubilee National Hospital"))->jnk

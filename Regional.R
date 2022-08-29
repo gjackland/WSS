@@ -272,7 +272,7 @@ CCNI=CC_write(predEng,"Northern Ireland",population$NI[1],R_BestGuess$NI,R_Quant
 #Now combine all the sheets into one.  Remove CCNI until get the case data.
 
 
-CC<-rbind(CCEng,CCScot,CCNW,CCNEY,CCMD,CCLon,CCSW,CCSE,CCEE,CCWal)
+CC<-rbind(CCEng,CCScot,CCNW,CCNEY,CCMD,CCLon,CCSW,CCSE,CCEE)#,CCWal
 
 write.xlsx(CC, file = "CC.xlsx", 
            overwrite = TRUE,  sheetName = region, rowNames = FALSE)
