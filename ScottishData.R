@@ -261,11 +261,6 @@ nrsdeath=read.csv("NRS_agedeath2022.csv")
 nrsdeath1<-nrsdeath[22:nrow(nrsdeath),]
 nrsdeathday <- nrsdeath1[rep(seq_len(nrow(nrsdeath1)), each=7),]
 nrsdeathday[5:11] = nrsdeathday[5:11]/7.0
-#pckg <- package_show("covid-19-wider-impacts-deaths", as ="table")
-
-# Querying CKAN -----------------------------------------------------------
-
-
 
 
 # install and load the package
