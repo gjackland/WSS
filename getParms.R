@@ -14,7 +14,7 @@ startdate <- as.Date("2021/08/09") #as.Date("2020/08/09")
 # Lose only the last day of data - use tail correction for reporting delay
 # Weekend data can be sketchy Extend the enddate if run on Monday morning
 #  May need to rerun with longer delay for Scottish reporting
-reporting_delay=10
+reporting_delay=8
 enddate <-  Sys.Date()-reporting_delay
 #  Six week prediction
 predtime = 100
@@ -106,7 +106,7 @@ logmean <- log(6.0)
     1.58,1.65,1.64,1.72,2.21,2.83,3.71,6.00,
     6.85,5.47,4.82,4.83,5.18,4.49,3.84,3.55,
     3.80,4.87,6.39,7.56,7.60,6.92,5.90,4.42,2.91,2.21,1.90,1.60,1.44,1.46,2.07,2.50,
-    3.35,3.95,5.27,5.77,4.83,3.86,2.63,2.22)*engpop/100
+    3.35,3.95,5.27,5.77,4.83,3.86,2.63,2.22,1.64,1.41)*engpop/100
 
   scot_prev<-c(0.05,0.05,0.05,0.07,0.11,0.19, 0.21, 0.41,0.62,0.57,0.71,0.90,0.75,
                0.64,0.87,0.78,0.82,1.00,0.71,0.69,0.87,1.06,0.99,0.92,0.88,
@@ -115,7 +115,7 @@ logmean <- log(6.0)
                0.94,0.82,0.53,0.49,0.70,1.32,2.23,2.29,2.28,1.85,1.61,1.26,
                1.14,1.36,1.25,1.18,1.06,1.44,1.58,1.24,1.27,1.45,1.50,2.57,4.52,5.65,4.49,3.11,
                3.52,4.01, 4.17, 4.57, 5.33,5.70,7.15,9.00,8.57,7.54,5.98,5.35,4.14,3.55,3.01,2.32,2.57,
-               2.01,2.36,3.36,4.76,5.47,5.94,6.34,6.48,5.17,4.95,3.12,2.56)*scotpop/100
+               2.01,2.36,3.36,4.76,5.47,5.94,6.34,6.48,5.17,4.95,3.12,2.56,1.82,1.98)*scotpop/100
   onsurl="https://www.ons.gov.uk/visualisations/dvc2050/region/datadownload.xlsx"
   #NRS data startin 30/12/19
   scot_week_death<-c(10,  53,  256,  587,638,  636,
@@ -125,18 +125,18 @@ logmean <- log(6.0)
   15,  15,  9,  4,  5,  2,  6,  7,  4,  10,  15,  17,  26,  39,  48,  36,
   48,  38,  35,  39,  48,  65,  123,  146,  117,  113,  123,  115,  117,  112,  95,  78,
   73,  67,  63,  54,  43,  36,  52,  98,  97,  78,  76,  43,  48,  47,  63,  65,
-  76,  116,  96,  84,  70,  73,  49,  43,  33,  30,  26,  13,  23,  22,  33)
+  76,  116,  96,  84,  70,  73,  49,  43,  33,  30,  26,  13,  23,  22,  32 , 39,46,46,43,52,40,43,21,18,11)
   
 #onsdat <-  read_excel(onsurl)
 #  Would like to read these in but ONS datasheets aren't consistent.
 # read_excel("https://www.ons.gov.uk/visualisations/dvc2050/region/datadownload.xlsx")
 #download.file("https://www.ons.gov.uk/visualisations/dvc2050/region/datadownload.xlsx", destfile = "ons.xlsx")
-jnk=read_excel("ons.xlsx",sheet="England",col_names=FALSE,skip=4)
-eng_auto<-na.trim(jnk[[2]])*engpop/100
-jnk=read_excel("ons.xlsx",sheet="Scotland",col_names=FALSE,skip=4)
-scot_auto<-na.trim(jnk[[2]])*scotpop/100
-jnk=read_excel("ons.xlsx",sheet="Wales",col_names=FALSE,skip=4)
-wales_auto<-na.trim(jnk[[2]])*walespop/100
-jnk=read_excel("ons.xlsx",sheet="Northern Ireland",col_names=FALSE,skip=4)
-ni_auto<-na.trim(jnk[[2]])*nipop/100
+#jnk=read_excel("ons.xlsx",sheet="England",col_names=FALSE,skip=4)
+#eng_auto<-na.trim(jnk[[2]])*engpop/100
+#jnk=read_excel("ons.xlsx",sheet="Scotland",col_names=FALSE,skip=4)
+#scot_auto<-na.trim(jnk[[2]])*scotpop/100
+#jnk=read_excel("ons.xlsx",sheet="Wales",col_names=FALSE,skip=4)
+#wales_auto<-na.trim(jnk[[2]])*walespop/100
+#jnk=read_excel("ons.xlsx",sheet="Northern Ireland",col_names=FALSE,skip=4)
+#ni_auto<-na.trim(jnk[[2]])*nipop/100
 
