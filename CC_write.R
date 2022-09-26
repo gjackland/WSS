@@ -13,7 +13,7 @@ CC_write <- function(CCcomp,region,pop,R_region,Q_region,Rseries,ratio,Missing_i
 
 startwrite=length(CCcomp$CASE$date)-120
 
-endwrite=nrow(regcases)+reporting_delay+48
+endwrite=length(CCcomp$CASE$date)-40
 group <- "Edinburgh"
 model <-  "WSS"
 scenario <- "Nowcast"
@@ -75,6 +75,7 @@ CC <- data.frame(
     CCtmp$Value = Rseries[d]
     CCtmp$"Quantile 0.05"=max(min(Rseries[(d-3):(d+3)])*0.85,0)
     CCtmp$"Quantile 0.25"=max(min(Rseries[(d-3):(d+3)])*0.925,0)
+
     CCtmp$"Quantile 0.5"=Rseries[d]
     CCtmp$"Quantile 0.75"=max(Rseries[(d-3):(d+3)])*1.075
     CCtmp$"Quantile 0.95"=max(Rseries[(d-3):(d+3)])*1.15

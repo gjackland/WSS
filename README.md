@@ -1,5 +1,6 @@
 # WSS
 Weight scale and shift code for covid epidemic modelling.
+This code has been part of the SPI_M and JBC suite of nowcasts, medium term predictions and scenarios since autumn 2021.
 
 The model takes CASES from https://coronavirus.data.gov.uk/ .  All predictions are based on a compartment model moving people from CASE through hospitalization, ICU, to recovery or death.  Compartments are broken down by age region.
 
@@ -11,13 +12,15 @@ Medium term projections are made by extending the CASE data with R-based predict
 Parameterization is taken by fits to death/ICU/hospital data over the entire pandemic.  Parameters are (slowly) varying with variant and vaccination.
 Lockdowns etc are not included directly, because their effect is mainly in CASES.
 
-Model description and application is here...
+Model description and application is here (preprint and paper)
 
-* https://www.medrxiv.org/content/10.1101/2021.04.14.21255385v1.article-info
+* https://www.medrxiv.org/content/10.1101/2021.09.23.21256065v1
+* https://royalsocietypublishing.org/doi/10.1098/rsta.2021.0301
 
-Previous version, all calculations were spreadsheet-based
+Previous preprints using the model
 
 * https://www.medrxiv.org/content/10.1101/2021.01.21.21250264v1
+* https://www.medrxiv.org/content/10.1101/2021.04.14.21255385v1
 
 Ongoing version for BMJ
 
@@ -27,12 +30,18 @@ Analysis article
 
 # Execution
 
-The code is in pure R and developed in and best run through Rstudio.  There are no external input files, data is read at runtime from internet.   If online data is unavailable, code will fail.
+The code is in pure R and developed in and best run through Rstudio.  Data is read at runtime from internet.   If online data is unavailable, code will fail with error messages.   
+Since summer 2022, the testing regime has become quite sketchy and ONS estimates of prevalence (more accurate but delayed) are used to normalise the published case numbers.  Similarly, Scotland stopped reporting death data to the UK site, so these are inferred from NRS.  Wales and Northern Ireland data are unusable since summer 2022.
 
 Workflow:
 
-1. Run **Covid_trimmed.R.**  This sets up the global parameters for the UK, calculates all R. parameters, generates plots for interactive monitoring, and does the compartment simulation for England, including medium term predictions.  
-2. Legacy code from the WSS paper calculating CFR variation with time may be called from `medrxiv.R` and `age_pdfplot.R`, but these must be called by editing the calls in the code to:
+1. Run **Workflow.R**  This sets up the global parameters for the UK, calculates all R. parameters, generates plots for interactive monitoring, and does the compartment simulation for England, including medium term predictions.  
+2.  **Covid_trimmed.R**.  Reads the current data from , calculates R numbers and pandemic hindcasts and medium term predictions
+3.  **ScottishData.R**. This reads data from the Scottish government, reformats it because it uses different age banding, and runs the compartment model.  The code ends with some monitoring plots
+4.  **Regional.R**. to read data and obtain compartment model data for 7 NHS England Regions, and write outputs in CrystalCast format for uploading to weekly JBC ensemble estimates. Writing is done in CC_write.R
+5. **Sanity check**. R-numbers can be sensitive to late posting on recent cases, and wrong R-numbers tip over into the medium term predictions.  Medium term predictions are very sensitive to the calculated parameters R_BestGuess$.   Before believing anything, always check these and if not sensible investigate the last few days of input case data for anomalies.  The parameter "enddate" can be increased to eliminate incomplete data.  If R is sensitive to enddate, there is a data problem.
+
+6. Legacy code from the WSS paper calculating CFR variation with time may be called from `medrxiv.R` and `age_pdfplot.R`, but these must be called by editing the calls in the code to:
    ```R
    medout <- MedrxivPaper()
    ```
@@ -40,9 +49,6 @@ Workflow:
    ```R
    pdfpo <- TRUE
    ```
-3. Run **ScottishData.R**. This reads data from the Scottish government, reformats it, and runs the compartment model.  The code ends with some monitoring plots
-4. Run **Regional.R**. to read data and obtain compartment model data for 7 NHS England Regions, and write outputs in CrystalCast format.
-5. **Sanity check**. R-numbers can be sensitive to late posting on recent cases, and wrong R-numbers tip over into the medium term predictions.  Medium term predictions are very sensitive to the calculated parameters R_BestGuess$.   Before believing anything, always check these and if not sensible investigate the last few days of input case data for anomalies.  The parameter "enddate" can be increased to eliminate incomplete data.  If R is sensitive to enddate, there is a data problem.
 
 scenarios - where a range of initial values for R_BestGuess$ are set rather than calculated - can be run using the Scenarios.R code.
 

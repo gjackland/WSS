@@ -256,7 +256,7 @@ scotagedat <- read_csv(ageurl, col_types = coltypes)
 
 
 #Read in from  file since Scotland stopped publishing death data on June 2nd.  
-#This may have to be updated by hand from NRS data startin at row 23 (June 6th)
+#This may have to be updated by hand from NRS data starting at row 23 (June 6th)
 nrsdeath=read.csv("NRS_agedeath2022.csv")
 nrsdeath1<-nrsdeath[22:nrow(nrsdeath),]
 nrsdeathday <- nrsdeath1[rep(seq_len(nrow(nrsdeath1)), each=7),]
