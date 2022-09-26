@@ -709,7 +709,7 @@ for(iday in 1:14){
 }
 
 comdat$Missing_incidence=smooth.spline((comdat$Eng_ons_inc/rowSums(casedat[2:20])),df=6)$y
-comdat$Scot_Missing_incidence=smooth.spline((comdat$Scot_ons_inc/regcases$Scotland),df=6)$y
+comdat$Scot_Missing_incidence=smooth.spline((comdat$Scot_ons_inc[1:nrow(regcases)]/regcases$Scotland),df=6)$y
 
 #  Compartment model done with a function.  Last two inputs are indices giving date range
 

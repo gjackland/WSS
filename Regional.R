@@ -353,8 +353,6 @@ lines(rowSums(predSW$SARI[2:20]+predSW$CRIT[2:20]+predSW$CRITREC[2:20])/ratio$SW
 plot(y=Hospital$Lon$saridat,x=Hospital$Lon$date,ylab="Lon Hospital Cases",xlab="Date",xlim=plot_date)
 lines(rowSums(predLon$SARI[2:20]+predLon$CRIT[2:20]+predLon$CRITREC[2:20])/ratio$Lon$hosp,x=predLon$newSARI$date)
 
-
-
 #Admissions Uk total and by region
 sum(na.locf(Hospital$Eng$saridat))
 sum(na.locf(Hospital$UK$saridat))
