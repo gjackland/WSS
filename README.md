@@ -33,6 +33,8 @@ Analysis article
 The code is in pure R and developed in and best run through Rstudio.  Data is read at runtime from internet.   If online data is unavailable, code will fail with error messages.   
 Since summer 2022, the testing regime has become quite sketchy and ONS estimates of prevalence (more accurate but delayed) are used to normalise the published case numbers.  Similarly, Scotland stopped reporting death data to the UK site, so these are inferred from NRS.  Wales and Northern Ireland data are unusable since summer 2022.
 
+There are many in-code adjustable parameters, mainly gathered together in getParams.R.  For ordinary running startdate and enddate can be set to cover the pandemics period where data are available.  "reporting_delay" menas the last few days are excluded from nowcasting because dtat is incomplete. 
+
 Workflow:
 
 1. Run **Workflow.R**  This sets up the global parameters for the UK, calculates all R. parameters, generates plots for interactive monitoring, and does the compartment simulation for England, including medium term predictions.  
@@ -54,7 +56,7 @@ scenarios - where a range of initial values for R_BestGuess$ are set rather than
 
 ## Predictions for SPI-MO and JBC
 
-WSS is part of the suite of codes contributing to UK and Scottish government real-time  modelling
+WSS is part of the suite of codes contributing to UK and Scottish government real-time  modelling.
 
 ## Licensing
 
