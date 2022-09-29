@@ -54,6 +54,9 @@ Workflow:
 
 scenarios - where a range of initial values for R_BestGuess$ are set rather than calculated - can be run using the Scenarios.R code.
 
+Workflow of restructured  version:
+1. Run **Workflow.R**  This calls all other necessary code.   Gets parameters,data, calculates R, MTPs and prints out CrystalCast format
+
 ## Predictions for SPI-MO and JBC
 
 WSS is part of the suite of codes contributing to UK and Scottish government real-time  modelling.
