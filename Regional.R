@@ -154,7 +154,39 @@ SW$date<-as.Date(SW$date)
 MD$date<-as.Date(MD$date)
 NEY$date<-as.Date(NEY$date)
 
-#  Still use R from 7 regions...  CFR and vaccinations are assumed from National stats
+
+#  Compartment model done with a function.  Last two inputs are indices giving date range
+
+#  The compartments will not be correct until the cases have time to filter through all sections,
+#  which may be several months for, e.g oldCRITREC
+#  From mid 2022, Compartment will account for underreporting by adjusting the casedat to fit with the shifted & extrapolated ONS values 
+################################################################
+###  Finally, Use all this to make predictions for England (Scotland & Regions in separate compartment.R code)
+###Assume that R regresses to 1 and lethality are constants
+#  Compartment predictions removed to Predictions.R
+#  Replicated the data because repeated calls to Predictions would increment comp
+
+region="England"
+
+
+compEng <- Compartment(casedat, covidsimAge, RawCFR, comdat,2,nrow(casedat))
+
+predEng<-Predictions(compEng,R_BestGuess$England,predtime,population$England)
+
+
+region="Scotland"
+##  CFR gets entangled with vaccine and variant effect.  Use pre-vaccination values
+##  wild-type inherited from England and will adjust CFR later for vaccine/variant
+
+#  Full Epidemic model for Scotlad with pre-prepared data
+compScot <- Compartment(scotage, covidsimAge, RawCFR, comdat,2,nrow(scotage))
+predScot<-Predictions(compScot,R_BestGuess$Scotland,predtime,population$Scotland)
+
+
+##  CFR gets entangled with vaccine and variant effect.  Use pre-vaccination values
+##  wild-type inherited from England and will adjust CFR later for vaccine/variant
+
+#  Full Epidemic model for regions
 
 
 compLon<- Compartment(Lon,  covidsimAge, RawCFR, comdat,3,nrow(Lon))
@@ -353,6 +385,32 @@ lines(rowSums(predSW$SARI[2:20]+predSW$CRIT[2:20]+predSW$CRITREC[2:20])/ratio$SW
 plot(y=Hospital$Lon$saridat,x=Hospital$Lon$date,ylab="Lon Hospital Cases",xlab="Date",xlim=plot_date)
 lines(rowSums(predLon$SARI[2:20]+predLon$CRIT[2:20]+predLon$CRITREC[2:20])/ratio$Lon$hosp,x=predLon$newSARI$date)
 
+if(interactive()){
+  startplot=startdate+3
+  endplot=startdate+nrow(predEng$CASE)+predtime-3
+  PREV<-compEng$ILI[2:20]+compEng$SARI[2:20]+compEng$CRIT[2:20]+compEng$MILD[2:20]
+  
+  plot(rowSums(predEng$CASE[2:20]))
+  lines(rowSums(PREV[1:19])/20)
+  
+  plot(Hospital$UK$newsaridat,x=Hospital$UK$date, ylab="Hospital Admission",xlab="Date",xlim=c(startplot,endplot-180                                                                                                ))
+  lines(rowSums(compEng$newSARI[2:20]),x=compEng$newSARI$date,col="blue")
+  lines(rowSums(predEng$newSARI[2:20]),x=compEng$newSARI$date,col="red")
+  plot(Hospital$UK$saridat,x=Hospital$UK$date,ylab="Hospital Cases",xlab="Date",xlim=c((startplot),(endplot-200)))
+  lines(0.7*rowSums(predEng$SARI[2:20]+predEng$CRIT[2:20]+predEng$CRITREC[2:20]),x=predEng$SARI$date,col='red')
+  
+  plot(rowSums(compEng$newMILD[2:20]+compEng$newILI[2:20]),xlim=c((startplot),(endplot-100)),col="blue",x=compEng$newMILD$date,type="l",xlab="Date",ylab="Cases")
+  plot(rowSums(predEng$CASE[2:20]),x=predEng$CASE$date)
+  lines(rowSums(compEng$newMILD[2:10]+compEng$newILI[2:10]),col="green",x=compEng$newMILD$date,type="l",xlab="Date",ylab="Cases")
+  lines(rowSums(compEng$newMILD[11:20]+compEng$newILI[11:20]),col="red",x=compEng$newMILD$date,type="l",xlab="Date",ylab="Cases")
+  
+  plot(Hospital$UK$critdat,x=Hospital$UK$date,ylab="ICU Occupation",xlab="Date",xlim=c(startplot,endplot))
+  lines(rowSums(predEng$CRIT[2:20]),col="blue",x=predEng$CRIT$date)
+  
+  plot(rowSums(predEng$DEATH[2:20]),col="blue",x=predEng$DEATH$date, type="l",ylab="Deaths"
+       ,xlab="Date",xlim=c(startplot,endplot-60))
+  points(rowSums(deathdat[2:20]),x=deathdat$date)
+}
 #Admissions Uk total and by region
 sum(na.locf(Hospital$Eng$saridat))
 sum(na.locf(Hospital$UK$saridat))

@@ -237,33 +237,8 @@ deathdat <- deathdat %>%
   arrange(date) %>%
   select(names(casedat))#deaths by age
 
-# Scotland data https://api.coronavirus.data.gov.uk/v2/data?areaType=nation&areaCode=S92000003&metric=newCasesBySpecimenDate&metric=newDeaths28DaysByDeathDate&metric=newDeaths28DaysByPublishDate&format=csv
+# discontinued Scotland data https://api.coronavirus.data.gov.uk/v2/data?areaType=nation&areaCode=S92000003&metric=newCasesBySpecimenDate&metric=newDeaths28DaysByDeathDate&metric=newDeaths28DaysByPublishDate&format=csv
 # https://www.opendata.nhs.scot/dataset/covid-19-in-scotland/resource/9393bd66-5012-4f01-9bc5-e7a10accacf4
-
-#scoturl <-  paste0(baseurl,
-#                   "areaType=nation&",
-#                   "areaCode=S92000003&",
-#                   "metric=newDeaths28DaysByDeathDate&",
-#                   "metric=newCasesBySpecimenDate&",
-#                   "metric=newDeaths28DaysByPublishDate&",
-#                   "format=csv")
-#coltypes <-  cols(
- # date = col_date(format = "%Y-%m-%d"),
-#  newCasesBySpecimenDate = col_number(),
-#  newDeaths28DaysByPublishDate = col_number(),
-#  newDeaths28DaysByDeathDate = col_number()
-#)
-#  Trying and failing to get data from PHS
-#scotdeaths<- read.csv(file="https://www.opendata.nhs.scot/api/3/action/datastore_search?resource_id=9393bd66-5012-4f01-9bc5-e7a10accacf4")
-#
-# Data is not being returned as a CSV but JSON you have to use:
-#
-# library(jsonlite)
-# d <- jsonlite::fromJSON("https://www.opendata.nhs.scot/api/3/action/datastore_search?resource_id=9393bd66-5012-4f01-9bc5-e7a10accacf4",
-#                         flatten = TRUE)
-#
-# This still returns contents as a list so you will have to rummage around to extract the actual contents that you require in
-# the data structure returned.
 
 # Wales data https://api.coronavirus.data.gov.uk/v2/data?areaType=nation&areaCode=W92000004&metric=newCasesBySpecimenDate&metric=newDeaths28DaysByDeathDate&format=csv
 
@@ -355,6 +330,9 @@ regdeaths <- regdat %>%
              arrange(date)
 regdeaths$NEY=regdeaths$`North East`+regdeaths$`Yorkshire and The Humber`
 regdeaths$MD=regdeaths$`East Midlands`+regdeaths$`West Midlands`
+regdeaths$England=regdeaths$NEY+regdeaths$MD+regdeaths$`North West`+regdeaths$London+regdeaths$`East of England`
++regdeaths$`South East`+regdeaths$`South West`
+
 # Get the demographic data for regions because can't download simultaneously with
 # the death data.
 regurl2 <- paste0(baseurl,
@@ -381,35 +359,35 @@ coltypes <- cols(
 # Read in the regional case and death data by age and filter
 # Transform the data - reduce the number of columns and filter the data to
 # lie between specific dates.
-regagedat <-  read_csv(file = regurl2, col_types = coltypes) %>%
-  select(date, areaName, age, cases) %>%
-  filter(date >= startdate &
-           date <= enddate ) %>%
-  filter(age!="unassigned") %>%
-  arrange(date)
+#regagedat <-  read_csv(file = regurl2, col_types = coltypes) %>%
+#  select(date, areaName, age, cases) %>%
+#  filter(date >= startdate &
+#           date <= enddate ) %>%
+#  filter(age!="unassigned") %>%
+#  arrange(date)
 
 # And do it again for deaths to avoid 500 error Specify the column types
-regurl3 <- paste0(baseurl,
-                  "areaType=region&",
-                  "metric=newDeaths28DaysByDeathDateAgeDemographics&",
-                  "format=csv")
-coltypes <- cols(
-  areaCode = col_character(),
-  areaName = col_character(),
-  areaType = col_character(),
-  date = col_date(format = "%Y-%m-%d"),
-  age = col_character(),
-  deaths = col_number(),
-  rollingSum = col_number(),
-  rollingRate = col_number()
-)
+#regurl3 <- paste0(baseurl,
+#                  "areaType=region&",
+#                  "metric=newDeaths28DaysByDeathDateAgeDemographics&",
+#                  "format=csv")
+#coltypes <- cols(
+#  areaCode = col_character(),
+#  areaName = col_character(),
+#  areaType = col_character(),
+#  date = col_date(format = "%Y-%m-%d"),
+#  age = col_character(),
+#  deaths = col_number(),
+#  rollingSum = col_number(),
+#  rollingRate = col_number()
+#)
 
-regagedat3 <-  read_csv(file = regurl3, col_types = coltypes)  %>%
-  select(date, areaName, age, deaths) %>%
-  filter(date >= startdate &
-           date <= enddate ) %>%
-  arrange(date)
-regagedat$deaths <- regagedat3$deaths
+#regagedat3 <-  read_csv(file = regurl3, col_types = coltypes)  %>%
+#  select(date, areaName, age, deaths) %>%
+#  filter(date >= startdate &
+#           date <= enddate ) %>%
+#  arrange(date)
+#regagedat$deaths <- regagedat3$deaths
 # Define the columns for the UK government R estimate data from a csv file
 coltypes <- cols(
   Date = col_date(format = "%d/%m/%Y"), UK_LowerBound = col_number(),
@@ -534,7 +512,6 @@ Hospital$UK  <-  jnk %>%
 Hospital$UK$saridat <- na.locf(Hospital$UK$saridat)
 Hospital$UK$newsaridat <- na.locf(Hospital$UK$newsaridat)
 Hospital$UK$critdat <- na.locf(Hospital$UK$critdat)
-
 
 # Add the Welsh and Northern Ireland cases data,  no age stratifications 
 # Problems can occur here if these are updates before/after UK
@@ -663,8 +640,6 @@ if(interactive()){
     theme_bw()
 }
 ##  Case Fatality ratio was determined from initial period 
-##   this assumed original startdate 09/08/2020 so is deprecated
-##RawCFR=colSums(deathdat[12:211,2:20])/colSums(casedat[1:200,2:20])
 
 
 # Get mean age-related CFR across the whole pandemic, with adjustment for vaccination
@@ -708,7 +683,7 @@ for(iday in 1:14){
   comdat$Scot_ons_inc[(nrow(comdat)-14+iday)]=Scotstart+iday*Scotslope
 }
 
-comdat$Missing_incidence=smooth.spline((comdat$Eng_ons_inc/rowSums(casedat[2:20])),df=6)$y
+comdat$Missing_incidence=smooth.spline((comdat$Eng_ons_inc/comdat$allCases),df=6)$y
 comdat$Scot_Missing_incidence=smooth.spline((comdat$Scot_ons_inc[1:nrow(regcases)]/regcases$Scotland),df=6)$y
 
 #  Compartment model done with a function.  Last two inputs are indices giving date range
@@ -803,8 +778,8 @@ rat <- regcases
 
 
 #  Add ONS data to comdat$
-approx(eng_prev,n=7*length(eng_prev))$y %>% tail(nrow(comdat))-> comdat$ons_prev
-approx(scot_prev,n=7*length(scot_prev))$y%>% tail(nrow(comdat))-> comdat$scot_ons_prev
+approx(eng_prev,n=7*length(eng_prev)+1)$y %>% tail(nrow(comdat))-> comdat$Eng_ons_prev
+approx(scot_prev,n=7*length(scot_prev)+1)$y%>% tail(nrow(comdat))-> comdat$Scot_ons_prev
 
 
 for(i in (2:nrow(regcases))    ){
