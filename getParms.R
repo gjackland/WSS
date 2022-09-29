@@ -1,12 +1,4 @@
-# Read packages used by all scripts
-library(readr, warn.conflicts = FALSE, quietly = TRUE)
-library(dplyr, warn.conflicts = FALSE, quietly = TRUE)
-library(tidyr, warn.conflicts = FALSE, quietly = TRUE)
-library(ggplot2, warn.conflicts = FALSE, quietly = TRUE)
-library(lubridate, warn.conflicts = FALSE, quietly = TRUE)
-library(zoo, warn.conflicts = FALSE, quietly = TRUE)
-library(RColorBrewer, warn.conflicts = FALSE, quietly = TRUE)
-library("readxl")
+
 # Start and end date - the date to collect data from
 # First month or so will be equilibration, especially if started at a time of high caseload
 #startdate <- as.Date("2020/04/08") #as.Date("2020/08/09")
@@ -15,9 +7,9 @@ startdate <- as.Date("2020/08/09")
 # Lose only the last day of data - use tail correction for reporting delay
 # Weekend data can be sketchy Extend the enddate if run on Monday morning
 #  May need to rerun with longer delay for Scottish reporting
-reporting_delay=11
+reporting_delay=10
 enddate <-  Sys.Date()-reporting_delay
-#  Six week prediction
+#  Predtime is the length of medium term predictuions after enddate
 predtime = 100
   #  Time dependences of transitions - assumed age independent
   #  Make cdflength day cdfs.  these are same for all age groups, but fractions Prop/CFR vary
@@ -128,7 +120,7 @@ logmean <- log(6.0)
   73,  67,  63,  54,  43,  36,  52,  98,  97,  78,  76,  43,  48,  47,  63,  65,
   76,  116,  96,  84,  70,  73,  49,  43,  33,  30,  26,  13,  23,  22,  32 , 39,46,46,43,52,40,43,21,18,11)
   
-onsdat <-  read.xlsx(onsurl)
+#onsdat <-  read.xlsx(onsurl)
 #  Would like to read these in but ONS datasheets aren't consistent.
 # read_excel("https://www.ons.gov.uk/visualisations/dvc2050/region/datadownload.xlsx")
 #download.file("https://www.ons.gov.uk/visualisations/dvc2050/region/datadownload.xlsx", destfile = "ons.xlsx")
