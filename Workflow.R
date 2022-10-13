@@ -12,6 +12,7 @@ library(zoo, warn.conflicts = FALSE, quietly = TRUE)
 library(RColorBrewer, warn.conflicts = FALSE, quietly = TRUE)
 library("readxl")
 library("openxlsx")
+library(ckanr)
 #  getData and spim_trust are alternate (online or sftp) sources of case data
 source("./getParms.R")
 #source("./spim_trust.R")  To be sorted out

@@ -21,8 +21,9 @@
 
 
 #  Italian data is here ... https://github.com/InPhyT/COVID19-Italy-Integrated-Surveillance-Data
-
-
+# install and load the package previously
+# install.packages("devtools")
+#devtools::install_github("datasciencescotland/opendatascot")
 source("CompartmentFunction.R")
 source("medrxiv.R")
 source("Predictions.R")
@@ -930,21 +931,36 @@ scotagedat <- read_csv(ageurl, col_types = coltypes)
 
 #Read in from  file since Scotland stopped publishing death data on June 2nd.  
 #This may have to be updated by hand from NRS data starting at row 23 (June 6th)
-nrsdeath=read.csv("NRS_agedeath2022.csv")
-nrsdeath1<-nrsdeath[22:nrow(nrsdeath),]
+# opendatascot API doesnt work, but they have a workaround.
+#nrsdeath=read.csv("NRS_agedeath2022.csv")
+
+#Scottish deaths from ods
+opendatascot::ods_dataset("deaths-involving-coronavirus-covid-19",locationOfDeath="all",sex="all",causeOfDeath="covid-19-related",refArea="S92000003")->jnk 
+jnk<- jnk %>% filter(refPeriod!="2022") %>% filter(refPeriod!="2021")%>% filter(refPeriod!="2020")
+jnk$refPeriod<-as.Date(substr(jnk$refPeriod,5,nchar(jnk$refPeriod)))
+jnk %>% filter(age=="all")%>% select(refPeriod,value)-> jnkall
+jnk %>% filter(age=="1-14-years")%>% select(refPeriod,value)%>% filter(value<2000)-> jnk14
+jnk %>% filter(age=="15-44-years")%>% select(refPeriod,value)%>% filter(value<2000)-> jnk44
+jnk %>% filter(age=="45-64-years")%>% select(refPeriod,value)%>% filter(value<2000)-> jnk64
+jnk %>% filter(age=="65-74-years")%>% select(refPeriod,value)%>% filter(value<2000)-> jnk74
+jnk %>% filter(age=="75-84-years")%>% select(refPeriod,value)%>% filter(value<2000)-> jnk84
+jnk %>% filter(age=="85-years-and-over")%>% select(refPeriod,value)%>% filter(value<2000)-> jnk100
+#  odsdf should be readin to give odsdeath1 same as nrsdeath1  intention is that nrsdeath reading becomes obsolete
+odsdf<-data.frame(jnkall$refPeriod,jnkall,jnkall,jnk14$value,jnk44$value,jnk64$value,jnk74$value,jnk84$value,jnk100$value)
+# 
+#nrsdeath1<-nrsdeath[22:nrow(nrsdeath),]
+odsdeath1<-odsdf[117:nrow(odsdf),]
+odsdeath1$jnkall.refPeriod<-"2022"
+nrsdeath1<-odsdeath1
 nrsdeathday <- nrsdeath1[rep(seq_len(nrow(nrsdeath1)), each=7),]
 nrsdeathday[5:11] = nrsdeathday[5:11]/7.0
 
-
-# install and load the package
-# install.packages("ckanr")
-library(ckanr)
 
 # Set up
 ckanr_setup(url = "https://www.opendata.nhs.scot/")
 
 # List data sets
-package_list(as="table")
+#package_list(as="table")
 
 tags <- tag_list(as="table")
 #  Filter out the relevant columns  (Changed datastream from 10/02/2022)

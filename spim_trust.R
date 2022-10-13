@@ -1,4 +1,6 @@
-#  Read only Regional and National data.  Build 11 lists of regions and nations 
+#  This requires a semi-confidential input file from SPI-M downloaded weekly 
+# from ext-ed@sftp.dash.test-and-trace.nhs.uk  into  spim_trust.xlsx
+#Read only Regional and National data.  Build 11 lists of regions and nations 
 
 spimregdat <- openxlsx::read.xlsx("spim_trust.xlsx",3)
 spimregdat <- spimregdat %>% filter(ReportLevel=="Region"|ReportLevel=="Nation")

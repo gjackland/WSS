@@ -223,9 +223,9 @@ predSW$SARI[2:20][predSW$SARI[2:20] < 0] <- 0.0
 predSE$SARI[2:20][predSE$SARI[2:20] < 0] <- 0.0
 # recent scaling factors for MTPs, 
 # With omicron and confirmatory PCR changes, shorten recent_timescale
-total_time = min(nrow(deathdat),nrow(casedat),length(Hospital$UK$date))
-
-recent_time<-(total_time-21-reporting_delay):(total_time-reporting_delay-1)
+total_time = min(nrow(deathdat),nrow(casedat),nrow(Hospital$UK))
+#  Fit three weeks up to latest date
+recent_time<-(total_time-21):(total_time-1)
 
 #Ratios:  For MTPs we scale the various quantities to fit the most recent time data
 #   This automatically compensates for any slowish-varying trends of increased virulence, better treatment waning immunity etc.
