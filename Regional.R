@@ -400,16 +400,10 @@ if(interactive()){
   lines(0.7*rowSums(predEng$SARI[2:20]+predEng$CRIT[2:20]+predEng$CRITREC[2:20]),x=predEng$SARI$date,col='red')
   
   plot(rowSums(compEng$newMILD[2:20]+compEng$newILI[2:20]),xlim=c((startplot),(endplot-100)),col="blue",x=compEng$newMILD$date,type="l",xlab="Date",ylab="Cases")
-  plot(rowSums(predEng$CASE[2:20]),x=predEng$CASE$date)
+  plot(rowSums(compEng$CASE[2:20]),x=compEng$CASE$date)
   lines(rowSums(compEng$newMILD[2:10]+compEng$newILI[2:10]),col="green",x=compEng$newMILD$date,type="l",xlab="Date",ylab="Cases")
   lines(rowSums(compEng$newMILD[11:20]+compEng$newILI[11:20]),col="red",x=compEng$newMILD$date,type="l",xlab="Date",ylab="Cases")
   
-  plot(Hospital$UK$critdat,x=Hospital$UK$date,ylab="ICU Occupation",xlab="Date",xlim=c(startplot,endplot))
-  lines(rowSums(predEng$CRIT[2:20]),col="blue",x=predEng$CRIT$date)
-  
-  plot(rowSums(predEng$DEATH[2:20]),col="blue",x=predEng$DEATH$date, type="l",ylab="Deaths"
-       ,xlab="Date",xlim=c(startplot,endplot-60))
-  points(rowSums(deathdat[2:20]),x=deathdat$date)
 }
 #Admissions Uk total and by region
 sum(na.locf(Hospital$Eng$saridat))

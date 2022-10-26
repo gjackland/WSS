@@ -12,14 +12,13 @@ CC_write <- function(CCcomp,region,pop,R_region,Q_region,Rseries,ratio,Missing_i
 
 
 startwrite=length(CCcomp$CASE$date)-120
-
 endwrite=length(CCcomp$CASE$date)-40
 group <- "Edinburgh"
 model <-  "WSS"
 scenario <- "Nowcast"
 modeltype <- "Cases"
-version <- 0.1
-today <- today()
+version <- 1.0
+as.integer(endwrite-enddate) 
 ageband <-  "All"
 # Region should be inherited from most recent CCcompartment run, e.g. region <- "Scotland"
 Valuetype <- "R"
@@ -189,11 +188,11 @@ for (d in startwrite:endwrite){
   }
 
   CCtmp$Value = sum(CCcomp$CASE[d,2:20])
-  CCtmp$"Quantile 0.05"=max(0,CCtmp$Value*cum_error[1]*(1.0-4*sigma))
-  CCtmp$"Quantile 0.25"=max(0,CCtmp$Value*cum_error[2]*(1.0-1.5*sigma))
+  CCtmp$"Quantile 0.05"=max(0,CCtmp$Value*cum_error[1]*(1.0-3*sigma))
+  CCtmp$"Quantile 0.25"=max(0,CCtmp$Value*cum_error[2]*(1.0-sigma))
   CCtmp$"Quantile 0.5"=CCtmp$Value
-  CCtmp$"Quantile 0.75"=CCtmp$Value*cum_error[4]*(1.0+1.5*sigma)
-  CCtmp$"Quantile 0.95"=CCtmp$Value*cum_error[5]*(1.0+4*sigma)
+  CCtmp$"Quantile 0.75"=CCtmp$Value*cum_error[4]*(1.0+sigma)
+  CCtmp$"Quantile 0.95"=CCtmp$Value*cum_error[5]*(1.0+3*sigma)
   CCtmp$"Day of Value" = day(CCcomp$CASE$date[d])
   CCtmp$"Month of Value" = month(CCcomp$CASE$date[d])
   CCtmp$"Year of Value" = year(CCcomp$CASE$date[d])
@@ -238,15 +237,20 @@ for (d in startwrite:(endwrite)){
   if(CCcomp$CASE$date[d]>(today-reporting_delay)){
   CCtmp$Scenario="MTP"
   CCtmp$ValueType="hospital_prev"
-  cum_error=cum_error*R_error
+  # Prevalence is stochastically much more stable than incidence, but cumulative error is not
+  #  Reduce sigma by sqrt(length of stay)
+  #  increase cum_error twice as fast
+  
+  cum_error=cum_error*R_error*R_error
   }
   OCC = sum(CCcomp$SARI[d,2:20]+CCcomp$CRIT[d,2:20]+CCcomp$CRITREC[d,2:20])/ratio$hosp
   CCtmp$Value=OCC
-  CCtmp$"Quantile 0.05"=max(0,CCtmp$Value*cum_error[1]*(1.0-3*sigma))
-  CCtmp$"Quantile 0.25"=max(0,CCtmp$Value*cum_error[2]*(1.0-sigma))
+
+  CCtmp$"Quantile 0.05"=max(0,CCtmp$Value*cum_error[1]*(1.0-sigma))
+  CCtmp$"Quantile 0.25"=max(0,CCtmp$Value*cum_error[2]*(1.0-0.3*sigma))
   CCtmp$"Quantile 0.5"=CCtmp$Value
-  CCtmp$"Quantile 0.75"=CCtmp$Value*cum_error[4]*(1.0+sigma)
-  CCtmp$"Quantile 0.95"=CCtmp$Value*cum_error[5]*(1.0+3*sigma)
+  CCtmp$"Quantile 0.75"=CCtmp$Value*cum_error[4]*(1.0+0.3*sigma)
+  CCtmp$"Quantile 0.95"=CCtmp$Value*cum_error[5]*(1.0+sigma)
   CCtmp$"Day of Value" = day(CCcomp$SARI$date[d])
   CCtmp$"Month of Value" = month(CCcomp$SARI$date[d])
   CCtmp$"Year of Value" = year(CCcomp$SARI$date[d])

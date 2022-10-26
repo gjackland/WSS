@@ -467,7 +467,9 @@ scotdailydeathsbyboard <- scotdailycases   %>%
   arrange(date)
 
 # Join the scotdailycases with regcases by date
-regcases <- inner_join(regcases, scotdailycasesbyboard, by = c("date" = "date"))
+#  Assume Scottish cases are stable is unavailable (full_join) otherwise have to lose days for everywhere
+regcases <- full_join(regcases, scotdailycasesbyboard, by = c("date" = "date"))
+na.locf(regcases)
 
 #### Get tests for England pre-Sept by taking the post-Sept fraction of all tests
 #    that were in England (0.867), and set vaccines to zero
