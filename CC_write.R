@@ -10,7 +10,7 @@ library(lubridate)
 CC_write <- function(CCcomp,region,pop,R_region,Q_region,Rseries,ratio,Missing_incidence){
 # write from arbitrary start point to six weeks time
 
-
+  today <- Sys.Date()
 startwrite=length(CCcomp$CASE$date)-120
 endwrite=length(CCcomp$CASE$date)-40
 group <- "Edinburgh"
@@ -18,7 +18,6 @@ model <-  "WSS"
 scenario <- "Nowcast"
 modeltype <- "Cases"
 version <- 1.0
-as.integer(endwrite-enddate) 
 ageband <-  "All"
 # Region should be inherited from most recent CCcompartment run, e.g. region <- "Scotland"
 Valuetype <- "R"
@@ -108,7 +107,7 @@ CC <- data.frame(
   
   if(region!="Wales"){
     if(region!="Northern Ireland"){
-today <- Sys.Date()
+
 ageband <-  "All"
 CCtmp$Scenario="MTP"
 CCtmp$Geography=region
