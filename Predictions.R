@@ -121,7 +121,8 @@ Predictions <- function(input,R_input,predtime,pop){
     #Assume third omicron wave will follow pattern of previous two
     R_input=  ((R_input-1.0)*R_decay+1.0)  #((R_input-1)*R_decay+1.0)  
     #  Infections not confined by age group - use an average
-    #  Assume Omicron established by 12/4/22 - immunity built into R_input
+    #  Assume Omicron established (12/4/22) - immunity built into R_input, reverts slowly to endemic
+    #  this doesn't fit data too well, trend is for oscillations but cant predict that with simple model
     R_eff=sum(R_input)/19
     predCASE[(ipred+1),(2:20)]<-predCASE[ipred,(2:20)]*exp((R_input-1)/genTime)
     predCASE[ipred+1,1]<-enddateP+ipred

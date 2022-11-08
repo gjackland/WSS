@@ -225,7 +225,7 @@ predSE$SARI[2:20][predSE$SARI[2:20] < 0] <- 0.0
 # With omicron and confirmatory PCR changes, shorten recent_timescale
 total_time = min(nrow(deathdat),nrow(casedat),nrow(Hospital$UK))
 #  Fit three weeks up to latest date
-recent_time<-(total_time-21):(total_time-1)
+recent_time<-(total_time-7):(total_time-1)
 
 #Ratios:  For MTPs we scale the various quantities to fit the most recent time data
 #   This automatically compensates for any slowish-varying trends of increased virulence, better treatment waning immunity etc.
@@ -349,8 +349,8 @@ lines(rowSums(predSW$newSARI[2:20])/ratio$SW$newhosp,x=predSW$newSARI$date)
 
 plot(y=Hospital$Lon$newsaridat,x=Hospital$Lon$date,ylab="Lon Hospital Admissions",xlab="Date",xlim=plot_date)
 lines(rowSums(predLon$newSARI[2:20])/ratio$Lon$newhosp,x=predLon$newSARI$date)
-plot(Hospital$Scot$newsaridat,ylab="Scotland Hospital Admissions",xlab="Date")
-lines(rowSums(predScot$newSARI[2:20])/ratio$Scot$newhosp)
+plot(Hospital$Scot$newsaridat,x=Hospital$Scot$date,ylab="Scotland Hospital Admissions",xlab="Date")
+lines(rowSums(predScot$newSARI[2:20])/ratio$Scot$newhosp,x=predScot$newSARI$date)
 plot(y=Hospital$MD$newsaridat,x=Hospital$MD$date,ylab="MD Hospital Admissions",xlab="Date")
 lines(rowSums(predMD$newSARI[2:20])/ratio$MD$newhosp,x=predMD$newSARI$date)
 plot(Hospital$NEY$newsaridat,ylab="NE & Yorks Hospital Admissions",xlab="Date")
