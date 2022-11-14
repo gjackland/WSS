@@ -2,12 +2,12 @@
 # Start and end date - the date to collect data from
 # First month or so will be equilibration, especially if started at a time of high caseload
 #startdate <- as.Date("2020/04/08") #as.Date("2020/08/09")
-startdate <- as.Date("2022/02/09")
+startdate <- as.Date("2020/08/09")
 
 # Lose only the last day of data - use tail correction for reporting delay
 # Weekend data can be sketchy Extend the enddate if run on Monday morning
 #  May need to rerun with longer delay for Scottish reporting
-reporting_delay=7
+reporting_delay=12
 enddate <-  Sys.Date()-reporting_delay
 #  Edit enddate for hindcasting
 #   enddate <- enddate-100
@@ -20,7 +20,7 @@ predtime = 100
 # Set the generation time in days (coverts growth rate to R)
 # Omicron Gen time and R_decay much lower
 genTime <- 4.0
-R_decay=0.8
+R_decay=0.9
 #   Lethality of variants
 Kentfac <- 0.4
 Indiafac <- 0.9
@@ -36,9 +36,13 @@ logmean <- log(6.0)
   logmean <- log(7.0)
   ILIToRecovery <- dlnorm(1:cdflength, logmean,  logmean/4.0)
   #  Fit  shift & scale from ILI to SARI
+  #  Faster for omicron Nov 2022.  Probably due to late case reporting
   logmean <- log(5.0)
+  # For omicron logmean <- log(2.0)
   ILIToSARI <- dlnorm(1:cdflength, logmean,  logmean/2.0)
-  logmean <- log(9.0)
+  #  Also stays are much shorter in Nov 2022.  Probably due to pressure on health service
+  #logmean <- log(9.0)
+  logmean <- log(4.0)
   SARIToRecovery <- dlnorm(1:cdflength, logmean,  logmean/2.0)
   logmean <- log(6.0)
   SARIToDeath <- dlnorm(1:cdflength, logmean,  logmean/2.0)
@@ -70,20 +74,26 @@ logmean <- log(6.0)
   afac <- 1.0
   bfac <- 1.2
   #  Adjust for omicron data - more hospitalisation, fewer deaths  
-  afac <- 1.1
-  bfac <- 1.5
+  #afac <- 1.1
+  #bfac <- 1.5
   cfac <- 1.0/afac/bfac
-  ### Smoothing Filters for R calculation in Estimate_R
+    ### Smoothing Filters for R calculation in Estimate_R
   s1 <- 0.05
   s2 <- 0.1
   s3 <- 0.2
   s4 <- 0.3
-  # Hardcode rawCFR for wild type data at 09/08/2020 - this allows start date to be changed.  Other options are commented out in covid_trimmed
+  # Hardcode rawCFR for wild type data at 09/08/2020 - this allows start date to be changed. 
+  # Note the for XtalCast output all the CFRs etc are rescaled to account for recent trends
   RawCFR = c(
     0.00006476028, 0.00005932501, 0.00004474461, 0.00007174780, 0.00011668950, 0.00020707650, 0.00045082861, 0.00083235867, 
     0.00135192176, 0.00274650970, 0.00466541696, 0.00847207527, 0.01470736106, 0.05199837337, 0.08980941759, 0.15752935748, 
     0.22651139233, 0.27821927091, 0.32550659352 )
-  
+  #reset RawCFR based on 300 days from 09/08/2020 including ONS undercounting factor Number calculated from
+  #for (icfr in 2:20) {print(sum(rowSums(deathdat[1:300,icfr]))/sum(rowSums(compEng$CASE[1:300,icfr])))}
+   RawCFR = c(0.00002370296, 0.00002041085 , 0.00001462412, 0.00002653315 , 0.00004676798 , 0.00008452601 , 0.0001798514 , 0.0003314658
+ , 0.0005294738 , 0.001079333 , 0.001855586 , 0.003403599 , 0.005844741 , 0.0205895 , 0.03535971 , 0.06212092
+ , 0.08943561 , 0.1118333 , 0.1320454) 
+     
 #Add in ONSdata by hand.  this provides a check on the Case-based R and rescales the cases as testing winds slowly down
   engpop=56989570
   scotpop=5475660
@@ -101,7 +111,7 @@ logmean <- log(6.0)
     1.58,1.65,1.64,1.72,2.21,2.83,3.71,6.00,
     6.85,5.47,4.82,4.83,5.18,4.49,3.84,3.55,
     3.80,4.87,6.39,7.56,7.60,6.92,5.90,4.42,2.91,2.21,1.90,1.60,1.44,1.46,2.07,2.50,
-    3.35,3.95,5.27,5.77,4.83,3.86,2.63,2.22,1.64,1.41,1.29,1.41,1.57,2.03,2.78,3.13,3.21,2.92)*engpop/100
+    3.35,3.95,5.27,5.77,4.83,3.86,2.63,2.22,1.64,1.41,1.29,1.41,1.57,2.03,2.78,3.13,3.21,2.92,2.43)*engpop/100
 
   scot_prev<-c(0.05,0.05,0.05,0.07,0.11,0.19, 0.21, 0.41,0.62,0.57,0.71,0.90,0.75,
                0.64,0.87,0.78,0.82,1.00,0.71,0.69,0.87,1.06,0.99,0.92,0.88,
@@ -110,7 +120,7 @@ logmean <- log(6.0)
                0.94,0.82,0.53,0.49,0.70,1.32,2.23,2.29,2.28,1.85,1.61,1.26,
                1.14,1.36,1.25,1.18,1.06,1.44,1.58,1.24,1.27,1.45,1.50,2.57,4.52,5.65,4.49,3.11,
                3.52,4.01, 4.17, 4.57, 5.33,5.70,7.15,9.00,8.57,7.54,5.98,5.35,4.14,3.55,3.01,2.32,2.57,
-               2.01,2.36,3.36,4.76,5.47,5.94,6.34,6.48,5.17,4.95,3.12,2.56,1.82,1.98,2.16,1.88,2.22,2.15,2.08,2.74,3.02,2.69)*scotpop/100
+               2.01,2.36,3.36,4.76,5.47,5.94,6.34,6.48,5.17,4.95,3.12,2.56,1.82,1.98,2.16,1.88,2.22,2.15,2.08,2.74,3.02,2.69,2.04)*scotpop/100
 
   
 #onsdat <-  read.xlsx(onsurl)

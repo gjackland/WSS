@@ -9,7 +9,7 @@
 # Function Definition - naming function variables to ensure it is not taking
 # values from the calling space
 # Inherits vacdat from covid_trimmed
-Compartment <- function(cases, csimAge, rCFR, cdat, startc, endc){
+Compartment <- function(cases, rCFR, pop, startc, endc){
 
   # Create a list to output various data frames
   out <- list()
@@ -18,11 +18,17 @@ Compartment <- function(cases, csimAge, rCFR, cdat, startc, endc){
   # CASE=cases produces estimates for the data used.
   #  From June 2022 adjusted for missing incidence using mismatch with ONS survey
   CASE <- cases
-  CASE[2:20]<-CASE[2:20]*cdat$Missing_incidence
+  CASE[2:20]<-CASE[2:20]*comdat$Missing_incidence
 
  #  Lognormals gone to getParms
-  
-  #  Follow infections through ILI (Case) - SARI (Hospital) - Crit (ICU) - CritRecov (Hospital)- Deaths
+#  Cumulative number of cases for acquired immunity.  Before startdate contribution is from cumulative with assumed missing_incidence at 2.2 (i.e. ONS value from when testing was working)
+  cumulative=CASE
+  cumulative[1,2:20]=CASE[1,2:20]
+  for(i in 2:(nrow(CASE))){
+    cumulative[i,2:20]=cumulative[i-1,2:20]+CASE[i,2:20]*comdat$Missing_incidence[i]
+#    cumulative[i,2:20]=cumulative[i,2:20]/pop[1:19]
+      }
+#  Follow infections through ILI (Case) - SARI (Hospital) - Crit (ICU) - CritRecov (Hospital)- Deaths
   
   #  Zero dataframes.
   #  Follow these cases to the end of the CDFs
@@ -60,12 +66,12 @@ Compartment <- function(cases, csimAge, rCFR, cdat, startc, endc){
   #  Set day 1.  This assumes - wrongly - that there were zero cases before,
   #              but should autocorrect as those cases get resolved
   
-  #  csimAge has no date row, so need to use iage-1
+  #  covidsimAge has no date row, so need to use iage-1
   
   MILD[1,(2:ncol(MILD))] <- CASE[1,(2:ncol(CASE))]
-  ILI[1,(2:ncol(ILI))] <- CASE[1,(2:ncol(CASE))]*csimAge$Prop_ILI_ByAge
-  SARI[1,(2:ncol(SARI))] <- CASE[1,(2:ncol(CASE))]*csimAge$Prop_SARI_ByAge
-  CRIT[1,(2:ncol(CRIT))] <- CASE[1,(2:ncol(CASE))]*csimAge$Prop_Critical_ByAge
+  ILI[1,(2:ncol(ILI))] <- CASE[1,(2:ncol(CASE))]*covidsimAge$Prop_ILI_ByAge
+  SARI[1,(2:ncol(SARI))] <- CASE[1,(2:ncol(CASE))]*covidsimAge$Prop_SARI_ByAge
+  CRIT[1,(2:ncol(CRIT))] <- CASE[1,(2:ncol(CASE))]*covidsimAge$Prop_Critical_ByAge
   
   # Add new cases to Mild, ILI, SARI and CRIT people in each  age group.
   # Bring forward cases from yesterday
@@ -73,18 +79,18 @@ Compartment <- function(cases, csimAge, rCFR, cdat, startc, endc){
   # Nobody changes age band.  Vectorize over distributions
   
 
-  cdat$lethality<-na.locf(cdat$lethality)
+  comdat$lethality<-na.locf(comdat$lethality)
     for (iday in (startc:endc)){
     # Update current vaccine/variant lethality if available    
-    day_lethality<-cdat$lethality[min(iday,length(comdat$lethality))]
+    day_lethality<-comdat$lethality[min(iday,length(comdat$lethality))]
     xCFR <- rCFR*day_lethality/(1+rCFR*(day_lethality-1))
     pTtoI <- afac*xCFR^apow
     pItoS <- bfac*xCFR^bpow
     pStoD <- cfac*xCFR^cpow
     #  Entry to ventilation still from covidsim
     #  Redu
-    pStoC <-  csimAge$Prop_Critical_ByAge /
-      ( csimAge$Prop_Critical_ByAge + csimAge$Prop_SARI_ByAge )
+    pStoC <-  covidsimAge$Prop_Critical_ByAge /
+      ( covidsimAge$Prop_Critical_ByAge + covidsimAge$Prop_SARI_ByAge )
     # All routes to death are the same, vary by age
     pCtoD <- pStoD
     pCRtoD <- pStoD
@@ -103,7 +109,7 @@ Compartment <- function(cases, csimAge, rCFR, cdat, startc, endc){
     xday <- iday+cdflength-1
     agerange <- (2:ncol(ILI))
 #  Add all the missing incidence into mild by scaling from ONS prev.    
-    newMILD[iday,agerange] <- CASE[iday,agerange]*(1.0-pTtoI)+newMILD[iday,agerange]+CASE[iday,agerange]*(cdat$Missing_incidence[iday]-1.0)
+    newMILD[iday,agerange] <- CASE[iday,agerange]*(1.0-pTtoI)+newMILD[iday,agerange]+CASE[iday,agerange]*(comdat$Missing_incidence[iday]-1.0)
     newILI[iday,agerange] <- CASE[iday,agerange]*  pTtoI    +newILI[iday,agerange]
     
     
@@ -120,6 +126,8 @@ Compartment <- function(cases, csimAge, rCFR, cdat, startc, endc){
       # multiple by vaccination and its CFR reduction
       # ILI will go to SA/RI and REC
       day_vacdat=1.0-as.numeric(vacdat[min(iday,nrow(vacdat)),iage])*vacCFR
+      
+      
       ItoS <-  as.numeric(newILI[iday,iage] *     pItoS[iage-1]*day_vacdat ) *ILIToSARI
       # Replace with vaccine effect
       # ItoS = as.numeric(newILI[iday,iage] * pItoS[iage-1])  *ILIToSARI
@@ -186,6 +194,7 @@ Compartment <- function(cases, csimAge, rCFR, cdat, startc, endc){
   out$MildToRecovery <- MildToRecovery
   out$xday <-  xday
   out$vacCFR <-  vacCFR
+  out$cumulative <- cumulative
 
   return(out)
   

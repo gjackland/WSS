@@ -96,7 +96,15 @@ comdat <- comdat %>%  select(date,
                              inputCases = newCasesBySpecimenDate,
                              fpCases = newCasesBySpecimenDate,
                              vaccines=newPeopleVaccinatedFirstDoseByVaccinationDate,
-                             MVBeds=covidOccupiedMVBeds)%>%
+                             MVBeds=covidOccupiedMVBeds)  %>% arrange(date)
+
+comdat[is.na(comdat)]<-0
+#  Cumulative cases from beginning, regardless of startdate, although first wave is dubious
+comdat$cumulative=comdat$allCases
+for(i in 2:(nrow(comdat))){
+  comdat$cumulative[i]=comdat$cumulative[i-1]+comdat$allCases[i]
+}
+comdat <- comdat %>%
   filter(date >= startdate &
            date <= enddate ) %>%
   arrange(date)
@@ -680,8 +688,17 @@ for(iday in 1:14){
   comdat$Scot_ons_inc[(nrow(comdat)-14+iday)]=Scotstart+iday*Scotslope
 }
 
-comdat$Missing_incidence=smooth.spline((comdat$Eng_ons_inc/comdat$allCases),df=6)$y
-comdat$Scot_Missing_incidence=smooth.spline((comdat$Scot_ons_inc[1:nrow(regcases)]/regcases$Scotland),df=6)$y
+comdat$Missing_incidence=NA
+comdat$Scot_Missing_incidence=NA
+comdat$Missing_incidence[40:(nrow(comdat)-16)]=comdat$Eng_ons_inc[40:(nrow(comdat)-16)]/comdat$allCases[56:nrow(comdat)]
+comdat$Missing_incidence[1:40]=comdat$Missing_incidence[40]
+comdat$Missing_incidence<-na.locf(comdat$Missing_incidence, na.rm=FALSE)
+comdat$Missing_incidence=smooth.spline((comdat$Missing_incidence),df=3)$y
+comdat$Scot_Missing_incidence[40:(nrow(regcases)-16)]=comdat$Scot_ons_inc[40:(nrow(regcases)-16)]/regcases$Scotland[56:nrow(regcases)]
+comdat$Scot_Missing_incidence[1:40]=comdat$Scot_Missing_incidence[40]
+comdat$Scot_Missing_incidence<-na.locf(comdat$Scot_Missing_incidence, na.rm=FALSE)
+comdat$Scot_Missing_incidence=smooth.spline((comdat$Scot_Missing_incidence),df=3)$y
+
 
 
 # Scottish regions --------------------------------------------------------
