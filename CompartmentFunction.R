@@ -22,13 +22,18 @@ Compartment <- function(cases, rCFR, pop, startc, endc){
 
  #  Lognormals gone to getParms
 #  Cumulative number of cases for acquired immunity.  Before startdate contribution is from cumulative with assumed missing_incidence at 2.2 (i.e. ONS value from when testing was working)
+#  Assumption of 75% amelioration of severity from previous infection 
+  cumben=3
   cumulative=CASE
   cumulative[1,2:20]=CASE[1,2:20]
+  cumfac=cumulative
+  cumfac[1,2:20]<-cumulative[1,2:20]/(pop[2:20]+cumulative[1,2:20])
   for(i in 2:(nrow(CASE))){
-    cumulative[i,2:20]=cumulative[i-1,2:20]+CASE[i,2:20]*comdat$Missing_incidence[i]
-#    cumulative[i,2:20]=cumulative[i,2:20]/pop[1:19]
-      }
-#  Follow infections through ILI (Case) - SARI (Hospital) - Crit (ICU) - CritRecov (Hospital)- Deaths
+    cumulative[i,2:20]=cumulative[i-1,2:20]+CASE[i,2:20]
+      for(j in 2:20){cumfac[i,j]<-cumulative[i,j]/(pop[j]/cumben+cumulative[i,j])}
+  }
+  
+    #  Follow infections through ILI (Case) - SARI (Hospital) - Crit (ICU) - CritRecov (Hospital)- Deaths
   
   #  Zero dataframes.
   #  Follow these cases to the end of the CDFs
@@ -83,7 +88,9 @@ Compartment <- function(cases, rCFR, pop, startc, endc){
     for (iday in (startc:endc)){
     # Update current vaccine/variant lethality if available    
     day_lethality<-comdat$lethality[min(iday,length(comdat$lethality))]
+
     xCFR <- rCFR*day_lethality/(1+rCFR*(day_lethality-1))
+    xCFR <- xCFR*(1.0-cumfac[iday,2:20])
     pTtoI <- afac*xCFR^apow
     pItoS <- bfac*xCFR^bpow
     pStoD <- cfac*xCFR^cpow
@@ -108,8 +115,7 @@ Compartment <- function(cases, rCFR, pop, startc, endc){
     
     xday <- iday+cdflength-1
     agerange <- (2:ncol(ILI))
-#  Add all the missing incidence into mild by scaling from ONS prev.    
-    newMILD[iday,agerange] <- CASE[iday,agerange]*(1.0-pTtoI)+newMILD[iday,agerange]+CASE[iday,agerange]*(comdat$Missing_incidence[iday]-1.0)
+    newMILD[iday,agerange] <- CASE[iday,agerange]*(1.0-pTtoI)+newMILD[iday,agerange]+CASE[iday,agerange]
     newILI[iday,agerange] <- CASE[iday,agerange]*  pTtoI    +newILI[iday,agerange]
     
     
@@ -167,7 +173,8 @@ Compartment <- function(cases, rCFR, pop, startc, endc){
   }
   
   # Pack anything that you want to use - anything not returned will not have a
-  # value in the calling space.
+  # value in the calling space.  
+  #  Return Unscaled cases
   out$DEATH <- DEATH
   out$RECOV <- RECOV
   out$MILD <- MILD
@@ -185,7 +192,7 @@ Compartment <- function(cases, rCFR, pop, startc, endc){
   out$CRITREC <- CRITREC
   out$oldCRITREC <- oldCRITREC
   out$newCRITREC <- newCRITREC
-  out$CASE <-  CASE
+  out$CASE <-  cases
   out$pCtoD <- pCtoD
   out$pStoC <- pStoC
   out$pStoD <- pStoD
@@ -195,6 +202,7 @@ Compartment <- function(cases, rCFR, pop, startc, endc){
   out$xday <-  xday
   out$vacCFR <-  vacCFR
   out$cumulative <- cumulative
+  out$cumfac <- cumfac
 
   return(out)
   

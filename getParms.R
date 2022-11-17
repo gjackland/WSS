@@ -24,7 +24,7 @@ R_decay=0.9
 #   Lethality of variants
 Kentfac <- 0.4
 Indiafac <- 0.9
-Omicronfac <- 0.0
+Omicronfac <- -0.4
 Kenttrans <- 0.3
 Indiatrans<- 0.4
 # Done bespoke  Omicrontrans <- 0.0 
@@ -93,7 +93,7 @@ logmean <- log(6.0)
    RawCFR = c(0.00002370296, 0.00002041085 , 0.00001462412, 0.00002653315 , 0.00004676798 , 0.00008452601 , 0.0001798514 , 0.0003314658
  , 0.0005294738 , 0.001079333 , 0.001855586 , 0.003403599 , 0.005844741 , 0.0205895 , 0.03535971 , 0.06212092
  , 0.08943561 , 0.1118333 , 0.1320454) 
-     
+     RawCFR = RawCFR*1.6547   #mean(comdat$Missing_incidence[1:300])
 #Add in ONSdata by hand.  this provides a check on the Case-based R and rescales the cases as testing winds slowly down
   engpop=56989570
   scotpop=5475660

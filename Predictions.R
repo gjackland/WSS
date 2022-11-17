@@ -101,13 +101,12 @@ Predictions <- function(input,R_input,predtime,pop){
     ##  we can use MLP Rx.x as an input here. Previous code assuming burgeoning omicron-induced immunity removed
     
 
-    # R decays back to 1 with growth rate down 5% a day, faster if larger
+    # R decays back to 1 with growth rate R_decay, faster if larger
     # R is the same in all age groups
     # This come from the network model as the epidemic behaviour becomes wavelike
     # 5% is probably too slow, but more importantly the decay should (probably) 
     # depend on the number of cases as that measures "breakthrough" into new regions
     # 
-    #Assume third omicron wave will follow pattern of previous two
     R_input=  ((R_input-1.0)*R_decay+1.0)  #((R_input-1)*R_decay+1.0)  
     #  Infections not confined by age group - use an average
     #  Assume Omicron established (12/4/22) - immunity built into R_input, reverts slowly to endemic

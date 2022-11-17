@@ -165,8 +165,6 @@ NEY$date<-as.Date(NEY$date)
 #  Compartment predictions removed to Predictions.R
 #  Replicated the data because repeated calls to Predictions would increment comp
 
-region="England"
-
 
 compEng <- Compartment(casedat, RawCFR,population$England,2,nrow(casedat))
 predEng<-Predictions(compEng,R_BestGuess$England,predtime,population$England)
