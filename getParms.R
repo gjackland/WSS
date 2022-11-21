@@ -2,7 +2,7 @@
 # Start and end date - the date to collect data from
 # First month or so will be equilibration, especially if started at a time of high caseload
 #startdate <- as.Date("2020/04/08") #as.Date("2020/08/09")
-startdate <- as.Date("2022/02/09")
+startdate <- as.Date("2021/02/09")
 
 # Lose only the last day of data - use tail correction for reporting delay
 # Weekend data can be sketchy Extend the enddate if run on Monday morning
