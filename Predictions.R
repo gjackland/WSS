@@ -36,18 +36,7 @@ Predictions <- function(input,R_input,predtime,pop){
   enddateP<-CASE$date[lengthofdata]
 
   #  Maximum pre-existing immunity from old infections only 20% as per IC report 49, by age group
-  NotS0=min(1.0,colSums(CASE[2:20])/pop[2:20])*0.2
-  S=1.0-NotS0
-
-#  Boost R_input by the already susceptible.
-#  This is taken out again when incrementing cases using current notS  
-  #  Removed 12/4 with omicron complete R_input<-R_input/(1.0-NotS0)
-  #  For 12/4, given issues with case data, drive predictions using ONS R_value
-  #  R_input=rat$smoothONS[length(rat$smoothONS)]
-  #  Current prevalence of omicron
-  #x= (lengthofdata-Omicrondate)*1.0/genTime
-  #today_Omicron=1.0/(1.0+exp(-x))#  For loop over time, predCASE using R numbers
-  # enddateP is end of actual data - sometimes earlier than asked for
+  #From 12/11/22, remove variation in susceptibles  reinfection & vaccination close to constant
   
   agerange <- (2:ncol(ILI))
   #  Initialise predCASE, the predicted values. These will be added to CASE, with the
@@ -112,13 +101,12 @@ Predictions <- function(input,R_input,predtime,pop){
     ##  we can use MLP Rx.x as an input here. Previous code assuming burgeoning omicron-induced immunity removed
     
 
-    # R decays back to 1 with growth rate down 5% a day, faster if larger
+    # R decays back to 1 with growth rate R_decay, faster if larger
     # R is the same in all age groups
     # This come from the network model as the epidemic behaviour becomes wavelike
     # 5% is probably too slow, but more importantly the decay should (probably) 
     # depend on the number of cases as that measures "breakthrough" into new regions
     # 
-    #Assume third omicron wave will follow pattern of previous two
     R_input=  ((R_input-1.0)*R_decay+1.0)  #((R_input-1)*R_decay+1.0)  
     #  Infections not confined by age group - use an average
     #  Assume Omicron established (12/4/22) - immunity built into R_input, reverts slowly to endemic
@@ -159,6 +147,5 @@ Predictions <- function(input,R_input,predtime,pop){
   MildToRecovery ->  input$MildToRecovery
   xday -> input$xday
   vacCFR -> input$vacCFR
-  S -> input$S
   return(input)
 }

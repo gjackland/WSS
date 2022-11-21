@@ -15,7 +15,6 @@ getData <- function(dftmp) {
   return(out)
 }
 
-
 gethData <- function(dftmp) {
   out <- dftmp %>%
     select(date = date, saridat = hospitalCases, newsaridat = newAdmissions) %>%
@@ -166,20 +165,16 @@ NEY$date<-as.Date(NEY$date)
 #  Compartment predictions removed to Predictions.R
 #  Replicated the data because repeated calls to Predictions would increment comp
 
-region="England"
 
-
-compEng <- Compartment(casedat, covidsimAge, RawCFR, comdat,2,nrow(casedat))
-
+compEng <- Compartment(casedat, RawCFR,population$England,2,nrow(casedat))
 predEng<-Predictions(compEng,R_BestGuess$England,predtime,population$England)
-
 
 region="Scotland"
 ##  CFR gets entangled with vaccine and variant effect.  Use pre-vaccination values
 ##  wild-type inherited from England and will adjust CFR later for vaccine/variant
 
-#  Full Epidemic model for Scotlad with pre-prepared data
-compScot <- Compartment(scotage, covidsimAge, RawCFR, comdat,2,nrow(scotage))
+#  Full Epidemic model for Scotland with pre-prepared data
+compScot <- Compartment(scotage, RawCFR,population$Scotland,2,nrow(scotage))
 predScot<-Predictions(compScot,R_BestGuess$Scotland,predtime,population$Scotland)
 
 
@@ -189,24 +184,24 @@ predScot<-Predictions(compScot,R_BestGuess$Scotland,predtime,population$Scotland
 #  Full Epidemic model for regions
 
 
-compLon<- Compartment(Lon,  covidsimAge, RawCFR, comdat,3,nrow(Lon))
+compLon<- Compartment(Lon,RawCFR, population$Lon, 3,nrow(Lon))
 predLon<-Predictions(compLon,R_BestGuess$Lon,predtime,population$Lon)
 
-compNW<- Compartment(NW,  covidsimAge, RawCFR, comdat,3,nrow(NW))
+compNW<- Compartment(NW,RawCFR, population$NW, 3,nrow(NW))
 predNW<-Predictions(compNW,R_BestGuess$NW,predtime,population$NW)
 
-compEE<- Compartment(EE,  covidsimAge, RawCFR, comdat,3,nrow(EE))
+compEE<- Compartment(EE,   RawCFR, population$EE,3,nrow(EE))
 predEE<-Predictions(compEE,R_BestGuess$EE,predtime,population$EE)
 
-compSE<- Compartment(SE,  covidsimAge, RawCFR, comdat,3,nrow(SE))
+compSE<- Compartment(SE, RawCFR,population$SE,3,nrow(SE))
 predSE<-Predictions(compSE,R_BestGuess$SE,predtime,population$SE)
 
-compSW<- Compartment(SW,  covidsimAge, RawCFR, comdat,3,nrow(SW))
+compSW<- Compartment(SW,RawCFR, population$SW, 3,nrow(SW))
 predSW<-Predictions(compSW,R_BestGuess$SW,predtime,population$SW)
 
-compMD<- Compartment(MD,  covidsimAge, RawCFR, comdat,3,nrow(MD))
+compMD<- Compartment(MD, RawCFR, population$MD,3,nrow(MD))
 predMD<-Predictions(compMD,R_BestGuess$Midlands,predtime,population$MD)
-compNEY<- Compartment(NEY,  covidsimAge, RawCFR, comdat,3,nrow(NEY))
+compNEY<- Compartment(NEY,  RawCFR, population$NEY,3,nrow(NEY))
 predNEY<-Predictions(compNEY,R_BestGuess$NEY,predtime,population$NEY)
 
 rm( SE, SW, EE, NEY, MD, Lon, NW, hSE, hSW, hEE, hNEY, hMD, hLon, hNW)
@@ -237,6 +232,7 @@ Hospital$Eng$saridat=Hospital$NEY$saridat+Hospital$NW$saridat+
   Hospital$MD$saridat+Hospital$EE$saridat+
   Hospital$SE$saridat+Hospital$SW$saridat+
   Hospital$Lon$saridat
+Hospital$Eng$date=Hospital$Lon$date
 total_deaths=sum(deathdat[recent_time,2:20])
 total_cases=sum(casedat[recent_time,2:20])
 
@@ -324,6 +320,9 @@ lines(rowSums(predEE$CASE[2:20]),x=predEE$CASE$date,xlim=plot_date,col="violet")
 lines(rowSums(predLon$CASE[2:20]),x=predLon$CASE$date,xlim=plot_date,col="yellow") 
 lines(rowSums(predScot$CASE[2:20]),x=predScot$CASE$date,xlim=plot_date,col="black") 
 
+
+plot(rowSums(predEng$DEATH[2:20]),x=predEng$DEATH$date,xlim=plot_date,cex.axis=0.7,ylab="National Death",xlab="Date") 
+lines(rowSums(deathdat[2:20])*2.2,x=deathdat$date,xlim=plot_date,col="red") 
 plot(rowSums(predMD$DEATH[2:20]),x=predMD$DEATH$date,xlim=plot_date,cex.axis=0.7,ylab="Regional Death",xlab="Date") 
 lines(rowSums(predNEY$DEATH[2:20]),x=predNEY$DEATH$date,xlim=plot_date,col="red") 
 lines(rowSums(predNW$DEATH[2:20]),x=predNW$DEATH$date,xlim=plot_date,col="blue")  
