@@ -21,7 +21,7 @@ Predictions <- function(input,R_input,predtime,pop){
   CRITREC <- input$CRITREC
   newCRITREC <- input$newCRITREC
   oldCRITREC <- input$oldCRITREC
-  CASE <- input$CASE
+  CASE <- input$CASEMI
   pCtoD <- input$pCtoD
   pItoS <- input$pItoS
   pStoC <-  input$pStoC

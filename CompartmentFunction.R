@@ -193,6 +193,7 @@ Compartment <- function(cases, rCFR, pop, startc, endc){
   out$oldCRITREC <- oldCRITREC
   out$newCRITREC <- newCRITREC
   out$CASE <-  cases
+  out$CASEMI <-  CASE
   out$pCtoD <- pCtoD
   out$pStoC <- pStoC
   out$pStoD <- pStoD

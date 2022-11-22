@@ -322,7 +322,7 @@ lines(rowSums(predScot$CASE[2:20]),x=predScot$CASE$date,xlim=plot_date,col="blac
 
 
 plot(rowSums(predEng$DEATH[2:20]),x=predEng$DEATH$date,xlim=plot_date,cex.axis=0.7,ylab="National Death",xlab="Date") 
-lines(rowSums(deathdat[2:20])*2.2,x=deathdat$date,xlim=plot_date,col="red") 
+lines(rowSums(deathdat[2:20]),x=deathdat$date,xlim=plot_date,col="red") 
 plot(rowSums(predMD$DEATH[2:20]),x=predMD$DEATH$date,xlim=plot_date,cex.axis=0.7,ylab="Regional Death",xlab="Date") 
 lines(rowSums(predNEY$DEATH[2:20]),x=predNEY$DEATH$date,xlim=plot_date,col="red") 
 lines(rowSums(predNW$DEATH[2:20]),x=predNW$DEATH$date,xlim=plot_date,col="blue")  
@@ -395,8 +395,8 @@ if(interactive()){
   plot(Hospital$UK$newsaridat,x=Hospital$UK$date, ylab="Hospital Admission",xlab="Date",xlim=c(startplot,endplot-180                                                                                                ))
   lines(rowSums(compEng$newSARI[2:20]),x=compEng$newSARI$date,col="blue")
   lines(rowSums(predEng$newSARI[2:20]),x=compEng$newSARI$date,col="red")
-  plot(Hospital$UK$saridat,x=Hospital$UK$date,ylab="Hospital Cases",xlab="Date",xlim=c((startplot),(endplot-200)))
-  lines(0.7*rowSums(predEng$SARI[2:20]+predEng$CRIT[2:20]+predEng$CRITREC[2:20]),x=predEng$SARI$date,col='red')
+  plot(Hospital$Eng$saridat,x=Hospital$Eng$date,ylab="Hospital Cases",xlab="Date",xlim=c((startplot),(endplot-200)))
+  lines(rowSums(predEng$SARI[2:20]+predEng$CRIT[2:20]+predEng$CRITREC[2:20])/ratio$Eng$hosp,x=predEng$SARI$date,col='red')
   
   plot(rowSums(compEng$newMILD[2:20]+compEng$newILI[2:20]),xlim=c((startplot),(endplot-100)),col="blue",x=compEng$newMILD$date,type="l",xlab="Date",ylab="Cases")
   plot(rowSums(compEng$CASE[2:20]),x=compEng$CASE$date)
