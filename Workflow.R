@@ -2,6 +2,9 @@
 if(interactive()){
   rm(list = ls())
 }
+# install and load the package previously
+# install.packages("devtools")
+#devtools::install_github("datasciencescotland/opendatascot")
 # Read packages used by all scripts
 library(readr, warn.conflicts = FALSE, quietly = TRUE)
 library(dplyr, warn.conflicts = FALSE, quietly = TRUE)
