@@ -180,7 +180,7 @@ CCtmp$ValueType="incidence"
 CCtmp$Scenario="Nowcast"
 cum_error=R_error
 for (d in startwrite:endwrite){
-  if(CCcomp$CASE$date[d]>(today-reporting_delay-2)){
+  if(CCcomp$CASE$date[d]>(today-reporting_delay)){
     CCtmp$Scenario="MTP"
     CCtmp$ValueType="infections_inc"
     cum_error=cum_error*R_error
