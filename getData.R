@@ -21,9 +21,7 @@
 
 
 #  Italian data is here ... https://github.com/InPhyT/COVID19-Italy-Integrated-Surveillance-Data
-# install and load the package previously
-# install.packages("devtools")
-#devtools::install_github("datasciencescotland/opendatascot")
+
 source("CompartmentFunction.R")
 source("medrxiv.R")
 source("Predictions.R")
