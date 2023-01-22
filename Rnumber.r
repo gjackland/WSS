@@ -294,8 +294,8 @@ R_Quant$England <-tmp[2:6]
 
 tmp <-estimate_R(rat$smoothScotland,rat$date,regcases$Scotland)
 #  Scottish data reporting is so delayed in summer 2022 that its better to use ONS
+#tmp <-estimate_R(dfR$smoothONSScot,rat$date,regcases$Scotland)
 
-tmp <-estimate_R(dfR$smoothONSScot,rat$date,regcases$Scotland)
 R_BestGuess$Scotland <-tmp[1]
 R_Quant$Scotland <-tmp[2:6]
 

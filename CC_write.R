@@ -12,7 +12,7 @@ CC_write <- function(CCcomp,region,pop,R_region,Q_region,Rseries,ratio,Missing_i
 
   today <- Sys.Date()
 startwrite=length(CCcomp$CASE$date)-120
-endwrite=length(CCcomp$CASE$date)-40
+endwrite=length(CCcomp$CASE$date)-47
 group <- "Edinburgh"
 model <-  "WSS"
 scenario <- "Nowcast"
@@ -64,7 +64,7 @@ CC <- data.frame(
   CCtmp<-CC
  
 #  systemic uncertainty estimate (fractional)  
-  sigma=0.15
+  sigma=0.1
   #  R number Nowcast.  Error mainly comes from uncertainty in GenTime
   CCtmp$Scenario="Nowcast"
   CCtmp$Geography=region
@@ -121,8 +121,10 @@ CCtmp$ValueType="hospital_inc"
 #
 #  Uncertainty in two parts - in data collection +-10%, R_number cumulative projection.  sqrt capped at 0 - assuming random walk.
 # 0 would mean the infection dies out faster than the generation time, which might happen from large R uncertainty.  
-#
-R_error=  exp(  (sqrt(1.0+Q_region-R_region)-1.0)  /genTime)
+#  Increase the uncertainty in R to include uncertainty in todays measurement and uncertainty 
+# that its value will stay the same set equal to the R 
+R_error=  exp(  (sqrt(1.0+Q_region-R_region) -1.0)*2 /genTime)
+
 cum_error=R_error
 
 for (d in startwrite:endwrite){
@@ -201,12 +203,12 @@ for (d in startwrite:endwrite){
 #  Missing prevalence covers discrepancy between ONS and case data
 #  Also assume a five day delay between infection and test.
 #  Prevalence is a percentage who would test positive
-#From 22/06 CASEs alerady contain missing incidence
+#From 22/06 CASEs already contain missing incidence
 # There is some difficulty about the ONS data c/f e.g. https://www.medrxiv.org/content/10.1101/2021.02.09.21251411v1.full.pdf
 CCtmp$ValueType="prevalence"
 CCtmp$Scenario="Nowcast"
 cum_error=R_error
-for (d in (startwrite+20):(endwrite)){
+for (d in (startwrite):(endwrite)){
   if(CCcomp$CASE$date[d]>(today-reporting_delay)){
   CCtmp$Scenario="MTP"
   CCtmp$ValueType="prevalence_mtp"
@@ -223,6 +225,13 @@ for (d in (startwrite+20):(endwrite)){
   CCtmp$"Day of Value" = day(CCcomp$ILI$date[d])
   CCtmp$"Month of Value" = month(CCcomp$ILI$date[d])
   CCtmp$"Year of Value" = year(CCcomp$ILI$date[d])
+  #  convert to percentages, because exponetial groth in finite population should really be logistic
+  CCtmp$"Quantile 0.05"=  100*(CCtmp$"Quantile 0.05")/(CCtmp$"Quantile 0.05"+100)
+  CCtmp$"Quantile 0.25"=  100*(CCtmp$"Quantile 0.25")/(CCtmp$"Quantile 0.25"+100)
+  CCtmp$"Quantile 0.5"=  100*(CCtmp$"Quantile 0.5")/(CCtmp$"Quantile 0.5"+100)
+  CCtmp$"Quantile 0.75"=  100*(CCtmp$"Quantile 0.75")/(CCtmp$"Quantile 0.75"+100)
+  CCtmp$"Quantile 0.95"=  100*(CCtmp$"Quantile 0.95")/(CCtmp$"Quantile 0.95"+100)
+  CCtmp$Value=  100*(CCtmp$Value)/(CCtmp$Value+100)
   # Add the new row
   CC <- rbind(CC, CCtmp)
 }
@@ -240,7 +249,7 @@ for (d in startwrite:(endwrite)){
   #  Reduce sigma by sqrt(length of stay)
   #  increase cum_error twice as fast
   
-  cum_error=cum_error*R_error*R_error
+  cum_error=cum_error*R_error
   }
   OCC = sum(CCcomp$SARI[d,2:20]+CCcomp$CRIT[d,2:20]+CCcomp$CRITREC[d,2:20])/ratio$hosp
   CCtmp$Value=OCC

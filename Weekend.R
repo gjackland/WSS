@@ -47,5 +47,7 @@ estimate_R <- function(rat_in,date_in,reg_in){
    ))
    R_Quant <-unname(quantile(filteredR, probs=c(0.05,0.25,0.5,0.75,0.95)))
    R <-mean(filteredR)
+#  align mean with Quantiles   
+   R_Quant <- R-R_Quant[3]+R_Quant
    return( c(R,R_Quant) )
 }

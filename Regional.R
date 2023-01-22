@@ -166,6 +166,7 @@ NEY$date<-as.Date(NEY$date)
 #  Replicated the data because repeated calls to Predictions would increment comp
 
 
+
 compEng <- Compartment(casedat, RawCFR,population$England,2,nrow(casedat))
 predEng<-Predictions(compEng,R_BestGuess$England,predtime,population$England)
 
@@ -216,6 +217,8 @@ predNEY$SARI[2:20][predNEY$SARI[2:20] < 0] <- 0.0
 predMD$SARI[2:20][predMD$SARI[2:20] < 0] <- 0.0
 predSW$SARI[2:20][predSW$SARI[2:20] < 0] <- 0.0
 predSE$SARI[2:20][predSE$SARI[2:20] < 0] <- 0.0
+
+predEng$SARI[2:20]=(predNEY$SARI[2:20])+(predNW$SARI[2:20])+(predLon$SARI[2:20])+(predMD$SARI[2:20])+(predSW$SARI[2:20])+(predSE$SARI[2:20])+(predEE$SARI[2:20])
 # recent scaling factors for MTPs, 
 # With omicron and confirmatory PCR changes, shorten recent_timescale
 total_time = min(nrow(deathdat),nrow(casedat),nrow(Hospital$UK))
@@ -243,9 +246,15 @@ ratio <-list()
 ratio$Eng$death=sum(predEng$DEATH[recent_time,2:20])/sum(regdeaths[recent_time,2:10])
 ratio$Eng$case=sum(predEng$CASE[recent_time,2:20])/total_cases
 ratio$Eng$newhosp=sum(rowSums(predEng$newSARI[recent_time,2:20]))/total_admissions
-ratio$Eng$hosp=sum(rowSums(predEng$SARI[recent_time,2:20]+predEng$CRIT[recent_time,2:20]+predEng$CRITREC[recent_time,2:20]))/sum(Hospital$Eng$saridat[recent_time])
+ratio$Eng$hosp=sum(rowSums(predEng$SARI[recent_time,2:20]+predEng$CRIT[recent_time,2:20]+
+                             predEng$CRITREC[recent_time,2:20]))/sum(Hospital$Eng$saridat[recent_time])
 ratio$Eng$crit=sum(compEng$CRIT[recent_time,2:20])/total_crit
 
+# Scotland stopped reporting Hospital admissions on Sept 11th because of course they did.  
+# Historical ratio with England is 8.627659, so use that 
+for (nodata in 1:nrow(Hospital$Scot)){
+if(Hospital$Scot$date[nodata]>"2022-09-11"){ Hospital$Scot$newsaridat[nodata]=Hospital$Eng$newsaridat[nodata]*population$Scotland[1]/population$England[1]
+}}
 ONS_MI=comdat$Missing_incidence[nrow(comdat)]
 
 CCEng=CC_write(predEng,"England",population$England[1],R_BestGuess$England,R_Quant$England,rat$smoothEngland,ratio$Eng,ONS_MI)
@@ -302,7 +311,7 @@ CCNI=CC_write(predEng,"Northern Ireland",population$NI[1],R_BestGuess$NI,R_Quant
 
 CC<-rbind(CCEng,CCScot,CCNW,CCNEY,CCMD,CCLon,CCSW,CCSE,CCEE)#,CCWal
 
-write.xlsx(CC, file = "CC.xlsx", 
+write.xlsx(CC, file = "CCr9.xlsx", 
            overwrite = TRUE,  sheetName = region, rowNames = FALSE)
 
 

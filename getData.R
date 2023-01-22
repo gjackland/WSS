@@ -339,8 +339,7 @@ regdeaths <- regdat %>%
              arrange(date)
 regdeaths$NEY=regdeaths$`North East`+regdeaths$`Yorkshire and The Humber`
 regdeaths$MD=regdeaths$`East Midlands`+regdeaths$`West Midlands`
-regdeaths$England=regdeaths$NEY+regdeaths$MD+regdeaths$`North West`+regdeaths$London+regdeaths$`East of England`
-+regdeaths$`South East`+regdeaths$`South West`
+regdeaths$England=regdeaths$NEY+regdeaths$MD+regdeaths$`North West`+regdeaths$London+regdeaths$`East of England`+regdeaths$`South East`+regdeaths$`South West`
 
 # Get the demographic data for regions because can't download simultaneously with
 # the death data.
@@ -440,12 +439,15 @@ coltypes <- cols(
 
 # Get the data
 scotdailycases = read_csv(dailycasesurl, col_types = coltypes)
-
+#  Remove duplicates
+scotdailycases<-scotdailycases[!duplicated(scotdailycases),]
+#  Data errors in GJNH.  Just kill it, its an embarrassment anyway
+# subset(scotdailycases, !(HBName %in% c("Golden Jubilee National Hospital")))->noGJNH
 # Make the NHS boards the columns - DailyPositives are the values of PCR+LFT from 10/02/2022
-scotdailycases %>% select(date=Date,board=HBName, cases=DailyPositive)  %>%
-  pivot_wider(names_from = board, values_from = cases) %>%
-  filter(date >= startdate & date <= enddate )         %>%
-  arrange(date) -> scotdailycasesbyboard
+scotdailycases %>% select(date=Date,board=HBName, cases=DailyPositive)  %>% 
+  filter(date >= startdate & date <= enddate) %>%
+  arrange(date) %>% spread(board,cases) -> scotdailycasesbyboard
+
 
 # Hospital data
 scotdailycases %>% filter(HBName=="Scotland") %>%
@@ -458,21 +460,11 @@ Hospital$Scot$newsaridat<-jnk$newsaridat
 
 
 # Make the NHS boards the columns - DailyPositives are the values
-scotdailycasesbyboard <- scotdailycases   %>%
-  select(date=Date,board = HBName,
-         cases = DailyPositive)                 %>%
-  pivot_wider(names_from = board,
-              values_from = cases)              %>%
-  filter(date >= startdate & date <= enddate )  %>%
-  arrange(date)
-# Make the NHS boards the columns - DailyPositives are the values
 scotdailydeathsbyboard <- scotdailycases   %>%
   select(date=Date,board = HBName,
          deaths = DailyDeaths)                 %>%
-  pivot_wider(names_from = board,
-              values_from = deaths)              %>%
   filter(date >= startdate & date <= enddate )  %>%
-  arrange(date)
+  arrange(date)  %>% spread(board,deaths)
 
 # Join the scotdailycases with regcases by date
 #  Assume Scottish cases are stable is unavailable (full_join) otherwise have to lose days for everywhere

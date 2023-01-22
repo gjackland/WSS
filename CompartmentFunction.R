@@ -73,10 +73,10 @@ Compartment <- function(cases, rCFR, pop, startc, endc){
   
   #  covidsimAge has no date row, so need to use iage-1
   
-  MILD[1,(2:ncol(MILD))] <- CASE[1,(2:ncol(CASE))]
-  ILI[1,(2:ncol(ILI))] <- CASE[1,(2:ncol(CASE))]*covidsimAge$Prop_ILI_ByAge
-  SARI[1,(2:ncol(SARI))] <- CASE[1,(2:ncol(CASE))]*covidsimAge$Prop_SARI_ByAge
-  CRIT[1,(2:ncol(CRIT))] <- CASE[1,(2:ncol(CASE))]*covidsimAge$Prop_Critical_ByAge
+  newMILD[1,(2:ncol(MILD))] <- CASE[1,(2:ncol(CASE))]
+  newILI[1,(2:ncol(ILI))] <- CASE[1,(2:ncol(CASE))]*covidsimAge$Prop_ILI_ByAge
+  newSARI[1,(2:ncol(SARI))] <- CASE[1,(2:ncol(CASE))]*covidsimAge$Prop_SARI_ByAge
+  newCRIT[1,(2:ncol(CRIT))] <- CASE[1,(2:ncol(CASE))]*covidsimAge$Prop_Critical_ByAge
   
   # Add new cases to Mild, ILI, SARI and CRIT people in each  age group.
   # Bring forward cases from yesterday
