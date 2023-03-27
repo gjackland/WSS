@@ -11,7 +11,7 @@ CC_write <- function(CCcomp,region,pop,R_region,Q_region,Rseries,ratio,Missing_i
 # write from arbitrary start point to six weeks time
 
   today <- Sys.Date()
-startwrite=length(CCcomp$CASE$date)-120
+startwrite=length(CCcomp$CASE$date)-110
 endwrite=length(CCcomp$CASE$date)-47
 group <- "Edinburgh"
 model <-  "WSS"
