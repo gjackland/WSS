@@ -121,9 +121,10 @@ tempdata <-  tempdata %>%  select(date,
                             admissions = newAdmissions,
                              hospital = hospitalCases,
                              )%>%
-  filter(date >= startdate & date <= enddate ) %>%   arrange(date)
+  filter(date >= startdate ) %>%   arrange(date)
 
-comdat<-  cbind(comdat,tempdata[2:3])
+
+comdat<-  cbind(comdat,tempdata[1:nrow(comdat),2:3])
 rm(tempdata)
 # All UK cases (to estimate pre-Sept England Cases)
 
@@ -501,7 +502,7 @@ jnk <- read_csv(HospitalUrl, col_types = coltypes)
 Hospital$UK <- tibble()
 Hospital$UK  <-  jnk %>%
                   select(date = date, saridat = hospitalCases, newsaridat = newAdmissions, critdat=covidOccupiedMVBeds) %>%
-                  filter(date >= startdate & date <= enddate ) %>%
+                  filter(date >= startdate  ) %>%
                   arrange(date)
 Hospital$UK$saridat <- na.locf(Hospital$UK$saridat)
 Hospital$UK$newsaridat <- na.locf(Hospital$UK$newsaridat)

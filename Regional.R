@@ -221,9 +221,9 @@ predSE$SARI[2:20][predSE$SARI[2:20] < 0] <- 0.0
 predEng$SARI[2:20]=(predNEY$SARI[2:20])+(predNW$SARI[2:20])+(predLon$SARI[2:20])+(predMD$SARI[2:20])+(predSW$SARI[2:20])+(predSE$SARI[2:20])+(predEE$SARI[2:20])
 # recent scaling factors for MTPs, 
 # With omicron and confirmatory PCR changes, shorten recent_timescale
-total_time = min(nrow(deathdat),nrow(casedat),nrow(Hospital$UK))
+total_time = min(nrow(deathdat),nrow(casedat),nrow(Hospital$Eng),nrow(Hospital$Scot))
 #  Fit three weeks up to latest date
-recent_time<-(total_time-21):(total_time-1)
+recent_time<-(total_time-14):(total_time-1)
 
 #Ratios:  For MTPs we scale the various quantities to fit the most recent time data
 #   This automatically compensates for any slowish-varying trends of increased virulence, better treatment waning immunity etc.
@@ -311,7 +311,7 @@ CCNI=CC_write(predEng,"Northern Ireland",population$NI[1],R_BestGuess$NI,R_Quant
 
 CC<-rbind(CCEng,CCScot,CCNW,CCNEY,CCMD,CCLon,CCSW,CCSE,CCEE)#,CCWal
 
-write.xlsx(CC, file = "CCr9.xlsx", 
+write.xlsx(CC, file = "WSS140223.xlsx", 
            overwrite = TRUE,  sheetName = region, rowNames = FALSE)
 
 
